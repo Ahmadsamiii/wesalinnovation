@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS users (
   status      ENUM('active','suspended') NOT NULL DEFAULT 'active',
   must_change_pw TINYINT(1) NOT NULL DEFAULT 0,      -- بعد إعادة تعيين من مدير النظام
   improve     TINYINT(1)   NOT NULL DEFAULT 0,       -- موافقة استخدام المحادثات للتحسين
+  is_demo     TINYINT(1)   NOT NULL DEFAULT 0,       -- حساب تجريبي أنشأه مدير النظام للعرض
   tokens      INT          NOT NULL DEFAULT 30,      -- الرصيد المتبقي من الأسئلة
   tokens_at   DATETIME     NOT NULL,                 -- بداية دورة التجديد الحالية
   questions   INT          NOT NULL DEFAULT 0,       -- إجمالي الأسئلة المطروحة
@@ -51,7 +52,8 @@ CREATE TABLE IF NOT EXISTS users (
   UNIQUE KEY uq_email (email),
   UNIQUE KEY uq_phone (phone),
   KEY ix_created (created_at),
-  KEY ix_role (role)
+  KEY ix_role (role),
+  KEY ix_demo (is_demo)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------------------------

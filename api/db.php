@@ -83,6 +83,10 @@ function ensureSchema(): void {
         if (!colExists('users', 'name_en')) {
             db()->exec("ALTER TABLE users ADD COLUMN name_en VARCHAR(80) NULL, ADD COLUMN dob DATE NULL");
         }
+        if (!colExists('users', 'is_demo')) {
+            db()->exec("ALTER TABLE users ADD COLUMN is_demo TINYINT(1) NOT NULL DEFAULT 0,
+                        ADD INDEX ix_demo (is_demo)");
+        }
         if (!colExists('users', 'status')) {
             db()->exec("ALTER TABLE users
                         ADD COLUMN status         ENUM('active','suspended') NOT NULL DEFAULT 'active',
@@ -184,7 +188,8 @@ function currentUser(): ?array {
     if (empty($_SESSION['uid'])) return null;
     ensureSchema();
     $s = db()->prepare('SELECT id,name,name_en,dob,email,phone,pref,role,status,must_change_pw,improve,
-                               tokens,tokens_at,created_at,questions,avatar,city,age_range,disability,interests,bio
+                               is_demo,tokens,tokens_at,created_at,questions,
+                               avatar,city,age_range,disability,interests,bio
                         FROM users WHERE id=? LIMIT 1');
     $s->execute([$_SESSION['uid']]);
     $u = $s->fetch();
@@ -413,6 +418,7 @@ function publicUser(array $u): array {
         'status' => $u['status'] ?? 'active',
         'must_change_pw' => (int)($u['must_change_pw'] ?? 0) === 1,
         'improve' => (int)($u['improve'] ?? 0) === 1,
+        'is_demo' => (int)($u['is_demo'] ?? 0) === 1,
         'tokens' => (int)$u['tokens'], 'last' => strtotime($u['tokens_at']) * 1000,
         'created' => strtotime($u['created_at']) * 1000, 'qs' => (int)$u['questions'],
         'name_en' => $u['name_en'] ?? '', 'dob' => $u['dob'] ?? '',

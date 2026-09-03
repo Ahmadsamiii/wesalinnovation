@@ -271,6 +271,42 @@ switch ($act) {
         out(['ok' => true]);
     }
 
+    /* ==================== الحسابات التجريبية ====================
+       حسابات حقيقية في قاعدة البيانات، بكلمات مرور تُولَّد عشوائياً وتُعرض
+       مرة واحدة، ومعلَّمة بـ is_demo لتُحذف كلها بأمان. لا يُزرع شيء تلقائياً
+       ولا في متصفح أحد — الإنشاء بطلب صريح من مدير النظام فقط. */
+
+    case 'demo_status': {
+        needRole($STAFF, ['admin']);
+        require_once __DIR__ . '/demo.php';
+        out(['ok' => true, 'count' => demoCount(), 'total' => count(demoAccounts())]);
+    }
+
+    case 'demo_seed': {
+        needRole($STAFF, ['admin']);
+        rateLimit('demo', 6);
+        require_once __DIR__ . '/demo.php';
+        try {
+            $accounts = seedDemoAccounts($STAFF);
+        } catch (Throwable $e) {
+            fail(APP_DEBUG ? $e->getMessage() : 'تعذّر إنشاء الحسابات التجريبية. حاول مرة أخرى.', 500);
+        }
+        out(['ok' => true, 'accounts' => $accounts,
+             'message' => 'كلمات المرور تُعرض هذه المرة فقط — انسخها الآن. لو ضاعت، أعد الإنشاء وتتولّد كلمات جديدة.']);
+    }
+
+    case 'demo_purge': {
+        needRole($STAFF, ['admin']);
+        require_once __DIR__ . '/demo.php';
+        try {
+            $n = purgeDemoAccounts($STAFF);
+        } catch (Throwable $e) {
+            fail(APP_DEBUG ? $e->getMessage() : 'تعذّر حذف الحسابات التجريبية.', 500);
+        }
+        out(['ok' => true, 'deleted' => $n,
+             'message' => $n ? 'حُذفت الحسابات التجريبية وبيانات الأمثلة.' : 'ما فيه حسابات تجريبية أصلاً.']);
+    }
+
     /* ==================== سجل العمليات ==================== */
 
     case 'audit': {

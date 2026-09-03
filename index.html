@@ -1131,6 +1131,16 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <h4 style="margin:var(--s7) 0 var(--s3);color:var(--ink);font-size:var(--f-body)">الدعوات المرسلة</h4>
 <div class="tbl-scroll"><table class="tbl"><thead><tr><th>البريد</th><th>النوع</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody id="invBody"><tr><td colspan="4" style="color:var(--muted)">لا توجد دعوات بعد.</td></tr></tbody></table></div>
 <div id="usersEmpty"></div>
+<section data-perm="users.manage" hidden style="margin-top:var(--s8);border-top:1px solid var(--border);padding-top:var(--s6)">
+<div class="tbl-head" style="margin-bottom:var(--s3)"><h3>الحسابات التجريبية</h3>
+<div style="display:flex;gap:var(--s2);flex-wrap:wrap">
+<button class="btn btn-md btn-primary" id="demoSeedBtn" onclick="seedDemo()"><svg class="ico"><use href="#ic-users"/></svg> أنشئ أو جدّد</button>
+<button class="btn btn-md btn-surface" id="demoPurgeBtn" onclick="purgeDemo()"><svg class="ico"><use href="#ic-trash"/></svg> احذفها كلها</button>
+</div></div>
+<p style="color:var(--muted);font-size:var(--f-sm);max-width:74ch">أربعة حسابات حقيقية في قاعدة البيانات — مدير نظام، مشرف، مراجع محتوى، ومستفيد — لتجربة كل دور بنفسك. معها رسائل تواصل وتذاكر دعم كأمثلة حتى لا تكون اللوحات فارغة. كلمات المرور تُولَّد عشوائياً وتُعرض <b>مرة واحدة</b> عند الإنشاء؛ لو ضاعت واحدة أعد الإنشاء وتتولّد كلمات جديدة.</p>
+<p id="demoCount" style="color:var(--muted);font-size:var(--f-sm);margin-top:var(--s2)"></p>
+<div id="demoResult" tabindex="-1" hidden style="background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--r-lg);padding:var(--s5);margin-top:var(--s4)"></div>
+</section>
 </div>
 </div>
 
@@ -2245,7 +2255,7 @@ function dashTab(name,btn){
   document.querySelectorAll('.dash-panel').forEach(p=>p.classList.remove('on'));
   const p=document.getElementById('dp-'+name);if(p)p.classList.add('on');
   if(name==='chats')renderChats();
-  if(name==='users')loadUsers();
+  if(name==='users'){loadUsers();loadDemoStatus();}
   if(name==='messages')loadMessages();
   if(name==='tickets')loadTickets();
   if(name==='audit')loadAudit();
@@ -2406,6 +2416,93 @@ function renderUsers(){
     }
     body.appendChild(tr);
   });
+}
+
+/* ================= الحسابات التجريبية =================
+   بديل آمن للطريقة القديمة: لا يُزرع شيء تلقائياً ولا في متصفح أحد.
+   الإنشاء بطلب صريح من مدير النظام، والكلمات تُعرض مرة واحدة فقط. */
+async function loadDemoStatus(){
+  const el=document.getElementById('demoCount');
+  if(!el||!can('users.manage'))return;
+  const r=await api('admin.php',{action:'demo_status'});
+  if(!r.ok)return;
+  el.textContent=r.count
+    ? 'موجود الآن: '+ar(r.count)+' من '+ar(r.total)+' حسابات تجريبية.'
+    : 'ما فيه حسابات تجريبية حالياً.';
+}
+async function seedDemo(){
+  if(!confirm('إنشاء الحسابات التجريبية الأربعة؟\n\nلو كانت موجودة، بتتجدّد كلمات مرورها — أي أن الكلمات القديمة ما راح تعمل بعدها.'))return;
+  btnLoad('demoSeedBtn',true,'جارٍ الإنشاء');
+  const r=await api('admin.php',{action:'demo_seed'});
+  btnLoad('demoSeedBtn',false);
+  if(!r.ok)return toast(r.error||'تعذّر إنشاء الحسابات التجريبية.','err',9000);
+  renderDemoAccounts(r.accounts||[],r.message||'');
+  loadDemoStatus();loadUsers();
+  toast('جهّزت الحسابات التجريبية — انسخ كلمات المرور الآن.','ok',7000);
+}
+async function purgeDemo(){
+  if(!confirm('حذف كل الحسابات التجريبية وبيانات الأمثلة؟\n\nما راح تُلمس أي حسابات أو رسائل حقيقية.'))return;
+  btnLoad('demoPurgeBtn',true,'جارٍ الحذف');
+  const r=await api('admin.php',{action:'demo_purge'});
+  btnLoad('demoPurgeBtn',false);
+  if(!r.ok)return toast(r.error||'تعذّر الحذف.','err',9000);
+  const box=document.getElementById('demoResult');
+  if(box){box.hidden=true;box.innerHTML='';}
+  loadDemoStatus();loadUsers();
+  toast(r.message||'حُذفت الحسابات التجريبية.','ok');
+}
+function renderDemoAccounts(list,note){
+  const box=document.getElementById('demoResult');if(!box)return;
+  box.hidden=false;box.innerHTML='';
+  const h=document.createElement('h4');
+  h.textContent='بيانات الدخول — تُعرض هذه المرة فقط';
+  h.style.cssText='color:var(--ink);margin-bottom:var(--s3)';
+  box.appendChild(h);
+
+  const wrap=document.createElement('div');wrap.className='tbl-scroll';
+  const tb=document.createElement('table');tb.className='tbl';
+  tb.innerHTML='<thead><tr><th>الدور</th><th>الاسم</th><th>البريد</th><th>كلمة المرور</th><th></th></tr></thead>';
+  const body=document.createElement('tbody');
+  list.forEach(a=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML='<td class="d-r"></td><td class="d-n"></td>'
+      +'<td class="d-e" dir="ltr" style="text-align:right"></td>'
+      +'<td class="d-p" dir="ltr" style="text-align:right;font-family:ui-monospace,monospace"></td>'
+      +'<td></td>';
+    tr.querySelector('.d-r').textContent=a.role_name||a.role;
+    tr.querySelector('.d-n').textContent=a.name||'';
+    tr.querySelector('.d-e').textContent=a.email||'';
+    tr.querySelector('.d-p').textContent=a.password||'';
+    const b=document.createElement('button');
+    b.type='button';b.className='icon-btn-sm';b.title='نسخ البريد وكلمة المرور';
+    b.setAttribute('aria-label','نسخ بيانات '+(a.role_name||''));
+    b.innerHTML='<svg><use href="#ic-copy"/></svg>';
+    b.onclick=()=>{navigator.clipboard.writeText(a.email+'\n'+a.password);toast('نُسخت بيانات '+(a.role_name||'')+'.','ok',2000);};
+    tr.lastElementChild.appendChild(b);
+    body.appendChild(tr);
+  });
+  tb.appendChild(body);wrap.appendChild(tb);box.appendChild(wrap);
+
+  const all=document.createElement('button');
+  all.type='button';all.className='btn btn-md btn-primary';all.style.marginTop='var(--s4)';
+  all.textContent='انسخ الكل';
+  all.onclick=()=>{
+    const txt=list.map(a=>(a.role_name||a.role)+' — '+a.name+'\n'+a.email+'\n'+a.password).join('\n\n');
+    navigator.clipboard.writeText(txt);toast('نُسخت بيانات الحسابات الأربعة.','ok',2500);
+  };
+  const hide=document.createElement('button');
+  hide.type='button';hide.className='btn btn-md btn-surface';
+  hide.style.cssText='margin-top:var(--s4);margin-inline-start:8px';
+  hide.textContent='إخفاء';
+  hide.onclick=()=>{box.hidden=true;box.innerHTML='';};
+  box.append(all,hide);
+
+  if(note){
+    const n=document.createElement('p');n.textContent=note;
+    n.style.cssText='color:var(--muted);font-size:var(--f-xs);margin-top:var(--s3)';
+    box.appendChild(n);
+  }
+  box.focus();
 }
 
 /* ---------- صندوق يعرض السر الناتج (رابط أو كلمة مرور مؤقتة) ---------- */
