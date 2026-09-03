@@ -1867,9 +1867,8 @@ function toast(msg,type='info',ms=4200){
   setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),320);},ms);
 }
 
-/* ---------- نداء الخادم مع تشغيل محلي احتياطي ---------- */
+/* ---------- نداء الخادم ---------- */
 async function api(path,body){
-  if(USER&&USER.demo&&!(path==='chat.php'||(path==='auth.php'&&body&&(body.action==='login'||body.action==='register')))){return {ok:false,offline:true};}
   try{
     const r=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(body||{})});
     const j=await r.json().catch(()=>null);
@@ -1944,15 +1943,7 @@ async function doRegister(){
   const res=await api('auth.php',{action:'register',invite:window._inviteToken||'',first,last,first_en:firstEn,last_en:lastEn,name,name_en:nameEn,email,phone,dob,password:pass,pref});
   _busy=false;btnLoad('rgBtn',false);
   if(res.ok&&res.user){setUser(res.user);afterAuth('تم إنشاء حسابك. أهلاً بك في وصال');return;}
-  if(res.offline){
-    const users=LS.get('users',[]);
-    if(users.some(u=>u.email===email))return showMsg('regErr','يوجد حساب مرتبط بنفس البريد الإلكتروني — سجّل دخولك أو استخدم بريداً آخر.');
-    if(users.some(u=>u.phone===phone))return showMsg('regErr','يوجد حساب مرتبط بنفس رقم الجوال — سجّل دخولك أو استخدم رقماً آخر.');
-    const u={id:Date.now(),name,name_en:nameEn,email,phone,dob,pref,role:'user',ph:await makePass(pass),
-      tokens:USER_TOKENS,last:Date.now(),created:Date.now(),qs:0};
-    users.push(u);LS.set('users',users);
-    setUser(strip(u));afterAuth('تم إنشاء حسابك. أهلاً بك في وصال');return;
-  }
+  if(res.offline)return showMsg('regErr','ما قدرنا نوصل للخادم. تأكد من اتصالك بالإنترنت وحاول مرة أخرى.');
   showMsg('regErr',res.error||'تعذّر إنشاء الحساب. حاول مرة أخرى.');
 }
 
@@ -1966,14 +1957,9 @@ async function doLogin(){
   const res=await api('auth.php',{action:'login',email,password:pass});
   _busy=false;btnLoad('liBtn',false);
   if(res.ok){setUser(res.user);logAudit('login',email);afterAuth('أهلاً بعودتك، '+res.user.name);return;}
-  const users=LS.get('users',[]);
-  const u=users.find(x=>x.email===email);
-  if(u&&await verifyPass(u,pass)){setUser(strip(u));logAudit('login',email);afterAuth('أهلاً بعودتك، '+u.name);return;}
-  showMsg('loginErr',(res.error&&!res.offline)?res.error:'البريد أو كلمة المرور غير صحيحة.');
+  if(res.offline)return showMsg('loginErr','ما قدرنا نوصل للخادم. تأكد من اتصالك بالإنترنت وحاول مرة أخرى.');
+  showMsg('loginErr',res.error||'البريد أو كلمة المرور غير صحيحة.');
 }
-
-function hash(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))>>>0;return 'w'+h.toString(36);}
-function strip(u){const{pass,ph,...r}=u;return r;}
 
 function afterAuth(msg){
   toast(msg,'ok');
@@ -2009,11 +1995,12 @@ function syncAuthUI(){
   applyRoleUI();
 }
 
+/* الخادم وحده يقرّر من هو المستخدم وما دوره. الجلسة المخزّنة في المتصفح
+   يمكن تزويرها لكشف واجهة المشرف، فلا تُستخدم بديلاً عن رد الخادم. */
 async function restoreSession(){
   const res=await api('auth.php',{action:'me'});
   if(res.ok&&res.user){setUser(res.user);return;}
-  const s=LS.get('session',null);
-  if(s){USER=s;document.body.setAttribute('data-role',s.role||'user');}
+  USER=null;LS.del('session');document.body.removeAttribute('data-role');
   syncAuthUI();
 }
 
@@ -2291,7 +2278,7 @@ async function loadMyTickets(){
 let _users=[];
 async function loadUsers(){
   const res=await api('admin.php',{action:'users'});
-  _users=(res.ok&&res.users)?res.users:LS.get('users',[]).map(strip);
+  _users=(res.ok&&res.users)?res.users:[];
   renderUsers();
   loadInvites();
 }
@@ -2331,13 +2318,11 @@ function renderUsers(){
 async function setRole(id,role,sel,u){
   if(!can('users.manage')){sel.value=u.role||'user';return toast('ما عندك صلاحية تعديل الأدوار.','err');}
   const res=await api('admin.php',{action:'set_role',user_id:id,role});
-  if(res.ok){u.role=res.role||role;}
-  else if(res.offline){
-    const users=LS.get('users',[]);const i=users.findIndex(x=>x.id===id);
-    if(i>-1){users[i].role=role;LS.set('users',users);}
-    u.role=role;
+  if(!res.ok){
+    sel.value=(u.role==='mod'||u.role==='reviewer')?u.role:'user';
+    return toast(res.offline?'ما قدرنا نوصل للخادم — الصلاحية ما تغيّرت.':(res.error||'تعذّر تعديل الصلاحية.'),'err');
   }
-  else{sel.value=(u.role==='mod'||u.role==='reviewer')?u.role:'user';return toast(res.error||'تعذّر تعديل الصلاحية.','err');}
+  u.role=res.role||role;
   logAudit('role',(u.email||'')+' → '+roleLabel(role));
   toast('صارت صلاحيته: '+roleLabel(u.role)+'.','ok');
 }
@@ -2632,33 +2617,11 @@ function loadAudit(){
   });
 }
 
-/* ================= تشفير كلمات المرور (تجزئة + مُملِّح) ================= */
-async function sha256(t){const d=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(d)].map(b=>b.toString(16).padStart(2,'0')).join('');}
-function randSalt(){const a=new Uint8Array(12);crypto.getRandomValues(a);return [...a].map(b=>b.toString(16).padStart(2,'0')).join('');}
-async function makePass(p){const s=randSalt();return {s,h:await sha256(s+p)};}
-async function verifyPass(u,p){
-  if(u.ph&&u.ph.s){return u.ph.h===await sha256(u.ph.s+p);}
-  if(u.pass){ // ترقية حسابات قديمة
-    if(u.pass!==hash(p))return false;
-    u.ph=await makePass(p);delete u.pass;
-    const users=LS.get('users',[]);const i=users.findIndex(x=>x.id===u.id);
-    if(i>-1){users[i]=u;LS.set('users',users);}
-    return true;
-  }
-  return false;
-}
-
-/* ================= حسابات تجريبية للعرض ================= */
-async function seedDemoUsers(){
-  const users=LS.get('users',[]);
-  if(users.some(u=>u.email==='admin@wesal-hub.com'))return;
-  const mk=async(name,name_en,email,role)=>({id:Date.now()+Math.floor(Math.random()*9999),name,name_en,email,phone:'',dob:'',pref:'simple',role,ph:await makePass('Wesal@2026'),tokens:USER_TOKENS,last:Date.now(),created:Date.now(),qs:0,demo:1});
-  users.push(await mk('مدير وصال','Wesal Admin','admin@wesal-hub.com','admin'));
-  users.push(await mk('مشرف وصال','Wesal Mod','mod@wesal-hub.com','mod'));
-  users.push(await mk('لمياء الشهراني','Lamia','reviewer@wesal-hub.com','reviewer'));
-  users.push(await mk('خالد التجريبي','Khaled','user@wesal-hub.com','user'));
-  LS.set('users',users);
-}
+/* ================= المصادقة =================
+   لا يوجد هنا تجزئة كلمات مرور ولا حسابات محلية ولا حسابات تجريبية.
+   كانت الإصدارات السابقة تزرع حساب مشرف بكلمة مرور معروفة في متصفح كل زائر
+   وتقبل الدخول به محلياً عند تعذّر الوصول للخادم — أي باب خلفي لواجهة المشرف.
+   المصادقة كلها الآن في api/auth.php ولا مسار بديل لها في المتصفح. */
 
 /* ================= البلاغ عن خطأ في إجابة ================= */
 function reportMsg(btn){
@@ -2746,7 +2709,9 @@ initAnims();
 setTimeout(()=>{document.querySelectorAll('.hero .anim').forEach(el=>el.classList.add('in'));},100);
 setC(LS.get('contrast',''));
 const l=LS.get('lang','ar');if(l==='en')setLang('en');
-await seedDemoUsers();
+/* تنظيف لمرة واحدة: إصدارات سابقة كانت تخزّن حسابات تجريبية بكلمة مرور معروفة
+   في متصفح الزائر. نمسحها هنا حتى لا تبقى على أجهزة من زار الموقع قبل الإصلاح. */
+LS.del('users');
 await restoreSession();
 applyRoleUI();
 paintTrial();

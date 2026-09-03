@@ -168,6 +168,19 @@ try {
 
             $dir = dirname(__DIR__) . '/uploads/avatars';
             if (!is_dir($dir)) @mkdir($dir, 0755, true);
+
+            // خط دفاع ثانٍ داخل مجلد المرفوعات نفسه، إضافة إلى قاعدة الجذر في .htaccess
+            $guard = dirname(__DIR__) . '/uploads/.htaccess';
+            if (!file_exists($guard)) {
+                @file_put_contents($guard,
+                    "<IfModule mod_mime.c>\n"
+                  . "  RemoveHandler .php .phtml .phar .php3 .php4 .php5 .php7 .php8\n"
+                  . "  RemoveType    .php .phtml .phar\n"
+                  . "</IfModule>\n"
+                  . "<FilesMatch \"\\.(php|phtml|phar|php[0-9]|pl|py|cgi|sh)$\">\n"
+                  . "  Require all denied\n"
+                  . "</FilesMatch>\n");
+            }
             $fname = 'u' . (int)$u['id'] . '_' . bin2hex(random_bytes(6)) . '.' . $mimes[$info['mime']];
             if (@file_put_contents($dir . '/' . $fname, $bin) === false)
                 fail('تعذّر حفظ الصورة — حاول مرة أخرى.', 500);
