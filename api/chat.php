@@ -53,8 +53,9 @@ function smallTalkReply(string $raw): ?string {
 $st = smallTalkReply($message);
 if ($st !== null) {
     try {
-        db()->prepare('INSERT INTO chat_logs (user_id, question, answer, mode, cost, created_at) VALUES (?,?,?,?,0,NOW())')
-            ->execute([currentUser()['id'] ?? null, $message, $st, 'small']);
+        // بلا هوية: التحيات لا تحمل معلومة شخصية ولا داعي لربطها بحساب
+        db()->prepare('INSERT INTO chat_logs (user_id, question, answer, mode, cost, created_at) VALUES (NULL,?,?,?,0,NOW())')
+            ->execute([$message, $st, 'small']);
     } catch (Throwable $e) {}
     out(['ok' => true, 'reply' => $st, 'cost' => 0, 'small' => true]);
 }
@@ -216,11 +217,18 @@ if ($reply) {
         'وصال', $reply);
 }
 
-/* ---------- تسجيل ---------- */
+/* ---------- تسجيل ----------
+   يحترم موافقة المستخدم في إعدادات الخصوصية:
+     بموافقة   → يُحفظ نص السؤال والجواب، وبلا هوية (user_id فارغ دائماً)
+     بلا موافقة → يبقى الصف عدّاداً للإحصاءات بلا أي محتوى
+   الزائر بلا حساب مجهول أصلاً فلا هوية تُحفظ له في الحالتين. */
+$consent = $u ? ((int)($u['improve'] ?? 0) === 1) : true;
 try {
-    db()->prepare('INSERT INTO chat_logs (user_id, question, answer, mode, cost, created_at) VALUES (?,?,?,?,?,NOW())')
-        ->execute([$u['id'] ?? null, $message, mb_substr((string)$reply, 0, 4000), $mode, $cost]);
-} catch (Throwable $e) { /* التسجيل اختياري */ }
+    db()->prepare('INSERT INTO chat_logs (user_id, question, answer, mode, cost, created_at) VALUES (NULL,?,?,?,?,NOW())')
+        ->execute([$consent ? $message : '',
+                   $consent ? mb_substr((string)$reply, 0, 4000) : null,
+                   $mode, $cost]);
+} catch (Throwable $e) { /* التسجيل لا يوقف الرد */ }
 
 if (!$reply) out(['ok' => false, 'fallback' => true]);   // الواجهة ترد من قاعدة المعرفة المحلية
 

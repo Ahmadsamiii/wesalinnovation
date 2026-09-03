@@ -94,13 +94,13 @@ switch ($in['action'] ?? 'get') {
 
     /* عام — تناديه الصفحة عند كل تحميل */
     case 'get': {
-        out(['ok' => true, 'content' => contentMap()]);
+        out(['ok' => true, 'content' => (object)contentMap()]);
     }
 
     /* سجل الحقول لبناء شاشة التحرير — لمدير النظام فقط */
     case 'schema': {
         requireAdmin();
-        out(['ok' => true, 'groups' => contentFields(), 'content' => contentMap()]);
+        out(['ok' => true, 'groups' => contentFields(), 'content' => (object)contentMap()]);
     }
 
     case 'save': {
@@ -136,7 +136,7 @@ switch ($in['action'] ?? 'get') {
         }
 
         audit($admin, 'content', implode('، ', array_keys($clean)), count($clean) . ' حقلاً');
-        out(['ok' => true, 'content' => contentMap(), 'saved' => count($clean)]);
+        out(['ok' => true, 'content' => (object)contentMap(), 'saved' => count($clean)]);
     }
 
     /* إرجاع مجموعة كاملة لنصوصها الأصلية */
@@ -149,7 +149,7 @@ switch ($in['action'] ?? 'get') {
         $ph = implode(',', array_fill(0, count($keys), '?'));
         db()->prepare("DELETE FROM site_content WHERE ckey IN ($ph)")->execute($keys);
         audit($admin, 'content_reset', $g, count($keys) . ' حقلاً');
-        out(['ok' => true, 'content' => contentMap()]);
+        out(['ok' => true, 'content' => (object)contentMap()]);
     }
 
     default: fail('طلب غير معروف.');

@@ -96,11 +96,137 @@ try {
             $u = $s->fetch();
             if (!$u || !password_verify($pass, $u['pass_hash']))
                 fail('البريد أو كلمة المرور غير صحيحة.', 401);
+            if (($u['status'] ?? 'active') === 'suspended')
+                fail('حسابك موقوف حالياً. راسلنا من صفحة «تواصل معنا» ونراجع الموضوع معك.', 403);
 
             $_SESSION['uid'] = (int) $u['id'];
             session_regenerate_id(true);
             db()->prepare('UPDATE users SET last_login=NOW() WHERE id=?')->execute([$u['id']]);
             out(['ok' => true, 'user' => publicUser(refreshTokens($u))]);
+        }
+
+        /* ---------- إعادة تعيين كلمة المرور ---------- */
+
+        case 'forgot': {
+            rateLimit('forgot', 5);
+            $email = mb_strtolower(clean($in['email'] ?? '', 120));
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) fail('اكتب بريداً إلكترونياً صحيحاً.');
+            $s = db()->prepare('SELECT id,name,status FROM users WHERE email=? LIMIT 1');
+            $s->execute([$email]);
+            $u = $s->fetch();
+            // الرد نفسه سواء وُجد الحساب أو لا، حتى لا يُستخدم النموذج لمعرفة من هو مسجّل
+            if ($u && $u['status'] !== 'suspended') {
+                $token = issueResetToken((int)$u['id']);
+                $link  = SITE_URL . '/?reset=' . $token;
+                sendMail($email, 'إعادة تعيين كلمة المرور في وصال',
+                         resetEmailHtml($u['name'], $link, false, 2));
+                audit(null, 'forgot', $email, 'طلب المستخدم إعادة تعيين');
+            }
+            out(['ok' => true, 'message' => 'إذا كان البريد مسجّلاً عندنا فبيوصلك رابط إعادة التعيين خلال دقائق. راجع مجلد الرسائل غير المرغوبة لو ما وصل.']);
+        }
+
+        case 'reset_info': {
+            $tok = preg_replace('/[^a-f0-9]/', '', (string)($in['token'] ?? ''));
+            if (strlen($tok) < 32) fail('رابط إعادة التعيين غير صالح.');
+            $s = db()->prepare('SELECT u.email, u.name FROM password_resets r JOIN users u ON u.id=r.user_id
+                                WHERE r.token_hash=? AND r.used_at IS NULL AND r.expires_at > NOW() LIMIT 1');
+            $s->execute([hash('sha256', $tok)]);
+            $r = $s->fetch();
+            if (!$r) fail('انتهت صلاحية الرابط أو استُخدم من قبل. اطلب رابطاً جديداً.');
+            $p = explode('@', $r['email']);
+            $mask = mb_substr($p[0], 0, 2) . str_repeat('•', max(2, mb_strlen($p[0]) - 2)) . '@' . ($p[1] ?? '');
+            out(['ok' => true, 'name' => $r['name'], 'email_masked' => $mask]);
+        }
+
+        case 'reset': {
+            rateLimit('reset', 10);
+            $tok  = preg_replace('/[^a-f0-9]/', '', (string)($in['token'] ?? ''));
+            $pass = (string)($in['password'] ?? '');
+            if (strlen($tok) < 32)            fail('رابط إعادة التعيين غير صالح.');
+            if ($e = passwordError($pass))    fail($e);
+
+            $s = db()->prepare('SELECT user_id FROM password_resets
+                                WHERE token_hash=? AND used_at IS NULL AND expires_at > NOW() LIMIT 1');
+            $s->execute([hash('sha256', $tok)]);
+            $r = $s->fetch();
+            if (!$r) fail('انتهت صلاحية الرابط أو استُخدم من قبل. اطلب رابطاً جديداً.');
+
+            db()->beginTransaction();
+            try {
+                db()->prepare('UPDATE users SET pass_hash=?, must_change_pw=0 WHERE id=?')
+                    ->execute([password_hash($pass, PASSWORD_DEFAULT), $r['user_id']]);
+                db()->prepare('UPDATE password_resets SET used_at=NOW() WHERE user_id=? AND used_at IS NULL')
+                    ->execute([$r['user_id']]);
+                db()->commit();
+            } catch (Throwable $e) {
+                db()->rollBack();
+                fail(APP_DEBUG ? $e->getMessage() : 'تعذّر تعيين كلمة المرور. حاول مرة أخرى.', 500);
+            }
+            audit(null, 'reset_done', 'user#' . $r['user_id'], 'عبر رابط إعادة التعيين');
+            $_SESSION = [];   // أنهِ أي جلسة قائمة — يدخل بكلمة المرور الجديدة
+            out(['ok' => true, 'message' => 'تم تعيين كلمة المرور. سجّل دخولك الآن.']);
+        }
+
+        case 'change_password': {
+            $u = currentUser();
+            if (!$u) fail('سجّل دخولك أولاً.', 401);
+            rateLimit('chpw', 10);
+            $cur = (string)($in['current'] ?? '');
+            $new = (string)($in['password'] ?? '');
+            $s = db()->prepare('SELECT pass_hash FROM users WHERE id=? LIMIT 1');
+            $s->execute([$u['id']]);
+            $row = $s->fetch();
+            if (!$row || !password_verify($cur, $row['pass_hash'])) fail('كلمة المرور الحالية غير صحيحة.');
+            if ($e = passwordError($new))  fail($e);
+            if ($cur === $new)             fail('اختر كلمة مرور مختلفة عن الحالية.');
+            db()->prepare('UPDATE users SET pass_hash=?, must_change_pw=0 WHERE id=?')
+                ->execute([password_hash($new, PASSWORD_DEFAULT), $u['id']]);
+            audit($u, 'change_pw', $u['email'], '');
+            out(['ok' => true, 'user' => publicUser(currentUser())]);
+        }
+
+        /* ---------- الخصوصية ---------- */
+
+        case 'set_improve': {
+            $u = currentUser();
+            if (!$u) fail('سجّل دخولك أولاً.', 401);
+            $v = !empty($in['value']) ? 1 : 0;
+            db()->prepare('UPDATE users SET improve=? WHERE id=?')->execute([$v, $u['id']]);
+            out(['ok' => true, 'improve' => (bool)$v]);
+        }
+
+        case 'delete_account': {
+            $u = currentUser();
+            if (!$u) fail('سجّل دخولك أولاً.', 401);
+            $pass = (string)($in['password'] ?? '');
+            $s = db()->prepare('SELECT pass_hash FROM users WHERE id=? LIMIT 1');
+            $s->execute([$u['id']]);
+            $row = $s->fetch();
+            if (!$row || !password_verify($pass, $row['pass_hash']))
+                fail('اكتب كلمة مرورك الحالية لتأكيد الحذف.', 401);
+            if ($u['role'] === 'admin') {
+                $n = (int) db()->query("SELECT COUNT(*) c FROM users WHERE role='admin'")->fetch()['c'];
+                if ($n <= 1) fail('ما نقدر نحذف آخر حساب مدير نظام في المنصة. عيّن مديراً آخر أولاً.');
+            }
+            if (!empty($u['avatar']) && strpos($u['avatar'], 'uploads/avatars/') === 0)
+                @unlink(dirname(__DIR__) . '/uploads/avatars/' . basename($u['avatar']));
+
+            db()->beginTransaction();
+            try {
+                // سجل المحادثات يُفصل عن الهوية بدل حذفه، فتبقى إحصاءات المنصة سليمة
+                db()->prepare('UPDATE chat_logs SET user_id=NULL WHERE user_id=?')->execute([$u['id']]);
+                db()->prepare('DELETE FROM support_tickets WHERE user_id=?')->execute([$u['id']]);
+                db()->prepare('DELETE FROM password_resets WHERE user_id=?')->execute([$u['id']]);
+                db()->prepare('DELETE FROM users WHERE id=?')->execute([$u['id']]);
+                db()->commit();
+            } catch (Throwable $e) {
+                db()->rollBack();
+                fail(APP_DEBUG ? $e->getMessage() : 'تعذّر حذف الحساب. حاول مرة أخرى.', 500);
+            }
+            audit(null, 'delete_account', $u['email'], 'حذف ذاتي');
+            $_SESSION = [];
+            session_destroy();
+            out(['ok' => true, 'message' => 'حُذف حسابك وبياناتك الشخصية نهائياً من أنظمتنا.']);
         }
 
         case 'me': {

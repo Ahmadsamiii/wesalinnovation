@@ -221,11 +221,18 @@ function contentMap(): array {
     return $out;
 }
 
-/** مشرف عام أو مشرف */
+/** أي عضو في الفريق: مدير نظام أو مشرف أو مراجع محتوى */
 function requireStaff(): array {
     $u = currentUser();
-    if (!$u || !in_array($u['role'], ['admin','mod'], true)) fail('غير مصرّح لك بالوصول لهذه البيانات.', 403);
+    if (!$u || !in_array($u['role'], ['admin','mod','reviewer'], true))
+        fail('غير مصرّح لك بالوصول لهذه البيانات.', 403);
     return $u;
+}
+
+/** اسم الدور بالعربية — مصدر واحد تستخدمه الرسائل والسجل والبريد */
+function roleName(string $r): string {
+    return ['admin' => 'مدير النظام', 'mod' => 'مشرف',
+            'reviewer' => 'مراجع محتوى', 'user' => 'مستفيد'][$r] ?? 'مستفيد';
 }
 
 /** إرسال بريد HTML من عنوان المنصة */
@@ -237,8 +244,9 @@ function sendMail(string $to, string $subject, string $html): bool {
 
 /** قالب بريد الدعوة */
 function inviteEmailHtml(string $inviter, string $roleTarget, string $link): string {
-    $roleTxt = $roleTarget === 'mod' ? 'للانضمام كمشرف في منصة وصال' : 'لتجربة منصة وصال';
-    $btnTxt  = $roleTarget === 'mod' ? 'قبول الدعوة وإنشاء حسابي' : 'تجربة وصال الآن';
+    $isTeam  = $roleTarget !== 'user';
+    $roleTxt = $isTeam ? 'للانضمام لفريق وصال بصفة ' . roleName($roleTarget) : 'لتجربة منصة وصال';
+    $btnTxt  = $isTeam ? 'قبول الدعوة وإنشاء حسابي' : 'تجربة وصال الآن';
     $i = htmlspecialchars($inviter, ENT_QUOTES, 'UTF-8');
     return '<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;background:#f4f2fb;padding:32px 16px">'
         . '<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #e4ddf0">'
