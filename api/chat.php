@@ -53,19 +53,36 @@ function smallTalkReply(string $raw): ?string {
 $st = smallTalkReply($message);
 if ($st !== null) {
     try {
-        db()->prepare('INSERT INTO chat_logs (user_id, question, answer, mode, cost, created_at) VALUES (?,?,?,?,0,NOW())')
-            ->execute([currentUser()['id'] ?? null, $message, $st, 'small']);
+        // بلا هوية: التحيات لا تحمل معلومة شخصية ولا داعي لربطها بحساب
+        db()->prepare('INSERT INTO chat_logs (user_id, question, answer, mode, cost, created_at) VALUES (NULL,?,?,?,0,NOW())')
+            ->execute([$message, $st, 'small']);
     } catch (Throwable $e) {}
     out(['ok' => true, 'reply' => $st, 'cost' => 0, 'small' => true]);
 }
 
 /* ---------- الرصيد ---------- */
-$u = currentUser();
+$u  = currentUser();
+$ip = clientIp();
 $cost = 1;
 if (mb_strlen($message) > 180) $cost++;
 if (preg_match('/فصّل|بالتفصيل|قارن|مصادر|دراسة|بحث/u', $message)) $cost++;
 $cost = min($cost, 3);
 
+/* ---------- قاطع الدائرة: سقوف يومية تحمي فاتورة المزوّد ----------
+   قبل خصم أي رصيد، حتى لا يُخصم من المستخدم مقابل طلب سنرفضه.
+   ولا تمر من هنا الردود الفورية للتحيات لأنها خرجت أعلاه ولا تصل النموذج. */
+if (CHAT_DAILY_IP_LIMIT > 0 &&
+    hitCounter('chat_day', $ip, windowDay(), $cost) > CHAT_DAILY_IP_LIMIT) {
+    out(['ok' => false, 'limit' => true,
+         'error' => 'تجاوزت الحد اليومي للأسئلة من هذا الاتصال. جرّب مرة أخرى بكرة.'], 429);
+}
+if (CHAT_DAILY_TOTAL_LIMIT > 0 &&
+    hitCounter('chat_day', '*', windowDay(), $cost) > CHAT_DAILY_TOTAL_LIMIT) {
+    out(['ok' => false, 'busy' => true,
+         'error' => 'وصلت المنصة حدها اليومي من الأسئلة. جرّب بعد قليل — ونعتذر عن الانتظار.'], 503);
+}
+
+$guestUsed = 0;
 if ($u) {
     $u = refreshTokens($u);
     if ((int)$u['tokens'] < $cost) {
@@ -75,8 +92,9 @@ if ($u) {
     }
     db()->prepare('UPDATE users SET tokens=tokens-?, questions=questions+1 WHERE id=?')->execute([$cost, $u['id']]);
 } else {
-    $_SESSION['guest_used'] = ($_SESSION['guest_used'] ?? 0) + $cost;
-    if ($_SESSION['guest_used'] > GUEST_LIMIT) {
+    // حصة الزائر محسوبة بعنوان IP ويوم — لا بالجلسة، فحذف الكوكي لا يمنح حصة جديدة
+    $guestUsed = hitCounter('guest', $ip, windowDay(), $cost);
+    if ($guestUsed > GUEST_LIMIT) {
         out(['ok' => false, 'needAuth' => true,
              'error' => 'خلصت أسئلتك التجريبية. أنشئ حساباً مجانياً وواصل — الرصيد يتجدّد كل ٦ ساعات.']);
     }
@@ -199,13 +217,20 @@ if ($reply) {
         'وصال', $reply);
 }
 
-/* ---------- تسجيل ---------- */
+/* ---------- تسجيل ----------
+   يحترم موافقة المستخدم في إعدادات الخصوصية:
+     بموافقة   → يُحفظ نص السؤال والجواب، وبلا هوية (user_id فارغ دائماً)
+     بلا موافقة → يبقى الصف عدّاداً للإحصاءات بلا أي محتوى
+   الزائر بلا حساب مجهول أصلاً فلا هوية تُحفظ له في الحالتين. */
+$consent = $u ? ((int)($u['improve'] ?? 0) === 1) : true;
 try {
-    db()->prepare('INSERT INTO chat_logs (user_id, question, answer, mode, cost, created_at) VALUES (?,?,?,?,?,NOW())')
-        ->execute([$u['id'] ?? null, $message, mb_substr((string)$reply, 0, 4000), $mode, $cost]);
-} catch (Throwable $e) { /* التسجيل اختياري */ }
+    db()->prepare('INSERT INTO chat_logs (user_id, question, answer, mode, cost, created_at) VALUES (NULL,?,?,?,?,NOW())')
+        ->execute([$consent ? $message : '',
+                   $consent ? mb_substr((string)$reply, 0, 4000) : null,
+                   $mode, $cost]);
+} catch (Throwable $e) { /* التسجيل لا يوقف الرد */ }
 
 if (!$reply) out(['ok' => false, 'fallback' => true]);   // الواجهة ترد من قاعدة المعرفة المحلية
 
-$left = $u ? max(0, (int)$u['tokens'] - $cost) : max(0, GUEST_LIMIT - (int)$_SESSION['guest_used']);
+$left = $u ? max(0, (int)$u['tokens'] - $cost) : max(0, GUEST_LIMIT - $guestUsed);
 out(['ok' => true, 'reply' => trim($reply), 'tokens' => $left, 'cost' => $cost]);
