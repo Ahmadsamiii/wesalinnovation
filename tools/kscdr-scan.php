@@ -4,6 +4,7 @@
 
    الاستخدام:
      php tools/kscdr-scan.php scan  [رابط البداية]   مسح فقط: يطبع بنية الصفحة وقائمة الروابط دون تنزيل
+     php tools/kscdr-scan.php probe                 كشف مصدر بيانات مجموعة ScienceOpen التي تعرضها صفحة المكتبة
      php tools/kscdr-scan.php fetch [رابط البداية]   جلب: يتتبع الصفحات وينزّل ملفات PDF ويكتب فهرس JSON
    الملفات تُحفظ في STORAGE_DIR/kscdr (خارج المجلد العام إن ضُبط في config.php)، ويُنشأ فيه
    ملف .htaccess يمنع الوصول المباشر احتياطاً. */
@@ -88,6 +89,43 @@ function parsePage(string $html, string $base): array {
     return compact('title', 'h1', 'links', 'rows', 'paragraphs', 'words', 'files', 'nodes', 'pages', 'heads', 'contentLinks', 'navLinks', 'forms', 'iframes', 'mainText', 'ajaxViews', 'dataSettings');
 }
 function uniqBy(array $list, string $k): array { $seen = []; $out = []; foreach ($list as $it) { if (isset($seen[$it[$k]])) continue; $seen[$it[$k]] = 1; $out[] = $it; } return $out; }
+
+/* probe: صفحة المكتبة تعرض مجموعة ScienceOpen عبر سكربت خارجي. هذا الوضع يكشف عناوين
+   البيانات التي يستخدمها السكربت ويجرّب واجهات ScienceOpen المعروفة (OAI-PMH وصفحة المجموعة). */
+if ($cmd === 'probe') {
+    $html = is_file($root . '/last-scan.html') ? file_get_contents($root . '/last-scan.html') : (get($start)['body'] ?? '');
+    preg_match_all('~<script[^>]+src=["\']([^"\']*scienceopen[^"\']*)["\']~i', $html, $m);
+    $scripts = array_unique(array_map(fn($u) => absUrl($u, $start), $m[1]));
+    preg_match_all('~route:\s*[\'"]([^\'"]+)[\'"]~', $html, $rm);
+    $route = $rm[1][0] ?? 'collection/74cf4e38-b68c-47aa-9530-217129b98ab9';
+    echo "== سكربتات ScienceOpen في الصفحة: " . (count($scripts) ? implode(' | ', $scripts) : 'لا يوجد') . "\nالمسار: $route\n\n";
+    foreach ($scripts as $sc) {
+        $rr = get($sc);
+        echo "-- سكربت $sc → HTTP {$rr['code']}, " . strlen($rr['body']) . " بايت\n";
+        preg_match_all('~["\']((?:https?:)?//[^"\']*scienceopen[^"\']*|/[a-zA-Z0-9_./-]*(?:api|embed|search|collection)[a-zA-Z0-9_./?=&-]*)["\']~', $rr['body'], $um);
+        foreach (array_slice(array_unique($um[1]), 0, 25) as $u) echo "   عنوان داخل السكربت: $u\n";
+    }
+    $id = preg_replace('~^collection/~', '', $route);
+    $cands = [
+        'https://www.scienceopen.com/oai-pmh?verb=Identify',
+        'https://www.scienceopen.com/oai?verb=Identify',
+        "https://www.scienceopen.com/collection/$id",
+        "https://www.scienceopen.com/embed/collection/$id?count=10",
+        "https://www.scienceopen.com/api/embed/collection/$id?count=10",
+        "https://www.scienceopen.com/api/collection/$id",
+        "https://www.scienceopen.com/search-api/collection/$id",
+    ];
+    foreach ($cands as $u) {
+        $rr = get($u);
+        $snip = trim(preg_replace('/\s+/u', ' ', strip_tags($rr['body'])));
+        echo "-- $u\n   HTTP {$rr['code']} | {$rr['type']} | " . strlen($rr['body']) . " بايت | " . mb_substr($snip, 0, 220) . "\n";
+        if (preg_match('~(\d[\d,]*)\s*(documents?|publications?|articles?|records?)~i', $rr['body'], $cm)) echo "   عدّ محتمل: {$cm[0]}\n";
+        if (preg_match_all('~https://www\.scienceopen\.com/document\?vid=[a-f0-9-]+~', $rr['body'], $dm)) echo "   روابط وثائق: " . count(array_unique($dm[0])) . " (مثال: " . ($dm[0][0] ?? '') . ")\n";
+        file_put_contents($root . '/probe-' . md5($u) . '.txt', $rr['body']);
+    }
+    echo "\nأرسل لي هذا الناتج كاملاً.\n";
+    exit(0);
+}
 
 $r = get($start);
 if (!$r['ok']) { fwrite(STDERR, "تعذّر فتح $start — HTTP {$r['code']} {$r['err']}\n"); exit(1); }
