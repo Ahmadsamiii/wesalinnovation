@@ -1,3 +1,4 @@
-uploads/
-api/config.php
 .env
+api/config.php
+storage/
+uploads/

@@ -17,7 +17,7 @@ define('DB_PASS', '');
 
 /* ---------- الموقع ---------- */
 define('SITE_NAME', 'وصال');
-define('SITE_URL',  'https://wesal-hub.com');   // بلا شرطة مائلة في النهاية — تُستخدم في روابط الدعوات
+define('SITE_URL',  'https://wesalinnovation.sa');   // بلا شرطة مائلة في النهاية — تُستخدم في روابط الدعوات
 
 /* ---------- وضع التطوير ----------
  * true يعرض رسائل الأخطاء الفعلية في ردود JSON. اتركه false في الإنتاج دائماً. */
@@ -47,8 +47,8 @@ define('AI_PROVIDER', 'gemini');       // 'gemini' أو 'openai' — والآخ�
 
 // Gemini — المفتاح من https://aistudio.google.com/apikey (يبدأ عادة بـ AIza)
 define('GEMINI_KEY',   '');
-define('GEMINI_MODEL', 'gemini-2.0-flash');
-define('GEMINI_FALLBACKS', 'gemini-2.0-flash-lite');   // نماذج بديلة مفصولة بفواصل
+define('GEMINI_MODEL', 'gemini-3.5-flash-lite');    // Flash-Lite: أسرع وحصته المجانية أكبر بكثير من Flash (التي تقف عند 20 طلباً يومياً)
+define('GEMINI_FALLBACKS', 'gemini-3.1-flash-lite,gemini-flash-lite-latest,gemini-3.6-flash');   // بدائل مرتبة، لكل نموذج حصة مستقلة
 
 // OpenAI — اختياري، يُستخدم عند فشل Gemini
 define('OPENAI_KEY',   '');
@@ -57,6 +57,10 @@ define('OPENAI_MODEL', 'gpt-4o-mini');
 /* ---------- البريد ----------
  * يعتمد على دالة mail() في الاستضافة. اجعل MAIL_FROM على نطاق الموقع نفسه
  * وإلا رفضت أغلب الخوادم الرسائل أو صنّفتها مزعجة. */
-define('MAIL_FROM',      'no-reply@wesal-hub.com');
+define('MAIL_FROM',      'no-reply@wesalinnovation.sa');
 define('MAIL_FROM_NAME', 'وصال');
-define('CONTACT_TO',     'info@wesal-hub.com');        // وجهة رسائل «تواصل معنا»
+define('CONTACT_TO',     'info@wesalinnovation.sa');        // وجهة رسائل «تواصل معنا»
+
+/* مجلد التخزين الخاص (ملفات قاعدة المعرفة والمكتبات المجلوبة). يُفضَّل خارج المجلد العام،
+   مثل: /home/USER/domains/wesalinnovation.sa/storage — وإن تُرك يُستخدم storage/ داخل المشروع محمياً بـ .htaccess */
+// define('STORAGE_DIR', '/home/USER/domains/wesalinnovation.sa/storage');

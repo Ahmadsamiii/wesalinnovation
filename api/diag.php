@@ -1,5 +1,5 @@
 <?php
-/* أداة تشخيص للمشرف فقط — افتح wesal-hub.com/api/diag.php وأنت مسجّل دخول بحساب المشرف */
+/* أداة تشخيص للمشرف فقط — افتح wesalinnovation.sa/api/diag.php وأنت مسجّل دخول بحساب المشرف */
 require_once __DIR__ . '/db.php';
 
 $u = null;

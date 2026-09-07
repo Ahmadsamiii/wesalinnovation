@@ -18,7 +18,7 @@ function contentFields(): array {
             ['k' => 'social.x',         'l' => 'حساب إكس (X)',            't' => 'url',   'd' => 'https://x.com/Wesalhub'],
             ['k' => 'social.instagram', 'l' => 'حساب إنستقرام',           't' => 'url',   'd' => 'https://www.instagram.com/wesalhub'],
             ['k' => 'social.linkedin',  'l' => 'حساب لينكد إن',           't' => 'url',   'd' => 'https://www.linkedin.com/company/wesalksa0'],
-            ['k' => 'contact.email',    'l' => 'البريد الإلكتروني',        't' => 'email', 'd' => 'info@wesal-hub.com'],
+            ['k' => 'contact.email',    'l' => 'البريد الإلكتروني',        't' => 'email', 'd' => 'info@wesalinnovation.sa'],
             ['k' => 'contact.phone',    'l' => 'رقم الجوال',              't' => 'tel',   'd' => '+966 50 112 0161'],
             ['k' => 'contact.hours',    'l' => 'ساعات العمل',             't' => 'text',  'd' => 'الأحد - الخميس، 8 ص - 6 م'],
         ]],
