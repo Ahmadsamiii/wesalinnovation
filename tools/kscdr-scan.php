@@ -60,13 +60,32 @@ function parsePage(string $html, string $base): array {
         $links[] = ['url' => $u, 'text' => $text];
     }
     $rows = $x->query('//*[contains(@class,"views-row") or contains(@class,"node--type") or contains(@class,"card") or self::article]')->length;
+    /* تشريح الصفحة: العناوين، روابط المحتوى مقابل روابط القوائم، النماذج، الإطارات، ونصّ المحتوى */
+    $heads = [];
+    foreach ($x->query('//h1|//h2|//h3') as $h) { $t = trim(preg_replace('/\s+/u', ' ', $h->textContent)); if ($t !== '') $heads[] = $h->nodeName . ': ' . mb_substr($t, 0, 90); }
+    $contentLinks = []; $navLinks = [];
+    foreach ($x->query('//a[@href]') as $a) {
+        $u = absUrl($a->getAttribute('href'), $base); if (!$u) continue;
+        $inNav = false; $n = $a;
+        while ($n = $n->parentNode) { if (!($n instanceof DOMElement)) break; $cls = ' ' . $n->getAttribute('class') . ' '; $tag = $n->nodeName;
+            if (in_array($tag, ['nav', 'header', 'footer']) || preg_match('/ (menu|navbar|nav|breadcrumb|footer|header|toolbar)[ -]/', $cls) || $n->getAttribute('role') === 'navigation') { $inNav = true; break; } }
+        $text = trim(preg_replace('/\s+/u', ' ', $a->textContent));
+        if ($inNav) $navLinks[] = ['url' => $u, 'text' => $text]; else $contentLinks[] = ['url' => $u, 'text' => $text];
+    }
+    $forms = [];
+    foreach ($x->query('//form') as $f) { $names = []; foreach ($x->query('.//input|.//select', $f) as $i) { $nm = $i->getAttribute('name'); if ($nm) $names[] = $nm; } $forms[] = ($f->getAttribute('action') ?: '(نفس الصفحة)') . ' [' . implode(', ', array_slice(array_unique($names), 0, 8)) . ']'; }
+    $iframes = []; foreach ($x->query('//iframe[@src]') as $i) $iframes[] = $i->getAttribute('src');
+    $mainText = '';
+    foreach ($x->query('//main|//*[@id="content"]|//*[contains(@class,"region-content")]|//*[contains(@class,"main-content")]|//article') as $m) { $mainText = trim(preg_replace('/\s+/u', ' ', $m->textContent)); if (mb_strlen($mainText) > 80) break; }
+    $ajaxViews = $x->query('//*[contains(@class,"view-") and (contains(@class,"js-view-dom-id") or contains(@class,"view-id"))]')->length;
+    $dataSettings = $x->query('//script[@data-drupal-selector="drupal-settings-json"]')->length;
     $paragraphs = 0; $words = 0;
     foreach ($x->query('//main//p | //article//p | //*[contains(@class,"field--name-body")]//p') as $p) { $paragraphs++; $words += str_word_count(preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $p->textContent)) ?: count(preg_split('/\s+/u', trim($p->textContent))); }
     $files = array_values(array_filter($links, fn($l) => preg_match('~\.(pdf|docx?|pptx?|xlsx?)(\?|$)~i', $l['url'])));
     $host  = parse_url($base, PHP_URL_HOST);
     $nodes = array_values(array_filter($links, fn($l) => parse_url($l['url'], PHP_URL_HOST) === $host && preg_match('~/(ar|en)/(node/\d+|[^?#]+)$~', $l['url']) && !preg_match('~\.(pdf|docx?|pptx?|xlsx?|jpe?g|png|css|js)(\?|$)~i', $l['url'])));
     $pages = array_values(array_filter($links, fn($l) => preg_match('~[?&]page=\d+~', $l['url'])));
-    return compact('title', 'h1', 'links', 'rows', 'paragraphs', 'words', 'files', 'nodes', 'pages');
+    return compact('title', 'h1', 'links', 'rows', 'paragraphs', 'words', 'files', 'nodes', 'pages', 'heads', 'contentLinks', 'navLinks', 'forms', 'iframes', 'mainText', 'ajaxViews', 'dataSettings');
 }
 function uniqBy(array $list, string $k): array { $seen = []; $out = []; foreach ($list as $it) { if (isset($seen[$it[$k]])) continue; $seen[$it[$k]] = 1; $out[] = $it; } return $out; }
 
@@ -80,8 +99,13 @@ if ($cmd === 'scan') {
     echo "العنوان: {$p['title']}\nH1: {$p['h1']}\n";
     echo "عناصر قائمة محتملة: {$p['rows']} | فقرات: {$p['paragraphs']} | كلمات تقريباً: {$p['words']}\n";
     echo "روابط: " . count($p['links']) . " | ملفات: " . count($p['files']) . " | صفحات داخلية: " . count(uniqBy($p['nodes'], 'url')) . " | ترقيم صفحات: " . count(uniqBy($p['pages'], 'url')) . "\n\n";
+    echo "-- العناوين:\n"; foreach (array_slice($p['heads'], 0, 25) as $h) echo "  $h\n";
+    echo "-- نص المحتوى (أول 500 حرف):\n  " . mb_substr($p['mainText'], 0, 500) . "\n";
+    echo "-- النماذج: " . (count($p['forms']) ? '' : 'لا يوجد') . "\n"; foreach (array_slice($p['forms'], 0, 5) as $f) echo "  $f\n";
+    echo "-- إطارات: " . (count($p['iframes']) ? implode(' | ', $p['iframes']) : 'لا يوجد') . " | عروض Drupal ديناميكية: {$p['ajaxViews']} | drupal-settings: {$p['dataSettings']}\n";
     echo "-- الملفات (حتى 40):\n";   foreach (array_slice(uniqBy($p['files'], 'url'), 0, 40) as $l) echo "  {$l['url']}  ← {$l['text']}\n";
-    echo "-- الصفحات الداخلية (حتى 60):\n"; foreach (array_slice(uniqBy($p['nodes'], 'url'), 0, 60) as $l) echo "  {$l['url']}  ← {$l['text']}\n";
+    echo "-- روابط المحتوى (خارج القوائم، حتى 80):\n"; foreach (array_slice(uniqBy($p['contentLinks'], 'url'), 0, 80) as $l) echo "  {$l['url']}  ← {$l['text']}\n";
+    echo "-- روابط القوائم: " . count(uniqBy($p['navLinks'], 'url')) . " (محذوفة من العرض)\n";
     echo "-- ترقيم الصفحات:\n"; foreach (array_slice(uniqBy($p['pages'], 'url'), 0, 10) as $l) echo "  {$l['url']}\n";
     echo "\nالنسخة الخام محفوظة في $root/last-scan.html — أرسل لي هذا الناتج كاملاً.\n";
     exit(0);
