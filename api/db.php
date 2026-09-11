@@ -14,6 +14,8 @@ foreach ([
     'GEMINI_FALLBACKS'       => '',
     'OPENAI_KEY'             => '',
     'OPENAI_MODEL'           => 'gpt-4o-mini',
+    'INVITE_DAILY_LIMIT'     => 100,
+    'BETA_TRIAL_HOURS'       => 48,
 ] as $k => $v) { if (!defined($k)) define($k, $v); }
 
 if (!APP_DEBUG) { ini_set('display_errors', '0'); error_reporting(0); }
@@ -162,6 +164,38 @@ function ensureSchema(): void {
             INDEX (created_at), INDEX (actor_id), INDEX (action)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
+        db()->exec("CREATE TABLE IF NOT EXISTS invitations (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            email VARCHAR(120) NOT NULL,
+            token CHAR(40) NOT NULL,
+            campaign_name VARCHAR(80) NOT NULL DEFAULT '',
+            status ENUM('sent','clicked','tried','completed_survey') NOT NULL DEFAULT 'sent',
+            sent_at DATETIME NOT NULL,
+            clicked_at DATETIME NULL,
+            tried_at DATETIME NULL,
+            created_by INT NULL,
+            UNIQUE KEY uq_token (token),
+            INDEX (email), INDEX (campaign_name), INDEX (status), INDEX (sent_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+        db()->exec("CREATE TABLE IF NOT EXISTS survey_responses (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            invitation_id INT NULL,
+            accessibility_need VARCHAR(60) NULL,
+            ease_of_use TINYINT NULL,
+            access_difficulty TINYINT(1) NULL,
+            access_details VARCHAR(500) NULL,
+            trust_in_sources TINYINT NULL,
+            helped_access_service TINYINT NULL,
+            pmf_reaction ENUM('very_disappointed','somewhat_disappointed','not_disappointed') NULL,
+            nps_score TINYINT NULL,
+            return_intent ENUM('yes','maybe','no') NULL,
+            missing_service VARCHAR(500) NULL,
+            other_feedback VARCHAR(1000) NULL,
+            created_at DATETIME NOT NULL,
+            INDEX (invitation_id), INDEX (created_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
         ensureRateTable();
     } catch (Throwable $e) { /* غير حرج */ }
 }
@@ -260,6 +294,43 @@ function inviteEmailHtml(string $inviter, string $roleTarget, string $link): str
         . 'السلام عليكم،<br><b>' . $i . '</b> يدعوك ' . $roleTxt . ' — أول منصة ذكاء اصطناعي سعودية مصممة لخدمة الأشخاص ذوي الإعاقة.'
         . '<div style="text-align:center;margin:26px 0"><a href="' . $link . '" style="background:linear-gradient(135deg,#814fc3,#5039a8);color:#fff;text-decoration:none;padding:14px 34px;border-radius:99px;font-weight:bold;display:inline-block">' . $btnTxt . '</a></div>'
         . '<div style="font-size:12px;color:#8a7fa3">لو الزر ما اشتغل انسخ الرابط:<br><span dir="ltr" style="word-break:break-all">' . $link . '</span></div>'
+        . '</div></div></div>';
+}
+
+/* ---------- التجربة الموسّعة — دعوات النسخة التجريبية ----------
+   المدعو من رابط /invite/{token} يجرّب المساعد بلا حساب لمدة BETA_TRIAL_HOURS
+   ساعة، متجاوزاً حصة الزائر اليومية. الحالة تعيش في الجلسة، والفحص كله
+   يمر من betaTrialActive() — نقطة واحدة، لا منطق مكرر في الملفات. */
+
+/** هل لهذه الجلسة تجربة موسّعة سارية من رابط دعوة؟ */
+function betaTrialActive(): bool {
+    return !empty($_SESSION['beta_trial_until']) && (int)$_SESSION['beta_trial_until'] > time();
+}
+
+/** أول سؤال فعلي من المدعو: تتقدم دعوته إلى «جرّب» — مرة واحدة لكل جلسة */
+function markInvitationTried(): void {
+    if (empty($_SESSION['invitation_id']) || !empty($_SESSION['invitation_tried'])) return;
+    $_SESSION['invitation_tried'] = 1;
+    try {
+        db()->prepare("UPDATE invitations SET status='tried', tried_at=NOW()
+                       WHERE id=? AND status IN ('sent','clicked')")
+            ->execute([(int)$_SESSION['invitation_id']]);
+    } catch (Throwable $e) { /* التتبع لا يوقف الرد */ }
+}
+
+/** قالب بريد دعوة النسخة التجريبية — تجربة موسّعة بلا حساب ثم استبانة قصيرة */
+function betaInviteEmailHtml(string $inviteLink, string $surveyLink): string {
+    $hours = (int)BETA_TRIAL_HOURS;
+    return '<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;background:#f4f2fb;padding:32px 16px">'
+        . '<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #e4ddf0">'
+        . '<div style="background:linear-gradient(135deg,#814fc3,#282692);padding:26px;text-align:center;color:#fff;font-size:22px;font-weight:bold">وصــال</div>'
+        . '<div style="padding:28px 26px;color:#3d3558;line-height:1.9;font-size:15px">'
+        . 'السلام عليكم،<br>تمت دعوتك لتجربة <b>وصال</b> — أول منصة ذكاء اصطناعي سعودية مصممة لخدمة الأشخاص ذوي الإعاقة.'
+        . '<br>الرابط يفتح لك تجربة موسّعة لمدة <b>' . $hours . ' ساعة</b> بلا حاجة لإنشاء حساب: اسأل المساعد عن حقوقك والخدمات والتقنيات المساعدة بأي صيغة تريحك.'
+        . '<div style="text-align:center;margin:26px 0"><a href="' . $inviteLink . '" style="background:linear-gradient(135deg,#814fc3,#5039a8);color:#fff;text-decoration:none;padding:14px 34px;border-radius:99px;font-weight:bold;display:inline-block">ابدأ التجربة الآن</a></div>'
+        . '<div style="background:#f4f2fb;border-radius:12px;padding:14px 16px;font-size:13px;color:#5a4f78">'
+        . 'بعد ما تجرّب، رأيك يهمنا: <a href="' . $surveyLink . '" style="color:#814fc3;font-weight:bold">استبانة قصيرة</a> من عشرة أسئلة ما تاخذ أكثر من دقيقة — وهي اللي تحدد شكل وصال القادم.</div>'
+        . '<div style="font-size:12px;color:#8a7fa3;margin-top:14px">لو الزر ما اشتغل انسخ الرابط:<br><span dir="ltr" style="word-break:break-all">' . $inviteLink . '</span></div>'
         . '</div></div></div>';
 }
 

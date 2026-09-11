@@ -975,6 +975,7 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <button class="dash-tab" data-perm="tickets.view" hidden onclick="dashTab('tickets',this)" role="tab"><svg><use href="#ic-shield"/></svg> طلبات الدعم</button>
 <button class="dash-tab" data-perm="content.manage" hidden onclick="dashTab('content',this)" role="tab" aria-label="محتوى الصفحة"><svg class="ico"><use href="#ic-book"/></svg> محتوى الصفحة</button>
 <button class="dash-tab" data-perm="audit.view" hidden onclick="dashTab('audit',this)" role="tab"><svg><use href="#ic-clock"/></svg> سجل العمليات</button>
+<button class="dash-tab" data-perm="experience.view" hidden onclick="dashTab('experience',this)" role="tab"><svg><use href="#ic-heart"/></svg> تجربة المستخدم</button>
 </div>
 
 <!-- نظرة عامة -->
@@ -1180,6 +1181,48 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 </div>
 </div>
 
+<!-- تجربة المستخدم وقياس الأداء (مدير النظام والمشرف) -->
+<div class="dash-panel" id="dp-experience">
+
+<div class="card glass" style="padding:var(--s6);margin-bottom:var(--s5)">
+<div class="tbl-head" style="padding:0;border:0;margin-bottom:var(--s2)">
+<h3>مؤشرات النسخة التجريبية</h3>
+<button class="btn btn-md btn-surface" onclick="loadExperience(true)"><svg class="ico"><use href="#ic-search"/></svg> تحديث</button>
+</div>
+<p style="color:var(--muted);font-size:var(--f-sm);margin-bottom:var(--s4);max-width:70ch">قمع الدعوات من الإرسال حتى إكمال الاستبانة، مع مقاييس الملاءمة: PMF بطريقة Sean Ellis (نسبة «سأنزعج جداً» — الهدف ٤٠٪ فأكثر) وصافي نقاط الترويج NPS.</p>
+<div class="dash-stats" id="expMetrics"></div>
+</div>
+
+<div class="tbl-wrap" style="margin-bottom:var(--s5)">
+<div class="tbl-head"><h3>إرسال دعوات تجريبية</h3><span id="expQuota" style="color:var(--muted);font-size:var(--f-sm)"></span></div>
+<form onsubmit="sendInvites(event)" style="padding:var(--s5);display:flex;flex-direction:column;gap:var(--s4)">
+<div class="form-group">
+<label for="expCampaign">اسم الحملة</label>
+<input class="form-input" id="expCampaign" maxlength="80" required placeholder="مثال: جمعيات ذوي الإعاقة — سبتمبر" autocomplete="off">
+<div class="field-hint">يجمع الدعوات المتشابهة تحت اسم واحد لتتبع أداء كل شريحة على حدة.</div>
+</div>
+<div class="form-group">
+<label for="expEmails">البريد الإلكتروني للمدعوين</label>
+<textarea class="form-input" id="expEmails" rows="4" required placeholder="بريد في كل سطر، أو مفصولة بفواصل — حتى ٥٠ بريداً في الدفعة"></textarea>
+<div class="field-hint">كل مدعو يصله رابط شخصي يفعّل تجربة موسّعة بلا حدّ للأسئلة، ومعه رابط الاستبانة.</div>
+</div>
+<div><button class="btn btn-md btn-primary" id="expSendBtn" type="submit"><svg class="ico"><use href="#ic-send"/></svg> إرسال الدعوات</button></div>
+</form>
+</div>
+
+<div class="tbl-wrap" style="margin-bottom:var(--s5)">
+<div class="tbl-head"><h3>الدعوات المُرسلة</h3></div>
+<div class="tbl-scroll"><table class="tbl"><thead><tr><th>البريد</th><th>الحملة</th><th>الحالة</th><th>أُرسلت</th><th>فُتحت</th><th>جرّب</th><th>الرابط</th></tr></thead><tbody id="expInvBody"></tbody></table></div>
+<div class="empty-state" id="expInvEmpty" hidden><svg><use href="#ic-mail"/></svg><p>لا توجد دعوات بعد — أرسل أول دفعة من النموذج أعلاه.</p></div>
+</div>
+
+<div class="tbl-wrap">
+<div class="tbl-head"><h3>إجابات الاستبانة</h3></div>
+<div class="tbl-scroll"><table class="tbl"><thead><tr><th>المُجيب</th><th>الحملة</th><th>الإعاقة</th><th>السهولة</th><th>صعوبة وصول</th><th>الثقة</th><th>ساعدك؟</th><th>PMF</th><th>NPS</th><th>سيعود؟</th><th>خدمة ناقصة</th><th>ملاحظات</th><th>التاريخ</th></tr></thead><tbody id="expResBody"></tbody></table></div>
+<div class="empty-state" id="expResEmpty" hidden><svg><use href="#ic-star"/></svg><p>لا توجد إجابات بعد — تظهر هنا فور إكمال أول مدعو للاستبانة.</p></div>
+</div>
+
+</div>
 
 </div>
 </div>
@@ -1726,6 +1769,7 @@ if(typeof reply==='string')reply={a:reply,src:null};
 hideTyping();
 addMsg('ai',reply.a,{src:reply.src,report:true});
 saveChatEntry(txt,reply.a);
+maybeSurveyNudge();
 }
 function startTrial(){go('chat');setTimeout(()=>{const i=document.getElementById('chatInput');if(i)i.focus();},400);}
 function submitRating(){
@@ -2112,6 +2156,8 @@ function paintCompletion(){
 /* ================= الرصيد ================= */
 function tokenState(){
   if(!USER){
+    const bt=betaTrial();
+    if(bt)return {guest:true,trial:true,left:GUEST_LIMIT,max:GUEST_LIMIT,next:bt.until};
     const g=LS.get('guest',{used:0});
     return {guest:true,left:Math.max(0,GUEST_LIMIT-g.used),max:GUEST_LIMIT,next:0};
   }
@@ -2127,7 +2173,7 @@ function costOf(q){
   return Math.min(c,3);
 }
 function spendTokens(n){
-  if(!USER){const g=LS.get('guest',{used:0});g.used+=n;LS.set('guest',g);}
+  if(!USER){if(!betaTrial()){const g=LS.get('guest',{used:0});g.used+=n;LS.set('guest',g);}}
   else{const t=LS.get('tok_'+USER.id,{n:USER_TOKENS,last:Date.now()});t.n=Math.max(0,t.n-n);LS.set('tok_'+USER.id,t);}
   paintTrial();
 }
@@ -2138,7 +2184,7 @@ function paintTrial(){
   const pct=Math.round(s.left/s.max*100)+'%';
   ['chatTrialBar','dashTrialBar','prBar'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.width=pct;});
   document.querySelectorAll('.trial-bar').forEach(b=>b.classList.toggle('empty',s.left<=0));
-  const lbl=s.guest?'تجربة مجانية — أنشئ حساباً لرصيد أكبر':(s.next?'يتجدّد '+renewIn(s.next):'');
+  const lbl=s.guest?(s.trial?'تجربة موسّعة من دعوتك — أسئلة بلا حد، تنتهي '+renewIn(s.next):'تجربة مجانية — أنشئ حساباً لرصيد أكبر'):(s.next?'يتجدّد '+renewIn(s.next):'');
   set('chatRenew',lbl);set('dashRenew',lbl);
   if(!s.guest){set('prLast',fmtWhen(s.next-RENEW_MS));set('prNext',renewIn(s.next));}
   const cta=document.getElementById('chatGuestCta');if(cta)cta.style.display=s.guest?'':'none';
@@ -2248,7 +2294,7 @@ function renderChats(){
 
 /* ================= لوحة التحكم ================= */
 function dashTab(name,btn){
-  const need={users:'users.view',messages:'messages.view',tickets:'tickets.view',audit:'audit.view',content:'content.manage'}[name];
+  const need={users:'users.view',messages:'messages.view',tickets:'tickets.view',audit:'audit.view',content:'content.manage',experience:'experience.view'}[name];
   if(need&&!can(need))return toast('ما عندك صلاحية لهذا القسم.','err');
   document.querySelectorAll('.dash-tab').forEach(b=>b.classList.remove('on'));
   if(btn)btn.classList.add('on');
@@ -2260,6 +2306,7 @@ function dashTab(name,btn){
   if(name==='tickets')loadTickets();
   if(name==='audit')loadAudit();
   if(name==='content')loadContentAdmin();
+  if(name==='experience')loadExperience();
   setTimeout(initAnims,60);
 }
 function paintDash(){
@@ -2847,9 +2894,9 @@ const ROLE_PERMS={
   guest:{},
   user:{},
   reviewer:{'tickets.view':1,'tickets.close':1},
-  mod:{'users.view':1,'users.invite':1,'messages.view':1,'tickets.view':1,'tickets.close':1},
+  mod:{'users.view':1,'users.invite':1,'messages.view':1,'tickets.view':1,'tickets.close':1,'experience.view':1},
   admin:{'users.view':1,'users.manage':1,'users.invite':1,'users.export':1,'messages.view':1,
-         'tickets.view':1,'tickets.close':1,'audit.view':1,'content.manage':1}
+         'tickets.view':1,'tickets.close':1,'audit.view':1,'content.manage':1,'experience.view':1}
 };
 function curRole(){return USER?(USER.role||'user'):'guest';}
 function can(p){const r=ROLE_PERMS[curRole()]||{};return !!r[p];}
@@ -2862,7 +2909,8 @@ const AUDIT_LABELS={login:'تسجيل دخول',logout:'تسجيل خروج',rol
   reset_pw:'إعادة تعيين كلمة مرور',change_pw:'تغيير كلمة مرور',
   forgot:'طلب إعادة تعيين',reset_done:'تعيين كلمة مرور',tokens:'تعديل رصيد',
   content:'تعديل محتوى الصفحة',content_reset:'ترجيع محتوى',
-  delete_user:'حذف حساب',delete_account:'حذف حساب ذاتي',ticket:'طلب دعم',export:'تصدير بيانات'};
+  delete_user:'حذف حساب',delete_account:'حذف حساب ذاتي',ticket:'طلب دعم',export:'تصدير بيانات',
+  beta_invite:'دعوة نسخة تجريبية'};
 async function loadAudit(){
   const body=document.getElementById('auditBody'),empty=document.getElementById('auditEmpty');
   if(!body)return;
@@ -2879,6 +2927,149 @@ async function loadAudit(){
     d.querySelector('.a-det').textContent=e.detail||'';
     body.appendChild(d);
   });
+}
+
+/* ================= تجربة المستخدم وقياس الأداء =================
+   جانبان: جلسة المدعو (تجربة موسّعة بلا حدّ للأسئلة، ثم دعوة لطيفة واحدة
+   للاستبانة بعد أول إجابة يحصل عليها)، ولوحة مدير النظام والمشرف
+   (إرسال الدعوات، قمع التحويل، مؤشرات PMF وNPS). الخادم: api/experience.php */
+
+/* تجربة المدعو في المتصفح مرآة لجلسة الخادم — الحَكم الفعلي chat.php */
+function betaTrial(){
+  const b=LS.get('betaTrial',null);
+  if(b&&b.until>Date.now())return b;
+  if(b)LS.del('betaTrial');
+  return null;
+}
+
+/* بطاقة واحدة فقط في المحادثة تدعو المجرِّب يكمل الاستبانة.
+   addMsg يهرّب HTML فلا يمرّر روابط — البطاقة تُبنى هنا بعناصر DOM. */
+function maybeSurveyNudge(){
+  const bt=betaTrial();
+  if(!bt||bt.nudged||!bt.token)return;
+  bt.nudged=true;LS.set('betaTrial',bt);
+  const body=document.getElementById('chatBody');if(!body)return;
+  const d=document.createElement('div');d.className='msg msg-ai';
+  d.innerHTML='<div class="msg-avatar">و</div><div><div class="msg-bubble">جرّبت وصال بنفسك الآن — رأيك يحدّد وش نطوّر بعد كذا. الاستبانة عشرة أسئلة قصيرة، تاخذ أقل من دقيقة.<br><br><a class="btn btn-md btn-primary"><svg class="ico"><use href="#ic-star"/></svg> شاركنا رأيك الآن</a></div></div>';
+  d.querySelector('a').href='survey.html?t='+encodeURIComponent(bt.token);
+  body.appendChild(d);body.scrollTop=body.scrollHeight;
+}
+
+/* ---------- لوحة المؤشرات والدعوات (experience.view) ---------- */
+const EXP_STATUS={sent:'أُرسلت',clicked:'فُتحت',tried:'جرّب',completed_survey:'أكمل الاستبانة'};
+const EXP_PMF={very_disappointed:'سأنزعج جداً',somewhat_disappointed:'سأنزعج قليلاً',not_disappointed:'لن أنزعج'};
+const EXP_RETURN={yes:'نعم',maybe:'ربما',no:'لا'};
+
+async function loadExperience(){
+  if(!can('experience.view'))return;
+  const [m,inv,res]=await Promise.all([
+    api('experience.php',{action:'metrics'}),
+    api('experience.php',{action:'invitations'}),
+    api('experience.php',{action:'responses'})
+  ]);
+  if(m.offline)return toast('تعذّر الوصول للخادم — جرّب التحديث بعد قليل.','err');
+  paintExpMetrics(m);paintExpInvites(inv);paintExpResponses(res);
+}
+
+function expStat(icon,tone,num,label){
+  const tones={purple:['rgba(129,79,195,.1)','var(--secondary)'],blue:['rgba(62,158,237,.1)','var(--blue)'],navy:['rgba(40,38,146,.08)','var(--primary)']};
+  const t=tones[tone]||tones.purple;
+  const d=document.createElement('div');
+  d.className='card dash-stat glass';
+  d.innerHTML='<div class="dash-stat-icon"><svg class="ico ico-lg"><use/></svg></div><div><div class="dash-stat-num"></div><div class="dash-stat-label"></div></div>';
+  const ic=d.querySelector('.dash-stat-icon');
+  ic.style.background=t[0];ic.style.color=t[1];
+  d.querySelector('use').setAttribute('href','#'+icon);
+  d.querySelector('.dash-stat-num').textContent=num;
+  d.querySelector('.dash-stat-label').textContent=label;
+  return d;
+}
+
+function paintExpMetrics(r){
+  const grid=document.getElementById('expMetrics');if(!grid)return;
+  grid.innerHTML='';
+  if(!r.ok||!r.metrics)return;
+  const M=r.metrics;
+  const pc=v=>v==null?'—':ar(v)+'٪';           // النسب — الشرطة تعني «لا بيانات بعد»
+  const av=v=>v==null?'—':ar(v)+' / ٥';         // متوسطات مقياس ١-٥
+  grid.appendChild(expStat('ic-mail','navy',ar(M.sent),'دعوة أُرسلت'+(M.quota_left!=null?' — متبقٍ اليوم '+ar(M.quota_left):'')));
+  grid.appendChild(expStat('ic-eye','blue',pc(M.click_rate),'فتحوا الرابط ('+ar(M.clicked)+')'));
+  grid.appendChild(expStat('ic-zap','purple',pc(M.try_rate),'جرّبوا المساعد ('+ar(M.tried)+')'));
+  grid.appendChild(expStat('ic-check','purple',pc(M.survey_rate),'أكملوا الاستبانة ('+ar(M.surveyed)+')'));
+  grid.appendChild(expStat('ic-heart','purple',pc(M.pmf),'ملاءمة المنتج PMF — الهدف ٤٠٪ فأكثر'));
+  grid.appendChild(expStat('ic-star','blue',M.nps==null?'—':ar(M.nps),'صافي نقاط الترويج NPS'));
+  grid.appendChild(expStat('ic-zap','navy',av(M.ease),'متوسط سهولة الاستخدام'));
+  grid.appendChild(expStat('ic-shield','navy',av(M.trust),'متوسط الثقة بالمصادر'));
+  grid.appendChild(expStat('ic-hand-heart','purple',av(M.helped),'ساعدهم بالوصول لخدمة'));
+  grid.appendChild(expStat('ic-a11y','blue',pc(M.difficulty),'واجهوا صعوبة وصول'));
+  grid.appendChild(expStat('ic-users','navy',ar(M.return_yes),'سيعودون (ربما '+ar(M.return_maybe)+' — لا '+ar(M.return_no)+')'));
+}
+
+function paintExpInvites(r){
+  const body=document.getElementById('expInvBody'),empty=document.getElementById('expInvEmpty'),quota=document.getElementById('expQuota');
+  if(!body)return;
+  const l=(r.ok&&r.invitations)?r.invitations:[];
+  if(quota)quota.textContent=r.quota_left!=null?'المتبقي من حصة اليوم: '+ar(r.quota_left)+' دعوة':'';
+  body.innerHTML='';
+  if(empty)empty.hidden=!!l.length;
+  l.forEach(v=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML='<td></td><td></td><td></td><td></td><td></td><td></td><td><button class="btn btn-md btn-surface" aria-label="نسخ رابط الدعوة"><svg class="ico"><use href="#ic-copy"/></svg> نسخ</button></td>';
+    const td=tr.querySelectorAll('td');
+    td[0].textContent=v.email;
+    td[1].textContent=v.campaign;
+    td[2].textContent=EXP_STATUS[v.status]||v.status;
+    td[3].textContent=fmtWhen(v.t);
+    td[4].textContent=v.clicked?fmtWhen(v.clicked):'—';
+    td[5].textContent=v.tried?fmtWhen(v.tried):'—';
+    tr.querySelector('button').onclick=()=>navigator.clipboard.writeText(v.link).then(()=>toast('انتسخ رابط الدعوة.','ok'),()=>toast('تعذّر النسخ.','err'));
+    body.appendChild(tr);
+  });
+}
+
+function paintExpResponses(r){
+  const body=document.getElementById('expResBody'),empty=document.getElementById('expResEmpty');
+  if(!body)return;
+  const l=(r.ok&&r.responses)?r.responses:[];
+  body.innerHTML='';
+  if(empty)empty.hidden=!!l.length;
+  const dash=v=>v==null||v===''?'—':v;
+  l.forEach(v=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML='<td></td>'.repeat(13);
+    const td=tr.querySelectorAll('td');
+    td[0].textContent=v.email||'زائر';
+    td[1].textContent=dash(v.campaign);
+    td[2].textContent=dash(v.need);
+    td[3].textContent=v.ease==null?'—':ar(v.ease)+'/٥';
+    td[4].textContent=v.difficulty==null?'—':(v.difficulty?'نعم'+(v.difficulty_details?' — '+v.difficulty_details:''):'لا');
+    td[5].textContent=v.trust==null?'—':ar(v.trust)+'/٥';
+    td[6].textContent=v.helped==null?'—':ar(v.helped)+'/٥';
+    td[7].textContent=v.pmf?(EXP_PMF[v.pmf]||v.pmf):'—';
+    td[8].textContent=v.nps==null?'—':ar(v.nps);
+    td[9].textContent=v['return']?(EXP_RETURN[v['return']]||v['return']):'—';
+    td[10].textContent=dash(v.missing);
+    td[11].textContent=dash(v.feedback);
+    td[12].textContent=fmtWhen(v.t);
+    body.appendChild(tr);
+  });
+}
+
+async function sendInvites(e){
+  e.preventDefault();
+  const campaign=document.getElementById('expCampaign').value.trim();
+  const emails=document.getElementById('expEmails').value.trim();
+  if(!campaign||!emails)return toast('اكتب اسم الحملة وبريد مدعو واحد على الأقل.','err');
+  const btn=document.getElementById('expSendBtn');btn.disabled=true;
+  const r=await api('experience.php',{action:'send_invitations',campaign,emails});
+  btn.disabled=false;
+  if(!r.ok)return toast(r.error||'تعذّر إرسال الدعوات.','err');
+  let msg='أُرسلت '+ar(r.sent)+' دعوة';
+  if(r.skipped)msg+=' — تخطّينا '+ar(r.skipped)+' مكررة';
+  if(r.failed)msg+=' — تعذّر بريد '+ar(r.failed);
+  toast(msg+'.',r.sent?'ok':'info');
+  if(r.sent)document.getElementById('expEmails').value='';
+  loadExperience();
 }
 
 /* ================= المصادقة =================
@@ -3132,6 +3323,20 @@ const _rstTok=(qp.get('reset')||'').replace(/[^a-f0-9]/g,'');
 if(_rstTok.length>=32){
   try{history.replaceState(null,'','/');}catch(e){}
   openReset(_rstTok);
+}
+/* عودة من رابط دعوة النسخة التجريبية — api/invite-redeem.php يحوّل هنا
+   بمعاملات invited و trial_until و t (رمز الدعوة لرابط الاستبانة) */
+const _invited=qp.get('invited');
+if(_invited==='1'){
+  const _until=parseInt(qp.get('trial_until')||'0',10);
+  const _btTok=(qp.get('t')||'').toLowerCase();
+  if(_until>Date.now())LS.set('betaTrial',{until:_until,token:/^[a-f0-9]{40}$/.test(_btTok)?_btTok:null});
+  paintTrial();
+  toast('أهلاً بك في وصال — تجربتك الموسّعة جاهزة: اسأل المساعد بلا حد ليومين كاملين، وبعد ما تجرّب شاركنا رأيك في الاستبانة.','ok',9000);
+  try{history.replaceState(null,'','/');}catch(e){}
+}else if(_invited==='0'){
+  toast('رابط الدعوة غير صالح أو منتهي — تقدر تتصفّح وصال وتجرّبه كزائر.','err',7000);
+  try{history.replaceState(null,'','/');}catch(e){}
 }
 const _invTok=qp.get('invite');
 if(_invTok){
