@@ -63,6 +63,9 @@ ServerSignature Off
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteRule ^uploads/.+\.(php|phtml|phar|php[0-9]|pl|py|cgi|sh|htaccess|htpasswd)$ - [F,L,NC]
+
+  # رابط دعوة النسخة التجريبية — /invite/{token} يصل بالمدعو لمستلم الدعوات
+  RewriteRule ^invite/([a-f0-9]{40})$ api/invite-redeem.php?token=$1 [L,QSA]
 </IfModule>
 
 

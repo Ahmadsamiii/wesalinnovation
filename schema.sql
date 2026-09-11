@@ -183,3 +183,53 @@ CREATE TABLE IF NOT EXISTS rate_limits (
   PRIMARY KEY (bucket, ident, window_start),
   KEY ix_window (window_start)
 ) ENGINE=InnoDB DEFAULT CHARSET=ascii COLLATE=ascii_general_ci;
+
+-- --------------------------------------------------------------------------
+--  دعوات النسخة التجريبية (قياس الأداء)
+--  نظام مستقل عن جدول invites (دعوات الأدوار): هذه دعوات جماعية بحملات
+--  تمنح المدعو تجربة موسّعة بلا حساب، وتتتبع رحلته حتى إكمال الاستبانة.
+--  الرابط: SITE_URL/invite/{token} — والحالة تتقدم ولا تتراجع:
+--    sent → clicked → tried → completed_survey
+-- --------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS invitations (
+  id            INT AUTO_INCREMENT PRIMARY KEY,
+  email         VARCHAR(120) NOT NULL,
+  token         CHAR(40)     NOT NULL,                -- bin2hex(random_bytes(20))
+  campaign_name VARCHAR(80)  NOT NULL DEFAULT '',     -- لتجميع النتائج حسب الحملة
+  status        ENUM('sent','clicked','tried','completed_survey') NOT NULL DEFAULT 'sent',
+  sent_at       DATETIME     NOT NULL,
+  clicked_at    DATETIME     NULL,                    -- أول فتح للرابط
+  tried_at      DATETIME     NULL,                    -- أول سؤال فعلي للمساعد
+  created_by    INT          NULL,
+  UNIQUE KEY uq_token (token),
+  KEY ix_email (email),
+  KEY ix_campaign (campaign_name),
+  KEY ix_status (status),
+  KEY ix_sent (sent_at),
+  CONSTRAINT fk_invitation_creator FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------------------------
+--  إجابات استبانة قياس التجربة — عشرة أسئلة، إجابة واحدة لكل دعوة
+--  invitation_id فارغ للإجابات المجهولة (استبانة بلا رابط دعوة)،
+--  و ON DELETE SET NULL يبقي الإجابة للإحصاءات بعد حذف الدعوة.
+-- --------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS survey_responses (
+  id                    INT AUTO_INCREMENT PRIMARY KEY,
+  invitation_id         INT          NULL,
+  accessibility_need    VARCHAR(60)  NULL,            -- نوع الاحتياج أو الإعاقة
+  ease_of_use           TINYINT      NULL,            -- سهولة الاستخدام 1-5
+  access_difficulty     TINYINT(1)   NULL,            -- صعوبة مع لوحة المفاتيح/قارئ الشاشة؟
+  access_details        VARCHAR(500) NULL,            -- تفاصيل الصعوبة إن وجدت
+  trust_in_sources      TINYINT      NULL,            -- الثقة بالمصادر 1-5
+  helped_access_service TINYINT      NULL,            -- ساعدك تصل لخدمة؟ 1-5
+  pmf_reaction          ENUM('very_disappointed','somewhat_disappointed','not_disappointed') NULL,
+  nps_score             TINYINT      NULL,            -- 0-10
+  return_intent         ENUM('yes','maybe','no') NULL,
+  missing_service       VARCHAR(500) NULL,            -- الخدمة الناقصة الأهم
+  other_feedback        VARCHAR(1000) NULL,
+  created_at            DATETIME     NOT NULL,
+  KEY ix_invitation (invitation_id),
+  KEY ix_created (created_at),
+  CONSTRAINT fk_survey_invitation FOREIGN KEY (invitation_id) REFERENCES invitations(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
