@@ -181,6 +181,7 @@ function ensureSchema(): void {
         db()->exec("CREATE TABLE IF NOT EXISTS survey_responses (
             id INT AUTO_INCREMENT PRIMARY KEY,
             invitation_id INT NULL,
+            campaign_name VARCHAR(80) NULL,
             accessibility_need VARCHAR(60) NULL,
             ease_of_use TINYINT NULL,
             access_difficulty TINYINT(1) NULL,
@@ -195,6 +196,11 @@ function ensureSchema(): void {
             created_at DATETIME NOT NULL,
             INDEX (invitation_id), INDEX (created_at)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        if (!colExists('survey_responses', 'campaign_name')) {
+            db()->exec("ALTER TABLE survey_responses
+                ADD COLUMN campaign_name VARCHAR(80) NULL AFTER invitation_id,
+                ADD INDEX ix_campaign (campaign_name)");
+        }
 
         ensureRateTable();
     } catch (Throwable $e) { /* غير حرج */ }

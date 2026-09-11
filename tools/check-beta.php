@@ -46,6 +46,7 @@ ensureSchema();
 $tables = db()->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN);
 check('جدول invitations موجود',      in_array('invitations', $tables, true));
 check('جدول survey_responses موجود', in_array('survey_responses', $tables, true));
+check('عمود campaign_name في survey_responses موجود', colExists('survey_responses', 'campaign_name'));
 
 /* ---------- دورة حياة الدعوة ---------- */
 $campaign = '_check';
@@ -90,6 +91,31 @@ $c->execute([$invId]);
 $cr = $c->fetch();
 check('تعديل الإجابة يحدّث الصف نفسه بلا تكرار', (int)$cr['n'] === 1 && (int)$cr['e'] === 5);
 
+/* ---------- رابط الاستبيان العام: إجابة بلا دعوة، حملتها من الطلب نفسه ---------- */
+$openCampaign = '_check_open';
+db()->prepare("INSERT INTO survey_responses (invitation_id, campaign_name, ease_of_use, nps_score, created_at)
+               VALUES (NULL, ?, 3, 6, NOW())")->execute([$openCampaign]);
+$openId = (int)db()->lastInsertId();
+check('إدخال إجابة رابط عام بلا دعوة يعمل', $openId > 0);
+
+/* نفس منطق COALESCE(i.campaign_name, r.campaign_name) في case 'responses' —
+   يتحقق أن كِلا المسارين، المرتبط بدعوة والعام بلا دعوة، يُنسب كل منهما
+   لحملته الصحيحة من نفس الاستعلام دون تمييز بينهما في الواجهة. */
+$linkedId = db()->prepare('SELECT id FROM survey_responses WHERE invitation_id=?');
+$linkedId->execute([$invId]);
+$linkedRespId = (int)$linkedId->fetchColumn();
+
+$both = db()->prepare("SELECT r.id, COALESCE(i.campaign_name, r.campaign_name) camp
+                       FROM survey_responses r LEFT JOIN invitations i ON i.id = r.invitation_id
+                       WHERE r.id IN (?, ?)");
+$both->execute([$linkedRespId, $openId]);
+$byId = [];
+foreach ($both->fetchAll() as $row) $byId[(int)$row['id']] = $row['camp'];
+check('حملة الإجابة المرتبطة بدعوة تُقرأ من invitations',
+      ($byId[$linkedRespId] ?? null) === $campaign);
+check('حملة الإجابة العامة بلا دعوة تُقرأ من عمودها هي',
+      ($byId[$openId] ?? null) === $openCampaign);
+
 /* ---------- معادلتا القياس (بحساب مباشر على قيم معلومة) ---------- */
 /* Sean Ellis PMF: نسبة «سأنزعج جداً» من إجمالي من جاوب على السؤال */
 check('معادلة PMF: 2 من 5 = 40٪', (int)round(2 / 5 * 100) === 40);
@@ -98,10 +124,13 @@ check('معادلة NPS: (3 مروجين − 1 منتقد) من 4 = 50', (int)ro
 
 /* ---------- التنظيف ---------- */
 db()->prepare('DELETE FROM survey_responses WHERE invitation_id=?')->execute([$invId]);
+db()->prepare('DELETE FROM survey_responses WHERE id=?')->execute([$openId]);
 db()->prepare('DELETE FROM invitations WHERE campaign_name=?')->execute([$campaign]);
 $g = db()->prepare('SELECT COUNT(*) FROM invitations WHERE campaign_name=?');
 $g->execute([$campaign]);
-check('تنظيف بيانات الفحص', (int)$g->fetchColumn() === 0);
+$g2 = db()->prepare('SELECT COUNT(*) FROM survey_responses WHERE campaign_name=?');
+$g2->execute([$openCampaign]);
+check('تنظيف بيانات الفحص', (int)$g->fetchColumn() === 0 && (int)$g2->fetchColumn() === 0);
 
 echo "\n" . ($fails === 0 ? "كل الفحوص نجحت.\n" : "فشل $fails من الفحوص — راجع ما فوق.\n");
 exit($fails === 0 ? 0 : 1);

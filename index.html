@@ -1211,6 +1211,21 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 </div>
 
 <div class="tbl-wrap" style="margin-bottom:var(--s5)">
+<div class="tbl-head"><h3><svg class="ico"><use href="#ic-globe"/></svg> رابط استبيان عام</h3></div>
+<div style="padding:var(--s5);display:flex;flex-direction:column;gap:var(--s4)">
+<p style="color:var(--muted);font-size:var(--f-sm);margin:0;max-width:70ch">بلا دعوة ولا بريد لكل شخص — رابط واحد تشاركه في واتساب أو مجموعة أو منشور، يدخل منه أي أحد ويعبّي الاستبانة مباشرة، وتظهر إجاباته هنا مع بقية النتائج تحت اسم الحملة نفسه.</p>
+<div class="form-group">
+<label for="expOpenCampaign">اسم الحملة</label>
+<input class="form-input" id="expOpenCampaign" maxlength="80" placeholder="مثال: استبيان معرض التقنية المساندة" autocomplete="off" oninput="buildOpenSurveyLink()">
+</div>
+<div style="display:flex;gap:var(--s3);align-items:center;flex-wrap:wrap">
+<input class="form-input" id="expOpenLink" readonly style="flex:1;min-width:220px" onclick="this.select()">
+<button class="btn btn-md btn-surface" type="button" onclick="copyOpenSurveyLink()"><svg class="ico"><use href="#ic-copy"/></svg> نسخ الرابط</button>
+</div>
+</div>
+</div>
+
+<div class="tbl-wrap" style="margin-bottom:var(--s5)">
 <div class="tbl-head"><h3>الدعوات المُرسلة</h3></div>
 <div class="tbl-scroll"><table class="tbl"><thead><tr><th>البريد</th><th>الحملة</th><th>الحالة</th><th>أُرسلت</th><th>فُتحت</th><th>جرّب</th><th>الرابط</th></tr></thead><tbody id="expInvBody"></tbody></table></div>
 <div class="empty-state" id="expInvEmpty" hidden><svg><use href="#ic-mail"/></svg><p>لا توجد دعوات بعد — أرسل أول دفعة من النموذج أعلاه.</p></div>
@@ -3070,6 +3085,22 @@ async function sendInvites(e){
   toast(msg+'.',r.sent?'ok':'info');
   if(r.sent)document.getElementById('expEmails').value='';
   loadExperience();
+}
+
+/* رابط استبيان عام بلا دعوة ولا بريد — نفس صفحة survey.html تكتشف غياب
+   رمز الدعوة وتتعامل معه كزائر مجهول من البداية، فلا حاجة لأي شيء من
+   الخادم هنا: مجرد بناء الرابط بحملته على الجهاز نفسه. */
+function buildOpenSurveyLink(){
+  const name=(document.getElementById('expOpenCampaign').value||'').trim();
+  document.getElementById('expOpenLink').value=
+    name?location.origin+'/survey.html?c='+encodeURIComponent(name):'';
+}
+function copyOpenSurveyLink(){
+  const input=document.getElementById('expOpenLink');
+  if(!input.value)return toast('اكتب اسم الحملة أولاً.','err');
+  navigator.clipboard.writeText(input.value).then(
+    ()=>toast('نُسخ الرابط.','ok'),
+    ()=>{input.select();toast('حدّد الرابط وانسخه يدوياً.','info');});
 }
 
 /* ================= المصادقة =================

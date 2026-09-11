@@ -217,6 +217,7 @@ CREATE TABLE IF NOT EXISTS invitations (
 CREATE TABLE IF NOT EXISTS survey_responses (
   id                    INT AUTO_INCREMENT PRIMARY KEY,
   invitation_id         INT          NULL,
+  campaign_name         VARCHAR(80)  NULL,            -- لاستبيان الرابط العام بلا دعوة؛ المرتبط بدعوة يُقرأ من invitations
   accessibility_need    VARCHAR(60)  NULL,            -- نوع الاحتياج أو الإعاقة
   ease_of_use           TINYINT      NULL,            -- سهولة الاستخدام 1-5
   access_difficulty     TINYINT(1)   NULL,            -- صعوبة مع لوحة المفاتيح/قارئ الشاشة؟
@@ -231,5 +232,6 @@ CREATE TABLE IF NOT EXISTS survey_responses (
   created_at            DATETIME     NOT NULL,
   KEY ix_invitation (invitation_id),
   KEY ix_created (created_at),
+  KEY ix_campaign (campaign_name),
   CONSTRAINT fk_survey_invitation FOREIGN KEY (invitation_id) REFERENCES invitations(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
