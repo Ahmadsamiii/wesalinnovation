@@ -91,6 +91,10 @@ if ($u) {
              'error' => 'خلص رصيدك من الأسئلة لهذي الفترة. يتجدّد تلقائياً بعد قليل.']);
     }
     db()->prepare('UPDATE users SET tokens=tokens-?, questions=questions+1 WHERE id=?')->execute([$cost, $u['id']]);
+} else if (betaTrialActive()) {
+    // مدعو برابط تجربة موسّعة: بلا حصة يومية طوال التجربة، وسؤاله الأول
+    // يقدّم دعوته إلى «جرّب» في قمع القياس
+    markInvitationTried();
 } else {
     // حصة الزائر محسوبة بعنوان IP ويوم — لا بالجلسة، فحذف الكوكي لا يمنح حصة جديدة
     $guestUsed = hitCounter('guest', $ip, windowDay(), $cost);
