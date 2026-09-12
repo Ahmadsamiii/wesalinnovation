@@ -47,6 +47,9 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 @media(max-width:768px){.container{padding:0 var(--s4);}}
 .ico{width:20px;height:20px;flex-shrink:0;}
 .ico-lg{width:24px;height:24px;}
+/* شبكة أمان: أي <svg> داخل زر بلا صنف حجم يرسمه المتصفح 300×150 افتراضاً
+   فيتضخّم ويكسر الزر. هذه القاعدة تمنع ذلك مهما نُسي الصنف مستقبلاً. */
+.btn svg:not([class]){width:20px;height:20px;flex-shrink:0;}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
 .glass{background:rgba(255,255,255,.72);backdrop-filter:blur(20px) saturate(1.3);-webkit-backdrop-filter:blur(20px) saturate(1.3);border:1px solid rgba(255,255,255,.6);box-shadow:var(--sh-sm);}
 [data-contrast="dark"] .glass{background:rgba(26,23,48,.72);border-color:rgba(255,255,255,.06);}
@@ -108,7 +111,9 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 .sec-header .sec-sub{margin-inline:auto;}
 
 /* BUTTONS */
-.btn{display:inline-flex;align-items:center;gap:var(--s2);font-family:inherit;font-weight:600;border:none;border-radius:var(--r-full);cursor:pointer;transition:all var(--dur-md) var(--ease);text-decoration:none;line-height:1.4;}
+/* حشوة وحجم خط افتراضيان: الزر الذي يُنسى معه صنف الحجم (btn-md/btn-lg)
+   كان يرث حشوة صفر وخط المتصفح الافتراضي فيخرج مضغوطاً وغير متناسق. */
+.btn{display:inline-flex;align-items:center;gap:var(--s2);font-family:inherit;font-weight:600;border:none;border-radius:var(--r-full);cursor:pointer;transition:all var(--dur-md) var(--ease);text-decoration:none;line-height:1.4;padding:var(--s3) var(--s6);font-size:var(--f-sm);}
 .btn-md{padding:var(--s3) var(--s6);font-size:var(--f-sm);}
 .btn-lg{padding:var(--s4) var(--s8);font-size:var(--f-body);}
 .btn-primary{background:var(--g-brand);color:#fff;box-shadow:0 4px 16px rgba(40,38,146,.2);}
@@ -153,7 +158,7 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 .hero-orb-1{width:400px;height:400px;background:radial-gradient(circle,#52bdf9,transparent);top:-10%;left:10%;animation-delay:0s;}
 .hero-orb-2{width:300px;height:300px;background:radial-gradient(circle,#814fc3,transparent);bottom:5%;right:5%;animation-delay:2s;}
 .hero-orb-3{width:250px;height:250px;background:radial-gradient(circle,#3e9eed,transparent);top:40%;right:30%;animation-delay:4s;}
-.hero-content{position:relative;z-index:2;max-width:860px;}
+.hero-content{position:relative;z-index:2;max-width:860px;width:100%;min-width:0;}
 .hero-chip{display:inline-flex;align-items:center;gap:var(--s2);background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);padding:var(--s2) var(--s4);border-radius:var(--r-full);font-size:var(--f-sm);color:rgba(255,255,255,.9);margin-bottom:var(--s6);}
 .hero-chip .dot{width:8px;height:8px;border-radius:50%;background:#34d399;animation:pulse 2s ease infinite;}
 .hero h1{font-size:var(--f-display);font-weight:700;color:#fff;line-height:1.25;margin-bottom:var(--s5);max-width:800px;margin-inline:auto;}
@@ -161,7 +166,7 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 .hero-search{max-width:600px;margin:0 auto var(--s6);position:relative;}
 .hero-search-inner{display:flex;align-items:center;gap:var(--s2);background:rgba(255,255,255,.12);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.2);border-radius:var(--r-2xl);padding:var(--s2) var(--s3);transition:all var(--dur-md) var(--ease);}
 .hero-search-inner:focus-within{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.4);box-shadow:var(--sh-glow);}
-.hero-search input{flex:1;background:none;border:none;color:#fff;font-family:inherit;font-size:var(--f-body);padding:var(--s3) var(--s4);outline:none;}
+.hero-search input{flex:1;min-width:0;background:none;border:none;color:#fff;font-family:inherit;font-size:var(--f-body);padding:var(--s3) var(--s4);outline:none;}
 .hero-search input::placeholder{color:rgba(255,255,255,.5);}
 .hero-search-btn{width:44px;height:44px;border-radius:var(--r-xl);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--dur) var(--ease);flex-shrink:0;}
 .hero-search-btn.mic{background:rgba(255,255,255,.15);color:#fff;}
@@ -176,9 +181,14 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 .hero-trust-div{width:1px;height:32px;background:rgba(255,255,255,.2);}
 
 /* FEATURES */
-.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s6);}
-@media(max-width:1024px){.feat-grid{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:600px){.feat-grid{grid-template-columns:1fr;}}
+/* minmax(0,1fr) بدل 1fr: الافتراضي minmax(auto,1fr) يمنع العمود من الانكماش
+   تحت عرض محتواه الأدنى فيطفح خارج الشاشة على الجوال. */
+.feat-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s6);}
+/* عنصر الشبكة افتراضه min-width:auto فلا ينكمش تحت عرض محتواه الأدنى
+   (كلمة طويلة أو رابط)، فيطفح خارج الشاشة. هذه القاعدة تمنعها في كل الشبكات. */
+.feat-grid>*,.stats-grid>*,.test-grid>*,.settings-grid>*,.dash-stats>*,.res-grid>*,.values-grid>*,.contact-grid>*,.footer-grid>*,.auth-row>*,.dash-profile-grid>*,.sources-grid>*,.about-mission>*{min-width:0;}
+@media(max-width:1024px){.feat-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:600px){.feat-grid{grid-template-columns:minmax(0,1fr);}}
 
 /* HOW IT WORKS */
 .how-sec{background:var(--surface-alt);}
@@ -224,11 +234,15 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 .chat-sidebar h3{font-size:var(--f-sm);font-weight:700;color:var(--ink);margin-bottom:var(--s2);}
 .chat-sug-btn{display:block;width:100%;text-align:right;background:var(--surface-alt);border:1px solid var(--border);font-family:inherit;font-size:var(--f-xs);color:var(--text);padding:var(--s3);border-radius:var(--r-md);cursor:pointer;transition:all var(--dur) var(--ease);margin-bottom:var(--s2);}
 .chat-sug-btn:hover{background:rgba(40,38,146,.05);border-color:var(--secondary);}
-.chat-main{flex:1;display:flex;flex-direction:column;background:var(--bg);}
+/* min-width:0 ضروري: عنصر flex افتراضه min-width:auto فلا ينكمش تحت عرض
+   محتواه الأدنى، فيتمدّد خارج الشاشة على الجوال ويصنع تمريراً أفقياً. */
+.chat-main{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--bg);}
 .chat-topbar{display:flex;align-items:center;gap:var(--s4);padding:var(--s3) var(--s5);border-bottom:1px solid var(--border);background:var(--surface);flex-wrap:wrap;}
 .chat-topbar h2{font-size:var(--f-body);font-weight:700;color:var(--ink);margin-left:auto;}
 .chat-mode-btns{display:flex;background:var(--surface-alt);border-radius:var(--r-full);overflow:hidden;border:1px solid var(--border);}
-.chat-mode-btn{padding:var(--s1) var(--s4);font-family:inherit;font-size:var(--f-xs);font-weight:500;border:none;background:none;cursor:pointer;color:var(--muted);transition:all var(--dur) var(--ease);}
+/* 6px رأسياً بدل 4px: كان ارتفاع الزر 23px وهو دون الحد الأدنى لهدف اللمس
+   في WCAG 2.2 (معيار 2.5.8 = 24×24 بكسل). */
+.chat-mode-btn{padding:6px var(--s4);font-family:inherit;font-size:var(--f-xs);font-weight:500;border:none;background:none;cursor:pointer;color:var(--muted);transition:all var(--dur) var(--ease);}
 .chat-mode-btn.on{background:var(--g-brand);color:#fff;}
 .chat-body{flex:1;overflow-y:auto;padding:var(--s6);display:flex;flex-direction:column;gap:var(--s4);}
 .msg{display:flex;gap:var(--s3);max-width:80%;animation:fadeUp .3s var(--ease);}
@@ -250,6 +264,9 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 .chat-input-area{padding:var(--s4) var(--s5);border-top:1px solid var(--border);background:var(--surface);}
 .chat-chips{display:flex;gap:var(--s2);margin-bottom:var(--s3);flex-wrap:wrap;}
 .chat-chip{padding:var(--s1) var(--s3);border-radius:var(--r-full);font-family:inherit;font-size:var(--f-xs);background:var(--surface-alt);border:1px solid var(--border);color:var(--text);cursor:pointer;transition:all var(--dur) var(--ease);}
+/* على أجهزة اللمس فقط: أهداف لمس أوسع للعناصر الصغيرة، بلا أي تغيير على
+   مظهر سطح المكتب (المؤشر الدقيق). */
+@media(pointer:coarse){.chat-chip,.chat-mode-btn,.res-chip,.footer-link{min-height:36px;}}
 .chat-chip:hover{border-color:var(--secondary);color:var(--secondary);}
 .chat-input-row{display:flex;align-items:flex-end;gap:var(--s2);background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--r-xl);padding:var(--s2);transition:border-color var(--dur) var(--ease);}
 .chat-input-row:focus-within{border-color:var(--secondary);box-shadow:0 0 0 3px rgba(129,79,195,.1);}
@@ -264,7 +281,9 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 
 /* SETTINGS PAGE */
 .settings-wrap{padding-top:100px;padding-bottom:var(--s24);}
-.settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:var(--s6);}
+/* min(340px,100%) بدل 340px: بدونها يفرض العمود 340 بكسل حتى على شاشة 320
+   بكسل فتطفح البطاقة خارج الإطار. النمط نفسه مطبَّق على بقية الشبكات المرنة. */
+.settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr));gap:var(--s6);}
 .settings-group{padding:var(--s6);}
 .settings-group h3{font-size:var(--f-h3);font-weight:700;color:var(--ink);margin-bottom:var(--s5);display:flex;align-items:center;gap:var(--s3);}
 .setting-row{display:flex;align-items:center;justify-content:space-between;padding:var(--s4) 0;border-bottom:1px solid var(--border);}
@@ -429,11 +448,29 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 .nav-user{display:none;align-items:center;gap:var(--s2);}
 .nav-user.on{display:inline-flex;}
 .nav-guest.off{display:none!important;}
-.nav-avatar{width:34px;height:34px;border-radius:var(--r-full);background:var(--g-brand);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:var(--f-sm);border:2px solid rgba(255,255,255,.5);}
+.nav-avatar{width:34px;height:34px;border-radius:var(--r-full);background:var(--g-brand);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:var(--f-sm);border:2px solid rgba(255,255,255,.5);flex-shrink:0;}
+.nav-id{display:inline-flex;align-items:center;gap:var(--s2);background:none;border:none;cursor:pointer;font-family:inherit;padding:var(--s1);border-radius:var(--r-full);}
+.nav-id-text{display:flex;flex-direction:column;align-items:flex-start;line-height:1.3;}
+.nav-id-text b{color:#fff;font-size:var(--f-sm);font-weight:700;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.nav.scrolled .nav-id-text b{color:var(--ink);}
+.nav-id-chevron{width:14px;height:14px;color:rgba(255,255,255,.7);transition:transform var(--dur) var(--ease);flex-shrink:0;}
+.nav.scrolled .nav-id-chevron{color:var(--muted);}
+.nav-id[aria-expanded="true"] .nav-id-chevron{transform:rotate(180deg);}
+.role-pill{display:inline-block;background:rgba(82,189,249,.22);color:#eaf6ff;border:1px solid rgba(255,255,255,.3);font-size:10px;font-weight:700;font-style:normal;padding:1px var(--s2);border-radius:var(--r-full);margin-top:2px;}
+.nav.scrolled .role-pill{background:rgba(129,79,195,.12);color:var(--secondary);border-color:rgba(129,79,195,.25);}
+.user-menu-head{position:relative;}
+.user-menu-head .role-pill{background:rgba(129,79,195,.1);color:var(--secondary);border-color:var(--border);margin-top:var(--s2);}
+/* على الجوال لا يتسع الشريط العلوي للاسم والدور، فيظهران هنا أعلى القائمة
+   الجانبية بدلاً من ضغط الشريط حتى يطفح خارج عرض الشاشة. */
+.mob-user{display:flex;align-items:center;gap:var(--s3);padding:var(--s2) var(--s1) var(--s4);}
+.mob-user-text{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0;}
+.mob-user-text b{font-size:var(--f-sm);color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;}
+.mob-user .role-pill{background:rgba(129,79,195,.1);color:var(--secondary);border-color:var(--border);margin-top:0;}
 
 /* قائمة الجوال — نسخة محسّنة */
 @media(max-width:900px){.nav-links{display:none;}.burger{display:flex;}}
-@media(max-width:900px){.nav-cta,.nav-a11y-btn,.nav-tools .nav-icon-btn.hide-sm{display:none;}}
+@media(max-width:900px){.nav-cta,.nav-a11y-btn,.nav-tools .nav-icon-btn.hide-sm,.nav-id-text.hide-sm{display:none;}
+.nav-id-chevron{display:none;}.nav-id{padding:0;gap:0;}}
 .mob-menu{width:320px;padding:0;gap:0;overflow-y:auto;overscroll-behavior:contain;}
 .mob-head{display:flex;align-items:center;justify-content:space-between;padding:var(--s5) var(--s5) var(--s4);border-bottom:1px solid var(--border);position:sticky;top:0;background:inherit;backdrop-filter:blur(24px);z-index:2;}
 .mob-head img{height:34px;}
@@ -505,6 +542,16 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 
 /* ============ لوحة التحكم ============ */
 .dash-tabs{display:flex;gap:var(--s1);background:var(--surface);border:1px solid var(--border);padding:var(--s1);border-radius:var(--r-full);margin-bottom:var(--s8);overflow-x:auto;scrollbar-width:none;}
+/* من عرض الأجهزة اللوحية فأكبر: القائمة تصبح شريطاً جانبياً ثابتاً — يمين
+   الشاشة تلقائياً لأن dir="rtl"، فأول عمود في الشبكة يُرسم يميناً بلا أي
+   قلب يدوي. أضيق من ذلك تبقى شرائح أفقية كما كانت دائماً، بلا أي تغيير. */
+@media(min-width:960px){
+.dash-wrap{display:grid;grid-template-columns:240px 1fr;grid-template-areas:"welcome welcome" "tabs panels";gap:0 var(--s8);align-items:start;}
+.dash-welcome{grid-area:welcome;}
+.dash-tabs{grid-area:tabs;flex-direction:column;align-items:stretch;background:none;border:none;padding:0;border-radius:0;margin-bottom:0;overflow-x:visible;position:sticky;top:calc(100px + var(--s4));gap:2px;}
+.dash-tab{justify-content:flex-start;border-radius:var(--r-md);padding:var(--s3) var(--s4);width:100%;}
+.dash-panel{grid-area:panels;min-width:0;}
+}
 .dash-tabs::-webkit-scrollbar{display:none;}
 .dash-tab{flex-shrink:0;background:none;border:none;font-family:inherit;font-size:var(--f-sm);font-weight:600;color:var(--muted);padding:var(--s3) var(--s5);border-radius:var(--r-full);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;transition:all var(--dur) var(--ease);}
 .dash-tab svg{width:16px;height:16px;}
@@ -537,7 +584,7 @@ table.tbl tr:hover td{background:var(--surface-alt);}
 .icon-btn-sm svg{width:15px;height:15px;}
 .empty-state{padding:var(--s12) var(--s6);text-align:center;color:var(--muted);font-size:var(--f-sm);}
 .empty-state svg{width:40px;height:40px;color:var(--border);margin-bottom:var(--s3);}
-.dash-profile-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--s5);}
+.dash-profile-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:var(--s5);}
 
 /* ============ تنبيهات ============ */
 #toasts{position:fixed;bottom:24px;inset-inline-start:24px;z-index:12000;display:flex;flex-direction:column;gap:var(--s3);pointer-events:none;max-width:min(360px,calc(100vw - 48px));}
@@ -625,7 +672,7 @@ table.tbl tr:hover td{background:var(--surface-alt);}
 
 
 /* sources + misc v2 */
-.sources-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:var(--s4)}
+.sources-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));gap:var(--s4)}
 .src-card{padding:var(--s5) var(--s4)}
 .src-name{font-weight:700;margin-bottom:4px}
 .src-dom{color:var(--secondary);font-size:var(--f-sm);font-weight:600;margin-bottom:6px}
@@ -694,10 +741,16 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <button class="nav-cta nav-guest" onclick="startTrial()" data-i18n="nav.cta">جرّب الآن</button>
 <div class="nav-user" id="navUser">
 <button class="nav-icon-btn hide-sm" onclick="go('dashboard')" data-i18n="nav.dash">لوحة التحكم</button>
-<button class="nav-avatar" id="navAvatar" onclick="toggleUserMenu(event)" aria-label="قائمة حسابي" aria-haspopup="true" aria-expanded="false">م</button>
-<span class="sr-only" id="navName"></span>
+<button class="nav-id" id="navIdBtn" onclick="toggleUserMenu(event)" aria-label="قائمة حسابي" aria-haspopup="true" aria-expanded="false">
+<span class="nav-avatar" id="navAvatar">م</span>
+<span class="nav-id-text hide-sm">
+<b id="navName"></b>
+<em class="role-pill" id="navRolePill" hidden></em>
+</span>
+<svg class="ico nav-id-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+</button>
 <div class="user-menu" id="userMenu" role="menu">
-<div class="user-menu-head"><b id="umName"></b><span id="umEmail"></span></div>
+<div class="user-menu-head"><b id="umName"></b><span id="umEmail"></span><em class="role-pill" id="umRolePill" hidden></em></div>
 <button class="user-menu-item" onclick="go('dashboard');closeUserMenu()"><svg><use href="#ic-zap"/></svg> لوحة التحكم</button>
 <button class="user-menu-item" onclick="go('dashboard');closeUserMenu();setTimeout(()=>dashTab('profile',document.querySelectorAll('.dash-tab')[2]),150)"><svg><use href="#ic-settings"/></svg> ملفي الشخصي</button>
 <button class="user-menu-item" onclick="go('settings');closeUserMenu()"><svg><use href="#ic-a11y"/></svg> إعدادات الوصول</button>
@@ -716,6 +769,7 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <button class="mob-close" onclick="toggleMob()" aria-label="إغلاق القائمة">&times;</button>
 </div>
 <div class="mob-body">
+<div class="mob-user mob-auth" style="display:none"><span class="nav-avatar" id="mobAvatar">م</span><span class="mob-user-text"><b id="mobName"></b><em class="role-pill" id="mobRolePill" hidden></em></span></div>
 <button class="mob-link on" onclick="go('home');toggleMob()" data-pg="home"><svg><use href="#ic-heart"/></svg> الرئيسية</button>
 <button class="mob-link" onclick="go('chat');toggleMob()" data-pg="chat"><svg><use href="#ic-chat"/></svg> المحادثة الذكية</button>
 <button class="mob-link" onclick="go('resources');toggleMob()" data-pg="resources"><svg><use href="#ic-book"/></svg> الدليل</button>
@@ -1088,9 +1142,9 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <p style="color:var(--muted);font-size:var(--f-sm);margin-bottom:var(--s4)">تحكّم كامل ببياناتك من هنا — بدون مراسلات ولا انتظار.</p>
 <label class="chk" style="display:flex;gap:10px;align-items:flex-start;margin-bottom:var(--s4)"><input type="checkbox" id="optImprove" checked onchange="setImprove(this.checked)"><span>أسمح باستخدام محادثاتي (بدون هويتي) لتحسين دقة وصال — يمكنك إيقافه في أي وقت</span></label>
 <div style="display:flex;gap:10px;flex-wrap:wrap">
-<button class="btn btn-outline" type="button" onclick="exportMyData()"><svg><use href="#ic-copy"/></svg> تنزيل نسخة من بياناتي</button>
-<button class="btn btn-outline" type="button" onclick="clearMyChats()"><svg><use href="#ic-chat"/></svg> مسح محادثاتي</button>
-<button class="btn btn-outline" type="button" style="color:#c0392b;border-color:#c0392b" onclick="deleteMyAccount()"><svg><use href="#ic-info"/></svg> حذف الحساب نهائياً</button>
+<button class="btn btn-md btn-surface" type="button" onclick="exportMyData()"><svg class="ico"><use href="#ic-copy"/></svg> تنزيل نسخة من بياناتي</button>
+<button class="btn btn-md btn-surface" type="button" onclick="clearMyChats()"><svg class="ico"><use href="#ic-chat"/></svg> مسح محادثاتي</button>
+<button class="btn btn-md btn-surface" type="button" style="color:#c0392b;border-color:#c0392b" onclick="deleteMyAccount()"><svg class="ico"><use href="#ic-trash"/></svg> حذف الحساب نهائياً</button>
 </div></div>
 <div class="form-group"><label for="tkType">نوع الطلب</label>
 <select id="tkType" class="form-input">
@@ -2111,12 +2165,19 @@ function syncAuthUI(){
   guest.forEach(e=>e.classList.toggle('off',!!USER));
   if(user){user.classList.toggle('on',!!USER);
     if(USER){
-      const av=document.getElementById('navAvatar');
-      av.innerHTML=USER.avatar?'<img src="'+USER.avatar+'" alt="">':'';
-      if(!USER.avatar)av.textContent=(USER.name||'م').trim().charAt(0);
+      const initial=(USER.name||'م').trim().charAt(0);
+      ['navAvatar','mobAvatar'].forEach(id=>{
+        const av=document.getElementById(id);if(!av)return;
+        av.innerHTML=USER.avatar?'<img src="'+USER.avatar+'" alt="">':'';
+        if(!USER.avatar)av.textContent=initial;
+      });
       document.getElementById('navName').textContent=(USER.name||'').split(' ')[0];
-      const n=document.getElementById('umName'),e=document.getElementById('umEmail');
-      if(n)n.textContent=USER.name||'';if(e)e.textContent=USER.email||'';
+      const n=document.getElementById('umName'),e=document.getElementById('umEmail'),mn=document.getElementById('mobName');
+      if(n)n.textContent=USER.name||'';if(e)e.textContent=USER.email||'';if(mn)mn.textContent=USER.name||'';
+      const lbl=roleLabel(USER.role||'user');
+      ['navRolePill','umRolePill','mobRolePill'].forEach(id=>{
+        const el=document.getElementById(id);if(!el)return;el.textContent=lbl;el.hidden=false;
+      });
     }}
   document.querySelectorAll('.mob-guest').forEach(e=>e.style.display=USER?'none':'');
   document.querySelectorAll('.mob-auth').forEach(e=>e.style.display=USER?'':'none');
@@ -2132,8 +2193,8 @@ async function restoreSession(){
   syncAuthUI();
 }
 
-function toggleUserMenu(ev){ev.stopPropagation();const m=document.getElementById('userMenu');const open=m.classList.toggle('open');document.getElementById('navAvatar').setAttribute('aria-expanded',open);}
-function closeUserMenu(){const m=document.getElementById('userMenu');if(m)m.classList.remove('open');const a=document.getElementById('navAvatar');if(a)a.setAttribute('aria-expanded','false');}
+function toggleUserMenu(ev){ev.stopPropagation();const m=document.getElementById('userMenu');const open=m.classList.toggle('open');document.getElementById('navIdBtn').setAttribute('aria-expanded',open);}
+function closeUserMenu(){const m=document.getElementById('userMenu');if(m)m.classList.remove('open');const a=document.getElementById('navIdBtn');if(a)a.setAttribute('aria-expanded','false');}
 async function uploadAvatar(inp){
   const f=inp.files&&inp.files[0];inp.value='';if(!f)return;
   if(!/^image\/(jpeg|png|webp)$/.test(f.type))return toast('نقبل صور JPG أو PNG أو WebP فقط.','err');
