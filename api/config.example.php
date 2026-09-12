@@ -96,6 +96,13 @@ define('SMTP_ENCRYPTION', 'ssl');            // 'ssl' (465) أو 'tls' (587، ST
 define('SMTP_USER',       'info@wesalinnovation.sa');   // عادة نفس MAIL_FROM أو صندوق مشابه
 define('SMTP_PASS',       '');               // فارغ = مُعطَّل، يبقى mail() المحلي هو المسار
 
+/* ---------- صيانة تذاكر الدعم الدورية (Cron) ----------
+ * مفتاح سرّي يحمي api/cron-tickets.php من التشغيل عبر رابط عام؛ يُطلب فقط
+ * عند استدعائه من متصفح/HTTP لا من الطرفية (Cron الفعلي على الاستضافة لا
+ * يحتاجه). ضعه سلسلة عشوائية طويلة ولا تشاركه — فارغاً يعني رفض كل وصول
+ * عبر الرابط تلقائياً حتى تضبطه. */
+define('CRON_SECRET', '');
+
 /* مجلد التخزين الخاص (ملفات قاعدة المعرفة والمكتبات المجلوبة). يُفضَّل خارج المجلد العام،
    مثل: /home/USER/domains/wesalinnovation.sa/storage — وإن تُرك يُستخدم storage/ داخل المشروع محمياً بـ .htaccess */
 // define('STORAGE_DIR', '/home/USER/domains/wesalinnovation.sa/storage');

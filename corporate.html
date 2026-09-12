@@ -111,14 +111,38 @@ section{padding:var(--s20) 0}
 .why-card h3{font-size:1.05rem;margin-bottom:var(--s2)}
 .why-card p{font-size:var(--f-sm);color:var(--muted)}
 
-/* تواصل معنا */
-.contact{background:var(--g-brand);color:#fff;border-radius:28px;margin:0 var(--s6);padding:var(--s16) var(--s10);text-align:center}
-@media(max-width:640px){.contact{margin:0 var(--s4);padding:var(--s10) var(--s5)}}
-.contact h2{color:#fff}
-.contact p{color:rgba(255,255,255,.85);max-width:52ch;margin:var(--s4) auto var(--s8)}
-.contact-actions{display:flex;gap:var(--s4);justify-content:center;flex-wrap:wrap}
-.contact-email{font-size:var(--f-sm);color:rgba(255,255,255,.75);margin-top:var(--s6)}
-.contact-email a{color:#fff;font-weight:700;text-decoration:underline}
+/* الدعم الفني — تذكرة ضيف بلا حساب */
+.support-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:var(--s8);align-items:start}
+@media(max-width:860px){.support-grid{grid-template-columns:1fr}}
+.support-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:var(--s8);box-shadow:var(--sh-sm)}
+@media(max-width:640px){.support-card{padding:var(--s6)}}
+.support-side{display:flex;flex-direction:column;gap:var(--s6)}
+.support-card h3{margin-bottom:var(--s5)}
+.support-card>p{color:var(--muted);font-size:var(--f-sm);margin-bottom:var(--s5)}
+.support-email a{color:var(--secondary);font-weight:700;text-decoration:underline}
+.support-email a:hover{color:var(--primary)}
+
+/* عناصر النماذج — نفس مقاييس منصة وصال في index.html، حتى يبقى الإحساس واحداً */
+.form-group{margin-bottom:var(--s5)}
+.form-group label{display:block;font-size:var(--f-sm);font-weight:600;color:var(--ink);margin-bottom:var(--s2)}
+.form-input{width:100%;padding:var(--s3) var(--s4);border:1px solid var(--border);border-radius:var(--r-md);font-family:inherit;font-size:var(--f-sm);color:var(--ink);background:var(--surface);outline:none;transition:border-color var(--dur) var(--ease),box-shadow var(--dur) var(--ease)}
+.form-input:focus{border-color:var(--secondary);box-shadow:0 0 0 3px rgba(129,79,195,.1)}
+textarea.form-input{min-height:130px;resize:vertical;line-height:1.7}
+select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9' fill='none' stroke='%238a7fa3' stroke-width='2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:left 12px center}
+.field-hint{font-size:var(--f-xs);color:var(--muted);margin-top:6px}
+.form-error{background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.25);color:#b91c1c;padding:var(--s3) var(--s4);border-radius:var(--r-md);font-size:var(--f-sm);margin-bottom:var(--s5);display:none}
+.form-error.on{display:block}
+.form-ok{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:#047857;padding:var(--s3) var(--s4);border-radius:var(--r-md);font-size:var(--f-sm);margin-bottom:var(--s5);display:none}
+.form-ok.on{display:block}
+@media(prefers-color-scheme:dark){.form-error{color:#fca5a5}.form-ok{color:#6ee7b7}}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:rot .7s linear infinite;vertical-align:-3px}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* نجاح إنشاء التذكرة — الرقم المرجعي ورابط المتابعة يبقيان ظاهرين بلا اختفاء تلقائي */
+.ticket-success{background:var(--surface-alt);border:1.5px solid var(--secondary);border-radius:var(--r-lg);padding:var(--s6)}
+.ticket-success .ref-big{display:block;font-size:1.35rem;font-weight:800;color:var(--primary);letter-spacing:.02em;direction:ltr;text-align:center;margin:var(--s2) 0 var(--s5)}
+.ticket-success .btn{width:100%;justify-content:center}
+.ticket-success .again{display:block;width:100%;text-align:center;margin-top:var(--s4);font-size:var(--f-sm);color:var(--secondary);text-decoration:underline;background:none;border:none;cursor:pointer;font-family:inherit;padding:var(--s2);min-height:36px}
 
 /* الفوتر */
 footer{padding:var(--s12) 0 var(--s8);border-top:1px solid var(--border)}
@@ -144,7 +168,7 @@ footer{padding:var(--s12) 0 var(--s8);border-top:1px solid var(--border)}
 <li><a href="#about">من نحن</a></li>
 <li><a href="#services">خدماتنا</a></li>
 <li><a href="#why">لماذا وصال</a></li>
-<li><a href="#contact">تواصل معنا</a></li>
+<li><a href="#contact">الدعم الفني</a></li>
 </ul>
 <a class="btn btn-outline" href="https://chat.wesalinnovation.sa/" style="padding:var(--s2) var(--s6);font-size:var(--f-sm)">جرّب وصال</a>
 </nav>
@@ -271,13 +295,103 @@ footer{padding:var(--s12) 0 var(--s8);border-top:1px solid var(--border)}
 </section>
 
 <section id="contact">
-<div class="contact container">
-<h2>عندك مشروع أو فكرة؟</h2>
-<p>سواء تبغى تجربة وصال لجهتك، أو تحتاج فريقاً يبني لك منصة أو نظاماً، أو برنامجاً تدريبياً — راسلنا ونرجع لك بسرعة.</p>
-<div class="contact-actions">
-<a class="btn btn-primary" style="background:#fff;color:var(--primary)" href="mailto:info@wesalinnovation.sa">راسلنا الآن</a>
+<div class="container">
+<div class="sec-head">
+<span class="eyebrow">الدعم الفني</span>
+<h2>تحتاج مساعدة؟ افتح طلب دعم</h2>
+<p>ارفع طلبك مباشرة بلا حاجة لإنشاء حساب — تحصل فوراً على رقم مرجعي ورابط لمتابعة الرد وقتما تريد. أو راسلنا مباشرة إن كنت تفضّل ذلك.</p>
 </div>
-<p class="contact-email">أو مباشرة على <a href="mailto:info@wesalinnovation.sa">info@wesalinnovation.sa</a></p>
+
+<div class="support-grid">
+
+<div>
+<div class="support-card">
+<h3>افتح تذكرة دعم جديدة</h3>
+
+<form id="ticketForm" novalidate>
+<div class="form-error" id="tkErr" role="alert" aria-live="assertive"></div>
+
+<div class="form-group">
+<label for="tkType">نوع الطلب</label>
+<select id="tkType" class="form-input" required>
+<option value="">اختر نوع الطلب</option>
+<option>تعديل الاسم</option>
+<option>تعديل رقم الجوال</option>
+<option>تعديل البريد الإلكتروني</option>
+<option>تعديل تاريخ الميلاد</option>
+<option>مشكلة في الرصيد أو الأسئلة</option>
+<option>مشكلة تقنية في المنصة</option>
+<option>بلاغ عن معلومة غير دقيقة</option>
+<option>حذف الحساب</option>
+<option>صعوبة وصول</option>
+<option>استفسار عام</option>
+<option>فرصة عمل أو شراكة</option>
+<option>أخرى</option>
+</select>
+</div>
+
+<div class="form-group">
+<label for="tkName">الاسم</label>
+<input type="text" id="tkName" class="form-input" placeholder="اسمك كامل" autocomplete="name" minlength="3" required>
+</div>
+
+<div class="form-group">
+<label for="tkEmail">البريد الإلكتروني</label>
+<input type="email" id="tkEmail" class="form-input" placeholder="example@email.com" autocomplete="email" dir="ltr" required>
+<div class="field-hint">عليه نرسل رقم تذكرتك ورابط متابعتها.</div>
+</div>
+
+<div class="form-group">
+<label for="tkUrgency">درجة الإلحاح</label>
+<select id="tkUrgency" class="form-input">
+<option value="normal" selected>عادي</option>
+<option value="high">عالٍ</option>
+<option value="low">منخفض</option>
+</select>
+</div>
+
+<div class="form-group">
+<label for="tkDetails">تفاصيل الطلب</label>
+<textarea id="tkDetails" class="form-input" rows="5" placeholder="اشرح طلبك أو مشكلتك بالتفصيل..." minlength="10" required></textarea>
+<div class="field-hint">10 أحرف على الأقل.</div>
+</div>
+
+<button type="submit" class="btn btn-primary" id="tkBtn" style="width:100%;justify-content:center">إرسال الطلب</button>
+</form>
+
+<div class="ticket-success" id="tkSuccess" role="status" aria-live="polite" tabindex="-1" hidden>
+<h3 style="margin-bottom:var(--s2);display:flex;align-items:center;gap:var(--s2)"><svg class="ico" style="width:20px;height:20px;color:#047857" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> استلمنا طلبك</h3>
+<p id="tkSuccessMsg"></p>
+<span class="ref-big" id="tkRefValue"></span>
+<a class="btn btn-primary" id="tkTrackLink" href="ticket.html">تابع تذكرتك من هنا</a>
+<button type="button" class="again" id="tkAgainBtn">تريد إرسال طلب آخر؟</button>
+</div>
+</div>
+</div>
+
+<div class="support-side">
+
+<div class="support-card">
+<h3>عندك تذكرة سابقة؟</h3>
+<p>أدخل رابط المتابعة كاملاً أو رمزها فقط — أي تحديث يصلك على بريدك أيضاً.</p>
+<form id="trackForm" novalidate>
+<div class="form-error" id="trErr" role="alert" aria-live="assertive"></div>
+<div class="form-group">
+<label for="trInput">رابط المتابعة أو رمز التذكرة</label>
+<input type="text" id="trInput" class="form-input" dir="ltr" placeholder="ticket.html?token=... أو الرمز فقط" autocomplete="off">
+</div>
+<button type="submit" class="btn btn-outline" style="width:100%;justify-content:center">تابع تذكرتك</button>
+</form>
+</div>
+
+<div class="support-card support-email">
+<h3>تفضّل التواصل المباشر؟</h3>
+<p style="margin-bottom:var(--s3)">راسلنا على بريدنا وسنرد عليك بأقرب وقت.</p>
+<p style="margin:0"><a href="mailto:info@wesalinnovation.sa">info@wesalinnovation.sa</a></p>
+</div>
+
+</div>
+</div>
 </div>
 </section>
 
@@ -303,7 +417,7 @@ footer{padding:var(--s12) 0 var(--s8);border-top:1px solid var(--border)}
 <ul>
 <li><a href="#about">من نحن</a></li>
 <li><a href="#services">خدماتنا</a></li>
-<li><a href="#contact">تواصل معنا</a></li>
+<li><a href="#contact">الدعم الفني</a></li>
 </ul>
 </div>
 <div class="foot-col">
@@ -321,6 +435,83 @@ footer{padding:var(--s12) 0 var(--s8);border-top:1px solid var(--border)}
 </div>
 </div>
 </footer>
+
+<script>
+/* ================= الدعم الفني — تذكرة ضيف بلا حساب =================
+   نفس نمط النداء المستخدم في index.html (fetch + POST JSON + same-origin)
+   حرفياً، حتى يبقى التعامل مع tickets.php واحداً في كل صفحات المشروع. */
+const API='api/';
+async function api(path,body){
+  try{
+    const r=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(body||{})});
+    const j=await r.json().catch(()=>null);
+    if(j&&typeof j==='object')return j;
+    throw new Error('http '+r.status);
+  }catch(e){return {ok:false,offline:true};}
+}
+function showMsg(id,txt){
+  const e=document.getElementById(id);if(!e)return;
+  e.textContent=txt;e.classList.toggle('on',!!txt);
+}
+function btnLoad(id,on,label){
+  const b=document.getElementById(id);if(!b)return;
+  b.disabled=on;
+  if(on){b.dataset.html=b.innerHTML;b.innerHTML='<span class="spin"></span> '+(label||'لحظة...');}
+  else if(b.dataset.html){b.innerHTML=b.dataset.html;}
+}
+function validEmail(v){return /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(v);}
+
+/* ---------- إنشاء تذكرة ---------- */
+const ticketForm=document.getElementById('ticketForm');
+ticketForm.addEventListener('submit', async e=>{
+  e.preventDefault();
+  showMsg('tkErr','');
+  const type=document.getElementById('tkType').value;
+  const name=document.getElementById('tkName').value.trim();
+  const email=document.getElementById('tkEmail').value.trim();
+  const urgency=document.getElementById('tkUrgency').value;
+  const details=document.getElementById('tkDetails').value.trim();
+  if(!type) return showMsg('tkErr','اختر نوع الطلب.');
+  if(name.length<3) return showMsg('tkErr','اكتب اسمك كاملاً حتى نعرف من نخاطب.');
+  if(!validEmail(email)) return showMsg('tkErr','اكتب بريداً إلكترونياً صحيحاً — عليه نرسل لك رابط المتابعة.');
+  if(details.length<10) return showMsg('tkErr','اكتب تفاصيل الطلب (10 أحرف على الأقل).');
+  btnLoad('tkBtn',true,'جارٍ الإرسال');
+  const res=await api('tickets.php',{action:'create',type,name,email,urgency,details,source:'corporate'});
+  btnLoad('tkBtn',false);
+  if(!res.ok) return showMsg('tkErr', res.offline
+    ? 'ما وصلنا طلبك — يبدو أن الاتصال منقطع. نصّك باقٍ في الصفحة، أعد الإرسال بعد رجوع الاتصال.'
+    : (res.error||'تعذّر إرسال الطلب. حاول مرة أخرى.'));
+  showTicketSuccess(res.ref,res.token,res.message);
+});
+
+function showTicketSuccess(ref,token,message){
+  document.getElementById('tkSuccessMsg').textContent=message||('استلمنا طلبك. رقمه '+ref+'.');
+  document.getElementById('tkRefValue').textContent=ref;
+  document.getElementById('tkTrackLink').href='ticket.html?token='+encodeURIComponent(token);
+  ticketForm.hidden=true;
+  const box=document.getElementById('tkSuccess');
+  box.hidden=false;
+  box.focus();
+  box.scrollIntoView({behavior:'smooth',block:'start'});
+}
+document.getElementById('tkAgainBtn').addEventListener('click', ()=>{
+  document.getElementById('tkSuccess').hidden=true;
+  ticketForm.hidden=false;
+  ticketForm.reset();
+  document.getElementById('tkType').focus();
+});
+
+/* ---------- متابعة تذكرة سابقة ---------- */
+document.getElementById('trackForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  showMsg('trErr','');
+  const raw=document.getElementById('trInput').value;
+  const m=raw.match(/token=([a-f0-9]+)/i);
+  const token=((m?m[1]:raw)||'').replace(/[^a-f0-9]/ig,'').toLowerCase();
+  if(token.length!==32) return showMsg('trErr','أدخل رابط المتابعة كاملاً أو الرمز الذي أرسلناه إليك بالبريد.');
+  location.href='ticket.html?token='+token;
+});
+</script>
 
 </body>
 </html>

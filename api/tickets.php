@@ -317,9 +317,15 @@ switch ($action) {
                    'name' => $t['user_id'] ? ($u['name'] ?? null) : $t['guest_name']];
         ticketEntry((int)$t['id'], $author, 'reply', 'public', $body);
 
-        /* ردّ صاحب التذكرة يرفع التجميد: ما عدنا ننتظره */
+        /* ردّ صاحب التذكرة يرفع التجميد: ما عدنا ننتظره. لكن "التجميد" لم
+           يكن له أثر فعلي — due_resolution لا يتغيّر أبداً وقت الانتظار،
+           فينتظر الفريق يوماً كاملاً ويُحسب عليهم تأخيراً لم يصنعوه. هذا
+           يمدّد الموعد بمقدار مدة الانتظار الفعلية، لا يجمّدها وهماً. */
         if ($t['status'] === 'waiting') {
-            db()->prepare("UPDATE support_tickets SET status='in_progress' WHERE id=?")->execute([$t['id']]);
+            $waitedSeconds = max(0, time() - strtotime($t['updated_at'] ?: $t['created_at']));
+            db()->prepare("UPDATE support_tickets SET status='in_progress',
+                           due_resolution=DATE_ADD(due_resolution, INTERVAL ? SECOND) WHERE id=?")
+                ->execute([$waitedSeconds, $t['id']]);
             ticketEntry((int)$t['id'], null, 'status', 'public', 'وصلنا ردّك ورجعت التذكرة قيد المعالجة.',
                         ['from' => 'waiting', 'to' => 'in_progress']);
         }
