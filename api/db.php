@@ -12,6 +12,7 @@ function apiFail(string $detail): void
     $sent = true;
 
     @error_log('[wesal-api] ' . $detail);
+    discardStrayOutput();
     if (!headers_sent()) {
         http_response_code(500);
         header('Content-Type: application/json; charset=utf-8');
@@ -21,6 +22,20 @@ function apiFail(string $detail): void
         'ok'    => false,
         'error' => $debug ? $detail : 'صار خلل مؤقت في الخادم. حاول بعد قليل، وإذا تكرر راسل الدعم الفني.',
     ], JSON_UNESCAPED_UNICODE);
+}
+
+/* أي بايت يُطبع خارج وسوم PHP — مسافة أو سطر أو حرف شارد بعد تحرير يدوي —
+   يسبق الرد فيكسر تحليله عند العميل، بينما تبقى الحالة 200 والجسم سليماً
+   بعده؛ فيبدو العطل انقطاعَ شبكة ولا يظهر له أثر في أي سجل. يُلتقط هنا
+   ويُسجَّل ثم يُطرح قبل إرسال أي رد. */
+function discardStrayOutput(): void
+{
+    if (ob_get_level() === 0) { return; }
+    $stray = ob_get_contents();
+    if ($stray !== false && $stray !== '') {
+        @error_log('[wesal-api] بايتات دخيلة قبل الرد: ' . substr((string) json_encode($stray), 0, 200));
+    }
+    ob_clean();
 }
 
 set_exception_handler(static function (Throwable $e): void {
@@ -34,6 +49,7 @@ register_shutdown_function(static function (): void {
     }
 });
 
+ob_start();
 require_once __DIR__ . '/config.php';
 
 /* قيم افتراضية للثوابت — حتى يظل ملف config.php القائم على الخادم يعمل بلا
@@ -491,6 +507,7 @@ function body(): array {
 }
 
 function out(array $data, int $code = 200): void {
+    discardStrayOutput();
     http_response_code($code);
     echo json_encode($data, JSON_UNESCAPED_UNICODE);
     exit;
