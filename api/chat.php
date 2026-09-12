@@ -210,9 +210,54 @@ function askOpenAI(string $sys, string $msg, array $hist): ?string {
     return $j['choices'][0]['message']['content'] ?? null;
 }
 
+/* Anthropic Claude — الطلب المباشر لواجهة Messages، بلا SDK (لا Composer في هذا
+   المشروع بتاتاً، بنفس منطق askGemini/askOpenAI أعلاه). ملاحظات تخص نماذج
+   الجيل الخامس تحديداً: temperature/top_p محذوفان (يرجعان خطأ 400 إن أُرسلا)،
+   وterminal thinking يعمل تلقائياً افتراضياً ما لم يُعطَّل صراحة — نعطّله هنا
+   لأن هذا رد محادثة قصير مباشر لا يحتاج تفكيراً ممتداً، تماشياً مع سرعة بقية
+   المزوّدين في هذا الملف. */
+function askClaude(string $sys, string $msg, array $hist): ?string {
+    if (!CLAUDE_KEY) return null;
+    $msgs = [];
+    foreach ($hist as $h) {
+        $msgs[] = ['role' => (($h['role'] ?? '') === 'user' ? 'user' : 'assistant'),
+                   'content' => mb_substr((string)($h['text'] ?? ''), 0, 800)];
+    }
+    $msgs[] = ['role' => 'user', 'content' => $msg];
+    $j = httpPost('https://api.anthropic.com/v1/messages',
+        ['model' => CLAUDE_MODEL, 'max_tokens' => 900, 'system' => $sys,
+         'messages' => $msgs, 'thinking' => ['type' => 'disabled']],
+        ['x-api-key: ' . CLAUDE_KEY, 'anthropic-version: 2023-06-01']);
+    if (!$j || ($j['stop_reason'] ?? '') === 'refusal') return null;
+    foreach ($j['content'] ?? [] as $block) if (($block['type'] ?? '') === 'text') return $block['text'];
+    return null;
+}
+
+/* Kimi (Moonshot AI) — واجهة متوافقة مع OpenAI حرفياً، فنفس شكل askOpenAI()
+   تماماً مع عنوان ومفتاح مختلفين فقط. */
+function askKimi(string $sys, string $msg, array $hist): ?string {
+    if (!KIMI_KEY) return null;
+    $msgs = [['role' => 'system', 'content' => $sys]];
+    foreach ($hist as $h) {
+        $msgs[] = ['role' => (($h['role'] ?? '') === 'user' ? 'user' : 'assistant'),
+                   'content' => mb_substr((string)($h['text'] ?? ''), 0, 800)];
+    }
+    $msgs[] = ['role' => 'user', 'content' => $msg];
+    $j = httpPost(rtrim(KIMI_BASE_URL, '/') . '/chat/completions',
+        ['model' => KIMI_MODEL, 'messages' => $msgs, 'temperature' => 0.5, 'max_tokens' => 900],
+        ['Authorization: Bearer ' . KIMI_KEY]);
+    return $j['choices'][0]['message']['content'] ?? null;
+}
+
+/* المزوّد النشط يُضبط من config.php بلا تعديل كود. gemini وopenai يبقيان
+   بديلين لبعضهما كما كانا دائماً؛ claude وkimi مزوّدان اختياريان جديدان،
+   وبديلهما التلقائي gemini لأنه لا يحتاج اشتراكاً مدفوعاً (قرار المشروع). */
 $reply = null;
-if (AI_PROVIDER === 'gemini') { $reply = askGemini($SYSTEM, $message, $history) ?: askOpenAI($SYSTEM, $message, $history); }
-elseif (AI_PROVIDER === 'openai') { $reply = askOpenAI($SYSTEM, $message, $history) ?: askGemini($SYSTEM, $message, $history); }
+if (AI_PROVIDER === 'gemini')      { $reply = askGemini($SYSTEM, $message, $history) ?: askOpenAI($SYSTEM, $message, $history); }
+elseif (AI_PROVIDER === 'openai')  { $reply = askOpenAI($SYSTEM, $message, $history) ?: askGemini($SYSTEM, $message, $history); }
+elseif (AI_PROVIDER === 'claude')  { $reply = askClaude($SYSTEM, $message, $history) ?: askGemini($SYSTEM, $message, $history); }
+elseif (AI_PROVIDER === 'kimi')    { $reply = askKimi($SYSTEM, $message, $history)   ?: askGemini($SYSTEM, $message, $history); }
+else                                { $reply = askGemini($SYSTEM, $message, $history); }
 
 /* ---------- حارس: لا يُذكر المزوّد إطلاقاً ---------- */
 if ($reply) {

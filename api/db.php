@@ -14,8 +14,18 @@ foreach ([
     'GEMINI_FALLBACKS'       => '',
     'OPENAI_KEY'             => '',
     'OPENAI_MODEL'           => 'gpt-4o-mini',
+    'CLAUDE_KEY'             => '',
+    'CLAUDE_MODEL'           => 'claude-sonnet-5',
+    'KIMI_KEY'               => '',
+    'KIMI_MODEL'             => 'kimi-k2-turbo-preview',
+    'KIMI_BASE_URL'          => 'https://api.moonshot.ai/v1',
     'INVITE_DAILY_LIMIT'     => 100,
     'BETA_TRIAL_HOURS'       => 48,
+    'SMTP_HOST'              => 'smtp.hostinger.com',
+    'SMTP_PORT'              => 465,
+    'SMTP_ENCRYPTION'        => 'ssl',
+    'SMTP_USER'              => '',
+    'SMTP_PASS'              => '',
 ] as $k => $v) { if (!defined($k)) define($k, $v); }
 
 if (!APP_DEBUG) { ini_set('display_errors', '0'); error_reporting(0); }
@@ -63,6 +73,218 @@ function colType(string $table, string $col): string {
     return (string)($s->fetch()['t'] ?? '');
 }
 
+/* ---------- تذاكر الدعم: الحالات والأولويات ---------- */
+const TICKET_STATUSES = ['new', 'in_progress', 'waiting', 'escalated', 'resolved', 'closed', 'reopened'];
+const TICKET_PRIORITIES = ['critical', 'high', 'normal', 'low'];
+
+/**
+ * ترقية جدول التذاكر من الشكل البدائي (ستة أعمدة وحالتان) إلى نظام تذاكر
+ * كامل. مقسّمة إلى خطوات كل واحدة محروسة بفحص وجودها، لأن ensureSchema()
+ * تُنفَّذ مع كل طلب فلا يجوز أن تعيد أي خطوة تنفيذ نفسها.
+ */
+function migrateTickets(): void {
+    /* ١) الأعمدة الجديدة. ref وtrack_token تُضافان بلا UNIQUE أولاً حتى
+       نملأهما للصفوف القائمة، ثم يُضاف القيد في الخطوة ٣. */
+    if (!colExists('support_tickets', 'ref')) {
+        db()->exec("ALTER TABLE support_tickets
+            ADD COLUMN ref VARCHAR(20) NULL AFTER id,
+            ADD COLUMN track_token CHAR(32) NULL AFTER ref,
+            ADD COLUMN guest_name VARCHAR(80) NULL AFTER user_id,
+            ADD COLUMN guest_email VARCHAR(120) NULL AFTER guest_name,
+            ADD COLUMN subject VARCHAR(140) NULL AFTER type,
+            ADD COLUMN priority ENUM('critical','high','normal','low') NOT NULL DEFAULT 'normal' AFTER details,
+            ADD COLUMN assignee_id INT NULL AFTER priority,
+            ADD COLUMN source ENUM('corporate','chat','internal') NOT NULL DEFAULT 'chat' AFTER assignee_id,
+            ADD COLUMN due_first_response DATETIME NULL,
+            ADD COLUMN due_resolution DATETIME NULL,
+            ADD COLUMN first_response_at DATETIME NULL,
+            ADD COLUMN resolved_at DATETIME NULL,
+            ADD COLUMN closed_at DATETIME NULL,
+            ADD COLUMN updated_at DATETIME NULL,
+            ADD COLUMN resolution TEXT NULL,
+            ADD COLUMN csat TINYINT NULL,
+            ADD INDEX ix_status (status),
+            ADD INDEX ix_assignee (assignee_id),
+            ADD INDEX ix_due (due_resolution)");
+    }
+
+    /* ٢) user_id يصبح اختيارياً ليرفع الضيف تذكرة. المفتاح الأجنبي في
+       schema.sql يقبل NULL بلا فحص، فلا حاجة لإسقاطه. */
+    if (stripos(colType('support_tickets', 'user_id'), 'int') !== false
+        && !colNullable('support_tickets', 'user_id')) {
+        db()->exec("ALTER TABLE support_tickets MODIFY user_id INT NULL");
+    }
+
+    /* ٣) توسيع الحالات من اثنتين إلى سبع. تتم على ثلاث مراحل لأن UPDATE
+       على قيمة غير موجودة في ENUM يفشل: نضيف الجديدة مع إبقاء القديمة،
+       ثم نحوّل الصفوف، ثم نحذف القديمة. */
+    $statusType = colType('support_tickets', 'status');
+    if (strpos($statusType, "'in_progress'") === false) {
+        $all = "'open','done','" . implode("','", TICKET_STATUSES) . "'";
+        db()->exec("ALTER TABLE support_tickets MODIFY status ENUM($all) NOT NULL DEFAULT 'new'");
+        db()->exec("UPDATE support_tickets SET status='new' WHERE status='open'");
+        db()->exec("UPDATE support_tickets SET status='closed', closed_at=created_at WHERE status='done'");
+        $new = "'" . implode("','", TICKET_STATUSES) . "'";
+        db()->exec("ALTER TABLE support_tickets MODIFY status ENUM($new) NOT NULL DEFAULT 'new'");
+    }
+
+    /* ٤) ملء الرقم المرجعي ورمز التتبّع للتذاكر القائمة، ثم فرض التفرّد.
+       بلا هذه الخطوة يفشل قيد UNIQUE على صفوف NULL متكررة في بعض الإعدادات. */
+    $pending = db()->query('SELECT id, created_at FROM support_tickets WHERE ref IS NULL')->fetchAll();
+    if ($pending) {
+        $up = db()->prepare('UPDATE support_tickets SET ref=?, track_token=?, updated_at=created_at WHERE id=?');
+        foreach ($pending as $row) {
+            $year = (int)date('Y', strtotime($row['created_at'])) ?: (int)date('Y');
+            $up->execute([ticketRef($year, (int)$row['id']), bin2hex(random_bytes(16)), (int)$row['id']]);
+        }
+    }
+    if (strpos(indexList('support_tickets'), 'uq_ticket_ref') === false) {
+        db()->exec("ALTER TABLE support_tickets
+                    ADD UNIQUE KEY uq_ticket_ref (ref),
+                    ADD UNIQUE KEY uq_ticket_token (track_token)");
+    }
+
+    /* ٥) سجل التذكرة: كل رد وملاحظة وإحالة وتغيير حالة، بترتيب زمني.
+       visibility هو العمود الذي يحسم ما يراه صاحب التذكرة وما يبقى داخلياً. */
+    db()->exec("CREATE TABLE IF NOT EXISTS ticket_entries (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        ticket_id INT NOT NULL,
+        author_id INT NULL,
+        author_name VARCHAR(80) NULL,
+        kind ENUM('reply','note','referral','status','priority','assign','system') NOT NULL DEFAULT 'reply',
+        visibility ENUM('public','internal') NOT NULL DEFAULT 'internal',
+        body TEXT NULL,
+        meta TEXT NULL,
+        created_at DATETIME NOT NULL,
+        INDEX ix_ticket (ticket_id, created_at), INDEX ix_vis (visibility)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+    /* ٦) المتابعون: المُحيل يبقى مشتركاً في التذكرة بعد خروجها من يده. */
+    db()->exec("CREATE TABLE IF NOT EXISTS ticket_watchers (
+        ticket_id INT NOT NULL,
+        user_id INT NOT NULL,
+        created_at DATETIME NOT NULL,
+        PRIMARY KEY (ticket_id, user_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+    /* ٧) مستوى الدعم مستقل عن دور المنصة: مراجع محتوى يمكن أن يكون معالج
+       تذاكر دون منحه صلاحيات إدارية، والعكس. */
+    if (!colExists('users', 'support_level')) {
+        db()->exec("ALTER TABLE users
+                    ADD COLUMN support_level ENUM('none','agent','lead','exec') NOT NULL DEFAULT 'none'");
+    }
+    /* مدير النظام يصبح قائد الفريق التقني تلقائياً حتى لا يبقى الطابور بلا
+       مالك. خارج الشرط أعلاه ويُعاد تنفيذها كل مرة (رخيصة، بلا أثر إن لم
+       تكن هناك صفوف مطابقة) لأنها إن نُفِّذت مرة واحدة فقط لحظة إضافة
+       العمود، فإن مدير نظام يُسجَّل بعد تلك اللحظة على قاعدة فارغة (كأول
+       حساب في المنصة) يفوتها تماماً — كما حدث فعلاً أثناء الاختبار. الشرط
+       support_level='none' يمنعها من الكتابة فوق ترقية يدوية لاحقة (مثل
+       'exec'). */
+    db()->exec("UPDATE users SET support_level='lead' WHERE role='admin' AND support_level='none'");
+
+    /* ٨) صيانة تذاكر الدعم الدورية (api/cron-tickets.php): عمودان لتتبّع ما
+       أُرسل فعلاً من تنبيهات، حتى لا يكرّر كل تشغيل تالٍ نفس التنبيه ولا
+       يُعيد إغلاق ما أُغلق أصلاً — بنفس فكرة كل الهجرات أعلاه. */
+    if (!colExists('support_tickets', 'sla_warned_at')) {
+        db()->exec("ALTER TABLE support_tickets
+            ADD COLUMN sla_warned_at DATETIME NULL,
+            ADD COLUMN waiting_reminder_count TINYINT NOT NULL DEFAULT 0");
+    }
+
+    migrateMessagesToTickets();
+    ensureNotifications();
+}
+
+/* ---------- الإشعارات ----------
+   بنية عامة لأي إجراء يخصّ أي مستخدم — التذاكر أول من يستخدمها، وأي ميزة
+   لاحقة (رسائل، دعوات، مراجعات) تستدعي notify() نفسها بلا جدول جديد. */
+function ensureNotifications(): void
+{
+    db()->exec("CREATE TABLE IF NOT EXISTS notifications (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        type VARCHAR(40) NOT NULL,
+        title VARCHAR(160) NOT NULL,
+        body VARCHAR(500) NULL,
+        link VARCHAR(200) NULL,
+        read_at DATETIME NULL,
+        created_at DATETIME NOT NULL,
+        INDEX ix_user (user_id, read_at, created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+}
+
+/**
+ * ينشئ إشعاراً لمستخدم مسجَّل واحد. لا تُستدعى لضيف (لا user_id له) —
+ * الضيف يُخطَر بالبريد وحده عبر sendMail(). فشل الإشعار لا يوقف العملية
+ * التي استدعته أبداً — أهم عملية (حفظ التذكرة، الرد، ...) قد تمّت فعلاً.
+ */
+function notify(int $userId, string $type, string $title, string $body = '', ?string $link = null): void
+{
+    try {
+        db()->prepare('INSERT INTO notifications (user_id,type,title,body,link,created_at) VALUES (?,?,?,?,?,NOW())')
+            ->execute([$userId, $type, mb_substr($title, 0, 160), mb_substr($body, 0, 500), $link]);
+    } catch (Throwable $e) { error_log('WESAL_NOTIFY_FAIL: ' . $e->getMessage()); }
+}
+
+/** رقم مرجعي مقروء يُذكر في المراسلات — ليس مفتاحاً سرّياً */
+function ticketRef(int $year, int $id): string {
+    return sprintf('WSL-%d-%05d', $year, $id);
+}
+
+function colNullable(string $table, string $col): bool {
+    $s = db()->prepare("SELECT IS_NULLABLE n FROM information_schema.COLUMNS
+                        WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=? AND COLUMN_NAME=?");
+    $s->execute([$table, $col]);
+    return strtoupper((string)($s->fetch()['n'] ?? '')) === 'YES';
+}
+
+function indexList(string $table): string {
+    $s = db()->prepare("SELECT GROUP_CONCAT(DISTINCT INDEX_NAME) i FROM information_schema.STATISTICS
+                        WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=?");
+    $s->execute([$table]);
+    return (string)($s->fetch()['i'] ?? '');
+}
+
+/**
+ * ترحيل رسائل «تواصل معنا» القديمة إلى تذاكر مغلقة، فيصبح تاريخ التواصل
+ * كله في مكان واحد بدل صندوقين لا يعرف أحدهما الآخر. يُنفَّذ مرة واحدة،
+ * ويُعلَّم كل صف مُرحَّل حتى لا يتكرر.
+ */
+function migrateMessagesToTickets(): void {
+    if (!colExists('messages', 'migrated_ticket_id')) {
+        db()->exec("ALTER TABLE messages ADD COLUMN migrated_ticket_id INT NULL");
+    }
+    $rows = db()->query('SELECT id,name,email,subject,message,created_at
+                         FROM messages WHERE migrated_ticket_id IS NULL
+                         ORDER BY id LIMIT 200')->fetchAll();
+    if (!$rows) return;
+
+    $ins = db()->prepare("INSERT INTO support_tickets
+        (ref,track_token,user_id,guest_name,guest_email,type,subject,details,priority,
+         status,source,created_at,updated_at,closed_at)
+        VALUES (?,?,NULL,?,?,?,?,?,'normal','closed','corporate',?,?,?)");
+    $mark = db()->prepare('UPDATE messages SET migrated_ticket_id=? WHERE id=?');
+    $entry = db()->prepare("INSERT INTO ticket_entries
+        (ticket_id,author_id,author_name,kind,visibility,body,created_at)
+        VALUES (?,NULL,?, 'reply','public',?,?)");
+
+    foreach ($rows as $m) {
+        $when = $m['created_at'];
+        /* رقم مؤقت فريد: المعرّف الحقيقي غير معروف قبل الإدراج، وقيد التفرّد
+           على ref يرفض قيمة ثابتة مكرّرة لو رُحّلت أكثر من رسالة. */
+        $ins->execute([
+            'TMP-' . bin2hex(random_bytes(6)), bin2hex(random_bytes(16)), $m['name'], $m['email'],
+            'أخرى', mb_substr((string)$m['subject'], 0, 140), (string)$m['message'],
+            $when, $when, $when,
+        ]);
+        $tid  = (int)db()->lastInsertId();
+        $year = (int)date('Y', strtotime($when)) ?: (int)date('Y');
+        db()->prepare('UPDATE support_tickets SET ref=? WHERE id=?')->execute([ticketRef($year, $tid), $tid]);
+        $entry->execute([$tid, $m['name'], (string)$m['message'], $when]);
+        $mark->execute([$tid, (int)$m['id']]);
+    }
+}
+
 /**
  * ترقية تلقائية — تُبقي قاعدة بيانات قائمة متوافقة مع schema.sql.
  * لا تُستخدم مفاتيح أجنبية هنا (بعكس schema.sql) لأن جدولاً قديماً بترميز
@@ -102,6 +324,21 @@ function ensureSchema(): void {
                         ENUM('user','reviewer','mod','admin') NOT NULL DEFAULT 'user'");
         }
 
+        /* كان هذا الجدول في schema.sql فقط وليس في الترقية التلقائية، فأي نشر
+           على قاعدة بيانات جديدة (نطاق فرعي أو نسخة اختبار) يجعل نموذج
+           «تواصل معنا» يفشل صامتاً بلا أي أثر ظاهر. */
+        db()->exec("CREATE TABLE IF NOT EXISTS messages (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(80) NOT NULL,
+            email VARCHAR(120) NOT NULL,
+            subject VARCHAR(120) NOT NULL,
+            message TEXT NOT NULL,
+            ip VARCHAR(45) NULL,
+            is_read TINYINT(1) NOT NULL DEFAULT 0,
+            created_at DATETIME NOT NULL,
+            INDEX (created_at), INDEX (is_read)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
         db()->exec("CREATE TABLE IF NOT EXISTS support_tickets (
             id INT AUTO_INCREMENT PRIMARY KEY,
             user_id INT NOT NULL,
@@ -111,6 +348,8 @@ function ensureSchema(): void {
             created_at DATETIME NOT NULL,
             INDEX (user_id), INDEX (created_at)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+        migrateTickets();
 
         db()->exec("CREATE TABLE IF NOT EXISTS invites (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -181,6 +420,7 @@ function ensureSchema(): void {
         db()->exec("CREATE TABLE IF NOT EXISTS survey_responses (
             id INT AUTO_INCREMENT PRIMARY KEY,
             invitation_id INT NULL,
+            campaign_name VARCHAR(80) NULL,
             accessibility_need VARCHAR(60) NULL,
             ease_of_use TINYINT NULL,
             access_difficulty TINYINT(1) NULL,
@@ -195,9 +435,18 @@ function ensureSchema(): void {
             created_at DATETIME NOT NULL,
             INDEX (invitation_id), INDEX (created_at)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        if (!colExists('survey_responses', 'campaign_name')) {
+            db()->exec("ALTER TABLE survey_responses
+                ADD COLUMN campaign_name VARCHAR(80) NULL AFTER invitation_id,
+                ADD INDEX ix_campaign (campaign_name)");
+        }
 
         ensureRateTable();
-    } catch (Throwable $e) { /* غير حرج */ }
+    } catch (Throwable $e) {
+        /* الترقية لا توقف الطلب، لكن صمتها التام كان يخفي هجرة نصف مكتملة
+           فيظهر العطل لاحقاً في مكان بعيد عن سببه. */
+        error_log('WESAL_SCHEMA_FAIL: ' . $e->getMessage());
+    }
 }
 
 function body(): array {
@@ -223,7 +472,7 @@ function currentUser(): ?array {
     ensureSchema();
     $s = db()->prepare('SELECT id,name,name_en,dob,email,phone,pref,role,status,must_change_pw,improve,
                                is_demo,tokens,tokens_at,created_at,questions,
-                               avatar,city,age_range,disability,interests,bio
+                               avatar,city,age_range,disability,interests,bio,support_level
                         FROM users WHERE id=? LIMIT 1');
     $s->execute([$_SESSION['uid']]);
     $u = $s->fetch();
@@ -236,6 +485,23 @@ function currentUser(): ?array {
 /* ---------- الأدوار ---------- */
 const ROLES = ['user', 'reviewer', 'mod', 'admin'];
 function isAdmin(?array $u): bool { return $u && $u['role'] === 'admin'; }
+
+/* ---------- أنواع تذاكر الدعم ----------
+   المصدر الوحيد للأنواع. كانت مكرّرة نصّاً في auth.php وفي قائمة HTML،
+   فأي تعديل في أحدهما يكسر الآخر صامتاً.
+   التسعة الأولى: طلبات حساب المستفيد المسجَّل (كما كانت). الثلاثة الأخيرة:
+   أُضيفت لتغطية الضيف بلا حساب وصفحة الشركة — صعوبة الوصول تُعامَل كعُطل
+   لا كاقتراح تحسين، لأن منصة لذوي الإعاقة لا تحتمل عائق وصول قائماً. */
+const TICKET_TYPES = [
+    'تعديل الاسم', 'تعديل رقم الجوال', 'تعديل البريد الإلكتروني', 'تعديل تاريخ الميلاد',
+    'مشكلة في الرصيد أو الأسئلة', 'مشكلة تقنية في المنصة', 'بلاغ عن معلومة غير دقيقة',
+    'حذف الحساب', 'أخرى',
+    'صعوبة وصول', 'استفسار عام', 'فرصة عمل أو شراكة',
+];
+/** النوع الوحيد الذي يراه مراجع المحتوى ويغلقه */
+const TICKET_TYPE_ACCURACY = 'بلاغ عن معلومة غير دقيقة';
+/** يرتفع بأولوية درجة واحدة تلقائياً — انظر computePriority() في tickets.php */
+const TICKET_TYPE_ACCESS = 'صعوبة وصول';
 
 /** تسجيل عملية إدارية في سجل الخادم — السجل الوحيد الذي يُعتد به */
 function audit(?array $actor, string $action, string $target = '', string $detail = ''): void {
@@ -274,11 +540,88 @@ function roleName(string $r): string {
             'reviewer' => 'مراجع محتوى', 'user' => 'مستفيد'][$r] ?? 'مستفيد';
 }
 
-/** إرسال بريد HTML من عنوان المنصة */
+/** إرسال بريد HTML من عنوان المنصة — SMTP مصادَق إن كانت SMTP_PASS مضبوطة،
+ *  وإلا mail() المحلي في الاستضافة كما كان دائماً. */
 function sendMail(string $to, string $subject, string $html): bool {
+    if (SMTP_PASS !== '' && smtpSend($to, $subject, $html)) return true;
+    if (SMTP_PASS !== '') error_log('WESAL_MAIL_FAIL: فشل SMTP، رجعنا لـmail() المحلي كبديل مؤقت');
     $fname = '=?UTF-8?B?' . base64_encode(MAIL_FROM_NAME) . '?=';
     $headers = "From: $fname <" . MAIL_FROM . ">\r\nReply-To: " . MAIL_FROM . "\r\nMIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\n";
     return @mail($to, '=?UTF-8?B?' . base64_encode($subject) . '?=', $html, $headers, '-f' . MAIL_FROM);
+}
+
+/** اتصال SMTP مصادَق مباشر بالبروتوكول الخام (بلا PHPMailer ولا أي اعتمادية،
+ *  بنفس فلسفة هذا المشروع بأكمله). يدعم SSL الفوري (المنفذ 465 عادة)
+ *  وSTARTTLS (587)، ويُسجّل سبب أي فشل في سجل الأخطاء للتشخيص. */
+function smtpSend(string $to, string $subject, string $html): bool {
+    $host = SMTP_HOST . ''; $port = (int)SMTP_PORT; $enc = SMTP_ENCRYPTION;
+    $transport = $enc === 'ssl' ? 'ssl://' : 'tcp://';
+    $ctx = stream_context_create(['ssl' => ['verify_peer' => true, 'verify_peer_name' => true, 'SNI_enabled' => true]]);
+    $fp = @stream_socket_client($transport . $host . ':' . $port, $errno, $errstr, 12, STREAM_CLIENT_CONNECT, $ctx);
+    if (!$fp) { error_log("WESAL_MAIL_FAIL: تعذّر الاتصال بـ $host:$port — $errstr"); return false; }
+    stream_set_timeout($fp, 12);
+
+    $read = function () use ($fp): string {
+        $data = '';
+        while (($line = fgets($fp, 515)) !== false) {
+            $data .= $line;
+            if (!isset($line[3]) || $line[3] !== '-') break;   // "250 " آخر سطر؛ "250-" متعدد الأسطر يكمل القراءة
+        }
+        return $data;
+    };
+    $cmd = function (string $c) use ($fp) { fwrite($fp, $c . "\r\n"); };
+    $ok  = fn(string $data, string ...$codes) => in_array(substr($data, 0, 3), $codes, true);
+    $fail = function (string $label, string $data) use ($fp) {
+        fclose($fp);
+        error_log("WESAL_MAIL_FAIL: $label — " . trim(mb_substr($data, 0, 200)));
+        return false;
+    };
+
+    $ehloHost = (string)(parse_url(SITE_URL, PHP_URL_HOST) ?: 'localhost');
+    $banner = $read();
+    if (!$ok($banner, '220')) return $fail('بادئة الخادم غير متوقعة', $banner);
+
+    $cmd('EHLO ' . $ehloHost);
+    $r = $read();
+    if (!$ok($r, '250')) return $fail('رفض EHLO', $r);
+
+    if ($enc === 'tls') {
+        $cmd('STARTTLS');
+        $r = $read();
+        if (!$ok($r, '220')) return $fail('رفض STARTTLS', $r);
+        if (!@stream_socket_enable_crypto($fp, true, STREAM_CRYPTO_METHOD_TLS_CLIENT))
+            return $fail('فشل تفعيل التشفير بعد STARTTLS', '');
+        $cmd('EHLO ' . $ehloHost);
+        $r = $read();
+        if (!$ok($r, '250')) return $fail('رفض EHLO بعد STARTTLS', $r);
+    }
+
+    $cmd('AUTH LOGIN');
+    $r = $read(); if (!$ok($r, '334')) return $fail('رفض AUTH LOGIN', $r);
+    $cmd(base64_encode(SMTP_USER));
+    $r = $read(); if (!$ok($r, '334')) return $fail('رفض اسم المستخدم', $r);
+    $cmd(base64_encode(SMTP_PASS));
+    $r = $read();
+    if (!$ok($r, '235')) return $fail('فشلت المصادقة — تحقّق من كلمة مرور صندوق البريد', $r);
+
+    $cmd('MAIL FROM:<' . MAIL_FROM . '>');
+    $r = $read(); if (!$ok($r, '250')) return $fail('رفض المرسل', $r);
+    $cmd('RCPT TO:<' . $to . '>');
+    $r = $read(); if (!$ok($r, '250', '251')) return $fail('رفض المستلم', $r);
+    $cmd('DATA');
+    $r = $read(); if (!$ok($r, '354')) return $fail('رفض بدء المحتوى', $r);
+
+    $fname   = '=?UTF-8?B?' . base64_encode(MAIL_FROM_NAME) . '?=';
+    $subjEnc = '=?UTF-8?B?' . base64_encode($subject) . '?=';
+    $headers = "From: $fname <" . MAIL_FROM . ">\r\nTo: <$to>\r\nSubject: $subjEnc\r\n"
+             . "Reply-To: " . MAIL_FROM . "\r\nMIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\n"
+             . "Date: " . date('r') . "\r\n\r\n";
+    $bodyEscaped = preg_replace('/^\./m', '..', $html);   // نقطة في بداية سطر تُضاعَف — قاعدة SMTP لإنهاء DATA
+    $cmd($headers . $bodyEscaped . "\r\n.");
+    $r = $read();
+    fclose($fp);
+    if (!$ok($r, '250')) { error_log('WESAL_MAIL_FAIL: رُفضت الرسالة بعد DATA — ' . trim(mb_substr($r, 0, 200))); return false; }
+    return true;
 }
 
 /** قالب بريد الدعوة */
@@ -495,5 +838,8 @@ function publicUser(array $u): array {
         'name_en' => $u['name_en'] ?? '', 'dob' => $u['dob'] ?? '',
         'avatar' => $u['avatar'] ?? '', 'city' => $u['city'] ?? '', 'age_range' => $u['age_range'] ?? '',
         'disability' => $u['disability'] ?? '', 'interests' => $u['interests'] ?? '', 'bio' => $u['bio'] ?? '',
+        /* مستقل عن role تماماً — الواجهة تستخدمه لإظهار تبويب تذاكر الدعم
+           لأي حساب مُنح صلاحية معالجة، بصرف النظر عن دوره في المنصة. */
+        'support_level' => $u['support_level'] ?? 'none',
     ];
 }

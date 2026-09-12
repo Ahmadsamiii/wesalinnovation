@@ -75,6 +75,11 @@ if ($act === 'submit_survey') {
         return in_array((string)$v, $allowed, true) ? (string)$v : null;
     };
 
+    /* رابط استبيان عام بلا دعوة: اسم الحملة يُقرأ من الطلب نفسه لأنه لا توجد
+       دعوة نستخرجه منها. لا يُقبل إن كانت هناك دعوة، فتلك تُنسب لحملتها هي
+       دائماً عبر الربط بجدول invitations — لا نأخذ كلام العميل بدلاً منها. */
+    $openCampaign = $invId === null ? (clean($in['campaign'] ?? '', 80) ?: null) : null;
+
     $row = [
         'accessibility_need'    => clean($in['accessibility_need'] ?? '', 60) ?: null,
         'ease_of_use'           => $scale($in['ease_of_use'] ?? null, 1, 5),
@@ -106,9 +111,9 @@ if ($act === 'submit_survey') {
         db()->prepare('UPDATE survey_responses SET ' . implode('=?, ', $cols) . '=? WHERE id=?')
             ->execute([...$vals, (int)$existing['id']]);
     } else {
-        db()->prepare('INSERT INTO survey_responses (invitation_id, ' . implode(', ', $cols) . ', created_at)
-                       VALUES (?' . str_repeat(', ?', count($cols)) . ', NOW())')
-            ->execute([$invId, ...$vals]);
+        db()->prepare('INSERT INTO survey_responses (invitation_id, campaign_name, ' . implode(', ', $cols) . ', created_at)
+                       VALUES (?, ?' . str_repeat(', ?', count($cols)) . ', NOW())')
+            ->execute([$invId, $openCampaign, ...$vals]);
     }
     if ($invId !== null)
         db()->prepare("UPDATE invitations SET status='completed_survey' WHERE id=?")->execute([$invId]);
@@ -192,7 +197,8 @@ case 'responses': {
     $rows = db()->query('SELECT r.id, r.accessibility_need, r.ease_of_use, r.access_difficulty,
                                 r.access_details, r.trust_in_sources, r.helped_access_service,
                                 r.pmf_reaction, r.nps_score, r.return_intent, r.missing_service,
-                                r.other_feedback, r.created_at, i.email, i.campaign_name
+                                r.other_feedback, r.created_at, i.email,
+                                COALESCE(i.campaign_name, r.campaign_name) AS campaign_name
                          FROM survey_responses r
                          LEFT JOIN invitations i ON i.id = r.invitation_id
                          ORDER BY r.id DESC LIMIT 300')->fetchAll();

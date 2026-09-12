@@ -28,22 +28,22 @@ function demoPassword(): string {
 /** تعريف الحسابات التجريبية الأربعة — دور واحد لكل حساب */
 function demoAccounts(): array {
     return [
-        ['email' => 'demo.admin@wesal-hub.com',    'role' => 'admin',
+        ['email' => 'demo.admin@wesalinnovation.sa',    'role' => 'admin',
          'name' => 'نورة الحربي',   'name_en' => 'Noura Alharbi',
          'phone' => '0590000001', 'dob' => '1990-04-12', 'pref' => 'detailed',
          'city' => 'الرياض', 'bio' => 'حساب تجريبي لعرض صلاحيات مدير النظام.'],
 
-        ['email' => 'demo.mod@wesal-hub.com',      'role' => 'mod',
+        ['email' => 'demo.mod@wesalinnovation.sa',      'role' => 'mod',
          'name' => 'فهد القحطاني',  'name_en' => 'Fahad Alqahtani',
          'phone' => '0590000002', 'dob' => '1993-09-01', 'pref' => 'simple',
          'city' => 'جدة', 'bio' => 'حساب تجريبي لعرض صلاحيات المشرف.'],
 
-        ['email' => 'demo.reviewer@wesal-hub.com', 'role' => 'reviewer',
+        ['email' => 'demo.reviewer@wesalinnovation.sa', 'role' => 'reviewer',
          'name' => 'لمياء الشهراني','name_en' => 'Lamia Alshahrani',
          'phone' => '0590000003', 'dob' => '1988-12-20', 'pref' => 'detailed',
          'city' => 'أبها', 'bio' => 'حساب تجريبي لعرض صلاحيات مراجع المحتوى.'],
 
-        ['email' => 'demo.user@wesal-hub.com',     'role' => 'user',
+        ['email' => 'demo.user@wesalinnovation.sa',     'role' => 'user',
          'name' => 'خالد العتيبي',  'name_en' => 'Khaled Alotaibi',
          'phone' => '0590000004', 'dob' => '2001-02-08', 'pref' => 'voice',
          'city' => 'الدمام', 'disability' => 'إعاقة بصرية',
@@ -123,15 +123,15 @@ function seedDemoContent(int $demoUserId): void {
     $d = db();
 
     // الرسائل معلَّمة ببريد demo.* حتى يجدها الحذف
-    $d->prepare("DELETE FROM messages WHERE email LIKE 'demo.%@wesal-hub.com'")->execute();
+    $d->prepare("DELETE FROM messages WHERE email LIKE 'demo.%@wesalinnovation.sa'")->execute();
     $m = $d->prepare('INSERT INTO messages (name,email,subject,message,ip,is_read,created_at)
                       VALUES (?,?,?,?,?,?, NOW() - INTERVAL ? HOUR)');
     foreach ([
-        ['سارة المطيري', 'demo.sara@wesal-hub.com', 'استفسار عن بطاقة إثبات الإعاقة',
+        ['سارة المطيري', 'demo.sara@wesalinnovation.sa', 'استفسار عن بطاقة إثبات الإعاقة',
          'السلام عليكم، ودي أعرف المستندات المطلوبة لإصدار بطاقة إثبات الإعاقة لابني، وهل التقديم كله إلكتروني؟', 0, 3],
-        ['عبدالله الزهراني', 'demo.abdullah@wesal-hub.com', 'اقتراح: دعم لغة الإشارة',
+        ['عبدالله الزهراني', 'demo.abdullah@wesalinnovation.sa', 'اقتراح: دعم لغة الإشارة',
          'المنصة ممتازة، لكن أخي من الصم ويحتاج ترجمة بلغة الإشارة. متى تتوقعون إضافتها؟', 0, 19],
-        ['منى العسيري', 'demo.mona@wesal-hub.com', 'بلاغ عن معلومة غير دقيقة',
+        ['منى العسيري', 'demo.mona@wesalinnovation.sa', 'بلاغ عن معلومة غير دقيقة',
          'الإجابة عن تخفيضات الطيران ذكرت نسبة غير محدّثة. أرجو مراجعتها مع الناقل.', 1, 50],
     ] as $r) $m->execute([$r[0], $r[1], $r[2], $r[3], '203.0.113.10', $r[4], $r[5]]);
 
@@ -187,9 +187,9 @@ function purgeDemoAccounts(?array $actor = null): int {
             $d->prepare('DELETE FROM password_resets WHERE user_id=?')->execute([$u['id']]);
         }
         $d->exec('DELETE FROM users WHERE is_demo=1');
-        $d->exec("DELETE FROM messages  WHERE email LIKE 'demo.%@wesal-hub.com'");
+        $d->exec("DELETE FROM messages  WHERE email LIKE 'demo.%@wesalinnovation.sa'");
         $d->exec("DELETE FROM chat_logs WHERE mode='demo'");
-        $d->exec("DELETE FROM invites   WHERE email LIKE 'demo.%@wesal-hub.com'");
+        $d->exec("DELETE FROM invites   WHERE email LIKE 'demo.%@wesalinnovation.sa'");
         $d->commit();
     } catch (Throwable $e) {
         $d->rollBack();

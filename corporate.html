@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="وصال الابتكار لتقنية المعلومات — الشركة السعودية خلف منصة وصال لذوي الإعاقة، وخدمات تطوير البرمجيات وإدارة المشاريع، والتدريب الرقمي">
+<title>وصال الابتكار — نفهمك ونسهّل وصولك</title>
+<meta name="theme-color" content="#282692">
+<meta property="og:title" content="وصال الابتكار لتقنية المعلومات">
+<meta property="og:description" content="ذكاء اصطناعي لذوي الإعاقة، تطوير برمجيات وإدارة مشاريع، وتدريب رقمي — شركة سعودية واحدة">
+<meta property="og:type" content="website">
+<link rel="preload" href="fonts/thmanyahsans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/thmanyahsans-Bold.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+/* ===== نفس هوية منصة وصال الخطية واللونية — القيم منسوخة من index.html حرفياً
+   حتى يبقى الموقع المؤسسي والمنتج تجربة بصرية واحدة ===== */
+@font-face{font-family:'Thmanyah Sans';src:url('fonts/thmanyahsans-Light.woff2') format('woff2'),url('fonts/thmanyahsans-Light.otf') format('opentype');font-weight:300;font-style:normal;font-display:swap;}
+@font-face{font-family:'Thmanyah Sans';src:url('fonts/thmanyahsans-Regular.woff2') format('woff2'),url('fonts/thmanyahsans-Regular.otf') format('opentype');font-weight:400;font-style:normal;font-display:swap;}
+@font-face{font-family:'Thmanyah Sans';src:url('fonts/thmanyahsans-Medium.woff2') format('woff2'),url('fonts/thmanyahsans-Medium.otf') format('opentype');font-weight:500;font-style:normal;font-display:swap;}
+@font-face{font-family:'Thmanyah Sans';src:url('fonts/thmanyahsans-Bold.woff2') format('woff2'),url('fonts/thmanyahsans-Bold.otf') format('opentype');font-weight:600 700;font-style:normal;font-display:swap;}
+@font-face{font-family:'Thmanyah Sans';src:url('fonts/thmanyahsans-Black.woff2') format('woff2'),url('fonts/thmanyahsans-Black.otf') format('opentype');font-weight:800 900;font-style:normal;font-display:swap;}
+:root{
+--primary:#282692;--secondary:#814fc3;--tertiary:#5039a8;--navy:#20134f;--blue:#3e9eed;--sky:#52bdf9;
+--white:#ffffff;--bg:#f8f6fd;--surface:#ffffff;--surface-alt:#f1eef8;--border:#e4ddf0;--muted:#8a7fa3;--text:#3d3558;--ink:#1a1632;
+--f-display:clamp(2.25rem,5vw,3.5rem);--f-h1:clamp(1.75rem,3.5vw,2.75rem);--f-h2:clamp(1.375rem,2.5vw,2rem);--f-h3:clamp(1.125rem,2vw,1.5rem);--f-sm:.875rem;--f-xs:.75rem;
+--s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:20px;--s6:24px;--s8:32px;--s10:40px;--s12:48px;--s16:64px;--s20:80px;--s24:96px;
+--sh-sm:0 1px 3px rgba(40,38,146,.04),0 4px 12px rgba(40,38,146,.06);--sh-md:0 2px 4px rgba(40,38,146,.04),0 8px 24px rgba(40,38,146,.08);--sh-lg:0 4px 8px rgba(40,38,146,.04),0 16px 40px rgba(40,38,146,.12);
+--r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:24px;--r-full:9999px;
+--g-brand:linear-gradient(135deg,#814fc3 0%,#5039a8 40%,#282692 100%);--g-hero:linear-gradient(160deg,#12103a 0%,#1a1560 20%,#282892 45%,#4a35a8 70%,#6b42bc 85%,#814fc3 100%);
+--ease:cubic-bezier(.4,0,.2,1);--dur:.2s;--dur-lg:.5s;
+}
+@media(prefers-color-scheme:dark){:root{--bg:#0f0d1a;--surface:#1a1730;--surface-alt:#221f38;--border:#2d2950;--muted:#a698c9;--text:#c8bfe0;--ink:#f0ecf8;}}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Thmanyah Sans','Segoe UI',system-ui,-apple-system,sans-serif;color:var(--text);background:var(--bg);line-height:1.75;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+img,svg{max-width:100%}
+:focus-visible{outline:3px solid var(--sky);outline-offset:2px;border-radius:var(--r-sm)}
+.skip{position:absolute;top:-100%;right:var(--s4);background:var(--primary);color:#fff;padding:var(--s2) var(--s4);border-radius:0 0 var(--r-sm) var(--r-sm);z-index:999;font-size:var(--f-sm);text-decoration:none}
+.skip:focus{top:0}
+.container{max-width:1180px;margin:0 auto;padding:0 var(--s6)}
+@media(max-width:640px){.container{padding:0 var(--s4)}}
+.ico{width:22px;height:22px;flex-shrink:0}
+h1,h2,h3{font-weight:700;color:var(--ink);letter-spacing:-.01em}
+h1{font-size:var(--f-display);line-height:1.15}
+h2{font-size:var(--f-h1);line-height:1.25}
+h3{font-size:var(--f-h3);line-height:1.4}
+p{color:var(--text)}
+a{color:inherit}
+.btn{display:inline-flex;align-items:center;gap:var(--s2);padding:var(--s4) var(--s8);border-radius:var(--r-full);font-weight:700;font-size:1rem;text-decoration:none;border:none;cursor:pointer;transition:transform var(--dur) var(--ease),box-shadow var(--dur) var(--ease);min-height:44px}
+.btn-primary{background:var(--g-brand);color:#fff;box-shadow:var(--sh-md)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:var(--sh-lg)}
+.btn-ghost{background:rgba(255,255,255,.1);color:#fff;border:1.5px solid rgba(255,255,255,.35)}
+.btn-ghost:hover{background:rgba(255,255,255,.18)}
+.btn-outline{background:transparent;color:var(--primary);border:1.5px solid var(--border)}
+.btn-outline:hover{border-color:var(--secondary);color:var(--secondary)}
+
+/* رأس الصفحة */
+header.top{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(14px) saturate(1.3);border-bottom:1px solid var(--border)}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:var(--s4) 0;gap:var(--s4)}
+.brand{display:flex;align-items:center;gap:var(--s3);font-weight:800;font-size:1.15rem;color:var(--ink);text-decoration:none}
+.brand-mark{width:38px;height:38px;border-radius:var(--r-md);background:var(--g-brand);display:grid;place-items:center;color:#fff;font-weight:900;font-size:1.1rem;flex-shrink:0}
+.nav-links{display:flex;gap:var(--s8);list-style:none}
+.nav-links a{font-size:var(--f-sm);font-weight:600;color:var(--text);text-decoration:none;padding:var(--s2) 0}
+.nav-links a:hover{color:var(--secondary)}
+@media(max-width:760px){.nav-links{display:none}}
+
+/* البطل */
+.hero{background:var(--g-hero);color:#fff;padding:var(--s24) 0 var(--s20);position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 15% 20%,rgba(82,189,249,.18),transparent 40%),radial-gradient(circle at 85% 60%,rgba(129,79,195,.25),transparent 45%);pointer-events:none}
+.hero-in{position:relative;max-width:760px}
+.badge{display:inline-flex;align-items:center;gap:var(--s2);background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;padding:var(--s2) var(--s5);border-radius:var(--r-full);font-size:var(--f-sm);font-weight:600;margin-bottom:var(--s6)}
+.hero h1{color:#fff;margin-bottom:var(--s5)}
+.hero .lead{font-size:1.2rem;color:rgba(255,255,255,.88);max-width:60ch;margin-bottom:var(--s8)}
+.hero-actions{display:flex;gap:var(--s4);flex-wrap:wrap}
+
+/* الأقسام العامة */
+section{padding:var(--s20) 0}
+.eyebrow{color:var(--secondary);font-weight:700;font-size:var(--f-sm);letter-spacing:.04em;margin-bottom:var(--s3);display:block}
+.sec-head{max-width:680px;margin-bottom:var(--s12)}
+.sec-head p{color:var(--muted);font-size:1.05rem;margin-top:var(--s3)}
+
+/* من نحن */
+.about-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:var(--s12);align-items:start}
+@media(max-width:860px){.about-grid{grid-template-columns:1fr}}
+.about-grid p{margin-bottom:var(--s4);font-size:1.05rem}
+.about-pillars{display:flex;flex-direction:column;gap:var(--s5)}
+.pillar{display:flex;gap:var(--s4);align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:var(--s5)}
+.pillar-icon{width:44px;height:44px;border-radius:var(--r-md);background:var(--surface-alt);color:var(--secondary);display:grid;place-items:center;flex-shrink:0}
+.pillar h3{font-size:1rem;margin-bottom:var(--s1)}
+.pillar p{font-size:var(--f-sm);color:var(--muted)}
+
+/* الخدمات */
+.services{background:var(--surface-alt)}
+.svc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s6)}
+@media(max-width:960px){.svc-grid{grid-template-columns:1fr;max-width:520px;margin:0 auto}}
+.svc-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:var(--s8);display:flex;flex-direction:column;box-shadow:var(--sh-sm);transition:transform var(--dur-lg) var(--ease),box-shadow var(--dur-lg) var(--ease)}
+.svc-card:hover{transform:translateY(-4px);box-shadow:var(--sh-lg)}
+.svc-card.featured{border-color:var(--secondary);position:relative}
+.svc-card.featured::before{content:'المنتج الرئيسي';position:absolute;top:-13px;right:var(--s6);background:var(--g-brand);color:#fff;font-size:var(--f-xs);font-weight:700;padding:var(--s1) var(--s4);border-radius:var(--r-full)}
+.svc-icon{width:56px;height:56px;border-radius:var(--r-lg);background:var(--g-brand);color:#fff;display:grid;place-items:center;margin-bottom:var(--s5)}
+.svc-card h3{margin-bottom:var(--s4)}
+.svc-card ul{list-style:none;display:flex;flex-direction:column;gap:var(--s3);margin-bottom:var(--s6);flex:1}
+.svc-card li{display:flex;gap:var(--s2);align-items:flex-start;font-size:var(--f-sm);color:var(--text)}
+.svc-card li svg{color:var(--secondary);flex-shrink:0;margin-top:3px}
+.svc-card .btn{align-self:flex-start}
+
+/* لماذا وصال */
+.why-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:var(--s6)}
+.why-card{padding:var(--s6);border-radius:var(--r-lg);background:var(--surface);border:1px solid var(--border)}
+.why-card .ico-wrap{width:40px;height:40px;border-radius:var(--r-md);background:var(--surface-alt);color:var(--secondary);display:grid;place-items:center;margin-bottom:var(--s4)}
+.why-card h3{font-size:1.05rem;margin-bottom:var(--s2)}
+.why-card p{font-size:var(--f-sm);color:var(--muted)}
+
+/* الدعم الفني — تذكرة ضيف بلا حساب */
+.support-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:var(--s8);align-items:start}
+@media(max-width:860px){.support-grid{grid-template-columns:1fr}}
+.support-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:var(--s8);box-shadow:var(--sh-sm)}
+@media(max-width:640px){.support-card{padding:var(--s6)}}
+.support-side{display:flex;flex-direction:column;gap:var(--s6)}
+.support-card h3{margin-bottom:var(--s5)}
+.support-card>p{color:var(--muted);font-size:var(--f-sm);margin-bottom:var(--s5)}
+.support-email a{color:var(--secondary);font-weight:700;text-decoration:underline}
+.support-email a:hover{color:var(--primary)}
+
+/* عناصر النماذج — نفس مقاييس منصة وصال في index.html، حتى يبقى الإحساس واحداً */
+.form-group{margin-bottom:var(--s5)}
+.form-group label{display:block;font-size:var(--f-sm);font-weight:600;color:var(--ink);margin-bottom:var(--s2)}
+.form-input{width:100%;padding:var(--s3) var(--s4);border:1px solid var(--border);border-radius:var(--r-md);font-family:inherit;font-size:var(--f-sm);color:var(--ink);background:var(--surface);outline:none;transition:border-color var(--dur) var(--ease),box-shadow var(--dur) var(--ease)}
+.form-input:focus{border-color:var(--secondary);box-shadow:0 0 0 3px rgba(129,79,195,.1)}
+textarea.form-input{min-height:130px;resize:vertical;line-height:1.7}
+select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9' fill='none' stroke='%238a7fa3' stroke-width='2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:left 12px center}
+.field-hint{font-size:var(--f-xs);color:var(--muted);margin-top:6px}
+.form-error{background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.25);color:#b91c1c;padding:var(--s3) var(--s4);border-radius:var(--r-md);font-size:var(--f-sm);margin-bottom:var(--s5);display:none}
+.form-error.on{display:block}
+.form-ok{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:#047857;padding:var(--s3) var(--s4);border-radius:var(--r-md);font-size:var(--f-sm);margin-bottom:var(--s5);display:none}
+.form-ok.on{display:block}
+@media(prefers-color-scheme:dark){.form-error{color:#fca5a5}.form-ok{color:#6ee7b7}}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:rot .7s linear infinite;vertical-align:-3px}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* نجاح إنشاء التذكرة — الرقم المرجعي ورابط المتابعة يبقيان ظاهرين بلا اختفاء تلقائي */
+.ticket-success{background:var(--surface-alt);border:1.5px solid var(--secondary);border-radius:var(--r-lg);padding:var(--s6)}
+.ticket-success .ref-big{display:block;font-size:1.35rem;font-weight:800;color:var(--primary);letter-spacing:.02em;direction:ltr;text-align:center;margin:var(--s2) 0 var(--s5)}
+.ticket-success .btn{width:100%;justify-content:center}
+.ticket-success .again{display:block;width:100%;text-align:center;margin-top:var(--s4);font-size:var(--f-sm);color:var(--secondary);text-decoration:underline;background:none;border:none;cursor:pointer;font-family:inherit;padding:var(--s2);min-height:36px}
+
+/* الفوتر */
+footer{padding:var(--s12) 0 var(--s8);border-top:1px solid var(--border)}
+.foot-grid{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--s8);flex-wrap:wrap;margin-bottom:var(--s8)}
+.foot-brand p{color:var(--muted);font-size:var(--f-sm);max-width:38ch;margin-top:var(--s3)}
+.foot-links{display:flex;gap:var(--s8);flex-wrap:wrap}
+.foot-col h4{font-size:var(--f-sm);color:var(--ink);margin-bottom:var(--s3)}
+.foot-col ul{list-style:none;display:flex;flex-direction:column;gap:var(--s2)}
+.foot-col a{font-size:var(--f-sm);color:var(--muted);text-decoration:none}
+.foot-col a:hover{color:var(--secondary)}
+.foot-bottom{display:flex;justify-content:space-between;flex-wrap:wrap;gap:var(--s3);padding-top:var(--s6);border-top:1px solid var(--border);font-size:var(--f-xs);color:var(--muted)}
+
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">تخطَّ إلى المحتوى</a>
+
+<header class="top">
+<nav class="nav container" aria-label="التنقّل الرئيسي">
+<a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">و</span> وصال الابتكار</a>
+<ul class="nav-links">
+<li><a href="#about">من نحن</a></li>
+<li><a href="#services">خدماتنا</a></li>
+<li><a href="#why">لماذا وصال</a></li>
+<li><a href="#contact">الدعم الفني</a></li>
+</ul>
+<a class="btn btn-outline" href="https://chat.wesalinnovation.sa/" style="padding:var(--s2) var(--s6);font-size:var(--f-sm)">جرّب وصال</a>
+</nav>
+</header>
+
+<main id="main">
+
+<section class="hero" id="top">
+<div class="container hero-in">
+<span class="badge">🚀 وُلدت من رحلة الهاكاثونات وبرامج الابتكار الرقمي السعودية</span>
+<h1>وصال: نفهمك ونسهّل وصولك</h1>
+<p class="lead">شركة سعودية تبني تقنية تصل فعلاً لمن تخدمهم — مساعد ذكاء اصطناعي لذوي الإعاقة، وحلول برمجية لإدارة المشاريع، وتدريب رقمي احترافي. منتج واحد يقود القصة، وخبرة تقنية تخدم البقية.</p>
+<div class="hero-actions">
+<a class="btn btn-primary" href="https://chat.wesalinnovation.sa/">
+<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+جرّب وصال الآن
+</a>
+<a class="btn btn-ghost" href="#services">تعرّف على خدماتنا</a>
+</div>
+</div>
+</section>
+
+<section id="about">
+<div class="container about-grid">
+<div>
+<span class="eyebrow">من نحن</span>
+<h2 style="margin-bottom:var(--s6)">تقنية سعودية تبدأ من احتياج حقيقي</h2>
+<p>وصال الابتكار لتقنية المعلومات شركة سعودية تجمع بين الذكاء الاصطناعي وهندسة البرمجيات والتدريب الرقمي تحت سقف واحد. بدأنا من سؤال بسيط: كيف تصل المعلومة الصحيحة لمن يحتاجها فعلاً، بأقل عناء وأوضح لغة؟</p>
+<p>من هذا السؤال وُلد وصال — مساعدنا الذكي لخدمة الأشخاص ذوي الإعاقة في المملكة، مبني من الأساس ليعمل مع قارئ الشاشة ولوحة المفاتيح، ويستشهد بمصدره الرسمي في كل إجابة بدل التخمين.</p>
+<p>الخبرة نفسها التي بنت وصال — في الذكاء الاصطناعي، وهندسة الأنظمة، وتصميم تجربة المستخدم — نضعها اليوم في خدمة عملائنا: بناء المنصات والأنظمة الداخلية، وتنظيم الفعاليات والهاكاثونات التقنية، وتصميم برامج تدريبية رقمية تصل فعلاً لا تُقرأ فقط.</p>
+</div>
+<div class="about-pillars">
+<div class="pillar">
+<div class="pillar-icon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+<div><h3>الوصول أولاً</h3><p>كل ما نبنيه يُختبر مع قارئ الشاشة ولوحة المفاتيح قبل أي شيء آخر، لا بعده.</p></div>
+</div>
+<div class="pillar">
+<div class="pillar-icon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+<div><h3>سرعة بلا تسرّع</h3><p>من الفكرة إلى منصة تعمل، بخطوات مختبرة وموثّقة في كل مرحلة.</p></div>
+</div>
+<div class="pillar">
+<div class="pillar-icon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg></div>
+<div><h3>صدق في المعلومة</h3><p>لا نخترع أرقاماً ولا نتائج — كل ادّعاء نقدر نثبته، أو نقول بصراحة إننا لا نعرف.</p></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="services" id="services">
+<div class="container">
+<div class="sec-head">
+<span class="eyebrow">خدماتنا</span>
+<h2>ثلاث خدمات، فريق واحد</h2>
+<p>من مساعد ذكي يخدم آلاف المستخدمين، إلى نظام داخلي يخدم فريقك، إلى برنامج تدريبي يخدم جمهورك.</p>
+</div>
+<div class="svc-grid">
+
+<article class="svc-card featured">
+<div class="svc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:28px;height:28px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+<h3>وصال، مساعد ذكاء اصطناعي لذوي الإعاقة</h3>
+<ul>
+<li><svg class="ico" style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> مساعد ذكاء اصطناعي بالعربي مخصص لذوي الإعاقة، يوصلهم لحقوقهم وخدماتهم الحكومية بسهولة</li>
+<li><svg class="ico" style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> كل إجابة مربوطة بمصدر رسمي واضح، بدون تخمين أو معلومات غير موثوقة</li>
+<li><svg class="ico" style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> مصمم من الأساس ليعمل مع قارئ الشاشة ولوحة المفاتيح</li>
+</ul>
+<a class="btn btn-primary" href="https://chat.wesalinnovation.sa/">جرّب وصال الآن</a>
+</article>
+
+<article class="svc-card">
+<div class="svc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:28px;height:28px"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg></div>
+<h3>تطوير البرمجيات وإدارة المشاريع التقنية</h3>
+<ul>
+<li><svg class="ico" style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> نبني الحلول التقنية من الفكرة للتشغيل: منصات وتطبيقات وأنظمة داخلية</li>
+<li><svg class="ico" style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> خبرة في تنظيم وإدارة الفعاليات التقنية مثل الهاكاثونات ومعسكرات الابتكار الرقمي من الألف للياء</li>
+<li><svg class="ico" style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> فريق يجمع بين الجانب التقني والتنفيذ الميداني</li>
+</ul>
+<a class="btn btn-outline" href="#contact">تواصل معنا</a>
+</article>
+
+<article class="svc-card">
+<div class="svc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:28px;height:28px"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg></div>
+<h3>التدريب الرقمي</h3>
+<ul>
+<li><svg class="ico" style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> برامج تدريبية تقنية مصممة حسب احتياج فريقكم أو جمهوركم</li>
+<li><svg class="ico" style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> تصميم محتوى تعليمي رقمي احترافي، من المنهج للهوية البصرية</li>
+<li><svg class="ico" style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> مناسب للشركات والجهات التدريبية والتعليمية</li>
+</ul>
+<a class="btn btn-outline" href="#contact">تواصل معنا</a>
+</article>
+
+</div>
+</div>
+</section>
+
+<section id="why">
+<div class="container">
+<div class="sec-head">
+<span class="eyebrow">لماذا وصال</span>
+<h2>مبادئ نلتزم بها، لا شعارات فقط</h2>
+</div>
+<div class="why-grid">
+<div class="why-card">
+<div class="ico-wrap"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></div>
+<h3>شفافية كاملة</h3>
+<p>لا نبيع بياناتك ولا نشاركها مع أي طرف إعلاني، ونوضح دائماً ما نجمعه ولماذا.</p>
+</div>
+<div class="why-card">
+<div class="ico-wrap"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg></div>
+<h3>مصادر رسمية فقط</h3>
+<p>كل معلومة من وصال تشير لمصدرها الرسمي، وإن لم نكن متأكدين نقولها بصراحة.</p>
+</div>
+<div class="why-card">
+<div class="ico-wrap"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+<h3>وصولية من التصميم</h3>
+<p>ليست ميزة إضافية — قارئ الشاشة ولوحة المفاتيح جزء من التصميم الأساسي منذ اليوم الأول.</p>
+</div>
+<div class="why-card">
+<div class="ico-wrap"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg></div>
+<h3>سرعة تنفيذ حقيقية</h3>
+<p>فريق صغير يعمل بانضباط: تحليل، خطة، تنفيذ، ثم اختبار قبل اعتبار أي شيء جاهزاً.</p>
+</div>
+</div>
+</div>
+</section>
+
+<section id="contact">
+<div class="container">
+<div class="sec-head">
+<span class="eyebrow">الدعم الفني</span>
+<h2>تحتاج مساعدة؟ افتح طلب دعم</h2>
+<p>ارفع طلبك مباشرة بلا حاجة لإنشاء حساب — تحصل فوراً على رقم مرجعي ورابط لمتابعة الرد وقتما تريد. أو راسلنا مباشرة إن كنت تفضّل ذلك.</p>
+</div>
+
+<div class="support-grid">
+
+<div>
+<div class="support-card">
+<h3>افتح تذكرة دعم جديدة</h3>
+
+<form id="ticketForm" novalidate>
+<div class="form-error" id="tkErr" role="alert" aria-live="assertive"></div>
+
+<div class="form-group">
+<label for="tkType">نوع الطلب</label>
+<select id="tkType" class="form-input" required>
+<option value="">اختر نوع الطلب</option>
+<option>تعديل الاسم</option>
+<option>تعديل رقم الجوال</option>
+<option>تعديل البريد الإلكتروني</option>
+<option>تعديل تاريخ الميلاد</option>
+<option>مشكلة في الرصيد أو الأسئلة</option>
+<option>مشكلة تقنية في المنصة</option>
+<option>بلاغ عن معلومة غير دقيقة</option>
+<option>حذف الحساب</option>
+<option>صعوبة وصول</option>
+<option>استفسار عام</option>
+<option>فرصة عمل أو شراكة</option>
+<option>أخرى</option>
+</select>
+</div>
+
+<div class="form-group">
+<label for="tkName">الاسم</label>
+<input type="text" id="tkName" class="form-input" placeholder="اسمك كامل" autocomplete="name" minlength="3" required>
+</div>
+
+<div class="form-group">
+<label for="tkEmail">البريد الإلكتروني</label>
+<input type="email" id="tkEmail" class="form-input" placeholder="example@email.com" autocomplete="email" dir="ltr" required>
+<div class="field-hint">عليه نرسل رقم تذكرتك ورابط متابعتها.</div>
+</div>
+
+<div class="form-group">
+<label for="tkUrgency">درجة الإلحاح</label>
+<select id="tkUrgency" class="form-input">
+<option value="normal" selected>عادي</option>
+<option value="high">عالٍ</option>
+<option value="low">منخفض</option>
+</select>
+</div>
+
+<div class="form-group">
+<label for="tkDetails">تفاصيل الطلب</label>
+<textarea id="tkDetails" class="form-input" rows="5" placeholder="اشرح طلبك أو مشكلتك بالتفصيل..." minlength="10" required></textarea>
+<div class="field-hint">10 أحرف على الأقل.</div>
+</div>
+
+<button type="submit" class="btn btn-primary" id="tkBtn" style="width:100%;justify-content:center">إرسال الطلب</button>
+</form>
+
+<div class="ticket-success" id="tkSuccess" role="status" aria-live="polite" tabindex="-1" hidden>
+<h3 style="margin-bottom:var(--s2);display:flex;align-items:center;gap:var(--s2)"><svg class="ico" style="width:20px;height:20px;color:#047857" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg> استلمنا طلبك</h3>
+<p id="tkSuccessMsg"></p>
+<span class="ref-big" id="tkRefValue"></span>
+<a class="btn btn-primary" id="tkTrackLink" href="ticket.html">تابع تذكرتك من هنا</a>
+<button type="button" class="again" id="tkAgainBtn">تريد إرسال طلب آخر؟</button>
+</div>
+</div>
+</div>
+
+<div class="support-side">
+
+<div class="support-card">
+<h3>عندك تذكرة سابقة؟</h3>
+<p>أدخل رابط المتابعة كاملاً أو رمزها فقط — أي تحديث يصلك على بريدك أيضاً.</p>
+<form id="trackForm" novalidate>
+<div class="form-error" id="trErr" role="alert" aria-live="assertive"></div>
+<div class="form-group">
+<label for="trInput">رابط المتابعة أو رمز التذكرة</label>
+<input type="text" id="trInput" class="form-input" dir="ltr" placeholder="ticket.html?token=... أو الرمز فقط" autocomplete="off">
+</div>
+<button type="submit" class="btn btn-outline" style="width:100%;justify-content:center">تابع تذكرتك</button>
+</form>
+</div>
+
+<div class="support-card support-email">
+<h3>تفضّل التواصل المباشر؟</h3>
+<p style="margin-bottom:var(--s3)">راسلنا على بريدنا وسنرد عليك بأقرب وقت.</p>
+<p style="margin:0"><a href="mailto:info@wesalinnovation.sa">info@wesalinnovation.sa</a></p>
+</div>
+
+</div>
+</div>
+</div>
+</section>
+
+</main>
+
+<footer>
+<div class="container">
+<div class="foot-grid">
+<div class="foot-brand">
+<a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">و</span> وصال الابتكار</a>
+<p>ذكاء اصطناعي لذوي الإعاقة، تطوير برمجيات وإدارة مشاريع، وتدريب رقمي — من الرياض، لكل من يحتاج تقنية تصل فعلاً.</p>
+</div>
+<div class="foot-links">
+<div class="foot-col">
+<h4>المنتج</h4>
+<ul>
+<li><a href="https://chat.wesalinnovation.sa/">جرّب وصال</a></li>
+<li><a href="https://chat.wesalinnovation.sa/#resources">دليل الخدمات</a></li>
+</ul>
+</div>
+<div class="foot-col">
+<h4>الشركة</h4>
+<ul>
+<li><a href="#about">من نحن</a></li>
+<li><a href="#services">خدماتنا</a></li>
+<li><a href="#contact">الدعم الفني</a></li>
+</ul>
+</div>
+<div class="foot-col">
+<h4>قانوني</h4>
+<ul>
+<li><a href="https://chat.wesalinnovation.sa/#terms">شروط الاستخدام</a></li>
+<li><a href="https://chat.wesalinnovation.sa/#privacy">سياسة الخصوصية</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="foot-bottom">
+<span>© 2026 وصال الابتكار لتقنية المعلومات. جميع الحقوق محفوظة.</span>
+<span>info@wesalinnovation.sa</span>
+</div>
+</div>
+</footer>
+
+<script>
+/* ================= الدعم الفني — تذكرة ضيف بلا حساب =================
+   نفس نمط النداء المستخدم في index.html (fetch + POST JSON + same-origin)
+   حرفياً، حتى يبقى التعامل مع tickets.php واحداً في كل صفحات المشروع. */
+const API='api/';
+async function api(path,body){
+  try{
+    const r=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(body||{})});
+    const j=await r.json().catch(()=>null);
+    if(j&&typeof j==='object')return j;
+    throw new Error('http '+r.status);
+  }catch(e){return {ok:false,offline:true};}
+}
+function showMsg(id,txt){
+  const e=document.getElementById(id);if(!e)return;
+  e.textContent=txt;e.classList.toggle('on',!!txt);
+}
+function btnLoad(id,on,label){
+  const b=document.getElementById(id);if(!b)return;
+  b.disabled=on;
+  if(on){b.dataset.html=b.innerHTML;b.innerHTML='<span class="spin"></span> '+(label||'لحظة...');}
+  else if(b.dataset.html){b.innerHTML=b.dataset.html;}
+}
+function validEmail(v){return /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(v);}
+
+/* ---------- إنشاء تذكرة ---------- */
+const ticketForm=document.getElementById('ticketForm');
+ticketForm.addEventListener('submit', async e=>{
+  e.preventDefault();
+  showMsg('tkErr','');
+  const type=document.getElementById('tkType').value;
+  const name=document.getElementById('tkName').value.trim();
+  const email=document.getElementById('tkEmail').value.trim();
+  const urgency=document.getElementById('tkUrgency').value;
+  const details=document.getElementById('tkDetails').value.trim();
+  if(!type) return showMsg('tkErr','اختر نوع الطلب.');
+  if(name.length<3) return showMsg('tkErr','اكتب اسمك كاملاً حتى نعرف من نخاطب.');
+  if(!validEmail(email)) return showMsg('tkErr','اكتب بريداً إلكترونياً صحيحاً — عليه نرسل لك رابط المتابعة.');
+  if(details.length<10) return showMsg('tkErr','اكتب تفاصيل الطلب (10 أحرف على الأقل).');
+  btnLoad('tkBtn',true,'جارٍ الإرسال');
+  const res=await api('tickets.php',{action:'create',type,name,email,urgency,details,source:'corporate'});
+  btnLoad('tkBtn',false);
+  if(!res.ok) return showMsg('tkErr', res.offline
+    ? 'ما وصلنا طلبك — يبدو أن الاتصال منقطع. نصّك باقٍ في الصفحة، أعد الإرسال بعد رجوع الاتصال.'
+    : (res.error||'تعذّر إرسال الطلب. حاول مرة أخرى.'));
+  showTicketSuccess(res.ref,res.token,res.message);
+});
+
+function showTicketSuccess(ref,token,message){
+  document.getElementById('tkSuccessMsg').textContent=message||('استلمنا طلبك. رقمه '+ref+'.');
+  document.getElementById('tkRefValue').textContent=ref;
+  document.getElementById('tkTrackLink').href='ticket.html?token='+encodeURIComponent(token);
+  ticketForm.hidden=true;
+  const box=document.getElementById('tkSuccess');
+  box.hidden=false;
+  box.focus();
+  box.scrollIntoView({behavior:'smooth',block:'start'});
+}
+document.getElementById('tkAgainBtn').addEventListener('click', ()=>{
+  document.getElementById('tkSuccess').hidden=true;
+  ticketForm.hidden=false;
+  ticketForm.reset();
+  document.getElementById('tkType').focus();
+});
+
+/* ---------- متابعة تذكرة سابقة ---------- */
+document.getElementById('trackForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  showMsg('trErr','');
+  const raw=document.getElementById('trInput').value;
+  const m=raw.match(/token=([a-f0-9]+)/i);
+  const token=((m?m[1]:raw)||'').replace(/[^a-f0-9]/ig,'').toLowerCase();
+  if(token.length!==32) return showMsg('trErr','أدخل رابط المتابعة كاملاً أو الرمز الذي أرسلناه إليك بالبريد.');
+  location.href='ticket.html?token='+token;
+});
+</script>
+
+</body>
+</html>

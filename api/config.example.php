@@ -17,7 +17,7 @@ define('DB_PASS', '');
 
 /* ---------- الموقع ---------- */
 define('SITE_NAME', 'وصال');
-define('SITE_URL',  'https://wesal-hub.com');   // بلا شرطة مائلة في النهاية — تُستخدم في روابط الدعوات
+define('SITE_URL',  'https://wesalinnovation.sa');   // بلا شرطة مائلة في النهاية — تُستخدم في روابط الدعوات
 
 /* ---------- وضع التطوير ----------
  * true يعرض رسائل الأخطاء الفعلية في ردود JSON. اتركه false في الإنتاج دائماً. */
@@ -49,21 +49,60 @@ define('BETA_TRIAL_HOURS',    48);     // مدة التجربة الموسّعة
  * بانتحال عنوانه وتجاوز كل الحدود أعلاه. */
 define('TRUST_PROXY', false);
 
-/* ---------- مزوّد الذكاء الاصطناعي ---------- */
-define('AI_PROVIDER', 'gemini');       // 'gemini' أو 'openai' — والآخر يُستخدم كبديل تلقائي
+/* ---------- مزوّد الذكاء الاصطناعي ----------
+ * التبديل بين المزوّدين الأربعة إعداد هنا فقط، بلا لمس أي كود. المزوّد
+ * النشط دائماً له بديل تلقائي فوري عند الفشل — gemini للاثنين الجديدين
+ * لأنه الوحيد المجاني، والقديمين (gemini/openai) يبقيان بديلي بعضهما
+ * كما كانا قبل إضافة claude وkimi. */
+define('AI_PROVIDER', 'gemini');       // 'gemini' | 'openai' | 'claude' | 'kimi'
 
 // Gemini — المفتاح من https://aistudio.google.com/apikey (يبدأ عادة بـ AIza)
 define('GEMINI_KEY',   '');
-define('GEMINI_MODEL', 'gemini-2.0-flash');
-define('GEMINI_FALLBACKS', 'gemini-2.0-flash-lite');   // نماذج بديلة مفصولة بفواصل
+define('GEMINI_MODEL', 'gemini-3.5-flash-lite');    // Flash-Lite: أسرع وحصته المجانية أكبر بكثير من Flash (التي تقف عند 20 طلباً يومياً)
+define('GEMINI_FALLBACKS', 'gemini-3.1-flash-lite,gemini-flash-lite-latest,gemini-3.6-flash');   // بدائل مرتبة، لكل نموذج حصة مستقلة
 
-// OpenAI — اختياري، يُستخدم عند فشل Gemini
+// OpenAI — اختياري، يُستخدم عند فشل Gemini (أو العكس إن AI_PROVIDER='openai')
 define('OPENAI_KEY',   '');
 define('OPENAI_MODEL', 'gpt-4o-mini');
 
+// Claude (Anthropic) — اختياري، جودة عالية للسياقات الحساسة. المفتاح من
+// https://console.anthropic.com — راجع أسعار النماذج قبل التفعيل، فهو
+// مزوّد مدفوع بلا فئة مجانية دائمة كـGemini.
+define('CLAUDE_KEY',   '');
+define('CLAUDE_MODEL', 'claude-sonnet-5');
+
+// Kimi (Moonshot AI) — اختياري، واجهة متوافقة مع OpenAI. المفتاح من
+// https://platform.moonshot.ai — راجع اسم النموذج الحالي في وثائق Moonshot
+// قبل التفعيل فهو يتغيّر مع إصداراتهم.
+define('KIMI_KEY',      '');
+define('KIMI_MODEL',    'kimi-k2-turbo-preview');
+define('KIMI_BASE_URL', 'https://api.moonshot.ai/v1');
+
 /* ---------- البريد ----------
- * يعتمد على دالة mail() في الاستضافة. اجعل MAIL_FROM على نطاق الموقع نفسه
- * وإلا رفضت أغلب الخوادم الرسائل أو صنّفتها مزعجة. */
-define('MAIL_FROM',      'no-reply@wesal-hub.com');
+ * بلا SMTP_PASS: يُرسَل عبر mail() المحلي في الاستضافة كما كان دائماً —
+ * يعمل غالباً لكن الخوادم المستقبِلة تثق برسالة مصادَق عليها عبر SMTP أكثر.
+ * بوضع SMTP_PASS، كل بريد صادر (الدعوات وإعادة تعيين كلمة المرور ونموذج
+ * التواصل) يُرسَل عبر اتصال SMTP مصادَق حقيقي بصندوق البريد نفسه، ويسقط
+ * تلقائياً لـmail() المحلي عند أي عطل في الاتصال فلا ينقطع الإرسال كلياً. */
+define('MAIL_FROM',      'no-reply@wesalinnovation.sa');
 define('MAIL_FROM_NAME', 'وصال');
-define('CONTACT_TO',     'info@wesal-hub.com');        // وجهة رسائل «تواصل معنا»
+define('CONTACT_TO',     'info@wesalinnovation.sa');        // وجهة رسائل «تواصل معنا»
+
+// SMTP — بيانات Hostinger الافتراضية لصندوق بريد على نطاقك؛ فعّله بوضع
+// SMTP_PASS فقط (كلمة مرور صندوق info@wesalinnovation.sa من hPanel ← البريد).
+define('SMTP_HOST',       'smtp.hostinger.com');
+define('SMTP_PORT',       465);              // أو 587 مع SMTP_ENCRYPTION='tls'
+define('SMTP_ENCRYPTION', 'ssl');            // 'ssl' (465) أو 'tls' (587، STARTTLS)
+define('SMTP_USER',       'info@wesalinnovation.sa');   // عادة نفس MAIL_FROM أو صندوق مشابه
+define('SMTP_PASS',       '');               // فارغ = مُعطَّل، يبقى mail() المحلي هو المسار
+
+/* ---------- صيانة تذاكر الدعم الدورية (Cron) ----------
+ * مفتاح سرّي يحمي api/cron-tickets.php من التشغيل عبر رابط عام؛ يُطلب فقط
+ * عند استدعائه من متصفح/HTTP لا من الطرفية (Cron الفعلي على الاستضافة لا
+ * يحتاجه). ضعه سلسلة عشوائية طويلة ولا تشاركه — فارغاً يعني رفض كل وصول
+ * عبر الرابط تلقائياً حتى تضبطه. */
+define('CRON_SECRET', '');
+
+/* مجلد التخزين الخاص (ملفات قاعدة المعرفة والمكتبات المجلوبة). يُفضَّل خارج المجلد العام،
+   مثل: /home/USER/domains/wesalinnovation.sa/storage — وإن تُرك يُستخدم storage/ داخل المشروع محمياً بـ .htaccess */
+// define('STORAGE_DIR', '/home/USER/domains/wesalinnovation.sa/storage');

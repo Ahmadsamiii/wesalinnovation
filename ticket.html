@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="تابع حالة تذكرة الدعم الفني الخاصة بك في وصال الابتكار برمز المتابعة السرّي — بلا حاجة لإنشاء حساب">
+<title>متابعة تذكرة الدعم — وصال الابتكار</title>
+<meta name="theme-color" content="#282692">
+<meta name="robots" content="noindex">
+<link rel="preload" href="fonts/thmanyahsans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/thmanyahsans-Bold.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+/* ===== نفس هوية منصة وصال — القيم منسوخة من corporate.html حرفياً ===== */
+@font-face{font-family:'Thmanyah Sans';src:url('fonts/thmanyahsans-Light.woff2') format('woff2'),url('fonts/thmanyahsans-Light.otf') format('opentype');font-weight:300;font-style:normal;font-display:swap;}
+@font-face{font-family:'Thmanyah Sans';src:url('fonts/thmanyahsans-Regular.woff2') format('woff2'),url('fonts/thmanyahsans-Regular.otf') format('opentype');font-weight:400;font-style:normal;font-display:swap;}
+@font-face{font-family:'Thmanyah Sans';src:url('fonts/thmanyahsans-Medium.woff2') format('woff2'),url('fonts/thmanyahsans-Medium.otf') format('opentype');font-weight:500;font-style:normal;font-display:swap;}
+@font-face{font-family:'Thmanyah Sans';src:url('fonts/thmanyahsans-Bold.woff2') format('woff2'),url('fonts/thmanyahsans-Bold.otf') format('opentype');font-weight:600 700;font-style:normal;font-display:swap;}
+@font-face{font-family:'Thmanyah Sans';src:url('fonts/thmanyahsans-Black.woff2') format('woff2'),url('fonts/thmanyahsans-Black.otf') format('opentype');font-weight:800 900;font-style:normal;font-display:swap;}
+:root{
+--primary:#282692;--secondary:#814fc3;--tertiary:#5039a8;--navy:#20134f;--blue:#3e9eed;--sky:#52bdf9;
+--white:#ffffff;--bg:#f8f6fd;--surface:#ffffff;--surface-alt:#f1eef8;--border:#e4ddf0;--muted:#8a7fa3;--text:#3d3558;--ink:#1a1632;
+--f-h1:clamp(1.5rem,4vw,2.1rem);--f-h3:clamp(1.05rem,2vw,1.25rem);--f-sm:.875rem;--f-xs:.75rem;
+--s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:20px;--s6:24px;--s8:32px;--s10:40px;--s12:48px;--s16:64px;
+--sh-sm:0 1px 3px rgba(40,38,146,.04),0 4px 12px rgba(40,38,146,.06);--sh-md:0 2px 4px rgba(40,38,146,.04),0 8px 24px rgba(40,38,146,.08);
+--r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:24px;--r-full:9999px;
+--g-brand:linear-gradient(135deg,#814fc3 0%,#5039a8 40%,#282692 100%);
+--ease:cubic-bezier(.4,0,.2,1);--dur:.2s;
+}
+@media(prefers-color-scheme:dark){:root{--bg:#0f0d1a;--surface:#1a1730;--surface-alt:#221f38;--border:#2d2950;--muted:#a698c9;--text:#c8bfe0;--ink:#f0ecf8;}}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Thmanyah Sans','Segoe UI',system-ui,-apple-system,sans-serif;color:var(--text);background:var(--bg);line-height:1.75;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+img,svg{max-width:100%}
+:focus-visible{outline:3px solid var(--sky);outline-offset:2px;border-radius:var(--r-sm)}
+.skip{position:absolute;top:-100%;right:var(--s4);background:var(--primary);color:#fff;padding:var(--s2) var(--s4);border-radius:0 0 var(--r-sm) var(--r-sm);z-index:999;font-size:var(--f-sm);text-decoration:none}
+.skip:focus{top:0}
+h1,h2,h3{font-weight:700;color:var(--ink);letter-spacing:-.01em}
+h1{font-size:var(--f-h1);line-height:1.3}
+h3{font-size:var(--f-h3);line-height:1.4;margin-bottom:var(--s3)}
+p{color:var(--text)}
+a{color:inherit}
+.ico{width:20px;height:20px;flex-shrink:0}
+.wrap{max-width:720px;margin:0 auto;padding:0 var(--s6)}
+@media(max-width:640px){.wrap{padding:0 var(--s4)}}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--s2);padding:var(--s3) var(--s6);border-radius:var(--r-full);font-weight:700;font-size:.95rem;text-decoration:none;border:none;cursor:pointer;transition:transform var(--dur) var(--ease),box-shadow var(--dur) var(--ease);min-height:44px;font-family:inherit}
+.btn-primary{background:var(--g-brand);color:#fff;box-shadow:var(--sh-sm)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:var(--sh-md)}
+.btn-primary:disabled{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-outline{background:transparent;color:var(--primary);border:1.5px solid var(--border)}
+.btn-outline:hover{border-color:var(--secondary);color:var(--secondary)}
+
+header.top{padding:var(--s5) 0;border-bottom:1px solid var(--border)}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:var(--s4)}
+.brand{display:flex;align-items:center;gap:var(--s3);font-weight:800;font-size:1.05rem;color:var(--ink);text-decoration:none}
+.brand-mark{width:34px;height:34px;border-radius:var(--r-md);background:var(--g-brand);display:grid;place-items:center;color:#fff;font-weight:900;font-size:1rem;flex-shrink:0}
+.home-link{font-size:var(--f-sm);font-weight:600;color:var(--secondary);text-decoration:none}
+.home-link:hover{text-decoration:underline}
+
+main{padding:var(--s10) 0 var(--s16)}
+
+/* حالة التحميل */
+.loading{text-align:center;padding:var(--s16) 0;color:var(--muted)}
+.page-spin{width:34px;height:34px;border:3px solid var(--border);border-top-color:var(--secondary);border-radius:50%;animation:rot .8s linear infinite;margin:0 auto var(--s5)}
+@keyframes rot{to{transform:rotate(360deg)}}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:rot .7s linear infinite;vertical-align:-3px}
+
+/* حالة الخطأ */
+.error-box{text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:var(--s10) var(--s6)}
+.error-box h1{margin-bottom:var(--s3)}
+.error-box p{color:var(--muted);margin-bottom:var(--s6)}
+
+/* رأس التذكرة */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:var(--s6);margin-bottom:var(--s5);box-shadow:var(--sh-sm)}
+@media(max-width:640px){.card{padding:var(--s5)}}
+.ticket-head h1{margin-bottom:var(--s2);word-break:break-word}
+.ticket-ref{font-size:var(--f-sm);color:var(--muted);direction:ltr;display:inline-block}
+.status-row{display:flex;flex-wrap:wrap;gap:var(--s3);align-items:center;margin-top:var(--s4)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:var(--r-full);font-size:var(--f-xs);font-weight:700;white-space:nowrap}
+.st-new{background:#e0e7ff;color:#3730a3}
+.st-in_progress{background:#ede4fb;color:#282692}
+.st-waiting{background:#fef3c7;color:#92400e}
+.st-escalated{background:#fce7f3;color:#9d174d}
+.st-resolved{background:#d1fae5;color:#065f46}
+.st-closed{background:#e5e7eb;color:#374151}
+.st-reopened{background:#ffedd5;color:#9a3412}
+.pr-critical{background:#fee2e2;color:#991b1b}
+.pr-high{background:#ffedd5;color:#9a3412}
+.pr-normal{background:#ede4fb;color:#282692}
+.pr-low{background:#e5e7eb;color:#374151}
+@media(prefers-color-scheme:dark){
+.st-new{background:#312e81;color:#c7d2fe}.st-in_progress{background:#3b2e6b;color:#e0d4fc}
+.st-waiting{background:#78350f;color:#fde68a}.st-escalated{background:#831843;color:#fbcfe8}
+.st-resolved{background:#064e3b;color:#a7f3d0}.st-closed{background:#374151;color:#e5e7eb}
+.st-reopened{background:#7c2d12;color:#fed7aa}.pr-critical{background:#7f1d1d;color:#fecaca}
+.pr-high{background:#7c2d12;color:#fed7aa}.pr-normal{background:#3b2e6b;color:#e0d4fc}.pr-low{background:#374151;color:#e5e7eb}
+}
+.meta-grid{display:flex;flex-wrap:wrap;gap:var(--s5) var(--s8);margin-top:var(--s5);font-size:var(--f-sm)}
+.meta-grid b{display:block;color:var(--ink);font-size:var(--f-sm)}
+.meta-grid span{color:var(--muted);font-size:var(--f-xs)}
+.details-body,.resolution-body{white-space:pre-wrap;word-break:break-word;font-size:var(--f-sm);line-height:1.8}
+.resolution-card{border-color:#a7d8c4;background:rgba(16,185,129,.06)}
+
+/* السجل الزمني */
+.timeline{display:flex;flex-direction:column;gap:var(--s4)}
+.entry{padding:var(--s4) var(--s5);border-radius:var(--r-md);background:var(--surface-alt);border:1px solid var(--border)}
+.entry.mine{background:var(--surface);border-inline-start:4px solid var(--secondary)}
+.entry.team{background:var(--surface);border-inline-start:4px solid var(--blue)}
+.entry.system{background:transparent;border:1px dashed var(--border);text-align:center}
+.entry-head{display:flex;justify-content:space-between;gap:var(--s3);margin-bottom:var(--s2);font-size:var(--f-xs);color:var(--muted);font-weight:700;flex-wrap:wrap}
+.entry-body{white-space:pre-wrap;word-break:break-word;font-size:var(--f-sm);color:var(--text)}
+.entry.system .entry-body{color:var(--muted);font-size:var(--f-xs)}
+
+/* عناصر النماذج — نفس مقاييس منصة وصال */
+.form-group{margin-bottom:var(--s5)}
+.form-group label{display:block;font-size:var(--f-sm);font-weight:600;color:var(--ink);margin-bottom:var(--s2)}
+.form-input{width:100%;padding:var(--s3) var(--s4);border:1px solid var(--border);border-radius:var(--r-md);font-family:inherit;font-size:var(--f-sm);color:var(--ink);background:var(--surface);outline:none;transition:border-color var(--dur) var(--ease),box-shadow var(--dur) var(--ease)}
+.form-input:focus{border-color:var(--secondary);box-shadow:0 0 0 3px rgba(129,79,195,.1)}
+textarea.form-input{min-height:100px;resize:vertical;line-height:1.7}
+.field-hint{font-size:var(--f-xs);color:var(--muted);margin-top:6px}
+.form-error{background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.25);color:#b91c1c;padding:var(--s3) var(--s4);border-radius:var(--r-md);font-size:var(--f-sm);margin-bottom:var(--s5);display:none}
+.form-error.on{display:block}
+.form-ok{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:#047857;padding:var(--s3) var(--s4);border-radius:var(--r-md);font-size:var(--f-sm);margin-bottom:var(--s5);display:none}
+.form-ok.on{display:block}
+@media(prefers-color-scheme:dark){.form-error{color:#fca5a5}.form-ok{color:#6ee7b7}}
+
+/* كتل الإجراء: مُحلّة/مغلقة */
+.action-block{margin-top:var(--s6);padding-top:var(--s6);border-top:1px solid var(--border)}
+
+/* تقييم الرضا */
+.stars{border:0;padding:0;margin:0 0 var(--s4);display:flex;gap:var(--s2);flex-wrap:wrap}
+.star-lbl{position:relative;display:inline-flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:var(--s2);border-radius:var(--r-md);min-width:44px;min-height:44px;justify-content:center}
+.star-lbl input{position:absolute;inset:0;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+.star-lbl:focus-within{outline:3px solid var(--sky);outline-offset:2px}
+.star-ico{font-size:1.6rem;line-height:1;color:var(--border)}
+.star-txt{font-size:var(--f-xs);color:var(--muted)}
+.star-lbl.filled .star-ico{color:#f5a524}
+.star-lbl:hover .star-ico{color:#f5a524}
+
+footer{padding:var(--s8) 0;text-align:center;font-size:var(--f-xs);color:var(--muted)}
+footer a{color:var(--secondary);text-decoration:underline}
+
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">تخطَّ إلى المحتوى</a>
+
+<header class="top">
+<div class="wrap nav">
+<a class="brand" href="corporate.html"><span class="brand-mark" aria-hidden="true">و</span> وصال الابتكار</a>
+<a class="home-link" href="corporate.html#contact">فتح تذكرة جديدة</a>
+</div>
+</header>
+
+<main id="main">
+<div class="wrap">
+
+<div id="loadingView" class="loading" role="status" aria-live="polite">
+<div class="page-spin" aria-hidden="true"></div>
+<p>جارٍ تحميل تذكرتك...</p>
+</div>
+
+<div id="errorView" hidden>
+<div class="error-box">
+<h1>تعذّر فتح التذكرة</h1>
+<p id="errorMsg"></p>
+<a class="btn btn-primary" href="corporate.html#contact">افتح تذكرة جديدة</a>
+</div>
+</div>
+
+<div id="ticketView" hidden>
+
+<div class="card ticket-head">
+<h1 id="tType">—</h1>
+<span class="ticket-ref" id="tRef">—</span>
+<div class="status-row" id="statusRow" aria-live="polite">
+<span class="pill" id="statusPill">—</span>
+<span class="pill" id="prioPill">—</span>
+</div>
+<div class="meta-grid">
+<div><span>أُنشئت</span><b id="tCreated">—</b></div>
+<div><span>آخر تحديث</span><b id="tUpdated">—</b></div>
+</div>
+</div>
+
+<div class="card">
+<h3>تفاصيل طلبك</h3>
+<p class="details-body" id="tDetails"></p>
+</div>
+
+<div class="card resolution-card" id="resolutionCard" hidden>
+<h3>ملخّص الحل من الفريق</h3>
+<p class="resolution-body" id="tResolution"></p>
+</div>
+
+<div class="card">
+<h3>سجل المحادثة</h3>
+<div class="timeline" id="timelineList"></div>
+
+<!-- يظهر لأي حالة غير closed -->
+<form id="replyForm" class="action-block" novalidate hidden>
+<h3>أضف ردّاً</h3>
+<div class="form-error" id="replyErr" role="alert" aria-live="assertive"></div>
+<div class="form-ok" id="replyOk" role="status" aria-live="polite"></div>
+<div class="form-group">
+<label for="replyBody">ردّك</label>
+<textarea id="replyBody" class="form-input" rows="4" placeholder="اكتب ردك هنا..." required></textarea>
+</div>
+<button type="submit" class="btn btn-primary" id="replyBtn">إرسال الرد</button>
+</form>
+
+<!-- يظهر فقط عندما تكون الحالة resolved -->
+<div class="action-block" id="resolvedBlock" hidden>
+<h3>هل تم حل مشكلتك؟</h3>
+<p style="color:var(--muted);font-size:var(--f-sm);margin-bottom:var(--s4)">إن كان الحل كافياً فلا داعي لأي إجراء — ستُغلق التذكرة تلقائياً خلال أسبوع من تاريخ الحل ما لم تعترض قبل ذلك. إن كانت المشكلة قائمة، أعد فتح التذكرة وسنكمل معك:</p>
+<div class="form-group">
+<label for="reopenNote1">صف ما زال ناقصاً (اختياري)</label>
+<textarea id="reopenNote1" class="form-input" rows="3" placeholder="اكتب هنا إن أردت توضيح سبب إعادة الفتح..."></textarea>
+</div>
+<div class="form-error" id="reopenErr1" role="alert" aria-live="assertive"></div>
+<button type="button" class="btn btn-outline" id="reopenBtn1">لم تُحل بعد — أعد فتحها</button>
+</div>
+
+<!-- يظهر فقط عندما تكون الحالة closed -->
+<div class="action-block" id="closedBlock" hidden>
+<div id="rateBlock">
+<h3>قيّم تجربتك معنا</h3>
+<p style="color:var(--muted);font-size:var(--f-sm);margin-bottom:var(--s4)">تذكرتك مغلقة الآن — تقييمك يساعدنا نتحسّن.</p>
+<fieldset class="stars" id="starsField">
+<legend style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">التقييم من 1 إلى 5 نجوم</legend>
+<label class="star-lbl" data-v="1"><input type="radio" name="csat" value="1"><span class="star-ico" aria-hidden="true">★</span><span class="star-txt">1</span></label>
+<label class="star-lbl" data-v="2"><input type="radio" name="csat" value="2"><span class="star-ico" aria-hidden="true">★</span><span class="star-txt">2</span></label>
+<label class="star-lbl" data-v="3"><input type="radio" name="csat" value="3"><span class="star-ico" aria-hidden="true">★</span><span class="star-txt">3</span></label>
+<label class="star-lbl" data-v="4"><input type="radio" name="csat" value="4"><span class="star-ico" aria-hidden="true">★</span><span class="star-txt">4</span></label>
+<label class="star-lbl" data-v="5"><input type="radio" name="csat" value="5"><span class="star-ico" aria-hidden="true">★</span><span class="star-txt">5</span></label>
+</fieldset>
+<div class="form-error" id="rateErr" role="alert" aria-live="assertive"></div>
+<button type="button" class="btn btn-primary" id="rateBtn" disabled>إرسال التقييم</button>
+</div>
+<div id="ratedNote" class="form-ok" role="status" aria-live="polite"></div>
+
+<div style="margin-top:var(--s6)">
+<h3>ما زلت بحاجة لمساعدة؟</h3>
+<div class="form-group">
+<label for="reopenNote2">صف المشكلة المتبقية (اختياري)</label>
+<textarea id="reopenNote2" class="form-input" rows="3" placeholder="اكتب هنا إن أردت توضيح ما تحتاجه..."></textarea>
+</div>
+<div class="form-error" id="reopenErr2" role="alert" aria-live="assertive"></div>
+<button type="button" class="btn btn-outline" id="reopenBtn2">أعد فتح هذه التذكرة</button>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+</main>
+
+<footer>
+<p>وصال الابتكار لتقنية المعلومات — تواجه مشكلة في هذه الصفحة؟ راسلنا على <a href="mailto:info@wesalinnovation.sa">info@wesalinnovation.sa</a></p>
+</footer>
+
+<script>
+/* ================= متابعة تذكرة الدعم — بلا حساب =================
+   نفس نمط النداء المستخدم في index.html وcorporate.html حرفياً. */
+const API='api/';
+async function api(path,body){
+  try{
+    const r=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(body||{})});
+    const j=await r.json().catch(()=>null);
+    if(j&&typeof j==='object')return j;
+    throw new Error('http '+r.status);
+  }catch(e){return {ok:false,offline:true};}
+}
+function showMsg(id,txt){
+  const e=document.getElementById(id);if(!e)return;
+  e.textContent=txt;e.classList.toggle('on',!!txt);
+}
+function btnLoad(id,on,label){
+  const b=document.getElementById(id);if(!b)return;
+  b.disabled=on;
+  if(on){b.dataset.html=b.innerHTML;b.innerHTML='<span class="spin"></span> '+(label||'لحظة...');}
+  else if(b.dataset.html){b.innerHTML=b.dataset.html;}
+}
+/* نفس تنسيق التاريخ في index.html: ميلادي بأرقام لاتينية، بلا تقويم هجري مربك */
+function fmtDate(ts){
+  if(!ts)return '—';
+  const d=new Date(ts);
+  return d.toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{year:'numeric',month:'2-digit',day:'2-digit'})
+       +' '+d.toLocaleTimeString('ar-SA-u-nu-latn',{hour:'2-digit',minute:'2-digit'});
+}
+
+const STATUS_LABELS={new:'جديدة',in_progress:'قيد المعالجة',waiting:'بانتظارك',escalated:'مُحالة',resolved:'تم الحل',closed:'مغلقة',reopened:'أُعيد فتحها'};
+const PRIO_LABELS={critical:'حرجة',high:'عالية',normal:'عادية',low:'منخفضة'};
+
+const params=new URLSearchParams(location.search);
+const token=(params.get('token')||'').trim();
+
+const loadingView=document.getElementById('loadingView');
+const errorView=document.getElementById('errorView');
+const ticketView=document.getElementById('ticketView');
+
+/* ---------- تحميل التذكرة وعرضها ---------- */
+async function loadTicket(){
+  const res=await api('tickets.php',{action:'track',token});
+  if(!res.ok){
+    loadingView.hidden=true; ticketView.hidden=true;
+    document.getElementById('errorMsg').textContent = res.offline
+      ? 'تعذّر الاتصال بالخادم — تحقّق من اتصالك بالإنترنت وأعد تحميل الصفحة.'
+      : (res.error || 'رابط المتابعة غير صحيح أو انتهت صلاحيته.');
+    errorView.hidden=false;
+    document.title='تعذّر فتح التذكرة | وصال الابتكار';
+    return;
+  }
+  render(res.ticket, res.entries);
+  loadingView.hidden=true; errorView.hidden=true; ticketView.hidden=false;
+}
+
+function render(t, entries){
+  document.title='تذكرة '+t.ref+' — '+(STATUS_LABELS[t.status]||t.status)+' | وصال الابتكار';
+
+  document.getElementById('tType').textContent=t.subject||t.type;
+  document.getElementById('tRef').textContent=t.ref;
+
+  const statusPill=document.getElementById('statusPill');
+  statusPill.textContent=STATUS_LABELS[t.status]||t.status;
+  statusPill.className='pill st-'+t.status;
+  const prioPill=document.getElementById('prioPill');
+  prioPill.textContent='أولوية '+(PRIO_LABELS[t.priority]||t.priority);
+  prioPill.className='pill pr-'+t.priority;
+
+  document.getElementById('tCreated').textContent=fmtDate(t.created);
+  document.getElementById('tUpdated').textContent=fmtDate(t.updated||t.created);
+  document.getElementById('tDetails').textContent=t.details;
+
+  const resCard=document.getElementById('resolutionCard');
+  if(t.resolution){resCard.hidden=false;document.getElementById('tResolution').textContent=t.resolution;}
+  else{resCard.hidden=true;}
+
+  const list=document.getElementById('timelineList');
+  list.innerHTML='';
+  entries.forEach(e=>{
+    const div=document.createElement('div');
+    const isSystem = e.kind==='status' || e.kind==='system';
+    div.className='entry '+(isSystem?'system':(e.mine?'mine':'team'));
+    const head=document.createElement('div');
+    head.className='entry-head';
+    const who=document.createElement('span');
+    who.textContent=isSystem?'النظام':e.who;
+    const when=document.createElement('span');
+    when.textContent=fmtDate(e.t);
+    head.appendChild(who);head.appendChild(when);
+    const body=document.createElement('div');
+    body.className='entry-body';
+    body.textContent=e.body;
+    div.appendChild(head);div.appendChild(body);
+    list.appendChild(div);
+  });
+
+  /* ---- إظهار كتلة الإجراء المناسبة للحالة الحالية ---- */
+  const replyForm=document.getElementById('replyForm');
+  const resolvedBlock=document.getElementById('resolvedBlock');
+  const closedBlock=document.getElementById('closedBlock');
+  replyForm.hidden = t.status==='closed';
+  resolvedBlock.hidden = t.status!=='resolved';
+  closedBlock.hidden = t.status!=='closed';
+
+  if(t.status==='closed'){
+    const rateBlock=document.getElementById('rateBlock');
+    const ratedNote=document.getElementById('ratedNote');
+    if(t.csat===null){
+      rateBlock.hidden=false; ratedNote.classList.remove('on');
+      currentRating=0;
+      document.getElementById('rateBtn').disabled=true;
+      document.querySelectorAll('#starsField input').forEach(i=>i.checked=false);
+      document.querySelectorAll('#starsField .star-lbl').forEach(l=>l.classList.remove('filled'));
+    }else{
+      rateBlock.hidden=true;
+      ratedNote.textContent='شكراً، قيّمت هذه التذكرة بـ'+t.csat+' من 5.';
+      ratedNote.classList.add('on');
+    }
+  }
+}
+
+loadTicket();
+
+/* ---------- الرد ---------- */
+document.getElementById('replyForm').addEventListener('submit', async e=>{
+  e.preventDefault();
+  showMsg('replyErr','');showMsg('replyOk','');
+  const body=document.getElementById('replyBody').value.trim();
+  if(body.length<2) return showMsg('replyErr','اكتب ردك أولاً.');
+  btnLoad('replyBtn',true,'جارٍ الإرسال');
+  const res=await api('tickets.php',{action:'reply',token,body});
+  btnLoad('replyBtn',false);
+  if(!res.ok) return showMsg('replyErr', res.offline
+    ? 'ما وصل ردك — يبدو أن الاتصال منقطع. حاول مرة أخرى.'
+    : (res.error||'تعذّر إرسال الرد.'));
+  document.getElementById('replyBody').value='';
+  showMsg('replyOk','تم إرسال ردك.');
+  await loadTicket();
+});
+
+/* ---------- إعادة الفتح (من حالة resolved أو closed) ---------- */
+async function doReopen(noteId, errId, btnId){
+  showMsg(errId,'');
+  const body=document.getElementById(noteId).value.trim();
+  btnLoad(btnId,true,'جارٍ إعادة الفتح');
+  const res=await api('tickets.php',{action:'reopen',token,body});
+  btnLoad(btnId,false);
+  if(!res.ok) return showMsg(errId, res.offline
+    ? 'تعذّر الاتصال — حاول مرة أخرى.'
+    : (res.error||'تعذّرت إعادة فتح التذكرة.'));
+  await loadTicket();
+}
+document.getElementById('reopenBtn1').addEventListener('click', ()=>doReopen('reopenNote1','reopenErr1','reopenBtn1'));
+document.getElementById('reopenBtn2').addEventListener('click', ()=>doReopen('reopenNote2','reopenErr2','reopenBtn2'));
+
+/* ---------- التقييم ---------- */
+let currentRating=0;
+document.getElementById('starsField').addEventListener('change', e=>{
+  const v=Number(e.target.value);
+  currentRating=v;
+  document.querySelectorAll('#starsField .star-lbl').forEach(l=>l.classList.toggle('filled', Number(l.dataset.v)<=v));
+  document.getElementById('rateBtn').disabled=false;
+});
+document.getElementById('rateBtn').addEventListener('click', async ()=>{
+  if(!currentRating) return;
+  showMsg('rateErr','');
+  btnLoad('rateBtn',true,'جارٍ الإرسال');
+  const res=await api('tickets.php',{action:'rate',token,csat:currentRating});
+  btnLoad('rateBtn',false);
+  if(!res.ok) return showMsg('rateErr', res.offline
+    ? 'تعذّر الاتصال — حاول مرة أخرى.'
+    : (res.error||'تعذّر إرسال التقييم.'));
+  await loadTicket();
+});
+</script>
+</body>
+</html>

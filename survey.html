@@ -294,7 +294,9 @@ const STEPS = [
 /* ---------- الحالة ---------- */
 const qp    = new URLSearchParams(location.search);
 const TOKEN = /^[a-f0-9]{40}$/.test(qp.get('t') || '') ? qp.get('t') : null;
-const DRAFT = 'survey_draft_' + (TOKEN || 'anon');
+/* رابط استبيان عام بلا دعوة شخصية: ?c=اسم_الحملة — يُهمَل إن وُجد رمز دعوة */
+const CAMPAIGN = TOKEN ? null : ((qp.get('c') || '').trim().slice(0, 80) || null);
+const DRAFT = 'survey_draft_' + (TOKEN || CAMPAIGN || 'anon');
 let A    = LS.get(DRAFT, {});   // الإجابات — بالمفاتيح نفسها المرسلة للخادم
 let step = 0;
 const $  = id => document.getElementById(id);
@@ -470,6 +472,7 @@ function submit() {
   }
   $('btnNext').disabled = true;
   const payload = { action: 'submit_survey', token: TOKEN };
+  if (!TOKEN && CAMPAIGN) payload.campaign = CAMPAIGN;
   STEPS.forEach(s => {
     payload[s.key] = A[s.key] ?? null;
     if (s.follow) payload[s.follow.key] = A[s.follow.key] ?? null;

@@ -47,6 +47,9 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 @media(max-width:768px){.container{padding:0 var(--s4);}}
 .ico{width:20px;height:20px;flex-shrink:0;}
 .ico-lg{width:24px;height:24px;}
+/* شبكة أمان: أي <svg> داخل زر بلا صنف حجم يرسمه المتصفح 300×150 افتراضاً
+   فيتضخّم ويكسر الزر. هذه القاعدة تمنع ذلك مهما نُسي الصنف مستقبلاً. */
+.btn svg:not([class]){width:20px;height:20px;flex-shrink:0;}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
 .glass{background:rgba(255,255,255,.72);backdrop-filter:blur(20px) saturate(1.3);-webkit-backdrop-filter:blur(20px) saturate(1.3);border:1px solid rgba(255,255,255,.6);box-shadow:var(--sh-sm);}
 [data-contrast="dark"] .glass{background:rgba(26,23,48,.72);border-color:rgba(255,255,255,.06);}
@@ -108,7 +111,9 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 .sec-header .sec-sub{margin-inline:auto;}
 
 /* BUTTONS */
-.btn{display:inline-flex;align-items:center;gap:var(--s2);font-family:inherit;font-weight:600;border:none;border-radius:var(--r-full);cursor:pointer;transition:all var(--dur-md) var(--ease);text-decoration:none;line-height:1.4;}
+/* حشوة وحجم خط افتراضيان: الزر الذي يُنسى معه صنف الحجم (btn-md/btn-lg)
+   كان يرث حشوة صفر وخط المتصفح الافتراضي فيخرج مضغوطاً وغير متناسق. */
+.btn{display:inline-flex;align-items:center;gap:var(--s2);font-family:inherit;font-weight:600;border:none;border-radius:var(--r-full);cursor:pointer;transition:all var(--dur-md) var(--ease);text-decoration:none;line-height:1.4;padding:var(--s3) var(--s6);font-size:var(--f-sm);}
 .btn-md{padding:var(--s3) var(--s6);font-size:var(--f-sm);}
 .btn-lg{padding:var(--s4) var(--s8);font-size:var(--f-body);}
 .btn-primary{background:var(--g-brand);color:#fff;box-shadow:0 4px 16px rgba(40,38,146,.2);}
@@ -153,7 +158,7 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 .hero-orb-1{width:400px;height:400px;background:radial-gradient(circle,#52bdf9,transparent);top:-10%;left:10%;animation-delay:0s;}
 .hero-orb-2{width:300px;height:300px;background:radial-gradient(circle,#814fc3,transparent);bottom:5%;right:5%;animation-delay:2s;}
 .hero-orb-3{width:250px;height:250px;background:radial-gradient(circle,#3e9eed,transparent);top:40%;right:30%;animation-delay:4s;}
-.hero-content{position:relative;z-index:2;max-width:860px;}
+.hero-content{position:relative;z-index:2;max-width:860px;width:100%;min-width:0;}
 .hero-chip{display:inline-flex;align-items:center;gap:var(--s2);background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);padding:var(--s2) var(--s4);border-radius:var(--r-full);font-size:var(--f-sm);color:rgba(255,255,255,.9);margin-bottom:var(--s6);}
 .hero-chip .dot{width:8px;height:8px;border-radius:50%;background:#34d399;animation:pulse 2s ease infinite;}
 .hero h1{font-size:var(--f-display);font-weight:700;color:#fff;line-height:1.25;margin-bottom:var(--s5);max-width:800px;margin-inline:auto;}
@@ -161,7 +166,7 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 .hero-search{max-width:600px;margin:0 auto var(--s6);position:relative;}
 .hero-search-inner{display:flex;align-items:center;gap:var(--s2);background:rgba(255,255,255,.12);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.2);border-radius:var(--r-2xl);padding:var(--s2) var(--s3);transition:all var(--dur-md) var(--ease);}
 .hero-search-inner:focus-within{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.4);box-shadow:var(--sh-glow);}
-.hero-search input{flex:1;background:none;border:none;color:#fff;font-family:inherit;font-size:var(--f-body);padding:var(--s3) var(--s4);outline:none;}
+.hero-search input{flex:1;min-width:0;background:none;border:none;color:#fff;font-family:inherit;font-size:var(--f-body);padding:var(--s3) var(--s4);outline:none;}
 .hero-search input::placeholder{color:rgba(255,255,255,.5);}
 .hero-search-btn{width:44px;height:44px;border-radius:var(--r-xl);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--dur) var(--ease);flex-shrink:0;}
 .hero-search-btn.mic{background:rgba(255,255,255,.15);color:#fff;}
@@ -176,9 +181,14 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 .hero-trust-div{width:1px;height:32px;background:rgba(255,255,255,.2);}
 
 /* FEATURES */
-.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s6);}
-@media(max-width:1024px){.feat-grid{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:600px){.feat-grid{grid-template-columns:1fr;}}
+/* minmax(0,1fr) بدل 1fr: الافتراضي minmax(auto,1fr) يمنع العمود من الانكماش
+   تحت عرض محتواه الأدنى فيطفح خارج الشاشة على الجوال. */
+.feat-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s6);}
+/* عنصر الشبكة افتراضه min-width:auto فلا ينكمش تحت عرض محتواه الأدنى
+   (كلمة طويلة أو رابط)، فيطفح خارج الشاشة. هذه القاعدة تمنعها في كل الشبكات. */
+.feat-grid>*,.stats-grid>*,.test-grid>*,.settings-grid>*,.dash-stats>*,.res-grid>*,.values-grid>*,.contact-grid>*,.footer-grid>*,.auth-row>*,.dash-profile-grid>*,.sources-grid>*,.about-mission>*{min-width:0;}
+@media(max-width:1024px){.feat-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:600px){.feat-grid{grid-template-columns:minmax(0,1fr);}}
 
 /* HOW IT WORKS */
 .how-sec{background:var(--surface-alt);}
@@ -224,11 +234,15 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 .chat-sidebar h3{font-size:var(--f-sm);font-weight:700;color:var(--ink);margin-bottom:var(--s2);}
 .chat-sug-btn{display:block;width:100%;text-align:right;background:var(--surface-alt);border:1px solid var(--border);font-family:inherit;font-size:var(--f-xs);color:var(--text);padding:var(--s3);border-radius:var(--r-md);cursor:pointer;transition:all var(--dur) var(--ease);margin-bottom:var(--s2);}
 .chat-sug-btn:hover{background:rgba(40,38,146,.05);border-color:var(--secondary);}
-.chat-main{flex:1;display:flex;flex-direction:column;background:var(--bg);}
+/* min-width:0 ضروري: عنصر flex افتراضه min-width:auto فلا ينكمش تحت عرض
+   محتواه الأدنى، فيتمدّد خارج الشاشة على الجوال ويصنع تمريراً أفقياً. */
+.chat-main{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--bg);}
 .chat-topbar{display:flex;align-items:center;gap:var(--s4);padding:var(--s3) var(--s5);border-bottom:1px solid var(--border);background:var(--surface);flex-wrap:wrap;}
 .chat-topbar h2{font-size:var(--f-body);font-weight:700;color:var(--ink);margin-left:auto;}
 .chat-mode-btns{display:flex;background:var(--surface-alt);border-radius:var(--r-full);overflow:hidden;border:1px solid var(--border);}
-.chat-mode-btn{padding:var(--s1) var(--s4);font-family:inherit;font-size:var(--f-xs);font-weight:500;border:none;background:none;cursor:pointer;color:var(--muted);transition:all var(--dur) var(--ease);}
+/* 6px رأسياً بدل 4px: كان ارتفاع الزر 23px وهو دون الحد الأدنى لهدف اللمس
+   في WCAG 2.2 (معيار 2.5.8 = 24×24 بكسل). */
+.chat-mode-btn{padding:6px var(--s4);font-family:inherit;font-size:var(--f-xs);font-weight:500;border:none;background:none;cursor:pointer;color:var(--muted);transition:all var(--dur) var(--ease);}
 .chat-mode-btn.on{background:var(--g-brand);color:#fff;}
 .chat-body{flex:1;overflow-y:auto;padding:var(--s6);display:flex;flex-direction:column;gap:var(--s4);}
 .msg{display:flex;gap:var(--s3);max-width:80%;animation:fadeUp .3s var(--ease);}
@@ -250,6 +264,9 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 .chat-input-area{padding:var(--s4) var(--s5);border-top:1px solid var(--border);background:var(--surface);}
 .chat-chips{display:flex;gap:var(--s2);margin-bottom:var(--s3);flex-wrap:wrap;}
 .chat-chip{padding:var(--s1) var(--s3);border-radius:var(--r-full);font-family:inherit;font-size:var(--f-xs);background:var(--surface-alt);border:1px solid var(--border);color:var(--text);cursor:pointer;transition:all var(--dur) var(--ease);}
+/* على أجهزة اللمس فقط: أهداف لمس أوسع للعناصر الصغيرة، بلا أي تغيير على
+   مظهر سطح المكتب (المؤشر الدقيق). */
+@media(pointer:coarse){.chat-chip,.chat-mode-btn,.res-chip,.footer-link{min-height:36px;}}
 .chat-chip:hover{border-color:var(--secondary);color:var(--secondary);}
 .chat-input-row{display:flex;align-items:flex-end;gap:var(--s2);background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--r-xl);padding:var(--s2);transition:border-color var(--dur) var(--ease);}
 .chat-input-row:focus-within{border-color:var(--secondary);box-shadow:0 0 0 3px rgba(129,79,195,.1);}
@@ -264,7 +281,9 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 
 /* SETTINGS PAGE */
 .settings-wrap{padding-top:100px;padding-bottom:var(--s24);}
-.settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:var(--s6);}
+/* min(340px,100%) بدل 340px: بدونها يفرض العمود 340 بكسل حتى على شاشة 320
+   بكسل فتطفح البطاقة خارج الإطار. النمط نفسه مطبَّق على بقية الشبكات المرنة. */
+.settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr));gap:var(--s6);}
 .settings-group{padding:var(--s6);}
 .settings-group h3{font-size:var(--f-h3);font-weight:700;color:var(--ink);margin-bottom:var(--s5);display:flex;align-items:center;gap:var(--s3);}
 .setting-row{display:flex;align-items:center;justify-content:space-between;padding:var(--s4) 0;border-bottom:1px solid var(--border);}
@@ -429,11 +448,29 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 .nav-user{display:none;align-items:center;gap:var(--s2);}
 .nav-user.on{display:inline-flex;}
 .nav-guest.off{display:none!important;}
-.nav-avatar{width:34px;height:34px;border-radius:var(--r-full);background:var(--g-brand);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:var(--f-sm);border:2px solid rgba(255,255,255,.5);}
+.nav-avatar{width:34px;height:34px;border-radius:var(--r-full);background:var(--g-brand);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:var(--f-sm);border:2px solid rgba(255,255,255,.5);flex-shrink:0;}
+.nav-id{display:inline-flex;align-items:center;gap:var(--s2);background:none;border:none;cursor:pointer;font-family:inherit;padding:var(--s1);border-radius:var(--r-full);}
+.nav-id-text{display:flex;flex-direction:column;align-items:flex-start;line-height:1.3;}
+.nav-id-text b{color:#fff;font-size:var(--f-sm);font-weight:700;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.nav.scrolled .nav-id-text b{color:var(--ink);}
+.nav-id-chevron{width:14px;height:14px;color:rgba(255,255,255,.7);transition:transform var(--dur) var(--ease);flex-shrink:0;}
+.nav.scrolled .nav-id-chevron{color:var(--muted);}
+.nav-id[aria-expanded="true"] .nav-id-chevron{transform:rotate(180deg);}
+.role-pill{display:inline-block;background:rgba(82,189,249,.22);color:#eaf6ff;border:1px solid rgba(255,255,255,.3);font-size:10px;font-weight:700;font-style:normal;padding:1px var(--s2);border-radius:var(--r-full);margin-top:2px;}
+.nav.scrolled .role-pill{background:rgba(129,79,195,.12);color:var(--secondary);border-color:rgba(129,79,195,.25);}
+.user-menu-head{position:relative;}
+.user-menu-head .role-pill{background:rgba(129,79,195,.1);color:var(--secondary);border-color:var(--border);margin-top:var(--s2);}
+/* على الجوال لا يتسع الشريط العلوي للاسم والدور، فيظهران هنا أعلى القائمة
+   الجانبية بدلاً من ضغط الشريط حتى يطفح خارج عرض الشاشة. */
+.mob-user{display:flex;align-items:center;gap:var(--s3);padding:var(--s2) var(--s1) var(--s4);}
+.mob-user-text{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0;}
+.mob-user-text b{font-size:var(--f-sm);color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;}
+.mob-user .role-pill{background:rgba(129,79,195,.1);color:var(--secondary);border-color:var(--border);margin-top:0;}
 
 /* قائمة الجوال — نسخة محسّنة */
 @media(max-width:900px){.nav-links{display:none;}.burger{display:flex;}}
-@media(max-width:900px){.nav-cta,.nav-a11y-btn,.nav-tools .nav-icon-btn.hide-sm{display:none;}}
+@media(max-width:900px){.nav-cta,.nav-a11y-btn,.nav-tools .nav-icon-btn.hide-sm,.nav-id-text.hide-sm{display:none;}
+.nav-id-chevron{display:none;}.nav-id{padding:0;gap:0;}}
 .mob-menu{width:320px;padding:0;gap:0;overflow-y:auto;overscroll-behavior:contain;}
 .mob-head{display:flex;align-items:center;justify-content:space-between;padding:var(--s5) var(--s5) var(--s4);border-bottom:1px solid var(--border);position:sticky;top:0;background:inherit;backdrop-filter:blur(24px);z-index:2;}
 .mob-head img{height:34px;}
@@ -505,6 +542,16 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 
 /* ============ لوحة التحكم ============ */
 .dash-tabs{display:flex;gap:var(--s1);background:var(--surface);border:1px solid var(--border);padding:var(--s1);border-radius:var(--r-full);margin-bottom:var(--s8);overflow-x:auto;scrollbar-width:none;}
+/* من عرض الأجهزة اللوحية فأكبر: القائمة تصبح شريطاً جانبياً ثابتاً — يمين
+   الشاشة تلقائياً لأن dir="rtl"، فأول عمود في الشبكة يُرسم يميناً بلا أي
+   قلب يدوي. أضيق من ذلك تبقى شرائح أفقية كما كانت دائماً، بلا أي تغيير. */
+@media(min-width:960px){
+.dash-wrap{display:grid;grid-template-columns:240px 1fr;grid-template-areas:"welcome welcome" "tabs panels";gap:0 var(--s8);align-items:start;}
+.dash-welcome{grid-area:welcome;}
+.dash-tabs{grid-area:tabs;flex-direction:column;align-items:stretch;background:none;border:none;padding:0;border-radius:0;margin-bottom:0;overflow-x:visible;position:sticky;top:calc(100px + var(--s4));gap:2px;}
+.dash-tab{justify-content:flex-start;border-radius:var(--r-md);padding:var(--s3) var(--s4);width:100%;}
+.dash-panel{grid-area:panels;min-width:0;}
+}
 .dash-tabs::-webkit-scrollbar{display:none;}
 .dash-tab{flex-shrink:0;background:none;border:none;font-family:inherit;font-size:var(--f-sm);font-weight:600;color:var(--muted);padding:var(--s3) var(--s5);border-radius:var(--r-full);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;transition:all var(--dur) var(--ease);}
 .dash-tab svg{width:16px;height:16px;}
@@ -532,12 +579,77 @@ table.tbl tr:hover td{background:var(--surface-alt);}
 .pill-amber{background:rgba(245,158,11,.14);color:#b45309;}
 .pill-gray{background:var(--surface-alt);color:var(--muted);}
 [data-contrast="dark"] .pill-green{color:#6ee7b7;}[data-contrast="dark"] .pill-amber{color:#fcd34d;}
+.pill-blue{background:rgba(37,99,235,.12);color:#1d4ed8;}
+.pill-red{background:rgba(220,38,38,.12);color:#b91c1c;}
+[data-contrast="dark"] .pill-blue{color:#93c5fd;}[data-contrast="dark"] .pill-red{color:#fca5a5;}
+
+/* ============ تذاكر الدعم ============ */
+.tk-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(160px,100%),1fr));gap:var(--s3);margin-bottom:var(--s5);}
+.tk-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:var(--s4) var(--s5);}
+.tk-stat b{display:block;font-size:var(--f-h2);color:var(--ink);line-height:1.2;}
+.tk-stat span{font-size:var(--f-xs);color:var(--muted);}
+.tk-stat.warn b{color:#b45309;}
+.tk-filters{display:flex;gap:var(--s3);flex-wrap:wrap;align-items:center;padding:var(--s4) var(--s6);border-bottom:1px solid var(--border);}
+.tk-filters select{font-family:inherit;font-size:var(--f-sm);padding:var(--s2) var(--s3);border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface);color:var(--text);}
+.tk-filters label{display:flex;align-items:center;gap:6px;font-size:var(--f-sm);color:var(--muted);cursor:pointer;}
+.tk-row{cursor:pointer;}
+.tk-overdue{color:#b91c1c;font-weight:700;}
+.tk-ref{font-family:ui-monospace,monospace;font-size:var(--f-xs);color:var(--muted);direction:ltr;display:inline-block;}
+
+/* الدرج الجانبي لتفاصيل التذكرة — نفس نمط قائمة الجوال (overlay+drawer) */
+.tk-drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1001;opacity:0;pointer-events:none;transition:opacity var(--dur-md) var(--ease);}
+.tk-drawer-overlay.on{opacity:1;pointer-events:auto;}
+.tk-drawer{position:fixed;top:0;left:0;width:560px;max-width:92vw;height:100%;z-index:1002;background:var(--surface);transform:translateX(-100%);transition:transform var(--dur-md) var(--ease);box-shadow:var(--sh-lg);display:flex;flex-direction:column;}
+.tk-drawer.on{transform:translateX(0);}
+.tk-drawer-head{padding:var(--s5) var(--s6);border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:var(--s3);}
+.tk-drawer-head h3{font-size:var(--f-h3);margin-bottom:4px;}
+.tk-drawer-meta{font-size:var(--f-xs);color:var(--muted);display:flex;flex-wrap:wrap;gap:var(--s2) var(--s4);margin-top:var(--s2);}
+.tk-drawer-body{flex:1;overflow-y:auto;padding:var(--s6);}
+.tk-drawer-close{background:none;border:none;color:var(--muted);cursor:pointer;padding:var(--s2);border-radius:var(--r-full);flex-shrink:0;}
+.tk-drawer-close:hover{background:var(--surface-alt);color:var(--ink);}
+.tk-drawer-actions{display:flex;gap:var(--s2);flex-wrap:wrap;padding:var(--s4) var(--s6);border-top:1px solid var(--border);background:var(--surface-alt);}
+
+.tk-timeline{display:flex;flex-direction:column;gap:var(--s3);margin-bottom:var(--s5);}
+.tk-entry{border-radius:var(--r-md);padding:var(--s3) var(--s4);border-inline-start:3px solid var(--border);background:var(--surface-alt);}
+.tk-entry.is-public{border-inline-start-color:#10b981;}
+.tk-entry.is-internal{border-inline-start-color:var(--secondary);background:rgba(129,79,195,.06);}
+.tk-entry-meta{display:flex;align-items:center;gap:var(--s2);font-size:var(--f-xs);color:var(--muted);margin-bottom:4px;flex-wrap:wrap;}
+.tk-entry-meta b{color:var(--ink);font-size:var(--f-sm);}
+.tk-entry p{font-size:var(--f-sm);color:var(--text);white-space:pre-wrap;margin:0;}
+.tk-vis-tag{font-size:10px;font-weight:700;padding:1px 7px;border-radius:var(--r-full);}
+.tk-vis-tag.pub{background:rgba(16,185,129,.14);color:#047857;}
+.tk-vis-tag.int{background:rgba(129,79,195,.14);color:var(--tertiary);}
+
+.tk-compose{border:1px solid var(--border);border-radius:var(--r-lg);padding:var(--s4);background:var(--surface);}
+.tk-compose textarea{width:100%;min-height:80px;border:1px solid var(--border);border-radius:var(--r-md);padding:var(--s3);font-family:inherit;font-size:var(--f-sm);resize:vertical;background:var(--bg);color:var(--text);}
+.tk-vis-toggle{display:flex;gap:var(--s2);margin:var(--s3) 0;}
+.tk-vis-btn{flex:1;padding:var(--s2) var(--s3);border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface);color:var(--muted);font-family:inherit;font-size:var(--f-xs);font-weight:600;cursor:pointer;}
+.tk-vis-btn.on[data-v="public"]{background:rgba(16,185,129,.12);border-color:#10b981;color:#047857;}
+.tk-vis-btn.on[data-v="internal"]{background:rgba(129,79,195,.12);border-color:var(--secondary);color:var(--tertiary);}
+.tk-escalate-form{display:flex;flex-direction:column;gap:var(--s3);margin-top:var(--s3);padding-top:var(--s3);border-top:1px dashed var(--border);}
+.tk-escalate-form select,.tk-escalate-form textarea{font-family:inherit;font-size:var(--f-sm);padding:var(--s2) var(--s3);border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg);color:var(--text);}
+
+/* ============ الإشعارات ============ */
+.notif-btn{position:relative;}
+.notif-dot{position:absolute;top:2px;left:2px;width:9px;height:9px;border-radius:50%;background:#dc2626;border:2px solid var(--nav-bg,#fff);}
+.notif-panel{position:absolute;top:calc(100% + var(--s3));inset-inline-start:0;width:360px;max-width:90vw;max-height:70vh;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-lg);z-index:1100;display:none;}
+.notif-panel.open{display:block;}
+.notif-panel-head{display:flex;align-items:center;justify-content:space-between;padding:var(--s3) var(--s4);border-bottom:1px solid var(--border);font-weight:700;font-size:var(--f-sm);}
+.notif-panel-head button{background:none;border:none;color:var(--secondary);font-size:var(--f-xs);cursor:pointer;font-family:inherit;}
+.notif-item{display:block;width:100%;text-align:start;padding:var(--s3) var(--s4);border-bottom:1px solid var(--border);background:none;border-inline:none;border-top:none;cursor:pointer;font-family:inherit;}
+.notif-item:last-child{border-bottom:none;}
+.notif-item:hover{background:var(--surface-alt);}
+.notif-item.unread{background:rgba(37,99,235,.05);}
+.notif-item b{display:block;font-size:var(--f-sm);color:var(--ink);margin-bottom:2px;}
+.notif-item p{font-size:var(--f-xs);color:var(--muted);margin:0;}
+.notif-item time{font-size:10px;color:var(--muted);}
+.notif-wrap{position:relative;}
 .icon-btn-sm{background:var(--surface-alt);border:1px solid var(--border);width:32px;height:32px;border-radius:var(--r-sm);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);}
 .icon-btn-sm:hover{color:var(--primary);border-color:var(--secondary);}
 .icon-btn-sm svg{width:15px;height:15px;}
 .empty-state{padding:var(--s12) var(--s6);text-align:center;color:var(--muted);font-size:var(--f-sm);}
 .empty-state svg{width:40px;height:40px;color:var(--border);margin-bottom:var(--s3);}
-.dash-profile-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--s5);}
+.dash-profile-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:var(--s5);}
 
 /* ============ تنبيهات ============ */
 #toasts{position:fixed;bottom:24px;inset-inline-start:24px;z-index:12000;display:flex;flex-direction:column;gap:var(--s3);pointer-events:none;max-width:min(360px,calc(100vw - 48px));}
@@ -625,7 +737,7 @@ table.tbl tr:hover td{background:var(--surface-alt);}
 
 
 /* sources + misc v2 */
-.sources-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:var(--s4)}
+.sources-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));gap:var(--s4)}
 .src-card{padding:var(--s5) var(--s4)}
 .src-name{font-weight:700;margin-bottom:4px}
 .src-dom{color:var(--secondary);font-size:var(--f-sm);font-weight:600;margin-bottom:6px}
@@ -666,6 +778,8 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <symbol id="ic-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
 <symbol id="ic-arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></symbol>
 <symbol id="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></symbol>
+<symbol id="ic-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+<symbol id="ic-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
 <symbol id="ic-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
 <symbol id="ic-brain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 1 4.56 2.95A4.5 4.5 0 0 1 20 9.5a4.5 4.5 0 0 1-2.59 4.07A5 5 0 0 1 12 18"/><path d="M12 2a5 5 0 0 0-4.56 2.95A4.5 4.5 0 0 0 4 9.5a4.5 4.5 0 0 0 2.59 4.07A5 5 0 0 0 12 18"/><path d="M12 18v4"/><path d="M8 10h.01"/><path d="M16 10h.01"/></symbol>
 <symbol id="ic-hand-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 14h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17"/><path d="M7 21l1.6-1.4c.3-.4.8-.6 1.4-.6h4c.8 0 1.6-.3 2.1-.9l4.8-4.3a2 2 0 0 0-2.7-2.9L15 14"/><path d="M12 4l-1.5 1.5a2.12 2.12 0 0 0 0 3c.8.8 2.2.8 3 0L12 4z"/></symbol>
@@ -694,10 +808,26 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <button class="nav-cta nav-guest" onclick="startTrial()" data-i18n="nav.cta">جرّب الآن</button>
 <div class="nav-user" id="navUser">
 <button class="nav-icon-btn hide-sm" onclick="go('dashboard')" data-i18n="nav.dash">لوحة التحكم</button>
-<button class="nav-avatar" id="navAvatar" onclick="toggleUserMenu(event)" aria-label="قائمة حسابي" aria-haspopup="true" aria-expanded="false">م</button>
-<span class="sr-only" id="navName"></span>
+<div class="notif-wrap">
+<button class="nav-icon-btn notif-btn" id="notifBtn" onclick="toggleNotifPanel(event)" aria-label="الإشعارات" aria-haspopup="true" aria-expanded="false">
+<svg class="ico" style="width:16px;height:16px"><use href="#ic-bell"/></svg>
+<span class="notif-dot" id="notifDot" hidden></span>
+</button>
+<div class="notif-panel" id="notifPanel" role="menu">
+<div class="notif-panel-head"><span>الإشعارات</span><button type="button" onclick="markAllNotifsRead()">تعليم الكل مقروءاً</button></div>
+<div id="notifList"></div>
+</div>
+</div>
+<button class="nav-id" id="navIdBtn" onclick="toggleUserMenu(event)" aria-label="قائمة حسابي" aria-haspopup="true" aria-expanded="false">
+<span class="nav-avatar" id="navAvatar">م</span>
+<span class="nav-id-text hide-sm">
+<b id="navName"></b>
+<em class="role-pill" id="navRolePill" hidden></em>
+</span>
+<svg class="ico nav-id-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+</button>
 <div class="user-menu" id="userMenu" role="menu">
-<div class="user-menu-head"><b id="umName"></b><span id="umEmail"></span></div>
+<div class="user-menu-head"><b id="umName"></b><span id="umEmail"></span><em class="role-pill" id="umRolePill" hidden></em></div>
 <button class="user-menu-item" onclick="go('dashboard');closeUserMenu()"><svg><use href="#ic-zap"/></svg> لوحة التحكم</button>
 <button class="user-menu-item" onclick="go('dashboard');closeUserMenu();setTimeout(()=>dashTab('profile',document.querySelectorAll('.dash-tab')[2]),150)"><svg><use href="#ic-settings"/></svg> ملفي الشخصي</button>
 <button class="user-menu-item" onclick="go('settings');closeUserMenu()"><svg><use href="#ic-a11y"/></svg> إعدادات الوصول</button>
@@ -716,6 +846,7 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <button class="mob-close" onclick="toggleMob()" aria-label="إغلاق القائمة">&times;</button>
 </div>
 <div class="mob-body">
+<div class="mob-user mob-auth" style="display:none"><span class="nav-avatar" id="mobAvatar">م</span><span class="mob-user-text"><b id="mobName"></b><em class="role-pill" id="mobRolePill" hidden></em></span></div>
 <button class="mob-link on" onclick="go('home');toggleMob()" data-pg="home"><svg><use href="#ic-heart"/></svg> الرئيسية</button>
 <button class="mob-link" onclick="go('chat');toggleMob()" data-pg="chat"><svg><use href="#ic-chat"/></svg> المحادثة الذكية</button>
 <button class="mob-link" onclick="go('resources');toggleMob()" data-pg="resources"><svg><use href="#ic-book"/></svg> الدليل</button>
@@ -972,7 +1103,7 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <button class="dash-tab" onclick="dashTab('profile',this)" role="tab"><svg><use href="#ic-settings"/></svg> حسابي</button>
 <button class="dash-tab" data-perm="users.view" hidden onclick="dashTab('users',this)" role="tab"><svg><use href="#ic-users"/></svg> المستخدمون</button>
 <button class="dash-tab" data-perm="messages.view" hidden onclick="dashTab('messages',this)" role="tab"><svg><use href="#ic-mail"/></svg> رسائل التواصل</button>
-<button class="dash-tab" data-perm="tickets.view" hidden onclick="dashTab('tickets',this)" role="tab"><svg><use href="#ic-shield"/></svg> طلبات الدعم</button>
+<button class="dash-tab" data-perm="tickets.view" hidden onclick="dashTab('tickets',this)" role="tab"><svg><use href="#ic-shield"/></svg> تذاكر الدعم</button>
 <button class="dash-tab" data-perm="content.manage" hidden onclick="dashTab('content',this)" role="tab" aria-label="محتوى الصفحة"><svg class="ico"><use href="#ic-book"/></svg> محتوى الصفحة</button>
 <button class="dash-tab" data-perm="audit.view" hidden onclick="dashTab('audit',this)" role="tab"><svg><use href="#ic-clock"/></svg> سجل العمليات</button>
 <button class="dash-tab" data-perm="experience.view" hidden onclick="dashTab('experience',this)" role="tab"><svg><use href="#ic-heart"/></svg> تجربة المستخدم</button>
@@ -1088,9 +1219,9 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <p style="color:var(--muted);font-size:var(--f-sm);margin-bottom:var(--s4)">تحكّم كامل ببياناتك من هنا — بدون مراسلات ولا انتظار.</p>
 <label class="chk" style="display:flex;gap:10px;align-items:flex-start;margin-bottom:var(--s4)"><input type="checkbox" id="optImprove" checked onchange="setImprove(this.checked)"><span>أسمح باستخدام محادثاتي (بدون هويتي) لتحسين دقة وصال — يمكنك إيقافه في أي وقت</span></label>
 <div style="display:flex;gap:10px;flex-wrap:wrap">
-<button class="btn btn-outline" type="button" onclick="exportMyData()"><svg><use href="#ic-copy"/></svg> تنزيل نسخة من بياناتي</button>
-<button class="btn btn-outline" type="button" onclick="clearMyChats()"><svg><use href="#ic-chat"/></svg> مسح محادثاتي</button>
-<button class="btn btn-outline" type="button" style="color:#c0392b;border-color:#c0392b" onclick="deleteMyAccount()"><svg><use href="#ic-info"/></svg> حذف الحساب نهائياً</button>
+<button class="btn btn-md btn-surface" type="button" onclick="exportMyData()"><svg class="ico"><use href="#ic-copy"/></svg> تنزيل نسخة من بياناتي</button>
+<button class="btn btn-md btn-surface" type="button" onclick="clearMyChats()"><svg class="ico"><use href="#ic-chat"/></svg> مسح محادثاتي</button>
+<button class="btn btn-md btn-surface" type="button" style="color:#c0392b;border-color:#c0392b" onclick="deleteMyAccount()"><svg class="ico"><use href="#ic-trash"/></svg> حذف الحساب نهائياً</button>
 </div></div>
 <div class="form-group"><label for="tkType">نوع الطلب</label>
 <select id="tkType" class="form-input">
@@ -1102,6 +1233,7 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <option>مشكلة في الرصيد أو الأسئلة</option>
 <option>مشكلة تقنية في المنصة</option>
 <option>بلاغ عن معلومة غير دقيقة</option>
+<option>صعوبة وصول</option>
 <option>حذف الحساب</option>
 <option>أخرى</option>
 </select></div>
@@ -1154,13 +1286,41 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 </div>
 </div>
 
-<!-- طلبات الدعم (سوبر أدمن) -->
+<!-- تذاكر الدعم الفني (لأي حساب support_level != none) -->
 <div class="dash-panel" id="dp-tickets">
+<div class="tk-summary" id="tkSummary"></div>
 <div class="tbl-wrap">
-<div class="tbl-head"><h3>طلبات الدعم الفني</h3><button class="btn btn-md btn-surface" onclick="loadTickets(true)"><svg class="ico"><use href="#ic-search"/></svg> تحديث</button></div>
-<div class="tbl-scroll"><table class="tbl"><thead><tr><th>المستخدم</th><th>نوع الطلب</th><th>التفاصيل</th><th>التاريخ</th><th>الحالة</th><th></th></tr></thead><tbody id="tkBody"></tbody></table></div>
+<div class="tbl-head"><h3>طابور تذاكر الدعم</h3><button class="btn btn-md btn-surface" onclick="loadTicketQueue(true)"><svg class="ico"><use href="#ic-search"/></svg> تحديث</button></div>
+<div class="tk-filters">
+<select id="tkFilterStatus" onchange="loadTicketQueue()">
+<option value="">كل الحالات</option>
+<option value="new">جديدة</option>
+<option value="in_progress">قيد المعالجة</option>
+<option value="waiting">بانتظار صاحب التذكرة</option>
+<option value="escalated">مُحالة</option>
+<option value="resolved">تم الحل</option>
+<option value="closed">مغلقة</option>
+<option value="reopened">أُعيد فتحها</option>
+</select>
+<label><input type="checkbox" id="tkFilterMine" onchange="loadTicketQueue()"> تذاكري فقط</label>
+</div>
+<div class="tbl-scroll"><table class="tbl"><thead><tr><th>المرجع</th><th>الموضوع</th><th>الأولوية</th><th>الحالة</th><th>المُسنَد إليه</th><th>الموعد</th></tr></thead><tbody id="tkBody"></tbody></table></div>
 <div id="tkEmpty"></div>
 </div>
+</div>
+
+<!-- درج تفاصيل التذكرة -->
+<div class="tk-drawer-overlay" id="tkDrawerOverlay" onclick="closeTicketDrawer()"></div>
+<div class="tk-drawer" id="tkDrawer" role="dialog" aria-label="تفاصيل التذكرة">
+<div class="tk-drawer-head">
+<div>
+<h3 id="tkDrawerRef"></h3>
+<div class="tk-drawer-meta" id="tkDrawerMeta"></div>
+</div>
+<button class="tk-drawer-close" onclick="closeTicketDrawer()" aria-label="إغلاق"><svg class="ico"><use href="#ic-x"/></svg></button>
+</div>
+<div class="tk-drawer-body" id="tkDrawerBody"></div>
+<div class="tk-drawer-actions" id="tkDrawerActions"></div>
 </div>
 <div class="dash-panel" id="dp-content">
 <div class="tbl-wrap">
@@ -1208,6 +1368,21 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 </div>
 <div><button class="btn btn-md btn-primary" id="expSendBtn" type="submit"><svg class="ico"><use href="#ic-send"/></svg> إرسال الدعوات</button></div>
 </form>
+</div>
+
+<div class="tbl-wrap" style="margin-bottom:var(--s5)">
+<div class="tbl-head"><h3><svg class="ico"><use href="#ic-globe"/></svg> رابط استبيان عام</h3></div>
+<div style="padding:var(--s5);display:flex;flex-direction:column;gap:var(--s4)">
+<p style="color:var(--muted);font-size:var(--f-sm);margin:0;max-width:70ch">بلا دعوة ولا بريد لكل شخص — رابط واحد تشاركه في واتساب أو مجموعة أو منشور، يدخل منه أي أحد ويعبّي الاستبانة مباشرة، وتظهر إجاباته هنا مع بقية النتائج تحت اسم الحملة نفسه.</p>
+<div class="form-group">
+<label for="expOpenCampaign">اسم الحملة</label>
+<input class="form-input" id="expOpenCampaign" maxlength="80" placeholder="مثال: استبيان معرض التقنية المساندة" autocomplete="off" oninput="buildOpenSurveyLink()">
+</div>
+<div style="display:flex;gap:var(--s3);align-items:center;flex-wrap:wrap">
+<input class="form-input" id="expOpenLink" readonly style="flex:1;min-width:220px" onclick="this.select()">
+<button class="btn btn-md btn-surface" type="button" onclick="copyOpenSurveyLink()"><svg class="ico"><use href="#ic-copy"/></svg> نسخ الرابط</button>
+</div>
+</div>
 </div>
 
 <div class="tbl-wrap" style="margin-bottom:var(--s5)">
@@ -1369,7 +1544,7 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 </div>
 <div class="anim" style="transition-delay:.2s">
 <div class="contact-info">
-<div class="card contact-card glass"><div class="contact-card-icon" style="background:var(--g-brand)"><svg class="ico"><use href="#ic-mail"/></svg></div><div><h4>البريد الإلكتروني</h4><p><a href="mailto:info@wesal-hub.com" data-cms-href="contact.email" data-cms-href-prefix="mailto:" data-cms="contact.email" dir="ltr" style="color:inherit">info@wesal-hub.com</a></p></div></div>
+<div class="card contact-card glass"><div class="contact-card-icon" style="background:var(--g-brand)"><svg class="ico"><use href="#ic-mail"/></svg></div><div><h4>البريد الإلكتروني</h4><p><a href="mailto:info@wesalinnovation.sa" data-cms-href="contact.email" data-cms-href-prefix="mailto:" data-cms="contact.email" dir="ltr" style="color:inherit">info@wesalinnovation.sa</a></p></div></div>
 <div class="card contact-card glass"><div class="contact-card-icon" style="background:var(--g-accent)"><svg class="ico"><use href="#ic-phone"/></svg></div><div><h4>الجوال</h4><p style="direction:ltr;text-align:right">+966 50 112 0161</p></div></div>
 <div class="card contact-card glass"><div class="contact-card-icon" style="background:linear-gradient(135deg,#34d399,#10b981)"><svg class="ico"><use href="#ic-clock"/></svg></div><div><h4>أوقات الدعم</h4><p>الأحد - الخميس، 8 ص - 6 م</p></div></div>
 </div>
@@ -1523,7 +1698,7 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <h2>حقوقك</h2>
 <p>تقدر في أي وقت تعدّل بياناتك من ملفك الشخصي، أو تنزّل نسخة كاملة من بياناتك، أو تمسح محادثاتك، أو تحذف حسابك نهائياً بنفسك من «لوحة التحكم ← حسابي ← بياناتك وخصوصيتك» — ولو احتجت مساعدة راسلنا عبر صفحة <button class="link-btn" onclick="go('contact')">تواصل معنا</button> — ونستجيب خلال 7 أيام عمل.</p>
 <h2>تواصل معنا</h2>
-<p>لأي استفسار عن خصوصيتك: <a href="mailto:info@wesal-hub.com" dir="ltr" style="color:var(--primary);font-weight:700">info@wesal-hub.com</a></p>
+<p>لأي استفسار عن خصوصيتك: <a href="mailto:info@wesalinnovation.sa" dir="ltr" style="color:var(--primary);font-weight:700">info@wesalinnovation.sa</a></p>
 </div>
 </div>
 
@@ -1629,6 +1804,7 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <div>
 <h4>الدعم</h4>
 <button class="footer-link" onclick="go('settings')">إمكانية الوصول</button>
+<a class="footer-link" href="ticket.html">تذاكر الدعم الفني</a>
 <button class="footer-link" onclick="go('contact')">تواصل معنا</button>
 <button class="footer-link" onclick="go('dashboard')">لوحة التحكم</button>
 <button class="footer-link" onclick="go('login')">تسجيل الدخول</button>
@@ -1638,7 +1814,7 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 </div>
 <div>
 <h4>تواصل</h4>
-<p style="font-size:var(--f-sm);margin-bottom:var(--s2)"><a href="mailto:info@wesal-hub.com" data-cms-href="contact.email" data-cms-href-prefix="mailto:" data-cms="contact.email" dir="ltr" style="color:inherit">info@wesal-hub.com</a></p>
+<p style="font-size:var(--f-sm);margin-bottom:var(--s2)"><a href="mailto:info@wesalinnovation.sa" data-cms-href="contact.email" data-cms-href-prefix="mailto:" data-cms="contact.email" dir="ltr" style="color:inherit">info@wesalinnovation.sa</a></p>
 <p style="font-size:var(--f-sm);margin-bottom:var(--s2)"><span dir="ltr" data-cms="contact.phone">+966 50 112 0161</span></p>
 <p style="font-size:var(--f-sm)" data-cms="contact.hours">الأحد - الخميس، 8 ص - 6 م</p>
 </div>
@@ -2085,10 +2261,13 @@ function setUser(u){
   USER=u;LS.set('session',u);
   document.body.setAttribute('data-role',u.role||'user');
   syncAuthUI();
+  pollNotifDot();
+  if(!NOTIF_TIMER)NOTIF_TIMER=setInterval(pollNotifDot,60000);
 }
 function doLogout(){
   api('auth.php',{action:'logout'});
   USER=null;LS.del('session');document.body.removeAttribute('data-role');
+  if(NOTIF_TIMER){clearInterval(NOTIF_TIMER);NOTIF_TIMER=null;}
   syncAuthUI();toast('تم تسجيل خروجك.','info');go('home');
 }
 function syncAuthUI(){
@@ -2096,12 +2275,19 @@ function syncAuthUI(){
   guest.forEach(e=>e.classList.toggle('off',!!USER));
   if(user){user.classList.toggle('on',!!USER);
     if(USER){
-      const av=document.getElementById('navAvatar');
-      av.innerHTML=USER.avatar?'<img src="'+USER.avatar+'" alt="">':'';
-      if(!USER.avatar)av.textContent=(USER.name||'م').trim().charAt(0);
+      const initial=(USER.name||'م').trim().charAt(0);
+      ['navAvatar','mobAvatar'].forEach(id=>{
+        const av=document.getElementById(id);if(!av)return;
+        av.innerHTML=USER.avatar?'<img src="'+USER.avatar+'" alt="">':'';
+        if(!USER.avatar)av.textContent=initial;
+      });
       document.getElementById('navName').textContent=(USER.name||'').split(' ')[0];
-      const n=document.getElementById('umName'),e=document.getElementById('umEmail');
-      if(n)n.textContent=USER.name||'';if(e)e.textContent=USER.email||'';
+      const n=document.getElementById('umName'),e=document.getElementById('umEmail'),mn=document.getElementById('mobName');
+      if(n)n.textContent=USER.name||'';if(e)e.textContent=USER.email||'';if(mn)mn.textContent=USER.name||'';
+      const lbl=roleLabel(USER.role||'user');
+      ['navRolePill','umRolePill','mobRolePill'].forEach(id=>{
+        const el=document.getElementById(id);if(!el)return;el.textContent=lbl;el.hidden=false;
+      });
     }}
   document.querySelectorAll('.mob-guest').forEach(e=>e.style.display=USER?'none':'');
   document.querySelectorAll('.mob-auth').forEach(e=>e.style.display=USER?'':'none');
@@ -2117,8 +2303,8 @@ async function restoreSession(){
   syncAuthUI();
 }
 
-function toggleUserMenu(ev){ev.stopPropagation();const m=document.getElementById('userMenu');const open=m.classList.toggle('open');document.getElementById('navAvatar').setAttribute('aria-expanded',open);}
-function closeUserMenu(){const m=document.getElementById('userMenu');if(m)m.classList.remove('open');const a=document.getElementById('navAvatar');if(a)a.setAttribute('aria-expanded','false');}
+function toggleUserMenu(ev){ev.stopPropagation();const m=document.getElementById('userMenu');const open=m.classList.toggle('open');document.getElementById('navIdBtn').setAttribute('aria-expanded',open);}
+function closeUserMenu(){const m=document.getElementById('userMenu');if(m)m.classList.remove('open');const a=document.getElementById('navIdBtn');if(a)a.setAttribute('aria-expanded','false');}
 async function uploadAvatar(inp){
   const f=inp.files&&inp.files[0];inp.value='';if(!f)return;
   if(!/^image\/(jpeg|png|webp)$/.test(f.type))return toast('نقبل صور JPG أو PNG أو WebP فقط.','err');
@@ -2254,7 +2440,7 @@ const KB=[
 {k:['اولويه','أولوية','انجاز معاملات','طوابير','خدمه مقدمه'],a:'من حقوقك المهمة والبسيطة: أولوية إنجاز المعاملات.\n\nالجهات الحكومية والخدمية ملزمة بمنح الأشخاص ذوي الإعاقة أولوية في الخدمة وتهيئة منافذ ميسّرة. غالباً يكفي إبراز بطاقة إثبات الإعاقة، وبعض الجهات توفر مسارات أو كاونترات مخصصة.\n\nلو واجهت جهة ما التزمت، وثّق الموقف وقدّم ملاحظتك عبر قنوات الجهة أو منصات البلاغات الرسمية.\nصار معك موقف معين تبغى تعرف تتصرف فيه كيف؟',src:{n:'وزارة الموارد البشرية والتنمية الاجتماعية',u:'hrsd.gov.sa'}},
 {k:['نظام حقوق','نظام رعايه','نظام رعاية','الانظمه','الأنظمة','قانون'],a:'الإطار النظامي لحقوقك في المملكة يقوم على:\n\n• نظام رعاية المعوقين — الأساس التاريخي للحقوق والخدمات\n• نظام حقوق الأشخاص ذوي الإعاقة الأحدث — يعزز الحماية من التمييز ويوسع الحقوق في التعليم والعمل والصحة والوصول\n• هيئة رعاية الأشخاص ذوي الإعاقة — تتولى التنظيم والمتابعة\n\nالخلاصة: لك حقوق نظامية مكتوبة وملزمة، ولأي انتهاك قنوات شكوى رسمية.\nتبغاني أفصّل حقوقك في مجال معين — عمل، تعليم، صحة؟',src:{n:'وزارة الموارد البشرية والتنمية الاجتماعية',u:'hrsd.gov.sa'}},
 {k:['سكن','اسكان','إسكان','قرض عقاري'],a:'في ملف السكن، توجد برامج دعم حكومية قد تمنح أولويات أو تسهيلات للأسر التي تضم أشخاصاً ذوي إعاقة، وتتغير معاييرها دورياً.\n\nالأدق أن تتحقق مباشرة من منصة وزارة البلديات والإسكان وبرنامج سكني عن المعايير الحالية وحالتك، مع تجهيز بطاقة إثبات الإعاقة ضمن مستنداتك.\n\nودك أرتب لك قائمة المستندات المعتادة لطلبات الدعم؟',src:{n:'برنامج سكني — وزارة البلديات والإسكان',u:'sakani.sa'}},
-{k:['وصال','المنصه','المنصة','الموقع','التسجيل بالمنصه'],a:'وصال منصة ذكاء اصطناعي سعودية صُممت خصيصاً لك:\n\n• تجاوب أسئلتك عن الحقوق والخدمات والتقنيات المساعدة بلغة واضحة\n• واجهة مُيسّرة بالكامل: قراءة صوتية، تباين، تكبير، وتحكم كامل بالتجربة من صفحة الإعدادات\n• حسابك المجاني يعطيك رصيد أسئلة يتجدد تلقائياً كل 6 ساعات\n\nجرّب اسألني أي شيء يخص احتياجك، أو تصفح «الدليل» للمواضيع الجاهزة.',src:{n:'فريق وصال',u:'wesal-hub.com'}},
+{k:['وصال','المنصه','المنصة','الموقع','التسجيل بالمنصه'],a:'وصال منصة ذكاء اصطناعي سعودية صُممت خصيصاً لك:\n\n• تجاوب أسئلتك عن الحقوق والخدمات والتقنيات المساعدة بلغة واضحة\n• واجهة مُيسّرة بالكامل: قراءة صوتية، تباين، تكبير، وتحكم كامل بالتجربة من صفحة الإعدادات\n• حسابك المجاني يعطيك رصيد أسئلة يتجدد تلقائياً كل 6 ساعات\n\nجرّب اسألني أي شيء يخص احتياجك، أو تصفح «الدليل» للمواضيع الجاهزة.',src:{n:'فريق وصال',u:'wesalinnovation.sa'}},
 {k:['التاهيل الشامل','التأهيل الشامل','اعانه التاهيل','إعانة التأهيل','اعانه ماليه شهريه'],a:'إعانة التأهيل الشامل دعم مالي شهري تصرفه وزارة الموارد البشرية والتنمية الاجتماعية للأشخاص ذوي الإعاقة المستحقين وفق نوع الإعاقة ودرجتها.\n\nالخطوات العامة:\n• قدّم الطلب عبر منصة الوزارة الإلكترونية بحسابك في النفاذ الوطني\n• أرفق التقرير الطبي وبيانات الحساب البنكي\n• تابع حالة الطلب حتى الاعتماد والصرف\n\nمقدار الإعانة يعتمد على تقييم الحالة، والمرجع النهائي صفحة الخدمة الرسمية.',src:{n:'وزارة الموارد البشرية والتنمية الاجتماعية',u:'hrsd.gov.sa'}},
 {k:['لغه الاشاره','لغة الاشارة','لغة الإشارة','الصم','ترجمه اشاره','ترجمة إشارة','ضعاف السمع'],a:'بصراحة كاملة: وصال حالياً لا يوفر ترجمة بلغة الإشارة، ودعمها ضمن خارطة طريقنا بالتعاون مع مختصين ومترجمين معتمدين — لأن جودة لغة الإشارة لا تُرتجل.\n\nإلى ذلك الحين، خدمات الصم وضعاف السمع تقدمها جهات متخصصة مثل الجمعيات المرخصة لخدمة الصم في مناطق المملكة، وتجدها عبر المركز الوطني لتنمية القطاع غير الربحي، إضافة إلى خدمات الترجمة الفورية التي توفرها بعض الجهات الحكومية في فروعها.\n\nتحب أدلّك على أقرب الجمعيات المتخصصة؟',src:{n:'هيئة رعاية الأشخاص ذوي الإعاقة',u:'apd.gov.sa'}},
 {k:['وصول شامل','تهيئه المباني','تهيئة المباني','منحدرات','كود البناء','مبنى مهيا','مبنى مهيأ'],a:'الوصول الشامل حق نظامي: كود البناء السعودي واشتراطات الجهات البلدية تلزم المرافق العامة بتوفير منحدرات ومداخل ومواقف ودورات مياه مهيأة، وتتابع هيئة رعاية الأشخاص ذوي الإعاقة سياسات التهيئة والتمكين.\n\nلو صادفت مرفقاً عاماً غير مهيأ، تقدر تبلّغ عبر منصة بلدي أو قنوات الجهة المشغّلة للمرفق.',src:{n:'هيئة رعاية الأشخاص ذوي الإعاقة',u:'apd.gov.sa'}}
@@ -2263,7 +2449,7 @@ function localAnswer(q){
   const t=normAr(q);
   const greet=smallTalk(q); if(greet)return {a:greet,src:null};
   if(/اي نموذج|شات جي|chatgpt|gpt|gemini|جيميناي|api|كلود|claude|مبني علي/.test(t))
-    return {a:'أنا وصال — مساعد ذكاء اصطناعي عربي طُوّر خصيصاً لخدمة الأشخاص ذوي الإعاقة في المملكة. أعتمد على قاعدة معرفية من الجهات الرسمية السعودية، وأبرزها وزارة الموارد البشرية وهيئة رعاية الأشخاص ذوي الإعاقة ومركز الملك سلمان لأبحاث الإعاقة.\n\nما أشارك تفاصيل البنية التقنية، لكن أساعدك بكل سرور في أي سؤال عن الحقوق والخدمات والتقنيات المساعدة. وش تحب نبدأ فيه؟',src:{n:'فريق وصال',u:'wesal-hub.com'}};
+    return {a:'أنا وصال — مساعد ذكاء اصطناعي عربي طُوّر خصيصاً لخدمة الأشخاص ذوي الإعاقة في المملكة. أعتمد على قاعدة معرفية من الجهات الرسمية السعودية، وأبرزها وزارة الموارد البشرية وهيئة رعاية الأشخاص ذوي الإعاقة ومركز الملك سلمان لأبحاث الإعاقة.\n\nما أشارك تفاصيل البنية التقنية، لكن أساعدك بكل سرور في أي سؤال عن الحقوق والخدمات والتقنيات المساعدة. وش تحب نبدأ فيه؟',src:{n:'فريق وصال',u:'wesalinnovation.sa'}};
   for(const e of KB){if(e.k.some(k=>t.includes(normAr(k))))return {a:e.a,src:e.src||null};}
   const short=t.split(' ').length<=4;
   return {a:(short?'وصلني سؤالك، بس ':'فهمت سؤالك بشكل عام، لكن ')+'ودي أدقّق قبل ما أجاوبك عشان تطلع الإجابة مفيدة لك فعلاً.\n\nسؤالك يخص أي جانب؟\n• حقوقك والأنظمة\n• الخدمات والإجراءات: بطاقة الإعاقة، الدعم المالي، التعليم، الصحة\n• التقنيات المساعدة\n• التوظيف والعمل\n\nأعد صياغة سؤالك بجملة وحدة واضحة — مثلاً: «كيف أطلع بطاقة إثبات الإعاقة؟» — وأعطيك الجواب كاملاً.',src:null};
@@ -2303,7 +2489,7 @@ function dashTab(name,btn){
   if(name==='chats')renderChats();
   if(name==='users'){loadUsers();loadDemoStatus();}
   if(name==='messages')loadMessages();
-  if(name==='tickets')loadTickets();
+  if(name==='tickets')loadTicketQueue();
   if(name==='audit')loadAudit();
   if(name==='content')loadContentAdmin();
   if(name==='experience')loadExperience();
@@ -2366,26 +2552,32 @@ async function sendTicket(){
   if(!type)return showMsg('tkErr','اختر نوع الطلب أولاً.');
   if(details.length<10)return showMsg('tkErr','اكتب تفاصيل الطلب (10 أحرف على الأقل).');
   btnLoad('tkBtn',true,'جارٍ الإرسال');
-  const res=await api('auth.php',{action:'ticket',type,details});
+  const res=await api('tickets.php',{action:'create',type,details,urgency:'normal',source:'chat'});
   btnLoad('tkBtn',false);
-  if(res.ok||res.offline){
-    if(!res.ok){const l=LS.get('tickets',[]);l.unshift({id:Date.now(),user_id:USER.id,uname:USER.name,uemail:USER.email,type,details,status:'open',t:Date.now()});LS.set('tickets',l);}
-    document.getElementById('tkType').value='';document.getElementById('tkMsg').value='';
-    showMsg('tkOk','وصلنا طلبك — نعالجه ونرد عليك على '+USER.email+' بأقرب وقت.',1);
-    toast('تم إرسال طلبك.','ok');loadMyTickets();
-  }else showMsg('tkErr',res.error||'تعذّر إرسال الطلب.');
+  /* النجاح يأتي من الخادم وحده. كان انقطاع الشبكة يحفظ التذكرة في المتصفح
+     ويعرض «تم الإرسال»، فيطمئن صاحب البلاغ وطلبه لم يصلنا إطلاقاً. */
+  if(!res.ok) return showMsg('tkErr', res.offline
+    ? 'ما وصلنا طلبك — يبدو أن الاتصال منقطع. نصّك باقٍ في الصفحة، أعد الإرسال بعد رجوع الاتصال.'
+    : (res.error||'تعذّر إرسال الطلب.'));
+  document.getElementById('tkType').value='';document.getElementById('tkMsg').value='';
+  showMsg('tkOk','وصلنا طلبك برقم '+res.ref+' — نعالجه ونرد عليك على '+USER.email+' بأقرب وقت.',1);
+  toast('تم إرسال طلبك.','ok');loadMyTickets();
 }
 async function loadMyTickets(){
   const box=document.getElementById('myTickets');if(!box||!USER)return;
-  const res=await api('auth.php',{action:'my_tickets'});
-  const list=(res.ok&&res.tickets)?res.tickets:LS.get('tickets',[]).filter(t=>t.user_id===USER.id);
+  const res=await api('tickets.php',{action:'mine'});
+  /* لا نعود إلى نسخة المتصفح: كانت تعرض تذاكر وهمية لم تصل الخادم أصلاً
+     وكأنها طلبات قائمة. «تعذّر التحميل» أصدق من قائمة كاذبة. */
+  if(!res.ok){box.innerHTML='<p style="font-size:var(--f-sm);color:var(--muted)">تعذّر تحميل طلباتك الآن — حدّث الصفحة بعد قليل.</p>';return;}
+  const list=res.tickets||[];
   if(!list.length){box.innerHTML='<p style="font-size:var(--f-sm);color:var(--muted)">ما أرسلت أي طلب بعد.</p>';return;}
   box.innerHTML='';
   list.forEach(t=>{
     const d=document.createElement('div');d.className='tk-item';
-    d.innerHTML='<div style="flex:1"><b></b><p></p></div><span class="pill '+(t.status==='done'?'pill-green':'pill-amber')+'">'+(t.status==='done'?'تم الحل':'قيد المعالجة')+'</span>';
-    d.querySelector('b').textContent=t.type;
-    d.querySelector('p').textContent=t.details.slice(0,120)+(t.details.length>120?'…':'')+' — '+fmtWhen(t.t||Date.now());
+    d.innerHTML='<div style="flex:1"><b></b><p></p></div><span class="pill '+(TK_STATUS_PILL[t.status]||'pill-gray')+'"></span>';
+    d.querySelector('b').textContent=t.ref+' — '+(t.subject||t.type);
+    d.querySelector('p').textContent=(t.details||'').slice(0,120)+((t.details||'').length>120?'…':'')+' — '+fmtWhen(t.created||Date.now());
+    d.querySelector('.pill').textContent=TK_STATUS_LABEL[t.status]||t.status;
     box.appendChild(d);
   });
 }
@@ -2682,10 +2874,13 @@ function exportUsers(){
 /* --------- رسائل التواصل (مشرف) --------- */
 async function loadMessages(force){
   const res=await api('admin.php',{action:'messages'});
-  const list=(res.ok&&res.messages)?res.messages:LS.get('messages',[]);
   const body=document.getElementById('msgsBody'),empty=document.getElementById('msgsEmpty');
   if(!body)return;
   body.innerHTML='';
+  /* لا نعرض نسخة المتصفح عند فشل الاتصال: لوحة تعرض رسائل قديمة أو وهمية
+     على أنها الوارد الحالي تدفع المشرف لقرار مبني على بيانات غير صحيحة. */
+  if(!res.ok){empty.innerHTML='<div class="empty-state"><svg><use href="#ic-mail"/></svg><p>تعذّر تحميل الرسائل. اضغط تحديث بعد قليل.</p></div>';return;}
+  const list=res.messages||[];
   empty.innerHTML=list.length?'':'<div class="empty-state"><svg><use href="#ic-mail"/></svg><p>ما وصلت رسائل بعد.</p></div>';
   list.forEach((m,i)=>{
     const tr=document.createElement('tr');
@@ -2700,34 +2895,234 @@ async function loadMessages(force){
   if(force)toast('تم تحديث القائمة.','ok',2000);
 }
 
-async function loadTickets(force){
-  const res=await api('admin.php',{action:'tickets'});
-  let list=(res.ok&&res.tickets)?res.tickets:LS.get('tickets',[]);
-  if(curRole()==='reviewer')list=list.filter(t=>t.type==='بلاغ عن معلومة غير دقيقة');
+/* ================= تذاكر الدعم (المعالج) ================= */
+const TK_STATUS_LABEL={new:'جديدة',in_progress:'قيد المعالجة',waiting:'بانتظار صاحب التذكرة',
+  escalated:'مُحالة',resolved:'تم الحل',closed:'مغلقة',reopened:'أُعيد فتحها'};
+const TK_STATUS_PILL={new:'pill-blue',in_progress:'pill-amber',waiting:'pill-gray',
+  escalated:'pill-purple',resolved:'pill-green',closed:'pill-gray',reopened:'pill-red'};
+const TK_PRIORITY_LABEL={critical:'حرجة',high:'عالية',normal:'عادية',low:'منخفضة'};
+const TK_PRIORITY_PILL={critical:'pill-red',high:'pill-amber',normal:'pill-blue',low:'pill-gray'};
+
+async function loadTicketQueue(force){
   const body=document.getElementById('tkBody'),empty=document.getElementById('tkEmpty');
   if(!body)return;
+  const status=document.getElementById('tkFilterStatus')?.value||'';
+  const mine=document.getElementById('tkFilterMine')?.checked||false;
+  const res=await api('tickets.php',{action:'queue',status,mine});
   body.innerHTML='';
-  empty.innerHTML=list.length?'':'<div class="empty-state"><svg><use href="#ic-shield"/></svg><p>ما فيه طلبات دعم بعد.</p></div>';
+  if(!res.ok){empty.innerHTML='<div class="empty-state"><svg><use href="#ic-shield"/></svg><p>تعذّر تحميل الطابور. اضغط تحديث بعد قليل.</p></div>';return;}
+  const list=res.tickets||[];
+  empty.innerHTML=list.length?'':'<div class="empty-state"><svg><use href="#ic-shield"/></svg><p>لا توجد تذاكر مطابقة.</p></div>';
+
+  const openCount=list.filter(t=>!['closed','resolved'].includes(t.status)).length;
+  const overdueCount=list.filter(t=>t.overdue).length;
+  const waitingCount=list.filter(t=>t.status==='waiting').length;
+  const sum=document.getElementById('tkSummary');
+  if(sum)sum.innerHTML=
+    '<div class="tk-stat"><b>'+openCount+'</b><span>مفتوحة الآن</span></div>'+
+    '<div class="tk-stat warn"><b>'+overdueCount+'</b><span>تجاوزت موعدها</span></div>'+
+    '<div class="tk-stat"><b>'+waitingCount+'</b><span>بانتظار العميل</span></div>';
+
   list.forEach(t=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML='<td><b class="c-n" style="color:var(--ink)"></b><br><span class="c-e" style="color:var(--muted);font-size:var(--f-xs)" dir="ltr"></span></td><td class="c-ty"></td><td class="c-d" style="max-width:320px"></td><td style="white-space:nowrap">'+fmtWhen(t.t||Date.now())+'</td><td><span class="pill '+(t.status==='done'?'pill-green':'pill-amber')+'">'+(t.status==='done'?'تم الحل':'قيد المعالجة')+'</span></td><td></td>';
-    tr.querySelector('.c-n').textContent=t.uname||'—';
-    tr.querySelector('.c-e').textContent=t.uemail||'';
-    tr.querySelector('.c-ty').textContent=t.type||'—';
-    tr.querySelector('.c-d').textContent=t.details||'';
-    if(t.status!=='done'){
-      const btn=document.createElement('button');btn.className='btn btn-md btn-surface';btn.textContent='تم الحل';
-      btn.onclick=()=>ticketDone(t.id);
-      tr.lastElementChild.appendChild(btn);
-    }
+    const tr=document.createElement('tr');tr.className='tk-row';
+    tr.innerHTML='<td><span class="tk-ref"></span></td><td class="c-s"></td>'+
+      '<td><span class="pill '+(TK_PRIORITY_PILL[t.priority]||'pill-gray')+'"></span></td>'+
+      '<td><span class="pill '+(TK_STATUS_PILL[t.status]||'pill-gray')+'"></span></td>'+
+      '<td class="c-a"></td><td class="c-due"></td>';
+    tr.querySelector('.tk-ref').textContent=t.ref;
+    tr.querySelector('.c-s').textContent=t.subject||t.type;
+    tr.querySelector('.pill.'+(TK_PRIORITY_PILL[t.priority]||'pill-gray')).textContent=TK_PRIORITY_LABEL[t.priority]||t.priority;
+    tr.querySelector('.pill.'+(TK_STATUS_PILL[t.status]||'pill-gray')).textContent=TK_STATUS_LABEL[t.status]||t.status;
+    tr.querySelector('.c-a').textContent=t.assignee||'—';
+    const dueCell=tr.querySelector('.c-due');
+    if(t.due_resolution){dueCell.textContent=fmtWhen(t.due_resolution);if(t.overdue)dueCell.classList.add('tk-overdue');}
+    else dueCell.textContent='—';
+    tr.onclick=()=>openTicketDrawer(t.id);
     body.appendChild(tr);
   });
-  if(force)toast('تم تحديث القائمة.','ok',2000);
+  if(force)toast('تم تحديث الطابور.','ok',2000);
 }
-async function ticketDone(id){
-  const res=await api('admin.php',{action:'ticket_done',id});
-  if(res.offline){const l=LS.get('tickets',[]);const k=l.findIndex(x=>x.id===id);if(k>-1){l[k].status='done';LS.set('tickets',l);}}
-  toast('تم إغلاق الطلب.','ok');loadTickets();
+
+let TK_CURRENT=null, TK_VIS='public';
+
+async function openTicketDrawer(id){
+  const res=await api('tickets.php',{action:'open',id});
+  if(!res.ok)return toast(res.error||'تعذّر فتح التذكرة.','err');
+  TK_CURRENT=res.ticket;TK_VIS='public';
+  document.getElementById('tkDrawerRef').textContent=res.ticket.ref;
+  const meta=document.getElementById('tkDrawerMeta');
+  meta.innerHTML='';
+  [['من',res.ticket.name+(res.ticket.is_guest?' (ضيف)':'')],['البريد',res.ticket.email],
+   ['النوع',res.ticket.type],['المصدر',res.ticket.source]].forEach(([k,v])=>{
+    const s=document.createElement('span');s.textContent=k+': '+(v||'—');meta.appendChild(s);
+  });
+
+  const bodyEl=document.getElementById('tkDrawerBody');
+  bodyEl.innerHTML='<div class="tk-timeline" id="tkTimeline"></div>';
+  const tl=document.getElementById('tkTimeline');
+  (res.entries||[]).forEach(e=>{
+    const d=document.createElement('div');d.className='tk-entry '+(e.visibility==='internal'?'is-internal':'is-public');
+    const m=document.createElement('div');m.className='tk-entry-meta';
+    const b=document.createElement('b');b.textContent=e.author||'النظام';m.appendChild(b);
+    const tag=document.createElement('span');tag.className='tk-vis-tag '+(e.visibility==='internal'?'int':'pub');
+    tag.textContent=e.visibility==='internal'?'داخلي':'عام';m.appendChild(tag);
+    const time=document.createElement('span');time.textContent=fmtWhen(e.t);m.appendChild(time);
+    d.appendChild(m);
+    const p=document.createElement('p');p.textContent=e.body||'';d.appendChild(p);
+    tl.appendChild(d);
+  });
+
+  renderTicketActions(res.ticket);
+  document.getElementById('tkDrawerOverlay').classList.add('on');
+  document.getElementById('tkDrawer').classList.add('on');
+}
+function closeTicketDrawer(){
+  document.getElementById('tkDrawerOverlay').classList.remove('on');
+  document.getElementById('tkDrawer').classList.remove('on');
+  TK_CURRENT=null;
+}
+
+function renderTicketActions(t){
+  const box=document.getElementById('tkDrawerActions');
+  box.innerHTML='';
+  if(t.status==='new'){
+    const btn=document.createElement('button');btn.className='btn btn-md btn-primary';btn.textContent='استلم التذكرة';
+    btn.onclick=()=>tkClaim(t.id);box.appendChild(btn);return;
+  }
+  if(['closed','resolved'].includes(t.status)){
+    const note=document.createElement('p');note.style.cssText='font-size:var(--f-sm);color:var(--muted);margin:0';
+    note.textContent=t.status==='resolved'?'بانتظار تأكيد صاحب التذكرة أو الإغلاق التلقائي خلال أسبوع.':'التذكرة مغلقة.';
+    box.appendChild(note);return;
+  }
+  // in_progress / waiting / escalated / reopened: تركيبة العمل الكاملة
+  const wrap=document.createElement('div');wrap.style.cssText='width:100%';
+  wrap.innerHTML=
+    '<div class="tk-compose">'+
+      '<textarea id="tkComposeBody" placeholder="اكتب ردّك أو ملاحظتك..." maxlength="4000"></textarea>'+
+      '<div class="tk-vis-toggle">'+
+        '<button type="button" class="tk-vis-btn on" data-v="public" onclick="tkSetVis(\'public\')">رد عام (يراه صاحب التذكرة)</button>'+
+        '<button type="button" class="tk-vis-btn" data-v="internal" onclick="tkSetVis(\'internal\')">ملاحظة داخلية</button>'+
+      '</div>'+
+      '<div style="display:flex;gap:var(--s2);flex-wrap:wrap">'+
+        '<button type="button" class="btn btn-md btn-primary" id="tkSendBtn">إرسال</button>'+
+        '<button type="button" class="btn btn-md btn-surface" id="tkWaitBtn">اطلب معلومة (ينتظر العميل)</button>'+
+        '<button type="button" class="btn btn-md btn-surface" id="tkEscBtn">إحالة</button>'+
+        '<button type="button" class="btn btn-md btn-surface" id="tkResBtn" style="color:#047857;border-color:#10b981">تم الحل</button>'+
+      '</div>'+
+      '<div class="tk-escalate-form" id="tkEscForm" hidden></div>'+
+    '</div>';
+  box.appendChild(wrap);
+  document.getElementById('tkSendBtn').onclick=()=>tkSendReply(t.id);
+  document.getElementById('tkWaitBtn').onclick=()=>tkWait(t.id);
+  document.getElementById('tkResBtn').onclick=()=>tkResolve(t.id);
+  document.getElementById('tkEscBtn').onclick=()=>tkOpenEscalate(t.id);
+}
+function tkSetVis(v){
+  TK_VIS=v;
+  document.querySelectorAll('.tk-vis-btn').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+}
+async function tkClaim(id){
+  const res=await api('tickets.php',{action:'claim',id});
+  if(!res.ok)return toast(res.error||'تعذّر الاستلام.','err');
+  toast('استلمت التذكرة.','ok');openTicketDrawer(id);loadTicketQueue();
+}
+async function tkSendReply(id){
+  const ta=document.getElementById('tkComposeBody');
+  const body=(ta.value||'').trim();
+  if(body.length<2)return toast('اكتب نصّاً أولاً.','err');
+  const res=await api('tickets.php',{action:'agent_reply',id,body,visibility:TK_VIS});
+  if(!res.ok)return toast(res.error||'تعذّر الإرسال.','err');
+  ta.value='';toast('أُرسل.','ok');openTicketDrawer(id);loadTicketQueue();
+}
+async function tkWait(id){
+  const ta=document.getElementById('tkComposeBody');
+  const body=(ta.value||'').trim();
+  if(body.length<2)return toast('اكتب ما تحتاج معرفته من صاحب التذكرة أولاً.','err');
+  const res=await api('tickets.php',{action:'wait',id,body});
+  if(!res.ok)return toast(res.error||'تعذّر التنفيذ.','err');
+  toast('انتقلت لبانتظار صاحب التذكرة.','ok');openTicketDrawer(id);loadTicketQueue();
+}
+async function tkResolve(id){
+  const res=(document.getElementById('tkComposeBody')?.value||'').trim();
+  if(res.length<5)return toast('اكتب ملخّص الحل في مربع النص أولاً (5 أحرف على الأقل).','err');
+  const r=await api('tickets.php',{action:'resolve',id,resolution:res});
+  if(!r.ok)return toast(r.error||'تعذّر الحل.','err');
+  toast('تم وسمها كمحلولة.','ok');closeTicketDrawer();loadTicketQueue();
+}
+async function tkOpenEscalate(id){
+  const form=document.getElementById('tkEscForm');
+  if(!form)return;
+  form.hidden=!form.hidden;
+  if(form.hidden||form.dataset.loaded)return;
+  const res=await api('tickets.php',{action:'agents'});
+  const agents=(res.ok&&res.agents)?res.agents:[];
+  const LEVEL_LABEL={agent:'معالج',lead:'قائد فريق',exec:'تنفيذي'};
+  form.innerHTML=
+    '<select id="tkEscTarget"><option value="">اختر المُحال إليه</option>'+
+    agents.map(a=>'<option value="'+a.id+'">'+a.name+' — '+(LEVEL_LABEL[a.level]||a.level)+'</option>').join('')+
+    '</select>'+
+    '<textarea id="tkEscReason" placeholder="سبب الإحالة (إلزامي)" maxlength="1000"></textarea>'+
+    '<label style="display:flex;align-items:center;gap:6px;font-size:var(--f-sm);color:var(--muted)">'+
+    '<input type="checkbox" id="tkEscShowWhy"> أظهر سبب الإحالة لصاحب التذكرة</label>'+
+    '<button type="button" class="btn btn-md btn-primary" id="tkEscSubmit">تأكيد الإحالة</button>';
+  form.dataset.loaded='1';
+  document.getElementById('tkEscSubmit').onclick=()=>tkSubmitEscalate(id);
+}
+async function tkSubmitEscalate(id){
+  const toId=+(document.getElementById('tkEscTarget')?.value||0);
+  const reason=(document.getElementById('tkEscReason')?.value||'').trim();
+  const showWhy=document.getElementById('tkEscShowWhy')?.checked||false;
+  if(!toId)return toast('اختر المُحال إليه.','err');
+  if(reason.length<3)return toast('اكتب سبب الإحالة.','err');
+  const res=await api('tickets.php',{action:'escalate',id,to_user_id:toId,reason,reason_visible_to_requester:showWhy});
+  if(!res.ok)return toast(res.error||'تعذّرت الإحالة.','err');
+  toast('أُحيلت التذكرة.','ok');closeTicketDrawer();loadTicketQueue();
+}
+
+/* ================= الإشعارات ================= */
+let NOTIF_TIMER=null;
+async function pollNotifDot(){
+  if(!USER)return;
+  const res=await api('notifications.php',{action:'unread_count'});
+  const dot=document.getElementById('notifDot');
+  if(dot)dot.hidden=!(res.ok&&res.count>0);
+}
+function toggleNotifPanel(ev){
+  ev.stopPropagation();
+  const p=document.getElementById('notifPanel');
+  const open=p.classList.toggle('open');
+  document.getElementById('notifBtn').setAttribute('aria-expanded',open);
+  if(open)loadNotifList();
+}
+function closeNotifPanel(){
+  const p=document.getElementById('notifPanel');
+  if(p)p.classList.remove('open');
+  document.getElementById('notifBtn')?.setAttribute('aria-expanded','false');
+}
+async function loadNotifList(){
+  const list=document.getElementById('notifList');
+  const res=await api('notifications.php',{action:'list'});
+  list.innerHTML='';
+  if(!res.ok){list.innerHTML='<p style="padding:var(--s4);font-size:var(--f-sm);color:var(--muted)">تعذّر التحميل.</p>';return;}
+  const notifs=res.notifications||[];
+  if(!notifs.length){list.innerHTML='<p style="padding:var(--s4);font-size:var(--f-sm);color:var(--muted)">لا إشعارات بعد.</p>';return;}
+  notifs.forEach(n=>{
+    const btn=document.createElement('button');btn.type='button';btn.className='notif-item'+(n.read?'':' unread');
+    const b=document.createElement('b');b.textContent=n.title;btn.appendChild(b);
+    if(n.body){const p=document.createElement('p');p.textContent=n.body;btn.appendChild(p);}
+    const time=document.createElement('time');time.textContent=fmtWhen(n.t);btn.appendChild(time);
+    btn.onclick=()=>notifClick(n);
+    list.appendChild(btn);
+  });
+}
+async function notifClick(n){
+  if(!n.read)await api('notifications.php',{action:'mark_read',id:n.id});
+  closeNotifPanel();pollNotifDot();
+  if(n.link&&n.link.indexOf('/dashboard')===0){go('dashboard');setTimeout(()=>dashTab('tickets',document.querySelector('[data-perm="tickets.view"]')),200);}
+}
+async function markAllNotifsRead(){
+  await api('notifications.php',{action:'mark_all_read'});
+  loadNotifList();pollNotifDot();
 }
 
 /* ================= نموذج التواصل ================= */
@@ -2746,8 +3141,11 @@ async function sendContact(){
   btnLoad('cBtn',true,'جارٍ الإرسال');
   const res=await api('contact.php',{name,email,subject,message});
   btnLoad('cBtn',false);
-  const rec={name,email,subject,message,t:Date.now(),read:false};
-  const ls=LS.get('messages',[]);ls.unshift(rec);LS.set('messages',ls.slice(0,200));
+  /* كان رد الخادم لا يُفحص إطلاقاً: تُعلن الرسالة ناجحة ويُفرَّغ النموذج
+     حتى لو رفضها الخادم أو انقطع الاتصال، فيضيع نصّ المرسِل بلا أن يصلنا. */
+  if(!res.ok) return showMsg('contactErr', res.offline
+    ? 'ما وصلتنا رسالتك — يبدو أن الاتصال منقطع. نصّك باقٍ في الصفحة، أعد الإرسال بعد رجوع الاتصال.'
+    : (res.error||'تعذّر إرسال رسالتك. حاول مرة أخرى.'));
   showMsg('contactOk','وصلتنا رسالتك. نرد عليك على '+email+' خلال يوم عمل واحد.',1);
   document.getElementById('cName').value='';document.getElementById('cEmail').value='';
   document.getElementById('cSubject').value='';document.getElementById('cMsg').value='';
@@ -2893,13 +3291,20 @@ function setLang(l){
 const ROLE_PERMS={
   guest:{},
   user:{},
-  reviewer:{'tickets.view':1,'tickets.close':1},
-  mod:{'users.view':1,'users.invite':1,'messages.view':1,'tickets.view':1,'tickets.close':1,'experience.view':1},
+  reviewer:{},
+  mod:{'users.view':1,'users.invite':1,'messages.view':1,'experience.view':1},
   admin:{'users.view':1,'users.manage':1,'users.invite':1,'users.export':1,'messages.view':1,
-         'tickets.view':1,'tickets.close':1,'audit.view':1,'content.manage':1,'experience.view':1}
+         'audit.view':1,'content.manage':1,'experience.view':1}
 };
 function curRole(){return USER?(USER.role||'user'):'guest';}
-function can(p){const r=ROLE_PERMS[curRole()]||{};return !!r[p];}
+/* تذاكر الدعم مستقلة تماماً عن دور المنصة — تُحكَم بـsupport_level وحده،
+   حتى يقدر أي حساب (مراجع محتوى مثلاً) يصير معالج تذاكر دون منحه صلاحيات
+   إدارية. هذا يطابق نفس الفصل في الخادم (requireAgent في tickets.php). */
+function isAgent(){return !!(USER&&USER.support_level&&USER.support_level!=='none');}
+function can(p){
+  if(p==='tickets.view'||p==='tickets.manage')return isAgent();
+  const r=ROLE_PERMS[curRole()]||{};return !!r[p];
+}
 function applyRoleUI(){document.querySelectorAll('[data-perm]').forEach(el=>{el.hidden=!can(el.dataset.perm);});}
 
 /* ================= سجل العمليات ================= */
@@ -3070,6 +3475,22 @@ async function sendInvites(e){
   toast(msg+'.',r.sent?'ok':'info');
   if(r.sent)document.getElementById('expEmails').value='';
   loadExperience();
+}
+
+/* رابط استبيان عام بلا دعوة ولا بريد — نفس صفحة survey.html تكتشف غياب
+   رمز الدعوة وتتعامل معه كزائر مجهول من البداية، فلا حاجة لأي شيء من
+   الخادم هنا: مجرد بناء الرابط بحملته على الجهاز نفسه. */
+function buildOpenSurveyLink(){
+  const name=(document.getElementById('expOpenCampaign').value||'').trim();
+  document.getElementById('expOpenLink').value=
+    name?location.origin+'/survey.html?c='+encodeURIComponent(name):'';
+}
+function copyOpenSurveyLink(){
+  const input=document.getElementById('expOpenLink');
+  if(!input.value)return toast('اكتب اسم الحملة أولاً.','err');
+  navigator.clipboard.writeText(input.value).then(
+    ()=>toast('نُسخ الرابط.','ok'),
+    ()=>{input.select();toast('حدّد الرابط وانسخه يدوياً.','info');});
 }
 
 /* ================= المصادقة =================
@@ -3254,9 +3675,13 @@ function reportMsg(btn){
 }
 
 /* ================= أدوات بياناتك وخصوصيتك ================= */
-function exportMyData(){
+async function exportMyData(){
   if(!USER)return toast('سجّل دخولك أولاً.','err');
-  const data={profile:USER,chats:LS.get('chats',[]),saved:LS.get('saved',[]),tickets:LS.get('tickets',[]).filter(t=>t.user_id===USER.id),exported_at:new Date().toISOString()};
+  /* التذاكر تُجلب من الخادم لا من المتصفح: نسخة المتصفح كانت تحوي طلبات
+     وهمية لم تصلنا أصلاً، وتصديرها يعطي المستخدم صورة غير صحيحة عن بياناته. */
+  const res=await api('auth.php',{action:'my_tickets'});
+  if(!res.ok)return toast('تعذّر تجهيز نسختك الآن — حاول بعد قليل.','err');
+  const data={profile:USER,chats:LS.get('chats',[]),saved:LS.get('saved',[]),tickets:res.tickets||[],exported_at:new Date().toISOString()};
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
   a.download='wesal-my-data.json';a.click();
@@ -3356,6 +3781,7 @@ if(_invTok){
 }
 });
 document.addEventListener('click',e=>{const m=document.getElementById('userMenu');if(m&&m.classList.contains('open')&&!e.target.closest('.nav-user'))closeUserMenu();});
+document.addEventListener('click',e=>{const p=document.getElementById('notifPanel');if(p&&p.classList.contains('open')&&!e.target.closest('.notif-wrap'))closeNotifPanel();});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',applyA11y);else applyA11y();
 </script>
 

@@ -255,11 +255,9 @@ try {
             $u = currentUser();
             if (!$u) fail('سجّل دخولك أولاً.', 401);
             rateLimit('ticket', 6);
-            $types = ['تعديل الاسم','تعديل رقم الجوال','تعديل البريد الإلكتروني','تعديل تاريخ الميلاد',
-                      'مشكلة في الرصيد أو الأسئلة','مشكلة تقنية في المنصة','بلاغ عن معلومة غير دقيقة','حذف الحساب','أخرى'];
             $type    = clean($in['type'] ?? '', 60);
             $details = clean($in['details'] ?? '', 2000);
-            if (!in_array($type, $types, true)) fail('اختر نوع الطلب من القائمة.');
+            if (!in_array($type, TICKET_TYPES, true)) fail('اختر نوع الطلب من القائمة.');
             if (mb_strlen($details) < 10)       fail('اكتب تفاصيل الطلب (10 أحرف على الأقل).');
             db()->prepare('INSERT INTO support_tickets (user_id,type,details,created_at) VALUES (?,?,?,NOW())')
                 ->execute([$u['id'], $type, $details]);
