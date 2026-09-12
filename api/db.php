@@ -1,4 +1,39 @@
 <?php
+
+/* حارس عام، مُسجَّل قبل أي تحميل. الواجهة تعتبر أي رد ليس JSON انقطاعَ شبكة
+   وتقول للمستخدم "ما قدرنا نوصل للخادم" — فتلوم اتصاله على عطل في الخادم
+   ولا يبقى في السجل أثر يُشخَّص منه السبب. الترتيب هنا مقصود: التسجيل يسبق
+   require config.php تحديداً ليلتقط خطأً نحوياً في ذلك الملف بعد تحرير يدوي
+   على الخادم، وهي الحالة الوحيدة التي تُسقط كل نقاط النهاية دفعةً واحدة. */
+function apiFail(string $detail): void
+{
+    static $sent = false;
+    if ($sent) { return; }
+    $sent = true;
+
+    @error_log('[wesal-api] ' . $detail);
+    if (!headers_sent()) {
+        http_response_code(500);
+        header('Content-Type: application/json; charset=utf-8');
+    }
+    $debug = defined('APP_DEBUG') && APP_DEBUG;
+    echo json_encode([
+        'ok'    => false,
+        'error' => $debug ? $detail : 'صار خلل مؤقت في الخادم. حاول بعد قليل، وإذا تكرر راسل الدعم الفني.',
+    ], JSON_UNESCAPED_UNICODE);
+}
+
+set_exception_handler(static function (Throwable $e): void {
+    apiFail(get_class($e) . ': ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
+});
+
+register_shutdown_function(static function (): void {
+    $e = error_get_last();
+    if ($e !== null && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+        apiFail('Fatal: ' . $e['message'] . ' @ ' . $e['file'] . ':' . $e['line']);
+    }
+});
+
 require_once __DIR__ . '/config.php';
 
 /* قيم افتراضية للثوابت — حتى يظل ملف config.php القائم على الخادم يعمل بلا
