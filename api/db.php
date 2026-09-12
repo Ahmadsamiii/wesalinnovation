@@ -112,6 +112,21 @@ function ensureSchema(): void {
                         ENUM('user','reviewer','mod','admin') NOT NULL DEFAULT 'user'");
         }
 
+        /* كان هذا الجدول في schema.sql فقط وليس في الترقية التلقائية، فأي نشر
+           على قاعدة بيانات جديدة (نطاق فرعي أو نسخة اختبار) يجعل نموذج
+           «تواصل معنا» يفشل صامتاً بلا أي أثر ظاهر. */
+        db()->exec("CREATE TABLE IF NOT EXISTS messages (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(80) NOT NULL,
+            email VARCHAR(120) NOT NULL,
+            subject VARCHAR(120) NOT NULL,
+            message TEXT NOT NULL,
+            ip VARCHAR(45) NULL,
+            is_read TINYINT(1) NOT NULL DEFAULT 0,
+            created_at DATETIME NOT NULL,
+            INDEX (created_at), INDEX (is_read)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
         db()->exec("CREATE TABLE IF NOT EXISTS support_tickets (
             id INT AUTO_INCREMENT PRIMARY KEY,
             user_id INT NOT NULL,
@@ -252,6 +267,17 @@ function currentUser(): ?array {
 /* ---------- الأدوار ---------- */
 const ROLES = ['user', 'reviewer', 'mod', 'admin'];
 function isAdmin(?array $u): bool { return $u && $u['role'] === 'admin'; }
+
+/* ---------- أنواع تذاكر الدعم ----------
+   المصدر الوحيد للأنواع. كانت مكرّرة نصّاً في auth.php وفي قائمة HTML،
+   فأي تعديل في أحدهما يكسر الآخر صامتاً. */
+const TICKET_TYPES = [
+    'تعديل الاسم', 'تعديل رقم الجوال', 'تعديل البريد الإلكتروني', 'تعديل تاريخ الميلاد',
+    'مشكلة في الرصيد أو الأسئلة', 'مشكلة تقنية في المنصة', 'بلاغ عن معلومة غير دقيقة',
+    'حذف الحساب', 'أخرى',
+];
+/** النوع الوحيد الذي يراه مراجع المحتوى ويغلقه */
+const TICKET_TYPE_ACCURACY = 'بلاغ عن معلومة غير دقيقة';
 
 /** تسجيل عملية إدارية في سجل الخادم — السجل الوحيد الذي يُعتد به */
 function audit(?array $actor, string $action, string $target = '', string $detail = ''): void {

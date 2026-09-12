@@ -2444,17 +2444,22 @@ async function sendTicket(){
   btnLoad('tkBtn',true,'جارٍ الإرسال');
   const res=await api('auth.php',{action:'ticket',type,details});
   btnLoad('tkBtn',false);
-  if(res.ok||res.offline){
-    if(!res.ok){const l=LS.get('tickets',[]);l.unshift({id:Date.now(),user_id:USER.id,uname:USER.name,uemail:USER.email,type,details,status:'open',t:Date.now()});LS.set('tickets',l);}
-    document.getElementById('tkType').value='';document.getElementById('tkMsg').value='';
-    showMsg('tkOk','وصلنا طلبك — نعالجه ونرد عليك على '+USER.email+' بأقرب وقت.',1);
-    toast('تم إرسال طلبك.','ok');loadMyTickets();
-  }else showMsg('tkErr',res.error||'تعذّر إرسال الطلب.');
+  /* النجاح يأتي من الخادم وحده. كان انقطاع الشبكة يحفظ التذكرة في المتصفح
+     ويعرض «تم الإرسال»، فيطمئن صاحب البلاغ وطلبه لم يصلنا إطلاقاً. */
+  if(!res.ok) return showMsg('tkErr', res.offline
+    ? 'ما وصلنا طلبك — يبدو أن الاتصال منقطع. نصّك باقٍ في الصفحة، أعد الإرسال بعد رجوع الاتصال.'
+    : (res.error||'تعذّر إرسال الطلب.'));
+  document.getElementById('tkType').value='';document.getElementById('tkMsg').value='';
+  showMsg('tkOk','وصلنا طلبك — نعالجه ونرد عليك على '+USER.email+' بأقرب وقت.',1);
+  toast('تم إرسال طلبك.','ok');loadMyTickets();
 }
 async function loadMyTickets(){
   const box=document.getElementById('myTickets');if(!box||!USER)return;
   const res=await api('auth.php',{action:'my_tickets'});
-  const list=(res.ok&&res.tickets)?res.tickets:LS.get('tickets',[]).filter(t=>t.user_id===USER.id);
+  /* لا نعود إلى نسخة المتصفح: كانت تعرض تذاكر وهمية لم تصل الخادم أصلاً
+     وكأنها طلبات قائمة. «تعذّر التحميل» أصدق من قائمة كاذبة. */
+  if(!res.ok){box.innerHTML='<p style="font-size:var(--f-sm);color:var(--muted)">تعذّر تحميل طلباتك الآن — حدّث الصفحة بعد قليل.</p>';return;}
+  const list=res.tickets||[];
   if(!list.length){box.innerHTML='<p style="font-size:var(--f-sm);color:var(--muted)">ما أرسلت أي طلب بعد.</p>';return;}
   box.innerHTML='';
   list.forEach(t=>{
@@ -2758,10 +2763,13 @@ function exportUsers(){
 /* --------- رسائل التواصل (مشرف) --------- */
 async function loadMessages(force){
   const res=await api('admin.php',{action:'messages'});
-  const list=(res.ok&&res.messages)?res.messages:LS.get('messages',[]);
   const body=document.getElementById('msgsBody'),empty=document.getElementById('msgsEmpty');
   if(!body)return;
   body.innerHTML='';
+  /* لا نعرض نسخة المتصفح عند فشل الاتصال: لوحة تعرض رسائل قديمة أو وهمية
+     على أنها الوارد الحالي تدفع المشرف لقرار مبني على بيانات غير صحيحة. */
+  if(!res.ok){empty.innerHTML='<div class="empty-state"><svg><use href="#ic-mail"/></svg><p>تعذّر تحميل الرسائل. اضغط تحديث بعد قليل.</p></div>';return;}
+  const list=res.messages||[];
   empty.innerHTML=list.length?'':'<div class="empty-state"><svg><use href="#ic-mail"/></svg><p>ما وصلت رسائل بعد.</p></div>';
   list.forEach((m,i)=>{
     const tr=document.createElement('tr');
@@ -2778,11 +2786,13 @@ async function loadMessages(force){
 
 async function loadTickets(force){
   const res=await api('admin.php',{action:'tickets'});
-  let list=(res.ok&&res.tickets)?res.tickets:LS.get('tickets',[]);
-  if(curRole()==='reviewer')list=list.filter(t=>t.type==='بلاغ عن معلومة غير دقيقة');
   const body=document.getElementById('tkBody'),empty=document.getElementById('tkEmpty');
   if(!body)return;
   body.innerHTML='';
+  if(!res.ok){empty.innerHTML='<div class="empty-state"><svg><use href="#ic-shield"/></svg><p>تعذّر تحميل الطلبات. اضغط تحديث بعد قليل.</p></div>';return;}
+  /* الخادم هو من يفلتر حسب الدور الآن — كانت الفلترة هنا في المتصفح فقط
+     بينما يرسل الخادم كل التذاكر، فيراها المراجع كاملةً بأدوات المطوّر. */
+  const list=res.tickets||[];
   empty.innerHTML=list.length?'':'<div class="empty-state"><svg><use href="#ic-shield"/></svg><p>ما فيه طلبات دعم بعد.</p></div>';
   list.forEach(t=>{
     const tr=document.createElement('tr');
@@ -2802,7 +2812,9 @@ async function loadTickets(force){
 }
 async function ticketDone(id){
   const res=await api('admin.php',{action:'ticket_done',id});
-  if(res.offline){const l=LS.get('tickets',[]);const k=l.findIndex(x=>x.id===id);if(k>-1){l[k].status='done';LS.set('tickets',l);}}
+  /* كان الإغلاق يُعلَن ناجحاً دائماً — حتى عند انقطاع الاتصال أو رفض الخادم —
+     فيختفي الطلب من نظر المشرف وهو ما يزال مفتوحاً على الخادم. */
+  if(!res.ok)return toast(res.offline?'ما تم الإغلاق — الاتصال منقطع.':(res.error||'تعذّر إغلاق الطلب.'),'err');
   toast('تم إغلاق الطلب.','ok');loadTickets();
 }
 
@@ -2822,8 +2834,11 @@ async function sendContact(){
   btnLoad('cBtn',true,'جارٍ الإرسال');
   const res=await api('contact.php',{name,email,subject,message});
   btnLoad('cBtn',false);
-  const rec={name,email,subject,message,t:Date.now(),read:false};
-  const ls=LS.get('messages',[]);ls.unshift(rec);LS.set('messages',ls.slice(0,200));
+  /* كان رد الخادم لا يُفحص إطلاقاً: تُعلن الرسالة ناجحة ويُفرَّغ النموذج
+     حتى لو رفضها الخادم أو انقطع الاتصال، فيضيع نصّ المرسِل بلا أن يصلنا. */
+  if(!res.ok) return showMsg('contactErr', res.offline
+    ? 'ما وصلتنا رسالتك — يبدو أن الاتصال منقطع. نصّك باقٍ في الصفحة، أعد الإرسال بعد رجوع الاتصال.'
+    : (res.error||'تعذّر إرسال رسالتك. حاول مرة أخرى.'));
   showMsg('contactOk','وصلتنا رسالتك. نرد عليك على '+email+' خلال يوم عمل واحد.',1);
   document.getElementById('cName').value='';document.getElementById('cEmail').value='';
   document.getElementById('cSubject').value='';document.getElementById('cMsg').value='';
@@ -3346,9 +3361,13 @@ function reportMsg(btn){
 }
 
 /* ================= أدوات بياناتك وخصوصيتك ================= */
-function exportMyData(){
+async function exportMyData(){
   if(!USER)return toast('سجّل دخولك أولاً.','err');
-  const data={profile:USER,chats:LS.get('chats',[]),saved:LS.get('saved',[]),tickets:LS.get('tickets',[]).filter(t=>t.user_id===USER.id),exported_at:new Date().toISOString()};
+  /* التذاكر تُجلب من الخادم لا من المتصفح: نسخة المتصفح كانت تحوي طلبات
+     وهمية لم تصلنا أصلاً، وتصديرها يعطي المستخدم صورة غير صحيحة عن بياناته. */
+  const res=await api('auth.php',{action:'my_tickets'});
+  if(!res.ok)return toast('تعذّر تجهيز نسختك الآن — حاول بعد قليل.','err');
+  const data={profile:USER,chats:LS.get('chats',[]),saved:LS.get('saved',[]),tickets:res.tickets||[],exported_at:new Date().toISOString()};
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
   a.download='wesal-my-data.json';a.click();

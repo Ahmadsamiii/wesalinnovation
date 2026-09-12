@@ -184,9 +184,18 @@ switch ($act) {
     /* ==================== طلبات الدعم ==================== */
 
     case 'tickets': {
-        $rows = db()->query('SELECT t.id,t.type,t.details,t.status,t.created_at,u.name uname,u.email uemail
-                             FROM support_tickets t JOIN users u ON u.id=t.user_id
-                             ORDER BY t.created_at DESC LIMIT 300')->fetchAll();
+        needRole($STAFF, ['admin', 'mod', 'reviewer']);
+        /* مراجع المحتوى يرى بلاغات دقّة المعلومة فقط. الفلترة هنا في الخادم
+           لا في المتصفح: الإخفاء في الواجهة يُتجاوَز بفتح أدوات المطوّر،
+           فكانت كل تذاكر المستخدمين تصل المراجع فعلياً. */
+        $sql  = 'SELECT t.id,t.type,t.details,t.status,t.created_at,u.name uname,u.email uemail
+                 FROM support_tickets t JOIN users u ON u.id=t.user_id';
+        $args = [];
+        if (($STAFF['role'] ?? '') === 'reviewer') { $sql .= ' WHERE t.type=?'; $args[] = TICKET_TYPE_ACCURACY; }
+        $sql .= ' ORDER BY t.created_at DESC LIMIT 300';
+        $st = db()->prepare($sql);
+        $st->execute($args);
+        $rows = $st->fetchAll();
         out(['ok' => true, 'tickets' => array_map(fn($t) => [
             'id' => (int)$t['id'], 'type' => $t['type'], 'details' => $t['details'],
             'status' => $t['status'], 'uname' => $t['uname'], 'uemail' => $t['uemail'],
@@ -195,8 +204,19 @@ switch ($act) {
     }
 
     case 'ticket_done': {
+        needRole($STAFF, ['admin', 'mod', 'reviewer']);
         $id     = (int)($in['id'] ?? 0);
         $status = ($in['status'] ?? 'done') === 'open' ? 'open' : 'done';
+        /* تحقّق من وجود التذكرة قبل التحديث: كان أي رقم يُرسَل يُسجَّل في سجل
+           التدقيق كإغلاق ناجح، فيمتلئ السجل بإغلاقات لتذاكر لا وجود لها. */
+        $st = db()->prepare('SELECT id,type FROM support_tickets WHERE id=?');
+        $st->execute([$id]);
+        $ticket = $st->fetch();
+        if (!$ticket) fail('التذكرة غير موجودة.', 404);
+        /* والمراجع لا يغلق إلا ما يراه — كان يقدر يغلق أي تذكرة برقمها */
+        if (($STAFF['role'] ?? '') === 'reviewer' && $ticket['type'] !== TICKET_TYPE_ACCURACY) {
+            fail('ما عندك صلاحية على هذه التذكرة.', 403);
+        }
         db()->prepare('UPDATE support_tickets SET status=? WHERE id=?')->execute([$status, $id]);
         audit($STAFF, 'ticket', '#' . $id, $status === 'done' ? 'أُغلقت' : 'أُعيد فتحها');
         out(['ok' => true, 'status' => $status]);
