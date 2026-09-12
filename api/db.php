@@ -21,6 +21,11 @@ foreach ([
     'KIMI_BASE_URL'          => 'https://api.moonshot.ai/v1',
     'INVITE_DAILY_LIMIT'     => 100,
     'BETA_TRIAL_HOURS'       => 48,
+    'SMTP_HOST'              => 'smtp.hostinger.com',
+    'SMTP_PORT'              => 465,
+    'SMTP_ENCRYPTION'        => 'ssl',
+    'SMTP_USER'              => '',
+    'SMTP_PASS'              => '',
 ] as $k => $v) { if (!defined($k)) define($k, $v); }
 
 if (!APP_DEBUG) { ini_set('display_errors', '0'); error_reporting(0); }
@@ -285,11 +290,88 @@ function roleName(string $r): string {
             'reviewer' => 'مراجع محتوى', 'user' => 'مستفيد'][$r] ?? 'مستفيد';
 }
 
-/** إرسال بريد HTML من عنوان المنصة */
+/** إرسال بريد HTML من عنوان المنصة — SMTP مصادَق إن كانت SMTP_PASS مضبوطة،
+ *  وإلا mail() المحلي في الاستضافة كما كان دائماً. */
 function sendMail(string $to, string $subject, string $html): bool {
+    if (SMTP_PASS !== '' && smtpSend($to, $subject, $html)) return true;
+    if (SMTP_PASS !== '') error_log('WESAL_MAIL_FAIL: فشل SMTP، رجعنا لـmail() المحلي كبديل مؤقت');
     $fname = '=?UTF-8?B?' . base64_encode(MAIL_FROM_NAME) . '?=';
     $headers = "From: $fname <" . MAIL_FROM . ">\r\nReply-To: " . MAIL_FROM . "\r\nMIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\n";
     return @mail($to, '=?UTF-8?B?' . base64_encode($subject) . '?=', $html, $headers, '-f' . MAIL_FROM);
+}
+
+/** اتصال SMTP مصادَق مباشر بالبروتوكول الخام (بلا PHPMailer ولا أي اعتمادية،
+ *  بنفس فلسفة هذا المشروع بأكمله). يدعم SSL الفوري (المنفذ 465 عادة)
+ *  وSTARTTLS (587)، ويُسجّل سبب أي فشل في سجل الأخطاء للتشخيص. */
+function smtpSend(string $to, string $subject, string $html): bool {
+    $host = SMTP_HOST . ''; $port = (int)SMTP_PORT; $enc = SMTP_ENCRYPTION;
+    $transport = $enc === 'ssl' ? 'ssl://' : 'tcp://';
+    $ctx = stream_context_create(['ssl' => ['verify_peer' => true, 'verify_peer_name' => true, 'SNI_enabled' => true]]);
+    $fp = @stream_socket_client($transport . $host . ':' . $port, $errno, $errstr, 12, STREAM_CLIENT_CONNECT, $ctx);
+    if (!$fp) { error_log("WESAL_MAIL_FAIL: تعذّر الاتصال بـ $host:$port — $errstr"); return false; }
+    stream_set_timeout($fp, 12);
+
+    $read = function () use ($fp): string {
+        $data = '';
+        while (($line = fgets($fp, 515)) !== false) {
+            $data .= $line;
+            if (!isset($line[3]) || $line[3] !== '-') break;   // "250 " آخر سطر؛ "250-" متعدد الأسطر يكمل القراءة
+        }
+        return $data;
+    };
+    $cmd = function (string $c) use ($fp) { fwrite($fp, $c . "\r\n"); };
+    $ok  = fn(string $data, string ...$codes) => in_array(substr($data, 0, 3), $codes, true);
+    $fail = function (string $label, string $data) use ($fp) {
+        fclose($fp);
+        error_log("WESAL_MAIL_FAIL: $label — " . trim(mb_substr($data, 0, 200)));
+        return false;
+    };
+
+    $ehloHost = (string)(parse_url(SITE_URL, PHP_URL_HOST) ?: 'localhost');
+    $banner = $read();
+    if (!$ok($banner, '220')) return $fail('بادئة الخادم غير متوقعة', $banner);
+
+    $cmd('EHLO ' . $ehloHost);
+    $r = $read();
+    if (!$ok($r, '250')) return $fail('رفض EHLO', $r);
+
+    if ($enc === 'tls') {
+        $cmd('STARTTLS');
+        $r = $read();
+        if (!$ok($r, '220')) return $fail('رفض STARTTLS', $r);
+        if (!@stream_socket_enable_crypto($fp, true, STREAM_CRYPTO_METHOD_TLS_CLIENT))
+            return $fail('فشل تفعيل التشفير بعد STARTTLS', '');
+        $cmd('EHLO ' . $ehloHost);
+        $r = $read();
+        if (!$ok($r, '250')) return $fail('رفض EHLO بعد STARTTLS', $r);
+    }
+
+    $cmd('AUTH LOGIN');
+    $r = $read(); if (!$ok($r, '334')) return $fail('رفض AUTH LOGIN', $r);
+    $cmd(base64_encode(SMTP_USER));
+    $r = $read(); if (!$ok($r, '334')) return $fail('رفض اسم المستخدم', $r);
+    $cmd(base64_encode(SMTP_PASS));
+    $r = $read();
+    if (!$ok($r, '235')) return $fail('فشلت المصادقة — تحقّق من كلمة مرور صندوق البريد', $r);
+
+    $cmd('MAIL FROM:<' . MAIL_FROM . '>');
+    $r = $read(); if (!$ok($r, '250')) return $fail('رفض المرسل', $r);
+    $cmd('RCPT TO:<' . $to . '>');
+    $r = $read(); if (!$ok($r, '250', '251')) return $fail('رفض المستلم', $r);
+    $cmd('DATA');
+    $r = $read(); if (!$ok($r, '354')) return $fail('رفض بدء المحتوى', $r);
+
+    $fname   = '=?UTF-8?B?' . base64_encode(MAIL_FROM_NAME) . '?=';
+    $subjEnc = '=?UTF-8?B?' . base64_encode($subject) . '?=';
+    $headers = "From: $fname <" . MAIL_FROM . ">\r\nTo: <$to>\r\nSubject: $subjEnc\r\n"
+             . "Reply-To: " . MAIL_FROM . "\r\nMIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\n"
+             . "Date: " . date('r') . "\r\n\r\n";
+    $bodyEscaped = preg_replace('/^\./m', '..', $html);   // نقطة في بداية سطر تُضاعَف — قاعدة SMTP لإنهاء DATA
+    $cmd($headers . $bodyEscaped . "\r\n.");
+    $r = $read();
+    fclose($fp);
+    if (!$ok($r, '250')) { error_log('WESAL_MAIL_FAIL: رُفضت الرسالة بعد DATA — ' . trim(mb_substr($r, 0, 200))); return false; }
+    return true;
 }
 
 /** قالب بريد الدعوة */

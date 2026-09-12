@@ -79,11 +79,22 @@ define('KIMI_MODEL',    'kimi-k2-turbo-preview');
 define('KIMI_BASE_URL', 'https://api.moonshot.ai/v1');
 
 /* ---------- البريد ----------
- * يعتمد على دالة mail() في الاستضافة. اجعل MAIL_FROM على نطاق الموقع نفسه
- * وإلا رفضت أغلب الخوادم الرسائل أو صنّفتها مزعجة. */
+ * بلا SMTP_PASS: يُرسَل عبر mail() المحلي في الاستضافة كما كان دائماً —
+ * يعمل غالباً لكن الخوادم المستقبِلة تثق برسالة مصادَق عليها عبر SMTP أكثر.
+ * بوضع SMTP_PASS، كل بريد صادر (الدعوات وإعادة تعيين كلمة المرور ونموذج
+ * التواصل) يُرسَل عبر اتصال SMTP مصادَق حقيقي بصندوق البريد نفسه، ويسقط
+ * تلقائياً لـmail() المحلي عند أي عطل في الاتصال فلا ينقطع الإرسال كلياً. */
 define('MAIL_FROM',      'no-reply@wesalinnovation.sa');
 define('MAIL_FROM_NAME', 'وصال');
 define('CONTACT_TO',     'info@wesalinnovation.sa');        // وجهة رسائل «تواصل معنا»
+
+// SMTP — بيانات Hostinger الافتراضية لصندوق بريد على نطاقك؛ فعّله بوضع
+// SMTP_PASS فقط (كلمة مرور صندوق info@wesalinnovation.sa من hPanel ← البريد).
+define('SMTP_HOST',       'smtp.hostinger.com');
+define('SMTP_PORT',       465);              // أو 587 مع SMTP_ENCRYPTION='tls'
+define('SMTP_ENCRYPTION', 'ssl');            // 'ssl' (465) أو 'tls' (587، STARTTLS)
+define('SMTP_USER',       'info@wesalinnovation.sa');   // عادة نفس MAIL_FROM أو صندوق مشابه
+define('SMTP_PASS',       '');               // فارغ = مُعطَّل، يبقى mail() المحلي هو المسار
 
 /* مجلد التخزين الخاص (ملفات قاعدة المعرفة والمكتبات المجلوبة). يُفضَّل خارج المجلد العام،
    مثل: /home/USER/domains/wesalinnovation.sa/storage — وإن تُرك يُستخدم storage/ داخل المشروع محمياً بـ .htaccess */
