@@ -346,6 +346,16 @@ switch ($action) {
 
     /* ==================== طابور المعالج ==================== */
 
+    /** قائمة معالجي الدعم — لتعبئة قائمة الإحالة في الواجهة */
+    case 'agents': {
+        requireAgent();
+        $s = db()->query("SELECT id,name,support_level FROM users WHERE support_level != 'none' ORDER BY
+                          FIELD(support_level,'exec','lead','agent'), name");
+        out(['ok' => true, 'agents' => array_map(fn($a) => [
+            'id' => (int)$a['id'], 'name' => $a['name'], 'level' => $a['support_level'],
+        ], $s->fetchAll())]);
+    }
+
     case 'queue': {
         $agent  = requireAgent();
         $status = clean($in['status'] ?? '', 20);

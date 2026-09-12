@@ -579,6 +579,71 @@ table.tbl tr:hover td{background:var(--surface-alt);}
 .pill-amber{background:rgba(245,158,11,.14);color:#b45309;}
 .pill-gray{background:var(--surface-alt);color:var(--muted);}
 [data-contrast="dark"] .pill-green{color:#6ee7b7;}[data-contrast="dark"] .pill-amber{color:#fcd34d;}
+.pill-blue{background:rgba(37,99,235,.12);color:#1d4ed8;}
+.pill-red{background:rgba(220,38,38,.12);color:#b91c1c;}
+[data-contrast="dark"] .pill-blue{color:#93c5fd;}[data-contrast="dark"] .pill-red{color:#fca5a5;}
+
+/* ============ تذاكر الدعم ============ */
+.tk-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(160px,100%),1fr));gap:var(--s3);margin-bottom:var(--s5);}
+.tk-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:var(--s4) var(--s5);}
+.tk-stat b{display:block;font-size:var(--f-h2);color:var(--ink);line-height:1.2;}
+.tk-stat span{font-size:var(--f-xs);color:var(--muted);}
+.tk-stat.warn b{color:#b45309;}
+.tk-filters{display:flex;gap:var(--s3);flex-wrap:wrap;align-items:center;padding:var(--s4) var(--s6);border-bottom:1px solid var(--border);}
+.tk-filters select{font-family:inherit;font-size:var(--f-sm);padding:var(--s2) var(--s3);border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface);color:var(--text);}
+.tk-filters label{display:flex;align-items:center;gap:6px;font-size:var(--f-sm);color:var(--muted);cursor:pointer;}
+.tk-row{cursor:pointer;}
+.tk-overdue{color:#b91c1c;font-weight:700;}
+.tk-ref{font-family:ui-monospace,monospace;font-size:var(--f-xs);color:var(--muted);direction:ltr;display:inline-block;}
+
+/* الدرج الجانبي لتفاصيل التذكرة — نفس نمط قائمة الجوال (overlay+drawer) */
+.tk-drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1001;opacity:0;pointer-events:none;transition:opacity var(--dur-md) var(--ease);}
+.tk-drawer-overlay.on{opacity:1;pointer-events:auto;}
+.tk-drawer{position:fixed;top:0;left:0;width:560px;max-width:92vw;height:100%;z-index:1002;background:var(--surface);transform:translateX(-100%);transition:transform var(--dur-md) var(--ease);box-shadow:var(--sh-lg);display:flex;flex-direction:column;}
+.tk-drawer.on{transform:translateX(0);}
+.tk-drawer-head{padding:var(--s5) var(--s6);border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:var(--s3);}
+.tk-drawer-head h3{font-size:var(--f-h3);margin-bottom:4px;}
+.tk-drawer-meta{font-size:var(--f-xs);color:var(--muted);display:flex;flex-wrap:wrap;gap:var(--s2) var(--s4);margin-top:var(--s2);}
+.tk-drawer-body{flex:1;overflow-y:auto;padding:var(--s6);}
+.tk-drawer-close{background:none;border:none;color:var(--muted);cursor:pointer;padding:var(--s2);border-radius:var(--r-full);flex-shrink:0;}
+.tk-drawer-close:hover{background:var(--surface-alt);color:var(--ink);}
+.tk-drawer-actions{display:flex;gap:var(--s2);flex-wrap:wrap;padding:var(--s4) var(--s6);border-top:1px solid var(--border);background:var(--surface-alt);}
+
+.tk-timeline{display:flex;flex-direction:column;gap:var(--s3);margin-bottom:var(--s5);}
+.tk-entry{border-radius:var(--r-md);padding:var(--s3) var(--s4);border-inline-start:3px solid var(--border);background:var(--surface-alt);}
+.tk-entry.is-public{border-inline-start-color:#10b981;}
+.tk-entry.is-internal{border-inline-start-color:var(--secondary);background:rgba(129,79,195,.06);}
+.tk-entry-meta{display:flex;align-items:center;gap:var(--s2);font-size:var(--f-xs);color:var(--muted);margin-bottom:4px;flex-wrap:wrap;}
+.tk-entry-meta b{color:var(--ink);font-size:var(--f-sm);}
+.tk-entry p{font-size:var(--f-sm);color:var(--text);white-space:pre-wrap;margin:0;}
+.tk-vis-tag{font-size:10px;font-weight:700;padding:1px 7px;border-radius:var(--r-full);}
+.tk-vis-tag.pub{background:rgba(16,185,129,.14);color:#047857;}
+.tk-vis-tag.int{background:rgba(129,79,195,.14);color:var(--tertiary);}
+
+.tk-compose{border:1px solid var(--border);border-radius:var(--r-lg);padding:var(--s4);background:var(--surface);}
+.tk-compose textarea{width:100%;min-height:80px;border:1px solid var(--border);border-radius:var(--r-md);padding:var(--s3);font-family:inherit;font-size:var(--f-sm);resize:vertical;background:var(--bg);color:var(--text);}
+.tk-vis-toggle{display:flex;gap:var(--s2);margin:var(--s3) 0;}
+.tk-vis-btn{flex:1;padding:var(--s2) var(--s3);border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface);color:var(--muted);font-family:inherit;font-size:var(--f-xs);font-weight:600;cursor:pointer;}
+.tk-vis-btn.on[data-v="public"]{background:rgba(16,185,129,.12);border-color:#10b981;color:#047857;}
+.tk-vis-btn.on[data-v="internal"]{background:rgba(129,79,195,.12);border-color:var(--secondary);color:var(--tertiary);}
+.tk-escalate-form{display:flex;flex-direction:column;gap:var(--s3);margin-top:var(--s3);padding-top:var(--s3);border-top:1px dashed var(--border);}
+.tk-escalate-form select,.tk-escalate-form textarea{font-family:inherit;font-size:var(--f-sm);padding:var(--s2) var(--s3);border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg);color:var(--text);}
+
+/* ============ الإشعارات ============ */
+.notif-btn{position:relative;}
+.notif-dot{position:absolute;top:2px;left:2px;width:9px;height:9px;border-radius:50%;background:#dc2626;border:2px solid var(--nav-bg,#fff);}
+.notif-panel{position:absolute;top:calc(100% + var(--s3));inset-inline-start:0;width:360px;max-width:90vw;max-height:70vh;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-lg);z-index:1100;display:none;}
+.notif-panel.open{display:block;}
+.notif-panel-head{display:flex;align-items:center;justify-content:space-between;padding:var(--s3) var(--s4);border-bottom:1px solid var(--border);font-weight:700;font-size:var(--f-sm);}
+.notif-panel-head button{background:none;border:none;color:var(--secondary);font-size:var(--f-xs);cursor:pointer;font-family:inherit;}
+.notif-item{display:block;width:100%;text-align:start;padding:var(--s3) var(--s4);border-bottom:1px solid var(--border);background:none;border-inline:none;border-top:none;cursor:pointer;font-family:inherit;}
+.notif-item:last-child{border-bottom:none;}
+.notif-item:hover{background:var(--surface-alt);}
+.notif-item.unread{background:rgba(37,99,235,.05);}
+.notif-item b{display:block;font-size:var(--f-sm);color:var(--ink);margin-bottom:2px;}
+.notif-item p{font-size:var(--f-xs);color:var(--muted);margin:0;}
+.notif-item time{font-size:10px;color:var(--muted);}
+.notif-wrap{position:relative;}
 .icon-btn-sm{background:var(--surface-alt);border:1px solid var(--border);width:32px;height:32px;border-radius:var(--r-sm);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);}
 .icon-btn-sm:hover{color:var(--primary);border-color:var(--secondary);}
 .icon-btn-sm svg{width:15px;height:15px;}
@@ -713,6 +778,8 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <symbol id="ic-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
 <symbol id="ic-arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></symbol>
 <symbol id="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></symbol>
+<symbol id="ic-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+<symbol id="ic-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
 <symbol id="ic-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
 <symbol id="ic-brain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 1 4.56 2.95A4.5 4.5 0 0 1 20 9.5a4.5 4.5 0 0 1-2.59 4.07A5 5 0 0 1 12 18"/><path d="M12 2a5 5 0 0 0-4.56 2.95A4.5 4.5 0 0 0 4 9.5a4.5 4.5 0 0 0 2.59 4.07A5 5 0 0 0 12 18"/><path d="M12 18v4"/><path d="M8 10h.01"/><path d="M16 10h.01"/></symbol>
 <symbol id="ic-hand-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 14h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17"/><path d="M7 21l1.6-1.4c.3-.4.8-.6 1.4-.6h4c.8 0 1.6-.3 2.1-.9l4.8-4.3a2 2 0 0 0-2.7-2.9L15 14"/><path d="M12 4l-1.5 1.5a2.12 2.12 0 0 0 0 3c.8.8 2.2.8 3 0L12 4z"/></symbol>
@@ -741,6 +808,16 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <button class="nav-cta nav-guest" onclick="startTrial()" data-i18n="nav.cta">جرّب الآن</button>
 <div class="nav-user" id="navUser">
 <button class="nav-icon-btn hide-sm" onclick="go('dashboard')" data-i18n="nav.dash">لوحة التحكم</button>
+<div class="notif-wrap">
+<button class="nav-icon-btn notif-btn" id="notifBtn" onclick="toggleNotifPanel(event)" aria-label="الإشعارات" aria-haspopup="true" aria-expanded="false">
+<svg class="ico" style="width:16px;height:16px"><use href="#ic-bell"/></svg>
+<span class="notif-dot" id="notifDot" hidden></span>
+</button>
+<div class="notif-panel" id="notifPanel" role="menu">
+<div class="notif-panel-head"><span>الإشعارات</span><button type="button" onclick="markAllNotifsRead()">تعليم الكل مقروءاً</button></div>
+<div id="notifList"></div>
+</div>
+</div>
 <button class="nav-id" id="navIdBtn" onclick="toggleUserMenu(event)" aria-label="قائمة حسابي" aria-haspopup="true" aria-expanded="false">
 <span class="nav-avatar" id="navAvatar">م</span>
 <span class="nav-id-text hide-sm">
@@ -1026,7 +1103,7 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <button class="dash-tab" onclick="dashTab('profile',this)" role="tab"><svg><use href="#ic-settings"/></svg> حسابي</button>
 <button class="dash-tab" data-perm="users.view" hidden onclick="dashTab('users',this)" role="tab"><svg><use href="#ic-users"/></svg> المستخدمون</button>
 <button class="dash-tab" data-perm="messages.view" hidden onclick="dashTab('messages',this)" role="tab"><svg><use href="#ic-mail"/></svg> رسائل التواصل</button>
-<button class="dash-tab" data-perm="tickets.view" hidden onclick="dashTab('tickets',this)" role="tab"><svg><use href="#ic-shield"/></svg> طلبات الدعم</button>
+<button class="dash-tab" data-perm="tickets.view" hidden onclick="dashTab('tickets',this)" role="tab"><svg><use href="#ic-shield"/></svg> تذاكر الدعم</button>
 <button class="dash-tab" data-perm="content.manage" hidden onclick="dashTab('content',this)" role="tab" aria-label="محتوى الصفحة"><svg class="ico"><use href="#ic-book"/></svg> محتوى الصفحة</button>
 <button class="dash-tab" data-perm="audit.view" hidden onclick="dashTab('audit',this)" role="tab"><svg><use href="#ic-clock"/></svg> سجل العمليات</button>
 <button class="dash-tab" data-perm="experience.view" hidden onclick="dashTab('experience',this)" role="tab"><svg><use href="#ic-heart"/></svg> تجربة المستخدم</button>
@@ -1156,6 +1233,7 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <option>مشكلة في الرصيد أو الأسئلة</option>
 <option>مشكلة تقنية في المنصة</option>
 <option>بلاغ عن معلومة غير دقيقة</option>
+<option>صعوبة وصول</option>
 <option>حذف الحساب</option>
 <option>أخرى</option>
 </select></div>
@@ -1208,13 +1286,41 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 </div>
 </div>
 
-<!-- طلبات الدعم (سوبر أدمن) -->
+<!-- تذاكر الدعم الفني (لأي حساب support_level != none) -->
 <div class="dash-panel" id="dp-tickets">
+<div class="tk-summary" id="tkSummary"></div>
 <div class="tbl-wrap">
-<div class="tbl-head"><h3>طلبات الدعم الفني</h3><button class="btn btn-md btn-surface" onclick="loadTickets(true)"><svg class="ico"><use href="#ic-search"/></svg> تحديث</button></div>
-<div class="tbl-scroll"><table class="tbl"><thead><tr><th>المستخدم</th><th>نوع الطلب</th><th>التفاصيل</th><th>التاريخ</th><th>الحالة</th><th></th></tr></thead><tbody id="tkBody"></tbody></table></div>
+<div class="tbl-head"><h3>طابور تذاكر الدعم</h3><button class="btn btn-md btn-surface" onclick="loadTicketQueue(true)"><svg class="ico"><use href="#ic-search"/></svg> تحديث</button></div>
+<div class="tk-filters">
+<select id="tkFilterStatus" onchange="loadTicketQueue()">
+<option value="">كل الحالات</option>
+<option value="new">جديدة</option>
+<option value="in_progress">قيد المعالجة</option>
+<option value="waiting">بانتظار صاحب التذكرة</option>
+<option value="escalated">مُحالة</option>
+<option value="resolved">تم الحل</option>
+<option value="closed">مغلقة</option>
+<option value="reopened">أُعيد فتحها</option>
+</select>
+<label><input type="checkbox" id="tkFilterMine" onchange="loadTicketQueue()"> تذاكري فقط</label>
+</div>
+<div class="tbl-scroll"><table class="tbl"><thead><tr><th>المرجع</th><th>الموضوع</th><th>الأولوية</th><th>الحالة</th><th>المُسنَد إليه</th><th>الموعد</th></tr></thead><tbody id="tkBody"></tbody></table></div>
 <div id="tkEmpty"></div>
 </div>
+</div>
+
+<!-- درج تفاصيل التذكرة -->
+<div class="tk-drawer-overlay" id="tkDrawerOverlay" onclick="closeTicketDrawer()"></div>
+<div class="tk-drawer" id="tkDrawer" role="dialog" aria-label="تفاصيل التذكرة">
+<div class="tk-drawer-head">
+<div>
+<h3 id="tkDrawerRef"></h3>
+<div class="tk-drawer-meta" id="tkDrawerMeta"></div>
+</div>
+<button class="tk-drawer-close" onclick="closeTicketDrawer()" aria-label="إغلاق"><svg class="ico"><use href="#ic-x"/></svg></button>
+</div>
+<div class="tk-drawer-body" id="tkDrawerBody"></div>
+<div class="tk-drawer-actions" id="tkDrawerActions"></div>
 </div>
 <div class="dash-panel" id="dp-content">
 <div class="tbl-wrap">
@@ -2154,10 +2260,13 @@ function setUser(u){
   USER=u;LS.set('session',u);
   document.body.setAttribute('data-role',u.role||'user');
   syncAuthUI();
+  pollNotifDot();
+  if(!NOTIF_TIMER)NOTIF_TIMER=setInterval(pollNotifDot,60000);
 }
 function doLogout(){
   api('auth.php',{action:'logout'});
   USER=null;LS.del('session');document.body.removeAttribute('data-role');
+  if(NOTIF_TIMER){clearInterval(NOTIF_TIMER);NOTIF_TIMER=null;}
   syncAuthUI();toast('تم تسجيل خروجك.','info');go('home');
 }
 function syncAuthUI(){
@@ -2379,7 +2488,7 @@ function dashTab(name,btn){
   if(name==='chats')renderChats();
   if(name==='users'){loadUsers();loadDemoStatus();}
   if(name==='messages')loadMessages();
-  if(name==='tickets')loadTickets();
+  if(name==='tickets')loadTicketQueue();
   if(name==='audit')loadAudit();
   if(name==='content')loadContentAdmin();
   if(name==='experience')loadExperience();
@@ -2442,7 +2551,7 @@ async function sendTicket(){
   if(!type)return showMsg('tkErr','اختر نوع الطلب أولاً.');
   if(details.length<10)return showMsg('tkErr','اكتب تفاصيل الطلب (10 أحرف على الأقل).');
   btnLoad('tkBtn',true,'جارٍ الإرسال');
-  const res=await api('auth.php',{action:'ticket',type,details});
+  const res=await api('tickets.php',{action:'create',type,details,urgency:'normal',source:'chat'});
   btnLoad('tkBtn',false);
   /* النجاح يأتي من الخادم وحده. كان انقطاع الشبكة يحفظ التذكرة في المتصفح
      ويعرض «تم الإرسال»، فيطمئن صاحب البلاغ وطلبه لم يصلنا إطلاقاً. */
@@ -2450,12 +2559,12 @@ async function sendTicket(){
     ? 'ما وصلنا طلبك — يبدو أن الاتصال منقطع. نصّك باقٍ في الصفحة، أعد الإرسال بعد رجوع الاتصال.'
     : (res.error||'تعذّر إرسال الطلب.'));
   document.getElementById('tkType').value='';document.getElementById('tkMsg').value='';
-  showMsg('tkOk','وصلنا طلبك — نعالجه ونرد عليك على '+USER.email+' بأقرب وقت.',1);
+  showMsg('tkOk','وصلنا طلبك برقم '+res.ref+' — نعالجه ونرد عليك على '+USER.email+' بأقرب وقت.',1);
   toast('تم إرسال طلبك.','ok');loadMyTickets();
 }
 async function loadMyTickets(){
   const box=document.getElementById('myTickets');if(!box||!USER)return;
-  const res=await api('auth.php',{action:'my_tickets'});
+  const res=await api('tickets.php',{action:'mine'});
   /* لا نعود إلى نسخة المتصفح: كانت تعرض تذاكر وهمية لم تصل الخادم أصلاً
      وكأنها طلبات قائمة. «تعذّر التحميل» أصدق من قائمة كاذبة. */
   if(!res.ok){box.innerHTML='<p style="font-size:var(--f-sm);color:var(--muted)">تعذّر تحميل طلباتك الآن — حدّث الصفحة بعد قليل.</p>';return;}
@@ -2464,9 +2573,10 @@ async function loadMyTickets(){
   box.innerHTML='';
   list.forEach(t=>{
     const d=document.createElement('div');d.className='tk-item';
-    d.innerHTML='<div style="flex:1"><b></b><p></p></div><span class="pill '+(t.status==='done'?'pill-green':'pill-amber')+'">'+(t.status==='done'?'تم الحل':'قيد المعالجة')+'</span>';
-    d.querySelector('b').textContent=t.type;
-    d.querySelector('p').textContent=t.details.slice(0,120)+(t.details.length>120?'…':'')+' — '+fmtWhen(t.t||Date.now());
+    d.innerHTML='<div style="flex:1"><b></b><p></p></div><span class="pill '+(TK_STATUS_PILL[t.status]||'pill-gray')+'"></span>';
+    d.querySelector('b').textContent=t.ref+' — '+(t.subject||t.type);
+    d.querySelector('p').textContent=(t.details||'').slice(0,120)+((t.details||'').length>120?'…':'')+' — '+fmtWhen(t.created||Date.now());
+    d.querySelector('.pill').textContent=TK_STATUS_LABEL[t.status]||t.status;
     box.appendChild(d);
   });
 }
@@ -2784,38 +2894,234 @@ async function loadMessages(force){
   if(force)toast('تم تحديث القائمة.','ok',2000);
 }
 
-async function loadTickets(force){
-  const res=await api('admin.php',{action:'tickets'});
+/* ================= تذاكر الدعم (المعالج) ================= */
+const TK_STATUS_LABEL={new:'جديدة',in_progress:'قيد المعالجة',waiting:'بانتظار صاحب التذكرة',
+  escalated:'مُحالة',resolved:'تم الحل',closed:'مغلقة',reopened:'أُعيد فتحها'};
+const TK_STATUS_PILL={new:'pill-blue',in_progress:'pill-amber',waiting:'pill-gray',
+  escalated:'pill-purple',resolved:'pill-green',closed:'pill-gray',reopened:'pill-red'};
+const TK_PRIORITY_LABEL={critical:'حرجة',high:'عالية',normal:'عادية',low:'منخفضة'};
+const TK_PRIORITY_PILL={critical:'pill-red',high:'pill-amber',normal:'pill-blue',low:'pill-gray'};
+
+async function loadTicketQueue(force){
   const body=document.getElementById('tkBody'),empty=document.getElementById('tkEmpty');
   if(!body)return;
+  const status=document.getElementById('tkFilterStatus')?.value||'';
+  const mine=document.getElementById('tkFilterMine')?.checked||false;
+  const res=await api('tickets.php',{action:'queue',status,mine});
   body.innerHTML='';
-  if(!res.ok){empty.innerHTML='<div class="empty-state"><svg><use href="#ic-shield"/></svg><p>تعذّر تحميل الطلبات. اضغط تحديث بعد قليل.</p></div>';return;}
-  /* الخادم هو من يفلتر حسب الدور الآن — كانت الفلترة هنا في المتصفح فقط
-     بينما يرسل الخادم كل التذاكر، فيراها المراجع كاملةً بأدوات المطوّر. */
+  if(!res.ok){empty.innerHTML='<div class="empty-state"><svg><use href="#ic-shield"/></svg><p>تعذّر تحميل الطابور. اضغط تحديث بعد قليل.</p></div>';return;}
   const list=res.tickets||[];
-  empty.innerHTML=list.length?'':'<div class="empty-state"><svg><use href="#ic-shield"/></svg><p>ما فيه طلبات دعم بعد.</p></div>';
+  empty.innerHTML=list.length?'':'<div class="empty-state"><svg><use href="#ic-shield"/></svg><p>لا توجد تذاكر مطابقة.</p></div>';
+
+  const openCount=list.filter(t=>!['closed','resolved'].includes(t.status)).length;
+  const overdueCount=list.filter(t=>t.overdue).length;
+  const waitingCount=list.filter(t=>t.status==='waiting').length;
+  const sum=document.getElementById('tkSummary');
+  if(sum)sum.innerHTML=
+    '<div class="tk-stat"><b>'+openCount+'</b><span>مفتوحة الآن</span></div>'+
+    '<div class="tk-stat warn"><b>'+overdueCount+'</b><span>تجاوزت موعدها</span></div>'+
+    '<div class="tk-stat"><b>'+waitingCount+'</b><span>بانتظار العميل</span></div>';
+
   list.forEach(t=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML='<td><b class="c-n" style="color:var(--ink)"></b><br><span class="c-e" style="color:var(--muted);font-size:var(--f-xs)" dir="ltr"></span></td><td class="c-ty"></td><td class="c-d" style="max-width:320px"></td><td style="white-space:nowrap">'+fmtWhen(t.t||Date.now())+'</td><td><span class="pill '+(t.status==='done'?'pill-green':'pill-amber')+'">'+(t.status==='done'?'تم الحل':'قيد المعالجة')+'</span></td><td></td>';
-    tr.querySelector('.c-n').textContent=t.uname||'—';
-    tr.querySelector('.c-e').textContent=t.uemail||'';
-    tr.querySelector('.c-ty').textContent=t.type||'—';
-    tr.querySelector('.c-d').textContent=t.details||'';
-    if(t.status!=='done'){
-      const btn=document.createElement('button');btn.className='btn btn-md btn-surface';btn.textContent='تم الحل';
-      btn.onclick=()=>ticketDone(t.id);
-      tr.lastElementChild.appendChild(btn);
-    }
+    const tr=document.createElement('tr');tr.className='tk-row';
+    tr.innerHTML='<td><span class="tk-ref"></span></td><td class="c-s"></td>'+
+      '<td><span class="pill '+(TK_PRIORITY_PILL[t.priority]||'pill-gray')+'"></span></td>'+
+      '<td><span class="pill '+(TK_STATUS_PILL[t.status]||'pill-gray')+'"></span></td>'+
+      '<td class="c-a"></td><td class="c-due"></td>';
+    tr.querySelector('.tk-ref').textContent=t.ref;
+    tr.querySelector('.c-s').textContent=t.subject||t.type;
+    tr.querySelector('.pill.'+(TK_PRIORITY_PILL[t.priority]||'pill-gray')).textContent=TK_PRIORITY_LABEL[t.priority]||t.priority;
+    tr.querySelector('.pill.'+(TK_STATUS_PILL[t.status]||'pill-gray')).textContent=TK_STATUS_LABEL[t.status]||t.status;
+    tr.querySelector('.c-a').textContent=t.assignee||'—';
+    const dueCell=tr.querySelector('.c-due');
+    if(t.due_resolution){dueCell.textContent=fmtWhen(t.due_resolution);if(t.overdue)dueCell.classList.add('tk-overdue');}
+    else dueCell.textContent='—';
+    tr.onclick=()=>openTicketDrawer(t.id);
     body.appendChild(tr);
   });
-  if(force)toast('تم تحديث القائمة.','ok',2000);
+  if(force)toast('تم تحديث الطابور.','ok',2000);
 }
-async function ticketDone(id){
-  const res=await api('admin.php',{action:'ticket_done',id});
-  /* كان الإغلاق يُعلَن ناجحاً دائماً — حتى عند انقطاع الاتصال أو رفض الخادم —
-     فيختفي الطلب من نظر المشرف وهو ما يزال مفتوحاً على الخادم. */
-  if(!res.ok)return toast(res.offline?'ما تم الإغلاق — الاتصال منقطع.':(res.error||'تعذّر إغلاق الطلب.'),'err');
-  toast('تم إغلاق الطلب.','ok');loadTickets();
+
+let TK_CURRENT=null, TK_VIS='public';
+
+async function openTicketDrawer(id){
+  const res=await api('tickets.php',{action:'open',id});
+  if(!res.ok)return toast(res.error||'تعذّر فتح التذكرة.','err');
+  TK_CURRENT=res.ticket;TK_VIS='public';
+  document.getElementById('tkDrawerRef').textContent=res.ticket.ref;
+  const meta=document.getElementById('tkDrawerMeta');
+  meta.innerHTML='';
+  [['من',res.ticket.name+(res.ticket.is_guest?' (ضيف)':'')],['البريد',res.ticket.email],
+   ['النوع',res.ticket.type],['المصدر',res.ticket.source]].forEach(([k,v])=>{
+    const s=document.createElement('span');s.textContent=k+': '+(v||'—');meta.appendChild(s);
+  });
+
+  const bodyEl=document.getElementById('tkDrawerBody');
+  bodyEl.innerHTML='<div class="tk-timeline" id="tkTimeline"></div>';
+  const tl=document.getElementById('tkTimeline');
+  (res.entries||[]).forEach(e=>{
+    const d=document.createElement('div');d.className='tk-entry '+(e.visibility==='internal'?'is-internal':'is-public');
+    const m=document.createElement('div');m.className='tk-entry-meta';
+    const b=document.createElement('b');b.textContent=e.author||'النظام';m.appendChild(b);
+    const tag=document.createElement('span');tag.className='tk-vis-tag '+(e.visibility==='internal'?'int':'pub');
+    tag.textContent=e.visibility==='internal'?'داخلي':'عام';m.appendChild(tag);
+    const time=document.createElement('span');time.textContent=fmtWhen(e.t);m.appendChild(time);
+    d.appendChild(m);
+    const p=document.createElement('p');p.textContent=e.body||'';d.appendChild(p);
+    tl.appendChild(d);
+  });
+
+  renderTicketActions(res.ticket);
+  document.getElementById('tkDrawerOverlay').classList.add('on');
+  document.getElementById('tkDrawer').classList.add('on');
+}
+function closeTicketDrawer(){
+  document.getElementById('tkDrawerOverlay').classList.remove('on');
+  document.getElementById('tkDrawer').classList.remove('on');
+  TK_CURRENT=null;
+}
+
+function renderTicketActions(t){
+  const box=document.getElementById('tkDrawerActions');
+  box.innerHTML='';
+  if(t.status==='new'){
+    const btn=document.createElement('button');btn.className='btn btn-md btn-primary';btn.textContent='استلم التذكرة';
+    btn.onclick=()=>tkClaim(t.id);box.appendChild(btn);return;
+  }
+  if(['closed','resolved'].includes(t.status)){
+    const note=document.createElement('p');note.style.cssText='font-size:var(--f-sm);color:var(--muted);margin:0';
+    note.textContent=t.status==='resolved'?'بانتظار تأكيد صاحب التذكرة أو الإغلاق التلقائي خلال أسبوع.':'التذكرة مغلقة.';
+    box.appendChild(note);return;
+  }
+  // in_progress / waiting / escalated / reopened: تركيبة العمل الكاملة
+  const wrap=document.createElement('div');wrap.style.cssText='width:100%';
+  wrap.innerHTML=
+    '<div class="tk-compose">'+
+      '<textarea id="tkComposeBody" placeholder="اكتب ردّك أو ملاحظتك..." maxlength="4000"></textarea>'+
+      '<div class="tk-vis-toggle">'+
+        '<button type="button" class="tk-vis-btn on" data-v="public" onclick="tkSetVis(\'public\')">رد عام (يراه صاحب التذكرة)</button>'+
+        '<button type="button" class="tk-vis-btn" data-v="internal" onclick="tkSetVis(\'internal\')">ملاحظة داخلية</button>'+
+      '</div>'+
+      '<div style="display:flex;gap:var(--s2);flex-wrap:wrap">'+
+        '<button type="button" class="btn btn-md btn-primary" id="tkSendBtn">إرسال</button>'+
+        '<button type="button" class="btn btn-md btn-surface" id="tkWaitBtn">اطلب معلومة (ينتظر العميل)</button>'+
+        '<button type="button" class="btn btn-md btn-surface" id="tkEscBtn">إحالة</button>'+
+        '<button type="button" class="btn btn-md btn-surface" id="tkResBtn" style="color:#047857;border-color:#10b981">تم الحل</button>'+
+      '</div>'+
+      '<div class="tk-escalate-form" id="tkEscForm" hidden></div>'+
+    '</div>';
+  box.appendChild(wrap);
+  document.getElementById('tkSendBtn').onclick=()=>tkSendReply(t.id);
+  document.getElementById('tkWaitBtn').onclick=()=>tkWait(t.id);
+  document.getElementById('tkResBtn').onclick=()=>tkResolve(t.id);
+  document.getElementById('tkEscBtn').onclick=()=>tkOpenEscalate(t.id);
+}
+function tkSetVis(v){
+  TK_VIS=v;
+  document.querySelectorAll('.tk-vis-btn').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+}
+async function tkClaim(id){
+  const res=await api('tickets.php',{action:'claim',id});
+  if(!res.ok)return toast(res.error||'تعذّر الاستلام.','err');
+  toast('استلمت التذكرة.','ok');openTicketDrawer(id);loadTicketQueue();
+}
+async function tkSendReply(id){
+  const ta=document.getElementById('tkComposeBody');
+  const body=(ta.value||'').trim();
+  if(body.length<2)return toast('اكتب نصّاً أولاً.','err');
+  const res=await api('tickets.php',{action:'agent_reply',id,body,visibility:TK_VIS});
+  if(!res.ok)return toast(res.error||'تعذّر الإرسال.','err');
+  ta.value='';toast('أُرسل.','ok');openTicketDrawer(id);loadTicketQueue();
+}
+async function tkWait(id){
+  const ta=document.getElementById('tkComposeBody');
+  const body=(ta.value||'').trim();
+  if(body.length<2)return toast('اكتب ما تحتاج معرفته من صاحب التذكرة أولاً.','err');
+  const res=await api('tickets.php',{action:'wait',id,body});
+  if(!res.ok)return toast(res.error||'تعذّر التنفيذ.','err');
+  toast('انتقلت لبانتظار صاحب التذكرة.','ok');openTicketDrawer(id);loadTicketQueue();
+}
+async function tkResolve(id){
+  const res=(document.getElementById('tkComposeBody')?.value||'').trim();
+  if(res.length<5)return toast('اكتب ملخّص الحل في مربع النص أولاً (5 أحرف على الأقل).','err');
+  const r=await api('tickets.php',{action:'resolve',id,resolution:res});
+  if(!r.ok)return toast(r.error||'تعذّر الحل.','err');
+  toast('تم وسمها كمحلولة.','ok');closeTicketDrawer();loadTicketQueue();
+}
+async function tkOpenEscalate(id){
+  const form=document.getElementById('tkEscForm');
+  if(!form)return;
+  form.hidden=!form.hidden;
+  if(form.hidden||form.dataset.loaded)return;
+  const res=await api('tickets.php',{action:'agents'});
+  const agents=(res.ok&&res.agents)?res.agents:[];
+  const LEVEL_LABEL={agent:'معالج',lead:'قائد فريق',exec:'تنفيذي'};
+  form.innerHTML=
+    '<select id="tkEscTarget"><option value="">اختر المُحال إليه</option>'+
+    agents.map(a=>'<option value="'+a.id+'">'+a.name+' — '+(LEVEL_LABEL[a.level]||a.level)+'</option>').join('')+
+    '</select>'+
+    '<textarea id="tkEscReason" placeholder="سبب الإحالة (إلزامي)" maxlength="1000"></textarea>'+
+    '<label style="display:flex;align-items:center;gap:6px;font-size:var(--f-sm);color:var(--muted)">'+
+    '<input type="checkbox" id="tkEscShowWhy"> أظهر سبب الإحالة لصاحب التذكرة</label>'+
+    '<button type="button" class="btn btn-md btn-primary" id="tkEscSubmit">تأكيد الإحالة</button>';
+  form.dataset.loaded='1';
+  document.getElementById('tkEscSubmit').onclick=()=>tkSubmitEscalate(id);
+}
+async function tkSubmitEscalate(id){
+  const toId=+(document.getElementById('tkEscTarget')?.value||0);
+  const reason=(document.getElementById('tkEscReason')?.value||'').trim();
+  const showWhy=document.getElementById('tkEscShowWhy')?.checked||false;
+  if(!toId)return toast('اختر المُحال إليه.','err');
+  if(reason.length<3)return toast('اكتب سبب الإحالة.','err');
+  const res=await api('tickets.php',{action:'escalate',id,to_user_id:toId,reason,reason_visible_to_requester:showWhy});
+  if(!res.ok)return toast(res.error||'تعذّرت الإحالة.','err');
+  toast('أُحيلت التذكرة.','ok');closeTicketDrawer();loadTicketQueue();
+}
+
+/* ================= الإشعارات ================= */
+let NOTIF_TIMER=null;
+async function pollNotifDot(){
+  if(!USER)return;
+  const res=await api('notifications.php',{action:'unread_count'});
+  const dot=document.getElementById('notifDot');
+  if(dot)dot.hidden=!(res.ok&&res.count>0);
+}
+function toggleNotifPanel(ev){
+  ev.stopPropagation();
+  const p=document.getElementById('notifPanel');
+  const open=p.classList.toggle('open');
+  document.getElementById('notifBtn').setAttribute('aria-expanded',open);
+  if(open)loadNotifList();
+}
+function closeNotifPanel(){
+  const p=document.getElementById('notifPanel');
+  if(p)p.classList.remove('open');
+  document.getElementById('notifBtn')?.setAttribute('aria-expanded','false');
+}
+async function loadNotifList(){
+  const list=document.getElementById('notifList');
+  const res=await api('notifications.php',{action:'list'});
+  list.innerHTML='';
+  if(!res.ok){list.innerHTML='<p style="padding:var(--s4);font-size:var(--f-sm);color:var(--muted)">تعذّر التحميل.</p>';return;}
+  const notifs=res.notifications||[];
+  if(!notifs.length){list.innerHTML='<p style="padding:var(--s4);font-size:var(--f-sm);color:var(--muted)">لا إشعارات بعد.</p>';return;}
+  notifs.forEach(n=>{
+    const btn=document.createElement('button');btn.type='button';btn.className='notif-item'+(n.read?'':' unread');
+    const b=document.createElement('b');b.textContent=n.title;btn.appendChild(b);
+    if(n.body){const p=document.createElement('p');p.textContent=n.body;btn.appendChild(p);}
+    const time=document.createElement('time');time.textContent=fmtWhen(n.t);btn.appendChild(time);
+    btn.onclick=()=>notifClick(n);
+    list.appendChild(btn);
+  });
+}
+async function notifClick(n){
+  if(!n.read)await api('notifications.php',{action:'mark_read',id:n.id});
+  closeNotifPanel();pollNotifDot();
+  if(n.link&&n.link.indexOf('/dashboard')===0){go('dashboard');setTimeout(()=>dashTab('tickets',document.querySelector('[data-perm="tickets.view"]')),200);}
+}
+async function markAllNotifsRead(){
+  await api('notifications.php',{action:'mark_all_read'});
+  loadNotifList();pollNotifDot();
 }
 
 /* ================= نموذج التواصل ================= */
@@ -2984,13 +3290,20 @@ function setLang(l){
 const ROLE_PERMS={
   guest:{},
   user:{},
-  reviewer:{'tickets.view':1,'tickets.close':1},
-  mod:{'users.view':1,'users.invite':1,'messages.view':1,'tickets.view':1,'tickets.close':1,'experience.view':1},
+  reviewer:{},
+  mod:{'users.view':1,'users.invite':1,'messages.view':1,'experience.view':1},
   admin:{'users.view':1,'users.manage':1,'users.invite':1,'users.export':1,'messages.view':1,
-         'tickets.view':1,'tickets.close':1,'audit.view':1,'content.manage':1,'experience.view':1}
+         'audit.view':1,'content.manage':1,'experience.view':1}
 };
 function curRole(){return USER?(USER.role||'user'):'guest';}
-function can(p){const r=ROLE_PERMS[curRole()]||{};return !!r[p];}
+/* تذاكر الدعم مستقلة تماماً عن دور المنصة — تُحكَم بـsupport_level وحده،
+   حتى يقدر أي حساب (مراجع محتوى مثلاً) يصير معالج تذاكر دون منحه صلاحيات
+   إدارية. هذا يطابق نفس الفصل في الخادم (requireAgent في tickets.php). */
+function isAgent(){return !!(USER&&USER.support_level&&USER.support_level!=='none');}
+function can(p){
+  if(p==='tickets.view'||p==='tickets.manage')return isAgent();
+  const r=ROLE_PERMS[curRole()]||{};return !!r[p];
+}
 function applyRoleUI(){document.querySelectorAll('[data-perm]').forEach(el=>{el.hidden=!can(el.dataset.perm);});}
 
 /* ================= سجل العمليات ================= */
@@ -3467,6 +3780,7 @@ if(_invTok){
 }
 });
 document.addEventListener('click',e=>{const m=document.getElementById('userMenu');if(m&&m.classList.contains('open')&&!e.target.closest('.nav-user'))closeUserMenu();});
+document.addEventListener('click',e=>{const p=document.getElementById('notifPanel');if(p&&p.classList.contains('open')&&!e.target.closest('.notif-wrap'))closeNotifPanel();});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',applyA11y);else applyA11y();
 </script>
 

@@ -182,6 +182,15 @@ function migrateTickets(): void {
        'exec'). */
     db()->exec("UPDATE users SET support_level='lead' WHERE role='admin' AND support_level='none'");
 
+    /* ٨) صيانة تذاكر الدعم الدورية (api/cron-tickets.php): عمودان لتتبّع ما
+       أُرسل فعلاً من تنبيهات، حتى لا يكرّر كل تشغيل تالٍ نفس التنبيه ولا
+       يُعيد إغلاق ما أُغلق أصلاً — بنفس فكرة كل الهجرات أعلاه. */
+    if (!colExists('support_tickets', 'sla_warned_at')) {
+        db()->exec("ALTER TABLE support_tickets
+            ADD COLUMN sla_warned_at DATETIME NULL,
+            ADD COLUMN waiting_reminder_count TINYINT NOT NULL DEFAULT 0");
+    }
+
     migrateMessagesToTickets();
     ensureNotifications();
 }
@@ -829,5 +838,8 @@ function publicUser(array $u): array {
         'name_en' => $u['name_en'] ?? '', 'dob' => $u['dob'] ?? '',
         'avatar' => $u['avatar'] ?? '', 'city' => $u['city'] ?? '', 'age_range' => $u['age_range'] ?? '',
         'disability' => $u['disability'] ?? '', 'interests' => $u['interests'] ?? '', 'bio' => $u['bio'] ?? '',
+        /* مستقل عن role تماماً — الواجهة تستخدمه لإظهار تبويب تذاكر الدعم
+           لأي حساب مُنح صلاحية معالجة، بصرف النظر عن دوره في المنصة. */
+        'support_level' => $u['support_level'] ?? 'none',
     ];
 }
