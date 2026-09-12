@@ -1,0 +1,89 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\User;
+use Database\Seeders\RoleSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class DashboardRoleAccessTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed(RoleSeeder::class);
+    }
+
+    public function test_guest_is_redirected_to_login(): void
+    {
+        $this->get('/dashboard')->assertRedirect('/login');
+    }
+
+    public function test_self_registration_is_disabled(): void
+    {
+        $this->get('/register')->assertNotFound();
+        $this->post('/register', [])->assertNotFound();
+    }
+
+    public function test_root_redirects_guest_to_login_and_user_to_dashboard(): void
+    {
+        $this->get('/')->assertRedirect('/login');
+
+        $user = User::factory()->create()->assignRole('client');
+        $this->actingAs($user)->get('/')->assertRedirect('/dashboard');
+    }
+
+    public function test_executive_sees_all_seven_of_their_own_tabs(): void
+    {
+        $user = User::factory()->create()->assignRole('executive');
+
+        $response = $this->actingAs($user)->get('/dashboard');
+
+        $response->assertOk();
+        $response->assertSee('المدير التنفيذي');
+        foreach (config('roles.executive.tabs') as $label) {
+            $response->assertSee($label);
+        }
+    }
+
+    public function test_each_role_only_sees_its_own_tabs_not_another_roles(): void
+    {
+        $client = User::factory()->create()->assignRole('client');
+
+        $response = $this->actingAs($client)->get('/dashboard');
+
+        $response->assertOk();
+        foreach (config('roles.client.tabs') as $label) {
+            $response->assertSee($label);
+        }
+        // تبويبات مالية/تنفيذية حصرية لأدوار أخرى يجب ألا تظهر إطلاقاً لعميل
+        $response->assertDontSee('الاعتمادات المالية');
+        $response->assertDontSee('اعتماد المشاريع');
+        $response->assertDontSee('طلبات التوظيف');
+    }
+
+    public function test_user_with_no_role_sees_safe_message_not_a_default_roles_tabs(): void
+    {
+        $user = User::factory()->create(); // بلا أي دور مُسند
+
+        $response = $this->actingAs($user)->get('/dashboard');
+
+        $response->assertOk();
+        $response->assertSee('لا يوجد دور مُسنَد لحسابك بعد');
+        // يجب ألا يُمنح أي تبويب من أي دور بالخطأ
+        $response->assertDontSee('اعتماد المشاريع');
+        $response->assertDontSee('فواتيري');
+    }
+
+    public function test_all_seven_roles_from_the_spec_exist_and_are_seeded(): void
+    {
+        $expected = ['executive', 'pm', 'finance', 'sysadmin', 'medical', 'team_member', 'client'];
+
+        foreach ($expected as $role) {
+            $this->assertDatabaseHas('roles', ['name' => $role]);
+        }
+    }
+}
