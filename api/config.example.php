@@ -49,17 +49,34 @@ define('BETA_TRIAL_HOURS',    48);     // مدة التجربة الموسّعة
  * بانتحال عنوانه وتجاوز كل الحدود أعلاه. */
 define('TRUST_PROXY', false);
 
-/* ---------- مزوّد الذكاء الاصطناعي ---------- */
-define('AI_PROVIDER', 'gemini');       // 'gemini' أو 'openai' — والآخر يُستخدم كبديل تلقائي
+/* ---------- مزوّد الذكاء الاصطناعي ----------
+ * التبديل بين المزوّدين الأربعة إعداد هنا فقط، بلا لمس أي كود. المزوّد
+ * النشط دائماً له بديل تلقائي فوري عند الفشل — gemini للاثنين الجديدين
+ * لأنه الوحيد المجاني، والقديمين (gemini/openai) يبقيان بديلي بعضهما
+ * كما كانا قبل إضافة claude وkimi. */
+define('AI_PROVIDER', 'gemini');       // 'gemini' | 'openai' | 'claude' | 'kimi'
 
 // Gemini — المفتاح من https://aistudio.google.com/apikey (يبدأ عادة بـ AIza)
 define('GEMINI_KEY',   '');
 define('GEMINI_MODEL', 'gemini-3.5-flash-lite');    // Flash-Lite: أسرع وحصته المجانية أكبر بكثير من Flash (التي تقف عند 20 طلباً يومياً)
 define('GEMINI_FALLBACKS', 'gemini-3.1-flash-lite,gemini-flash-lite-latest,gemini-3.6-flash');   // بدائل مرتبة، لكل نموذج حصة مستقلة
 
-// OpenAI — اختياري، يُستخدم عند فشل Gemini
+// OpenAI — اختياري، يُستخدم عند فشل Gemini (أو العكس إن AI_PROVIDER='openai')
 define('OPENAI_KEY',   '');
 define('OPENAI_MODEL', 'gpt-4o-mini');
+
+// Claude (Anthropic) — اختياري، جودة عالية للسياقات الحساسة. المفتاح من
+// https://console.anthropic.com — راجع أسعار النماذج قبل التفعيل، فهو
+// مزوّد مدفوع بلا فئة مجانية دائمة كـGemini.
+define('CLAUDE_KEY',   '');
+define('CLAUDE_MODEL', 'claude-sonnet-5');
+
+// Kimi (Moonshot AI) — اختياري، واجهة متوافقة مع OpenAI. المفتاح من
+// https://platform.moonshot.ai — راجع اسم النموذج الحالي في وثائق Moonshot
+// قبل التفعيل فهو يتغيّر مع إصداراتهم.
+define('KIMI_KEY',      '');
+define('KIMI_MODEL',    'kimi-k2-turbo-preview');
+define('KIMI_BASE_URL', 'https://api.moonshot.ai/v1');
 
 /* ---------- البريد ----------
  * يعتمد على دالة mail() في الاستضافة. اجعل MAIL_FROM على نطاق الموقع نفسه

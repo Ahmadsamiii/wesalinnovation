@@ -14,6 +14,11 @@ foreach ([
     'GEMINI_FALLBACKS'       => '',
     'OPENAI_KEY'             => '',
     'OPENAI_MODEL'           => 'gpt-4o-mini',
+    'CLAUDE_KEY'             => '',
+    'CLAUDE_MODEL'           => 'claude-sonnet-5',
+    'KIMI_KEY'               => '',
+    'KIMI_MODEL'             => 'kimi-k2-turbo-preview',
+    'KIMI_BASE_URL'          => 'https://api.moonshot.ai/v1',
     'INVITE_DAILY_LIMIT'     => 100,
     'BETA_TRIAL_HOURS'       => 48,
 ] as $k => $v) { if (!defined($k)) define($k, $v); }
