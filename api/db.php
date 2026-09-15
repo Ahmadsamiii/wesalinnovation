@@ -492,6 +492,21 @@ function ensureSchema(): void {
                 ADD INDEX ix_campaign (campaign_name)");
         }
 
+        /* مقاطع قاعدة المعرفة لنظام RAG — مصادر رسمية مُقطَّعة مع متجه تضمينها.
+           embedding مخزَّن كنص JSON لا عمود VECTOR: المطابقة تُحسب في PHP وقت
+           السؤال (مسح خطي)، وهذا كافٍ تماماً لحجم مئات لا ملايين المقاطع —
+           لا داعي لخدمة قاعدة بيانات متجهية منفصلة بهذا الحجم. */
+        db()->exec("CREATE TABLE IF NOT EXISTS kb_chunks (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            source_url VARCHAR(500) NOT NULL,
+            source_title VARCHAR(300) NULL,
+            chunk_index INT NOT NULL DEFAULT 0,
+            chunk_text TEXT NOT NULL,
+            embedding LONGTEXT NOT NULL,
+            created_at DATETIME NOT NULL,
+            INDEX (source_url)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
         ensureRateTable();
     } catch (Throwable $e) {
         /* الترقية لا توقف الطلب، لكن صمتها التام كان يخفي هجرة نصف مكتملة
