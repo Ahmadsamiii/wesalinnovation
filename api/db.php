@@ -195,6 +195,230 @@ function migrateTickets(): void {
     ensureNotifications();
 }
 
+/* ---------- محرّك الاستبيانات ----------
+   يحل محل الاستبانة الواحدة الثابتة (invitations وsurvey_responses).
+   الجداول القديمة تبقى بلا حذف؛ بياناتها تُنسخ مرة واحدة فقط عند إنشاء
+   الجداول الجديدة، لأن كل دعوة أو رد جديد بعد تلك اللحظة يُكتب في الجداول
+   الجديدة مباشرة ولا يمر بالقديمة أبداً — فلا حاجة لترحيل متكرر كالتذاكر. */
+function migrateSurveys(): void {
+    db()->exec("CREATE TABLE IF NOT EXISTS surveys (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(160) NOT NULL,
+        description VARCHAR(500) NULL,
+        thank_you_message VARCHAR(500) NULL,
+        status ENUM('draft','published','archived') NOT NULL DEFAULT 'draft',
+        public_token CHAR(40) NULL,
+        public_link_enabled TINYINT(1) NOT NULL DEFAULT 0,
+        grants_trial TINYINT(1) NOT NULL DEFAULT 0,
+        created_by INT NULL,
+        created_at DATETIME NOT NULL,
+        updated_at DATETIME NOT NULL,
+        published_at DATETIME NULL,
+        UNIQUE KEY uq_survey_public_token (public_token),
+        KEY ix_status (status)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+    db()->exec("CREATE TABLE IF NOT EXISTS survey_questions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        survey_id INT NOT NULL,
+        position INT NOT NULL DEFAULT 0,
+        type ENUM('single_choice','multi_choice','scale','short_text','long_text') NOT NULL,
+        question_text VARCHAR(500) NOT NULL,
+        help_text VARCHAR(300) NULL,
+        placeholder VARCHAR(200) NULL,
+        is_required TINYINT(1) NOT NULL DEFAULT 0,
+        scale_min TINYINT NULL,
+        scale_max TINYINT NULL,
+        scale_min_label VARCHAR(40) NULL,
+        scale_max_label VARCHAR(40) NULL,
+        max_length SMALLINT NULL,
+        created_at DATETIME NOT NULL,
+        KEY ix_survey (survey_id, position)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+    db()->exec("CREATE TABLE IF NOT EXISTS survey_question_options (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        question_id INT NOT NULL,
+        position INT NOT NULL DEFAULT 0,
+        option_text VARCHAR(200) NOT NULL,
+        option_value VARCHAR(60) NOT NULL,
+        has_followup TINYINT(1) NOT NULL DEFAULT 0,
+        followup_label VARCHAR(200) NULL,
+        followup_max SMALLINT NULL DEFAULT 500,
+        KEY ix_question (question_id, position)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+    db()->exec("CREATE TABLE IF NOT EXISTS survey_invitations (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        survey_id INT NOT NULL,
+        email VARCHAR(120) NOT NULL,
+        token CHAR(40) NOT NULL,
+        campaign_name VARCHAR(80) NOT NULL DEFAULT '',
+        status ENUM('sent','opened','completed') NOT NULL DEFAULT 'sent',
+        sent_at DATETIME NOT NULL,
+        opened_at DATETIME NULL,
+        trial_started_at DATETIME NULL,
+        completed_at DATETIME NULL,
+        created_by INT NULL,
+        UNIQUE KEY uq_invitation_token (token),
+        KEY ix_survey (survey_id), KEY ix_email (email), KEY ix_campaign (campaign_name), KEY ix_status (status)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+    db()->exec("CREATE TABLE IF NOT EXISTS survey_submissions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        survey_id INT NOT NULL,
+        invitation_id INT NULL,
+        campaign_name VARCHAR(80) NULL,
+        submitted_at DATETIME NOT NULL,
+        updated_at DATETIME NOT NULL,
+        UNIQUE KEY uq_submission_invitation (invitation_id),
+        KEY ix_survey (survey_id), KEY ix_campaign (campaign_name)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+    db()->exec("CREATE TABLE IF NOT EXISTS survey_answers (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        submission_id INT NOT NULL,
+        question_id INT NOT NULL,
+        answer_text VARCHAR(1000) NULL,
+        option_id INT NULL,
+        number_value TINYINT NULL,
+        UNIQUE KEY uq_answer (submission_id, question_id),
+        KEY ix_question (question_id), KEY ix_option (option_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+    db()->exec("CREATE TABLE IF NOT EXISTS survey_answer_options (
+        answer_id INT NOT NULL,
+        option_id INT NOT NULL,
+        PRIMARY KEY (answer_id, option_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+    if ((int)(db()->query('SELECT COUNT(*) c FROM surveys')->fetch()['c'] ?? 0) === 0) {
+        seedPlatformSurveyAndMigrateLegacyData();
+    }
+}
+
+/**
+ * يبذر استبيان «تجربة المنصة» الافتراضي بأسئلته العشرة (نفس نص وترتيب
+ * STEPS القديمة في survey.html حرفياً)، ثم ينسخ إليه كل دعوة ورد سابقين من
+ * invitations وsurvey_responses — فلا يفقد أي بيانات جمعتها النسخة القديمة.
+ * يُستدعى مرة واحدة فقط (بشرط جدول surveys فارغاً)، وأي عطل فيه لا يوقف
+ * الطلب لأن ensureSchema() كلها داخل try/catch عند الاستدعاء.
+ */
+function seedPlatformSurveyAndMigrateLegacyData(): void {
+    $now = date('Y-m-d H:i:s');
+
+    db()->prepare("INSERT INTO surveys
+        (title, description, thank_you_message, status, public_token, public_link_enabled,
+         grants_trial, created_at, updated_at, published_at)
+        VALUES (?,?,?,'published',?,1,1,?,?,?)")
+        ->execute(['تجربة المنصة',
+            'استبانة قصيرة عن تجربتك مع وصال — عشرة أسئلة، أقل من دقيقة.',
+            'وصلتنا إجاباتك — شكراً لك. رأيك يدخل مباشرة في تطوير وصال.',
+            bin2hex(random_bytes(20)), $now, $now, $now]);
+    $surveyId = (int)db()->lastInsertId();
+
+    $qIns = db()->prepare("INSERT INTO survey_questions
+        (survey_id, position, type, question_text, help_text, placeholder, is_required,
+         scale_min, scale_max, scale_min_label, scale_max_label, max_length, created_at)
+        VALUES (?,?,?,?,?,?,0,?,?,?,?,?,?)");
+    $oIns = db()->prepare("INSERT INTO survey_question_options
+        (question_id, position, option_text, option_value, has_followup, followup_label, followup_max)
+        VALUES (?,?,?,?,?,?,?)");
+
+    /** يضيف سؤال اختيار (فردي) بخياراته، ويعيد [question_id, [قيمة => option_id]] */
+    $addChoice = function (int $pos, string $q, string $hint, array $opts, ?array $follow = null) use ($qIns, $oIns, $surveyId, $now): array {
+        $qIns->execute([$surveyId, $pos, 'single_choice', $q, $hint ?: null, null, null, null, null, null, $now]);
+        $qid = (int)db()->lastInsertId();
+        $byValue = [];
+        foreach ($opts as $i => [$text, $value]) {
+            $hasFollow = $follow && $follow['when'] === $value;
+            $oIns->execute([$qid, $i, $text, $value, $hasFollow ? 1 : 0,
+                $hasFollow ? $follow['label'] : null, $hasFollow ? $follow['max'] : null]);
+            $byValue[$value] = (int)db()->lastInsertId();
+        }
+        return [$qid, $byValue];
+    };
+    /** يضيف سؤال مقياس، ويعيد question_id */
+    $addScale = function (int $pos, string $q, string $hint, int $min, int $max, string $lowLbl, string $highLbl) use ($qIns, $surveyId, $now): int {
+        $qIns->execute([$surveyId, $pos, 'scale', $q, $hint ?: null, null, $min, $max, $lowLbl, $highLbl, null, $now]);
+        return (int)db()->lastInsertId();
+    };
+    /** يضيف سؤال نص طويل، ويعيد question_id */
+    $addLongText = function (int $pos, string $q, string $hint, string $placeholder, int $max) use ($qIns, $surveyId, $now): int {
+        $qIns->execute([$surveyId, $pos, 'long_text', $q, $hint ?: null, $placeholder ?: null, null, null, null, null, $max, $now]);
+        return (int)db()->lastInsertId();
+    };
+
+    [$qNeed, $optNeed] = $addChoice(0, 'وش أقرب وصف لك؟', 'يساعدنا نعرف لمن نصمّم — وتقدر تتخطى السؤال.', [
+        ['أعيش بإعاقة بصرية', 'بصرية'], ['أعيش بإعاقة سمعية', 'سمعية'],
+        ['أعيش بإعاقة حركية', 'حركية'], ['أعيش بإعاقة ذهنية أو صعوبات تعلّم', 'ذهنية أو صعوبات تعلم'],
+        ['ما عندي إعاقة — مهتم أو مرافق', 'بلا إعاقة'], ['أفضّل ما أحدد', 'أفضّل عدم التحديد'],
+    ]);
+    $qEase = $addScale(1, 'قد إيش كان استخدام وصال سهلاً عليك؟', 'من ١ (صعب جداً) إلى ٥ (سهل جداً).', 1, 5, 'صعب جداً', 'سهل جداً');
+    [$qDiff, $optDiff] = $addChoice(2, 'واجهتك أي صعوبة وأنت تستخدم الموقع؟', 'في القراءة أو التنقل أو فهم الإجابات — أي شيء.', [
+        ['نعم، واجهتني صعوبة', '1'], ['لا، كل شيء كان واضحاً', '0'],
+    ], ['when' => '1', 'label' => 'احكِ لنا وش صار — حتى لو بسطر واحد', 'max' => 500]);
+    $qTrust = $addScale(3, 'قد إيش تثق بإجابات وصال والمصادر اللي يذكرها؟', 'من ١ (ما أثق) إلى ٥ (أثق تماماً).', 1, 5, 'ما أثق', 'أثق تماماً');
+    $qHelped = $addScale(4, 'قد إيش ساعدك وصال توصل لمعلومة أو خدمة تحتاجها؟', 'من ١ (ما ساعدني) إلى ٥ (ساعدني كثير).', 1, 5, 'ما ساعدني', 'ساعدني كثير');
+    [$qPmf, $optPmf] = $addChoice(5, 'لو اختفى وصال بكرة، وش راح يكون شعورك؟', 'إجابتك هنا أهم مؤشر نقيس به قيمة وصال.', [
+        ['بنزعج جداً', 'very_disappointed'], ['بنزعج شوي', 'somewhat_disappointed'], ['عادي، ما بنزعج', 'not_disappointed'],
+    ]);
+    $qNps = $addScale(6, 'كم تنصح شخصاً مثلك يجرّب وصال؟', 'من صفر (ما أنصح) إلى عشرة (أنصح بقوة).', 0, 10, 'ما أنصح', 'أنصح بقوة');
+    [$qReturn, $optReturn] = $addChoice(7, 'بترجع تستخدم وصال مرة ثانية؟', '', [
+        ['نعم', 'yes'], ['يمكن', 'maybe'], ['لا', 'no'],
+    ]);
+    $qMissing = $addLongText(8, 'دوّرت على خدمة أو معلومة وما لقيتها؟', 'اكتبها لنا — هذا اللي يحدّد وش نضيف بعدين.', 'مثلاً: معلومات عن التوظيف، أجهزة مساعدة، دعم مالي…', 500);
+    $qFeedback = $addLongText(9, 'أي شيء ثاني ودّك توصله لنا؟', 'اقتراح أو ملاحظة أو حتى كلمة — كلها توصل للفريق.', 'اكتب هنا…', 1000);
+
+    /* ---------- ترحيل الدعوات القديمة ---------- */
+    $invMap = [];   // معرّف الدعوة القديم ← معرّف survey_invitations الجديد
+    $siIns = db()->prepare("INSERT INTO survey_invitations
+        (survey_id, email, token, campaign_name, status, sent_at, opened_at, trial_started_at, created_by)
+        VALUES (?,?,?,?,?,?,?,?,?)");
+    foreach (db()->query('SELECT * FROM invitations')->fetchAll() as $old) {
+        $status = $old['status'] === 'completed_survey' ? 'completed'
+                : ($old['status'] === 'sent' ? 'sent' : 'opened');   // clicked وtried كلاهما «فُتحت» في القمع الجديد
+        $siIns->execute([$surveyId, $old['email'], $old['token'], $old['campaign_name'], $status,
+            $old['sent_at'], $old['clicked_at'], $old['tried_at'], $old['created_by']]);
+        $invMap[(int)$old['id']] = (int)db()->lastInsertId();
+    }
+
+    /* ---------- ترحيل الردود القديمة ---------- */
+    $ssIns = db()->prepare("INSERT INTO survey_submissions
+        (survey_id, invitation_id, campaign_name, submitted_at, updated_at) VALUES (?,?,?,?,?)");
+    $saIns = db()->prepare("INSERT INTO survey_answers
+        (submission_id, question_id, answer_text, option_id, number_value) VALUES (?,?,?,?,?)");
+    $completeInv = db()->prepare("UPDATE survey_invitations SET completed_at=? WHERE id=? AND completed_at IS NULL");
+
+    foreach (db()->query('SELECT * FROM survey_responses')->fetchAll() as $old) {
+        $newInvId = $old['invitation_id'] !== null ? ($invMap[(int)$old['invitation_id']] ?? null) : null;
+        $ssIns->execute([$surveyId, $newInvId, $old['campaign_name'], $old['created_at'], $old['created_at']]);
+        $subId = (int)db()->lastInsertId();
+
+        $ans = function (int $qid, ?string $text, ?int $optId, ?int $num) use ($saIns, $subId): void {
+            $saIns->execute([$subId, $qid, $text, $optId, $num]);
+        };
+        if ($old['accessibility_need'] !== null && isset($optNeed[$old['accessibility_need']]))
+            $ans($qNeed, null, $optNeed[$old['accessibility_need']], null);
+        if ($old['ease_of_use'] !== null) $ans($qEase, null, null, (int)$old['ease_of_use']);
+        if ($old['access_difficulty'] !== null) {
+            $val = (string)(int)$old['access_difficulty'];
+            $ans($qDiff, $old['access_details'], $optDiff[$val] ?? null, null);
+        }
+        if ($old['trust_in_sources'] !== null) $ans($qTrust, null, null, (int)$old['trust_in_sources']);
+        if ($old['helped_access_service'] !== null) $ans($qHelped, null, null, (int)$old['helped_access_service']);
+        if ($old['pmf_reaction'] !== null && isset($optPmf[$old['pmf_reaction']]))
+            $ans($qPmf, null, $optPmf[$old['pmf_reaction']], null);
+        if ($old['nps_score'] !== null) $ans($qNps, null, null, (int)$old['nps_score']);
+        if ($old['return_intent'] !== null && isset($optReturn[$old['return_intent']]))
+            $ans($qReturn, null, $optReturn[$old['return_intent']], null);
+        if ($old['missing_service'] !== null) $ans($qMissing, $old['missing_service'], null, null);
+        if ($old['other_feedback'] !== null) $ans($qFeedback, $old['other_feedback'], null, null);
+
+        if ($newInvId !== null) $completeInv->execute([$old['created_at'], $newInvId]);
+    }
+}
+
 /* ---------- الإشعارات ----------
    بنية عامة لأي إجراء يخصّ أي مستخدم — التذاكر أول من يستخدمها، وأي ميزة
    لاحقة (رسائل، دعوات، مراجعات) تستدعي notify() نفسها بلا جدول جديد. */
@@ -441,6 +665,7 @@ function ensureSchema(): void {
                 ADD INDEX ix_campaign (campaign_name)");
         }
 
+        migrateSurveys();
         ensureRateTable();
     } catch (Throwable $e) {
         /* الترقية لا توقف الطلب، لكن صمتها التام كان يخفي هجرة نصف مكتملة
@@ -650,30 +875,35 @@ function betaTrialActive(): bool {
     return !empty($_SESSION['beta_trial_until']) && (int)$_SESSION['beta_trial_until'] > time();
 }
 
-/** أول سؤال فعلي من المدعو: تتقدم دعوته إلى «جرّب» — مرة واحدة لكل جلسة */
+/** أول سؤال فعلي من المدعو: يُسجَّل وقت بدء تجربته — مرة واحدة لكل جلسة.
+ *  مستقل عن status (تقدّم إكمال الاستبيان)؛ يُقرأ فقط للاستبيان الذي
+ *  grants_trial=1، لكن التسجيل نفسه غير مشروط بذلك فلا حاجة لفحص إضافي. */
 function markInvitationTried(): void {
     if (empty($_SESSION['invitation_id']) || !empty($_SESSION['invitation_tried'])) return;
     $_SESSION['invitation_tried'] = 1;
     try {
-        db()->prepare("UPDATE invitations SET status='tried', tried_at=NOW()
-                       WHERE id=? AND status IN ('sent','clicked')")
+        db()->prepare('UPDATE survey_invitations SET trial_started_at=NOW()
+                       WHERE id=? AND trial_started_at IS NULL')
             ->execute([(int)$_SESSION['invitation_id']]);
     } catch (Throwable $e) { /* التتبع لا يوقف الرد */ }
 }
 
-/** قالب بريد دعوة النسخة التجريبية — تجربة موسّعة بلا حساب ثم استبانة قصيرة */
-function betaInviteEmailHtml(string $inviteLink, string $surveyLink): string {
-    $hours = (int)BETA_TRIAL_HOURS;
+/** قالب بريد دعوة الاستبيان — عام لأي استبيان، وتُضاف فقرة التجربة الموسّعة
+ *  فقط للاستبيان الذي يمنحها (grants_trial=1) بنفس نص الدعوة الأصلي. */
+function surveyInviteEmailHtml(string $surveyTitle, string $link, bool $grantsTrial): string {
+    $title = htmlspecialchars($surveyTitle, ENT_QUOTES, 'UTF-8');
+    $lead = $grantsTrial
+        ? 'تمت دعوتك لتجربة <b>وصال</b> — أول منصة ذكاء اصطناعي سعودية مصممة لخدمة الأشخاص ذوي الإعاقة.'
+          . '<br>الرابط يفتح لك تجربة موسّعة لمدة <b>' . (int)BETA_TRIAL_HOURS . ' ساعة</b> بلا حاجة لإنشاء حساب: اسأل المساعد عن حقوقك والخدمات والتقنيات المساعدة بأي صيغة تريحك، وبعدها ودّنا رأيك في استبانة «' . $title . '» — أقل من دقيقة.'
+        : 'ندعوك تشاركنا رأيك في استبانة «<b>' . $title . '</b>» — بضع دقائق من وقتك تساعدنا نطوّر وصال.';
+    $btnTxt = $grantsTrial ? 'ابدأ التجربة الآن' : 'فتح الاستبانة';
     return '<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;background:#f4f2fb;padding:32px 16px">'
         . '<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #e4ddf0">'
         . '<div style="background:linear-gradient(135deg,#814fc3,#282692);padding:26px;text-align:center;color:#fff;font-size:22px;font-weight:bold">وصــال</div>'
         . '<div style="padding:28px 26px;color:#3d3558;line-height:1.9;font-size:15px">'
-        . 'السلام عليكم،<br>تمت دعوتك لتجربة <b>وصال</b> — أول منصة ذكاء اصطناعي سعودية مصممة لخدمة الأشخاص ذوي الإعاقة.'
-        . '<br>الرابط يفتح لك تجربة موسّعة لمدة <b>' . $hours . ' ساعة</b> بلا حاجة لإنشاء حساب: اسأل المساعد عن حقوقك والخدمات والتقنيات المساعدة بأي صيغة تريحك.'
-        . '<div style="text-align:center;margin:26px 0"><a href="' . $inviteLink . '" style="background:linear-gradient(135deg,#814fc3,#5039a8);color:#fff;text-decoration:none;padding:14px 34px;border-radius:99px;font-weight:bold;display:inline-block">ابدأ التجربة الآن</a></div>'
-        . '<div style="background:#f4f2fb;border-radius:12px;padding:14px 16px;font-size:13px;color:#5a4f78">'
-        . 'بعد ما تجرّب، رأيك يهمنا: <a href="' . $surveyLink . '" style="color:#814fc3;font-weight:bold">استبانة قصيرة</a> من عشرة أسئلة ما تاخذ أكثر من دقيقة — وهي اللي تحدد شكل وصال القادم.</div>'
-        . '<div style="font-size:12px;color:#8a7fa3;margin-top:14px">لو الزر ما اشتغل انسخ الرابط:<br><span dir="ltr" style="word-break:break-all">' . $inviteLink . '</span></div>'
+        . 'السلام عليكم،<br>' . $lead
+        . '<div style="text-align:center;margin:26px 0"><a href="' . $link . '" style="background:linear-gradient(135deg,#814fc3,#5039a8);color:#fff;text-decoration:none;padding:14px 34px;border-radius:99px;font-weight:bold;display:inline-block">' . $btnTxt . '</a></div>'
+        . '<div style="font-size:12px;color:#8a7fa3">لو الزر ما اشتغل انسخ الرابط:<br><span dir="ltr" style="word-break:break-all">' . $link . '</span></div>'
         . '</div></div></div>';
 }
 

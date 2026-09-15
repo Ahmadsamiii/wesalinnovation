@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="استبانة قصيرة عن تجربتك مع وصال — عشرة أسئلة، أقل من دقيقة">
+<meta name="description" content="استبانة قصيرة — أسئلتها تحدّدها منصة وصال، تُعبّى في أقل من دقيقة">
 <meta name="robots" content="noindex">
-<title>استبانة تجربة وصال</title>
+<title>استبانة وصال</title>
 <meta name="theme-color" content="#282692">
 <link rel="apple-touch-icon" href="favicon-192.png">
 <link rel="shortcut icon" href="favicon.ico">
@@ -74,6 +74,8 @@ main{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:v
 .opt-dot{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;position:relative;transition:border-color var(--dur) var(--ease);}
 .opt[aria-checked="true"] .opt-dot{border-color:var(--secondary);}
 .opt[aria-checked="true"] .opt-dot::after{content:'';position:absolute;inset:3px;border-radius:50%;background:var(--secondary);}
+.opt-dot.sq{border-radius:6px;}
+.opt[aria-checked="true"] .opt-dot.sq::after{border-radius:2px;}
 [data-bigtouch="true"] .opt{padding:var(--s5) var(--s5);font-size:1.05rem;}
 
 /* مقياس ١–٥ وصف ٠–١٠ */
@@ -91,6 +93,7 @@ main{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:v
 .q-text{width:100%;font-family:inherit;font-size:var(--f-body);color:var(--ink);background:var(--surface);border:2px solid var(--border);border-radius:var(--r-md);padding:var(--s4);resize:vertical;min-height:104px;transition:border-color var(--dur) var(--ease);}
 .q-text:focus{border-color:var(--secondary);outline:none;}
 .q-text::placeholder{color:var(--muted);}
+input.q-text{min-height:auto;resize:none;}
 .follow{margin-top:var(--s5);}
 .follow label{display:block;font-size:var(--f-sm);font-weight:600;color:var(--ink);margin-bottom:var(--s2);}
 
@@ -116,7 +119,7 @@ main{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:v
 .note{display:flex;gap:var(--s3);align-items:flex-start;margin-top:var(--s5);padding:var(--s3) var(--s4);background:rgba(129,79,195,.07);border:1px solid var(--border);border-radius:var(--r-md);font-size:var(--f-xs);color:var(--muted);line-height:1.8;}
 .note svg{width:16px;height:16px;color:var(--secondary);flex-shrink:0;margin-top:2px;}
 
-/* ===== شاشة الشكر ===== */
+/* ===== شاشة الشكر / عدم التوفر ===== */
 .done{text-align:center;padding:var(--s6) 0;}
 .done-ic{width:72px;height:72px;border-radius:50%;background:var(--g-brand);display:flex;align-items:center;justify-content:center;margin:0 auto var(--s5);}
 .done-ic svg{width:36px;height:36px;color:#fff;}
@@ -146,12 +149,22 @@ footer{text-align:center;font-size:var(--f-xs);color:var(--muted);padding:var(--
 <main id="main">
   <div class="card">
     <div class="card-head">
-      <h1>شاركنا رأيك في وصال</h1>
-      <p>عشرة أسئلة قصيرة — أقل من دقيقة، وكل إجابة تفرق معنا</p>
+      <h1 id="hTitle">استبانة</h1>
+      <p id="hDesc"></p>
     </div>
     <div class="card-body">
 
-      <!-- شاشة البداية: تشرح الرحلة وتوجّه من لم يجرّب بعد -->
+      <!-- الرابط غير صالح أو الاستبيان غير متاح حالياً -->
+      <section id="vUnavailable" hidden>
+        <div class="done">
+          <div class="done-ic" style="background:var(--muted)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+          <h2>هذا الاستبيان غير متاح</h2>
+          <p>الرابط منتهي أو غير صحيح، أو أوقف مُنشئ الاستبيان استقباله للإجابات حالياً.</p>
+          <div class="row"><a class="btn btn-primary" href="/">الرجوع إلى وصال</a></div>
+        </div>
+      </section>
+
+      <!-- شاشة البداية: تشرح الرحلة وتوجّه من لم يجرّب بعد (لاستبيان يمنح تجربة موسّعة فقط) -->
       <section id="vIntro" hidden>
         <div id="introJourney" hidden>
           <p style="color:var(--muted);font-size:var(--f-sm)">رأيك يهمنا بعد ما تعيش التجربة — رحلتك ثلاث خطوات:</p>
@@ -168,7 +181,7 @@ footer{text-align:center;font-size:var(--f-xs);color:var(--muted);padding:var(--
         </div>
         <div class="note">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <span>إجاباتك تُحفظ أولاً بأول، وتقدر ترجع من نفس الرابط وتكمل من حيث وقفت. الإجابات تُستخدم لتطوير وصال فقط، وبلا أي ربط بهويتك الشخصية.</span>
+          <span id="privacyNote">إجاباتك تُحفظ أولاً بأول، وتقدر ترجع من نفس الرابط وتكمل من حيث وقفت. الإجابات تُستخدم لتطوير وصال فقط، وبلا أي ربط بهويتك الشخصية.</span>
         </div>
       </section>
 
@@ -197,11 +210,11 @@ footer{text-align:center;font-size:var(--f-xs);color:var(--muted);padding:var(--
       <section id="vDone" hidden>
         <div class="done">
           <div class="done-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg></div>
-          <h2>وصلتنا إجاباتك — شكراً لك</h2>
-          <p>رأيك يدخل مباشرة في تطوير وصال. ولو تغيّر رأيك أو ودّك تضيف شيئاً، ارجع من نفس الرابط وعدّل إجاباتك في أي وقت.</p>
+          <h2 id="doneTitle">وصلتنا إجاباتك — شكراً لك</h2>
+          <p id="doneMsg">رأيك يدخل مباشرة في تطوير وصال. ولو تغيّر رأيك أو ودّك تضيف شيئاً، ارجع من نفس الرابط وعدّل إجاباتك في أي وقت.</p>
           <div class="row">
             <a class="btn btn-primary" href="/">الرجوع إلى وصال</a>
-            <button class="btn btn-surface" type="button" onclick="startSurvey()">عدّل إجاباتك</button>
+            <button class="btn btn-surface" type="button" id="btnRedo" onclick="startSurvey()">عدّل إجاباتك</button>
           </div>
         </div>
       </section>
@@ -220,11 +233,13 @@ footer{text-align:center;font-size:var(--f-xs);color:var(--muted);padding:var(--
 'use strict';
 
 /* ==========================================================================
- *  استبانة تجربة وصال
+ *  استبانة وصال — عرض مُغذّى بالبيانات
  *
- *  سؤال واحد في كل خطوة، والإجابات تُحفظ محلياً أولاً بأول حتى يكمل
- *  المدعو من حيث وقف لو رجع من نفس الرابط — والخادم يعيد إجاباته
- *  المرسلة سابقاً لو حب يعدّلها.
+ *  الأسئلة تصل من الخادم (api/surveys.php) حسب رمز الدعوة الشخصي (t=) أو
+ *  رمز الرابط العام (s=)؛ لا أسئلة ثابتة في هذا الملف. سؤال واحد في كل
+ *  خطوة، والإجابات تُحفظ محلياً أولاً بأول حتى يكمل المدعو من حيث وقف لو
+ *  رجع من نفس الرابط — والخادم يعيد إجاباته المرسلة سابقاً لو حب يعدّلها
+ *  (لرابط الدعوة الشخصي فقط؛ الرابط العام مجهول الهوية فلا استرجاع له).
  * ========================================================================== */
 
 /* ---------- تفضيلات الوصول — نفس مفاتيح الموقع الرئيسي ---------- */
@@ -243,66 +258,22 @@ const LS = {
 /* أرقام عربية مثل بقية الموقع */
 const ar = n => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
 
-/* ---------- الأسئلة العشرة — بترتيب رحلة المستخدم ---------- */
-const STEPS = [
-  { key: 'accessibility_need', type: 'pick',
-    q: 'وش أقرب وصف لك؟',
-    hint: 'يساعدنا نعرف لمن نصمّم — وتقدر تتخطى السؤال.',
-    opts: [['أعيش بإعاقة بصرية', 'بصرية'], ['أعيش بإعاقة سمعية', 'سمعية'],
-           ['أعيش بإعاقة حركية', 'حركية'], ['أعيش بإعاقة ذهنية أو صعوبات تعلّم', 'ذهنية أو صعوبات تعلم'],
-           ['ما عندي إعاقة — مهتم أو مرافق', 'بلا إعاقة'], ['أفضّل ما أحدد', 'أفضّل عدم التحديد']] },
-  { key: 'ease_of_use', type: 'scale', min: 1, max: 5,
-    q: 'قد إيش كان استخدام وصال سهلاً عليك؟',
-    hint: 'من ١ (صعب جداً) إلى ٥ (سهل جداً).',
-    low: 'صعب جداً', high: 'سهل جداً' },
-  { key: 'access_difficulty', type: 'pick',
-    q: 'واجهتك أي صعوبة وأنت تستخدم الموقع؟',
-    hint: 'في القراءة أو التنقل أو فهم الإجابات — أي شيء.',
-    opts: [['نعم، واجهتني صعوبة', '1'], ['لا، كل شيء كان واضحاً', '0']],
-    follow: { key: 'access_details', when: '1', label: 'احكِ لنا وش صار — حتى لو بسطر واحد', max: 500 } },
-  { key: 'trust_in_sources', type: 'scale', min: 1, max: 5,
-    q: 'قد إيش تثق بإجابات وصال والمصادر اللي يذكرها؟',
-    hint: 'من ١ (ما أثق) إلى ٥ (أثق تماماً).',
-    low: 'ما أثق', high: 'أثق تماماً' },
-  { key: 'helped_access_service', type: 'scale', min: 1, max: 5,
-    q: 'قد إيش ساعدك وصال توصل لمعلومة أو خدمة تحتاجها؟',
-    hint: 'من ١ (ما ساعدني) إلى ٥ (ساعدني كثير).',
-    low: 'ما ساعدني', high: 'ساعدني كثير' },
-  { key: 'pmf_reaction', type: 'pick',
-    q: 'لو اختفى وصال بكرة، وش راح يكون شعورك؟',
-    hint: 'إجابتك هنا أهم مؤشر نقيس به قيمة وصال.',
-    opts: [['بنزعج جداً', 'very_disappointed'], ['بنزعج شوي', 'somewhat_disappointed'],
-           ['عادي، ما بنزعج', 'not_disappointed']] },
-  { key: 'nps_score', type: 'scale', min: 0, max: 10,
-    q: 'كم تنصح شخصاً مثلك يجرّب وصال؟',
-    hint: 'من صفر (ما أنصح) إلى عشرة (أنصح بقوة).',
-    low: 'ما أنصح', high: 'أنصح بقوة' },
-  { key: 'return_intent', type: 'pick',
-    q: 'بترجع تستخدم وصال مرة ثانية؟',
-    hint: '',
-    opts: [['نعم', 'yes'], ['يمكن', 'maybe'], ['لا', 'no']] },
-  { key: 'missing_service', type: 'text', max: 500,
-    q: 'دوّرت على خدمة أو معلومة وما لقيتها؟',
-    hint: 'اكتبها لنا — هذا اللي يحدّد وش نضيف بعدين.',
-    placeholder: 'مثلاً: معلومات عن التوظيف، أجهزة مساعدة، دعم مالي…' },
-  { key: 'other_feedback', type: 'text', max: 1000,
-    q: 'أي شيء ثاني ودّك توصله لنا؟',
-    hint: 'اقتراح أو ملاحظة أو حتى كلمة — كلها توصل للفريق.',
-    placeholder: 'اكتب هنا…' },
-];
-
 /* ---------- الحالة ---------- */
-const qp    = new URLSearchParams(location.search);
-const TOKEN = /^[a-f0-9]{40}$/.test(qp.get('t') || '') ? qp.get('t') : null;
-/* رابط استبيان عام بلا دعوة شخصية: ?c=اسم_الحملة — يُهمَل إن وُجد رمز دعوة */
-const CAMPAIGN = TOKEN ? null : ((qp.get('c') || '').trim().slice(0, 80) || null);
-const DRAFT = 'survey_draft_' + (TOKEN || CAMPAIGN || 'anon');
-let A    = LS.get(DRAFT, {});   // الإجابات — بالمفاتيح نفسها المرسلة للخادم
+const qp     = new URLSearchParams(location.search);
+const TOKEN  = /^[a-f0-9]{40}$/.test(qp.get('t') || '') ? qp.get('t') : null;
+/* رابط عام بلا دعوة شخصية: ?s=رمز_الاستبيان — يُهمَل إن وُجد رمز دعوة */
+const PUBLIC = TOKEN ? null : (/^[a-f0-9]{40}$/.test(qp.get('s') || '') ? qp.get('s') : null);
+/* وسم تحليلي اختياري يُلحَق بالرابط العام (?s=...&c=قناة) — لا يُستخدم للوصول */
+const CAMPAIGN = (!TOKEN && PUBLIC) ? ((qp.get('c') || '').trim().slice(0, 80) || null) : null;
+const DRAFT  = 'survey_draft_' + (TOKEN || PUBLIC || 'anon');
+
+let SURVEY = null, QUESTIONS = [], LINKED = false;
+let A    = LS.get(DRAFT, {});   // الإجابات — مفاتيحها معرّف السؤال (نص، كمفاتيح كائن JS)
 let step = 0;
 const $  = id => document.getElementById(id);
 
 function api(payload) {
-  return fetch('api/experience.php', {
+  return fetch('api/surveys.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -311,16 +282,15 @@ function api(payload) {
 
 /* ---------- التنقل بين الشاشات ---------- */
 function show(view) {
-  ['vIntro', 'vSurvey', 'vDone'].forEach(v => { $(v).hidden = v !== view; });
+  ['vUnavailable', 'vIntro', 'vSurvey', 'vDone'].forEach(v => { $(v).hidden = v !== view; });
 }
 
 /* ---------- شاشة البداية ---------- */
-function paintIntro(state) {
-  const linked  = state && state.linked;
-  const status  = linked ? state.status : null;
-  const triedAI = status === 'tried' || status === 'completed_survey';
+function paintIntro(st) {
+  const status  = LINKED ? st.status : null;
+  const triedAI = !!st.trial_started;
 
-  if (TOKEN && linked && !triedAI) {
+  if (SURVEY.grants_trial && TOKEN && LINKED && !triedAI) {
     /* لسّا ما جرّب المساعد: نوجهه للرحلة أولاً — والرابط يجدّد تجربته */
     $('introJourney').hidden = false;
     $('btnTry').hidden = false;
@@ -328,13 +298,14 @@ function paintIntro(state) {
     $('btnStart').textContent = 'ودّي أجاوب الآن';
     $('btnStart').className = 'btn btn-surface';
     $('introMsg').textContent = '';
-  } else if (status === 'completed_survey') {
+  } else if (status === 'completed') {
     $('introMsg').textContent = 'وصلتنا إجاباتك سابقاً — تقدر تراجعها وتعدّلها في أي وقت.';
     $('btnStart').textContent = 'راجع إجاباتك وعدّلها';
   } else {
-    $('introMsg').textContent = 'جرّبت وصال؟ خبّرنا وش شفت — إجاباتك تروح مباشرة لفريق التطوير.';
+    $('introMsg').textContent = 'رأيك يهمنا — إجاباتك تروح مباشرة لمن أنشأ الاستبيان.';
     $('btnStart').textContent = Object.keys(A).length ? 'كمّل الاستبانة' : 'ابدأ الاستبانة';
   }
+  if (!LINKED) $('privacyNote').textContent = 'إجاباتك لا تُربط بهويتك الشخصية. هذا رابط عام: إرسالك يُسجَّل كرد جديد ولا يمكن الرجوع لتعديله لاحقاً.';
   show('vIntro');
 }
 
@@ -342,91 +313,117 @@ function paintIntro(state) {
 function startSurvey() { step = 0; render(true); show('vSurvey'); }
 
 function render(focusTitle) {
-  const s = STEPS[step], n = STEPS.length;
+  const s = QUESTIONS[step], n = QUESTIONS.length;
   $('pgText').textContent = 'السؤال ' + ar(step + 1) + ' من ' + ar(n);
   $('pgPct').textContent  = ar(Math.round(step / n * 100)) + '٪';
   $('pgFill').style.width = (step / n * 100) + '%';
-  $('qTitle').textContent = s.q;
-  $('qHint').textContent  = s.hint || '';
-  $('qHint').style.display = s.hint ? '' : 'none';
+  $('qTitle').textContent = s.question_text;
+  $('qHint').textContent  = s.help_text || '';
+  $('qHint').style.display = s.help_text ? '' : 'none';
   $('alert').classList.remove('show');
 
   const body = $('qBody');
   body.innerHTML = '';
-  if (s.type === 'pick')  body.appendChild(buildPick(s));
-  if (s.type === 'scale') body.appendChild(buildScale(s));
-  if (s.type === 'text')  body.appendChild(buildText(s));
+  if (s.type === 'single_choice') body.appendChild(buildSingle(s));
+  if (s.type === 'multi_choice')  body.appendChild(buildMulti(s));
+  if (s.type === 'scale')         body.appendChild(buildScale(s));
+  if (s.type === 'short_text' || s.type === 'long_text') body.appendChild(buildText(s));
 
   $('btnPrev').style.visibility = step === 0 ? 'hidden' : 'visible';
   $('btnNext').textContent = step === n - 1 ? 'أرسل إجاباتك' : 'التالي';
-  $('btnSkip').hidden = step === n - 1;
+  $('btnSkip').hidden = step === n - 1 || !!s.is_required;
 
-  $('live').textContent = 'السؤال ' + ar(step + 1) + ' من ' + ar(n) + ': ' + s.q;
+  $('live').textContent = 'السؤال ' + ar(step + 1) + ' من ' + ar(n) + ': ' + s.question_text;
   if (focusTitle !== false) $('qTitle').focus();
 }
 
-/* خيارات نصية — أزرار بدور radio مع تقدم تلقائي بعد الاختيار */
-function buildPick(s) {
+/* اختيار فردي — أزرار بدور radio مع تقدم تلقائي بعد الاختيار، وسؤال متابعة
+   اختياري إن كان للخيار المُختار has_followup */
+function buildSingle(s) {
   const wrap = document.createElement('div');
   const grp  = document.createElement('div');
   grp.className = 'opts';
   grp.setAttribute('role', 'radiogroup');
-  grp.setAttribute('aria-label', s.q);
-  s.opts.forEach(([label, val]) => {
+  grp.setAttribute('aria-label', s.question_text);
+  const cur = A[s.id] || {};
+  s.options.forEach(o => {
     const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'opt';
-    b.setAttribute('role', 'radio');
-    b.setAttribute('aria-checked', String(A[s.key] === val));
+    b.type = 'button'; b.className = 'opt'; b.setAttribute('role', 'radio');
+    b.setAttribute('aria-checked', String(cur.option_id === o.id));
     b.innerHTML = '<span class="opt-dot" aria-hidden="true"></span>';
-    b.appendChild(document.createTextNode(label));
+    b.appendChild(document.createTextNode(o.text));
     b.onclick = () => {
-      A[s.key] = val;
-      if (s.follow && val !== s.follow.when) delete A[s.follow.key];
+      const follow = o.has_followup ? (A[s.id] && A[s.id].followup_text || '') : undefined;
+      A[s.id] = { option_id: o.id };
+      if (follow !== undefined) A[s.id].followup_text = follow;
       LS.set(DRAFT, A);
-      grp.querySelectorAll('.opt').forEach(o => o.setAttribute('aria-checked', String(o === b)));
-      /* سؤال المتابعة يفتح حقلاً بدل ما يتقدم تلقائياً */
-      if (s.follow && val === s.follow.when) { renderFollow(wrap, s); $(s.follow.key)?.focus(); }
+      grp.querySelectorAll('.opt').forEach(el => el.setAttribute('aria-checked', String(el === b)));
+      if (o.has_followup) { renderFollow(wrap, s, o); $('follow_' + s.id)?.focus(); }
       else { wrap.querySelector('.follow')?.remove(); setTimeout(next, 280); }
     };
     grp.appendChild(b);
   });
   wrap.appendChild(grp);
-  if (s.follow && A[s.key] === s.follow.when) renderFollow(wrap, s);
+  const curOpt = s.options.find(o => o.id === cur.option_id);
+  if (curOpt && curOpt.has_followup) renderFollow(wrap, s, curOpt);
   return wrap;
 }
 
-/* حقل المتابعة لسؤال «واجهتك صعوبة؟» */
-function renderFollow(wrap, s) {
+/* حقل متابعة نصي يظهر عند اختيار خيار معيّن */
+function renderFollow(wrap, s, opt) {
   if (wrap.querySelector('.follow')) return;
   const f = document.createElement('div');
   f.className = 'follow';
-  f.innerHTML = '<label for="' + s.follow.key + '">' + s.follow.label + '</label>';
+  f.innerHTML = '<label for="follow_' + s.id + '">' + opt.followup_label + '</label>';
   const t = document.createElement('textarea');
-  t.className = 'q-text'; t.id = s.follow.key; t.maxLength = s.follow.max; t.rows = 3;
-  t.value = A[s.follow.key] || '';
-  t.oninput = () => { A[s.follow.key] = t.value.trim(); LS.set(DRAFT, A); };
+  t.className = 'q-text'; t.id = 'follow_' + s.id; t.maxLength = opt.followup_max || 500; t.rows = 3;
+  t.value = (A[s.id] && A[s.id].followup_text) || '';
+  t.oninput = () => { A[s.id].followup_text = t.value.trim(); LS.set(DRAFT, A); };
   f.appendChild(t);
   wrap.appendChild(f);
 }
 
-/* مقياس رقمي ١–٥ أو ٠–١٠ */
+/* اختيار متعدد — مربعات، بلا تقدم تلقائي لأن أكثر من خيار متوقّع */
+function buildMulti(s) {
+  const grp = document.createElement('div');
+  grp.className = 'opts';
+  grp.setAttribute('role', 'group');
+  grp.setAttribute('aria-label', s.question_text);
+  const cur = (A[s.id] && A[s.id].option_ids) || [];
+  s.options.forEach(o => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'opt'; b.setAttribute('role', 'checkbox');
+    b.setAttribute('aria-checked', String(cur.includes(o.id)));
+    b.innerHTML = '<span class="opt-dot sq" aria-hidden="true"></span>';
+    b.appendChild(document.createTextNode(o.text));
+    b.onclick = () => {
+      const ids = new Set((A[s.id] && A[s.id].option_ids) || []);
+      ids.has(o.id) ? ids.delete(o.id) : ids.add(o.id);
+      A[s.id] = { option_ids: Array.from(ids) };
+      LS.set(DRAFT, A);
+      b.setAttribute('aria-checked', String(ids.has(o.id)));
+    };
+    grp.appendChild(b);
+  });
+  return grp;
+}
+
+/* مقياس رقمي — حدوده وتسمياته من تعريف السؤال */
 function buildScale(s) {
   const wrap = document.createElement('div');
   const grp  = document.createElement('div');
-  grp.className = 'scale' + (s.max > 5 ? ' nps' : '');
+  grp.className = 'scale' + (s.scale_max > 5 ? ' nps' : '');
   grp.setAttribute('role', 'radiogroup');
-  grp.setAttribute('aria-label', s.q);
-  for (let v = s.min; v <= s.max; v++) {
+  grp.setAttribute('aria-label', s.question_text);
+  const cur = A[s.id] && A[s.id].number;
+  for (let v = s.scale_min; v <= s.scale_max; v++) {
     const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'scale-btn';
-    b.textContent = ar(v);
+    b.type = 'button'; b.className = 'scale-btn'; b.textContent = ar(v);
     b.setAttribute('role', 'radio');
-    b.setAttribute('aria-checked', String(A[s.key] === v));
-    b.setAttribute('aria-label', ar(v) + ' من ' + ar(s.max));
+    b.setAttribute('aria-checked', String(cur === v));
+    b.setAttribute('aria-label', ar(v) + ' من ' + ar(s.scale_max));
     b.onclick = () => {
-      A[s.key] = v; LS.set(DRAFT, A);
+      A[s.id] = { number: v }; LS.set(DRAFT, A);
       grp.querySelectorAll('.scale-btn').forEach(o => o.setAttribute('aria-checked', String(o === b)));
       setTimeout(next, 280);
     };
@@ -436,28 +433,28 @@ function buildScale(s) {
   const ends = document.createElement('div');
   ends.className = 'scale-ends';
   /* الشريط direction:ltr فالنهاية اليسرى هي القيمة الصغرى */
-  ends.innerHTML = '<span>' + s.high + '</span><span>' + s.low + '</span>';
+  ends.innerHTML = '<span>' + (s.scale_max_label || '') + '</span><span>' + (s.scale_min_label || '') + '</span>';
   wrap.appendChild(ends);
   return wrap;
 }
 
-/* سؤال نصي حر */
+/* سؤال نصي حر — سطر واحد لنص قصير، ومساحة أكبر لنص طويل */
 function buildText(s) {
-  const t = document.createElement('textarea');
-  t.className = 'q-text'; t.maxLength = s.max; t.rows = 4;
+  const t = document.createElement(s.type === 'short_text' ? 'input' : 'textarea');
+  t.className = 'q-text';
+  if (s.type === 'short_text') t.type = 'text'; else t.rows = 4;
+  t.maxLength = s.max_length || 1000;
   t.placeholder = s.placeholder || '';
-  t.setAttribute('aria-label', s.q);
-  t.value = A[s.key] || '';
-  t.oninput = () => { const v = t.value.trim(); v ? A[s.key] = v : delete A[s.key]; LS.set(DRAFT, A); };
+  t.setAttribute('aria-label', s.question_text);
+  t.value = (A[s.id] && A[s.id].text) || '';
+  t.oninput = () => { const v = t.value.trim(); v ? A[s.id] = { text: v } : delete A[s.id]; LS.set(DRAFT, A); };
   return t;
 }
 
 /* ---------- التنقل ---------- */
-function next() { step < STEPS.length - 1 ? (step++, render()) : submit(); }
+function next() { step < QUESTIONS.length - 1 ? (step++, render()) : submit(); }
 function skip() {
-  const s = STEPS[step];
-  delete A[s.key];
-  if (s.follow) delete A[s.follow.key];
+  delete A[QUESTIONS[step].id];
   LS.set(DRAFT, A);
   next();
 }
@@ -465,21 +462,24 @@ function prev() { if (step > 0) { step--; render(); } }
 
 /* ---------- الإرسال ---------- */
 function submit() {
-  if (!Object.keys(A).length) {
+  const answers = QUESTIONS
+    .map(s => Object.assign({ question_id: s.id }, A[s.id] || {}))
+    .filter(a => Object.keys(a).length > 1);
+  if (!answers.length) {
     step = 0; render();
     showAlert('جاوب على سؤال واحد على الأقل قبل الإرسال.');
     return;
   }
   $('btnNext').disabled = true;
-  const payload = { action: 'submit_survey', token: TOKEN };
-  if (!TOKEN && CAMPAIGN) payload.campaign = CAMPAIGN;
-  STEPS.forEach(s => {
-    payload[s.key] = A[s.key] ?? null;
-    if (s.follow) payload[s.follow.key] = A[s.follow.key] ?? null;
-  });
+  const payload = { action: 'survey_submit', answers };
+  if (TOKEN) payload.token = TOKEN;
+  else { payload.public = PUBLIC; if (CAMPAIGN) payload.campaign = CAMPAIGN; }
   api(payload).then(r => {
     if (!r.ok) throw new Error(r.error || '');
     LS.del(DRAFT);
+    $('doneTitle').textContent = LINKED ? 'وصلتنا إجاباتك — شكراً لك' : 'وصلنا ردّك — شكراً لك';
+    $('doneMsg').textContent = SURVEY.thank_you_message || 'رأيك يدخل مباشرة في التطوير.';
+    $('btnRedo').textContent = LINKED ? 'عدّل إجاباتك' : 'عبّي الاستبانة مرة ثانية';
     show('vDone');
     $('live').textContent = 'تم إرسال إجاباتك بنجاح، شكراً لك.';
   }).catch(e => {
@@ -490,24 +490,36 @@ function submit() {
 function showAlert(msg) { const a = $('alert'); a.textContent = msg; a.classList.add('show'); }
 
 /* ---------- الإقلاع ----------
-   نسأل الخادم عن حالة الدعوة وأي إجابات سابقة: المسودة المحلية لها
-   الأولوية لأنها الأحدث، وإجابات الخادم تعبّي الفراغات. */
-api({ action: 'survey_state', token: TOKEN }).then(st => {
-  if (st.answers) {
-    const server = {};
-    STEPS.forEach(s => {
-      const raw = st.answers[s.key];
-      if (raw !== null && raw !== undefined && raw !== '')
-        server[s.key] = s.type === 'scale' ? Number(raw) : String(raw);
-      if (s.follow) {
-        const f = st.answers[s.follow.key];
-        if (f !== null && f !== undefined && f !== '') server[s.follow.key] = String(f);
-      }
-    });
-    A = Object.assign(server, A);
-  }
-  paintIntro(st);
-}).catch(() => paintIntro(null));
+   بلا رمز دعوة ولا رمز رابط عام صحيحين: لا معنى لطلب الخادم أصلاً.
+   غير ذلك: نجلب تعريف الاستبيان وحالته وأي إجابات سابقة معاً — المسودة
+   المحلية لها الأولوية لأنها الأحدث، وإجابات الخادم تعبّي الفراغات. */
+if (!TOKEN && !PUBLIC) {
+  show('vUnavailable');
+} else {
+  const payload = { action: 'survey_public_state' };
+  if (TOKEN) payload.token = TOKEN; else payload.public = PUBLIC;
+  api(payload).then(st => {
+    if (!st.ok || !st.available) { show('vUnavailable'); return; }
+    SURVEY = st.survey; QUESTIONS = st.questions; LINKED = !!st.linked;
+    document.title = SURVEY.title + ' — وصال';
+    $('hTitle').textContent = SURVEY.title;
+    $('hDesc').textContent = SURVEY.description || '';
+
+    if (st.answers) {
+      const server = {};
+      QUESTIONS.forEach(s => {
+        const raw = st.answers[s.id];
+        if (!raw) return;
+        if (s.type === 'single_choice' && raw.option_id !== null) server[s.id] = { option_id: raw.option_id, followup_text: raw.text || '' };
+        else if (s.type === 'multi_choice' && raw.option_ids && raw.option_ids.length) server[s.id] = { option_ids: raw.option_ids };
+        else if (s.type === 'scale' && raw.number !== null) server[s.id] = { number: raw.number };
+        else if ((s.type === 'short_text' || s.type === 'long_text') && raw.text) server[s.id] = { text: raw.text };
+      });
+      A = Object.assign(server, A);
+    }
+    paintIntro(st);
+  }).catch(() => show('vUnavailable'));
+}
 </script>
 </body>
 </html>
