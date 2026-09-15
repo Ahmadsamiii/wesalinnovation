@@ -1,4 +1,55 @@
 <?php
+
+/* حارس عام، مُسجَّل قبل أي تحميل. الواجهة تعتبر أي رد ليس JSON انقطاعَ شبكة
+   وتقول للمستخدم "ما قدرنا نوصل للخادم" — فتلوم اتصاله على عطل في الخادم
+   ولا يبقى في السجل أثر يُشخَّص منه السبب. الترتيب هنا مقصود: التسجيل يسبق
+   require config.php تحديداً ليلتقط خطأً نحوياً في ذلك الملف بعد تحرير يدوي
+   على الخادم، وهي الحالة الوحيدة التي تُسقط كل نقاط النهاية دفعةً واحدة. */
+function apiFail(string $detail): void
+{
+    static $sent = false;
+    if ($sent) { return; }
+    $sent = true;
+
+    @error_log('[wesal-api] ' . $detail);
+    discardStrayOutput();
+    if (!headers_sent()) {
+        http_response_code(500);
+        header('Content-Type: application/json; charset=utf-8');
+    }
+    $debug = defined('APP_DEBUG') && APP_DEBUG;
+    echo json_encode([
+        'ok'    => false,
+        'error' => $debug ? $detail : 'صار خلل مؤقت في الخادم. حاول بعد قليل، وإذا تكرر راسل الدعم الفني.',
+    ], JSON_UNESCAPED_UNICODE);
+}
+
+/* أي بايت يُطبع خارج وسوم PHP — مسافة أو سطر أو حرف شارد بعد تحرير يدوي —
+   يسبق الرد فيكسر تحليله عند العميل، بينما تبقى الحالة 200 والجسم سليماً
+   بعده؛ فيبدو العطل انقطاعَ شبكة ولا يظهر له أثر في أي سجل. يُلتقط هنا
+   ويُسجَّل ثم يُطرح قبل إرسال أي رد. */
+function discardStrayOutput(): void
+{
+    if (ob_get_level() === 0) { return; }
+    $stray = ob_get_contents();
+    if ($stray !== false && $stray !== '') {
+        @error_log('[wesal-api] بايتات دخيلة قبل الرد: ' . substr((string) json_encode($stray), 0, 200));
+    }
+    ob_clean();
+}
+
+set_exception_handler(static function (Throwable $e): void {
+    apiFail(get_class($e) . ': ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
+});
+
+register_shutdown_function(static function (): void {
+    $e = error_get_last();
+    if ($e !== null && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+        apiFail('Fatal: ' . $e['message'] . ' @ ' . $e['file'] . ':' . $e['line']);
+    }
+});
+
+ob_start();
 require_once __DIR__ . '/config.php';
 
 /* قيم افتراضية للثوابت — حتى يظل ملف config.php القائم على الخادم يعمل بلا
@@ -456,6 +507,7 @@ function body(): array {
 }
 
 function out(array $data, int $code = 200): void {
+    discardStrayOutput();
     http_response_code($code);
     echo json_encode($data, JSON_UNESCAPED_UNICODE);
     exit;
