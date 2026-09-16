@@ -1106,7 +1106,7 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <button class="dash-tab" data-perm="tickets.view" hidden onclick="dashTab('tickets',this)" role="tab"><svg><use href="#ic-shield"/></svg> تذاكر الدعم</button>
 <button class="dash-tab" data-perm="content.manage" hidden onclick="dashTab('content',this)" role="tab" aria-label="محتوى الصفحة"><svg class="ico"><use href="#ic-book"/></svg> محتوى الصفحة</button>
 <button class="dash-tab" data-perm="audit.view" hidden onclick="dashTab('audit',this)" role="tab"><svg><use href="#ic-clock"/></svg> سجل العمليات</button>
-<button class="dash-tab" data-perm="experience.view" hidden onclick="dashTab('experience',this)" role="tab"><svg><use href="#ic-heart"/></svg> تجربة المستخدم</button>
+<button class="dash-tab" data-perm="experience.view" hidden onclick="dashTab('experience',this)" role="tab"><svg><use href="#ic-heart"/></svg> الاستبيانات</button>
 </div>
 
 <!-- نظرة عامة -->
@@ -1341,62 +1341,85 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 </div>
 </div>
 
-<!-- تجربة المستخدم وقياس الأداء (مدير النظام والمشرف) -->
+<!-- الاستبيانات (مدير النظام والمشرف) -->
 <div class="dash-panel" id="dp-experience">
 
-<div class="card glass" style="padding:var(--s6);margin-bottom:var(--s5)">
-<div class="tbl-head" style="padding:0;border:0;margin-bottom:var(--s2)">
-<h3>مؤشرات النسخة التجريبية</h3>
-<button class="btn btn-md btn-surface" onclick="loadExperience(true)"><svg class="ico"><use href="#ic-search"/></svg> تحديث</button>
+<!-- قائمة الاستبيانات -->
+<div id="svyListView">
+<div class="tbl-wrap">
+<div class="tbl-head"><h3>الاستبيانات</h3>
+<div style="display:flex;gap:var(--s2);flex-wrap:wrap">
+<button class="btn btn-md btn-surface" onclick="loadSurveyList()"><svg class="ico"><use href="#ic-search"/></svg> تحديث</button>
+<button class="btn btn-md btn-primary" onclick="openSurveyEditor(null)">+ استبيان جديد</button>
+</div></div>
+<p style="color:var(--muted);font-size:var(--f-sm);padding:0 var(--s5);margin-bottom:var(--s4);max-width:70ch">أنشئ أي عدد من الاستبيانات وتحكّم بأسئلتها بالكامل. لكل استبيان رابط عام يدخل منه أي أحد ويعبّيه، ودعوات شخصية بالبريد تتابع حالتها — ويتعايش الاثنان معاً.</p>
+<div class="tbl-scroll"><table class="tbl"><thead><tr><th>العنوان</th><th>الحالة</th><th>الردود</th><th>الرابط العام</th><th>إجراءات</th></tr></thead><tbody id="svyListBody"></tbody></table></div>
+<div class="empty-state" id="svyListEmpty" hidden><svg><use href="#ic-star"/></svg><p>ما فيه استبيانات بعد — أنشئ أول واحد من الزر أعلاه.</p></div>
 </div>
-<p style="color:var(--muted);font-size:var(--f-sm);margin-bottom:var(--s4);max-width:70ch">قمع الدعوات من الإرسال حتى إكمال الاستبانة، مع مقاييس الملاءمة: PMF بطريقة Sean Ellis (نسبة «سأنزعج جداً» — الهدف ٤٠٪ فأكثر) وصافي نقاط الترويج NPS.</p>
-<div class="dash-stats" id="expMetrics"></div>
+</div>
+
+<!-- محرّر الاستبيان -->
+<div id="svyEditorView" hidden>
+<button class="btn btn-md btn-ghost" type="button" onclick="closeSurveyEditor()">→ الرجوع لقائمة الاستبيانات</button>
+
+<div class="card glass" style="padding:var(--s6);margin:var(--s5) 0">
+<div class="form-group"><label for="svyTitle">عنوان الاستبيان</label><input class="form-input" id="svyTitle" maxlength="160" placeholder="مثال: تجربة المنصة"></div>
+<div class="form-group"><label for="svyDesc">وصف مختصر (يظهر أعلى صفحة الاستبيان)</label><textarea class="form-input" id="svyDesc" rows="2" maxlength="500"></textarea></div>
+<div class="form-group" style="margin-bottom:0"><label for="svyThanks">رسالة الشكر (تظهر بعد الإرسال)</label><textarea class="form-input" id="svyThanks" rows="2" maxlength="500"></textarea></div>
 </div>
 
 <div class="tbl-wrap" style="margin-bottom:var(--s5)">
-<div class="tbl-head"><h3>إرسال دعوات تجريبية</h3><span id="expQuota" style="color:var(--muted);font-size:var(--f-sm)"></span></div>
-<form onsubmit="sendInvites(event)" style="padding:var(--s5);display:flex;flex-direction:column;gap:var(--s4)">
-<div class="form-group">
-<label for="expCampaign">اسم الحملة</label>
-<input class="form-input" id="expCampaign" maxlength="80" required placeholder="مثال: جمعيات ذوي الإعاقة — سبتمبر" autocomplete="off">
-<div class="field-hint">يجمع الدعوات المتشابهة تحت اسم واحد لتتبع أداء كل شريحة على حدة.</div>
+<div class="tbl-head"><h3>الأسئلة</h3><button class="btn btn-md btn-surface" type="button" onclick="addQuestion()">+ سؤال جديد</button></div>
+<div id="svyQuestions" style="padding:var(--s5);display:flex;flex-direction:column;gap:var(--s4)"></div>
 </div>
-<div class="form-group">
-<label for="expEmails">البريد الإلكتروني للمدعوين</label>
-<textarea class="form-input" id="expEmails" rows="4" required placeholder="بريد في كل سطر، أو مفصولة بفواصل — حتى ٥٠ بريداً في الدفعة"></textarea>
-<div class="field-hint">كل مدعو يصله رابط شخصي يفعّل تجربة موسّعة بلا حدّ للأسئلة، ومعه رابط الاستبانة.</div>
+
+<div style="display:flex;gap:var(--s3);flex-wrap:wrap;margin-bottom:var(--s6)">
+<button class="btn btn-md btn-primary" id="svySaveBtn" type="button" onclick="saveSurvey()"><svg class="ico"><use href="#ic-check"/></svg> حفظ</button>
+<button class="btn btn-md btn-surface" id="svyPublishBtn" type="button" onclick="toggleSurveyPublish()">نشر الاستبيان</button>
+<button class="btn btn-md btn-surface" id="svyArchiveBtn" type="button" onclick="archiveSurvey()"><svg class="ico"><use href="#ic-trash"/></svg> أرشفة</button>
 </div>
-<div><button class="btn btn-md btn-primary" id="expSendBtn" type="submit"><svg class="ico"><use href="#ic-send"/></svg> إرسال الدعوات</button></div>
+
+<div class="tbl-wrap" style="margin-bottom:var(--s5)" id="svyPublicLinkBox" data-needs-id hidden>
+<div class="tbl-head"><h3><svg class="ico"><use href="#ic-globe"/></svg> الرابط العام</h3></div>
+<div style="padding:var(--s5);display:flex;flex-direction:column;gap:var(--s4)">
+<p style="color:var(--muted);font-size:var(--f-sm);margin:0;max-width:70ch">بلا دعوة ولا بريد لكل شخص — رابط واحد تشاركه في واتساب أو مجموعة أو منشور، يدخل منه أي أحد ويعبّي الاستبانة مباشرة.</p>
+<label class="chk" style="display:flex;gap:10px;align-items:center"><input type="checkbox" id="svyPublicEnabled" onchange="setSurveyPublicLink(false)"><span>فعّل الرابط العام</span></label>
+<div style="display:flex;gap:var(--s3);align-items:center;flex-wrap:wrap" id="svyPublicLinkRow" hidden>
+<input class="form-input ltr-input" id="svyPublicLinkInput" readonly style="flex:1;min-width:220px" onclick="this.select()">
+<button class="btn btn-md btn-surface" type="button" onclick="copyText('svyPublicLinkInput')"><svg class="ico"><use href="#ic-copy"/></svg> نسخ</button>
+<button class="btn btn-md btn-surface" type="button" onclick="setSurveyPublicLink(true)">تجديد الرمز</button>
+</div>
+</div>
+</div>
+
+<div class="tbl-wrap" style="margin-bottom:var(--s5)" data-needs-id hidden>
+<div class="tbl-head"><h3>إرسال دعوات</h3><span id="svyQuota" style="color:var(--muted);font-size:var(--f-sm)"></span></div>
+<form onsubmit="sendSurveyInvites(event)" style="padding:var(--s5);display:flex;flex-direction:column;gap:var(--s4)">
+<div class="form-group"><label for="svyCampaign">اسم الحملة</label><input class="form-input" id="svyCampaign" maxlength="80" required placeholder="مثال: جمعيات ذوي الإعاقة — سبتمبر" autocomplete="off"></div>
+<div class="form-group"><label for="svyEmails">البريد الإلكتروني للمدعوين</label><textarea class="form-input" id="svyEmails" rows="3" required placeholder="بريد في كل سطر، أو مفصولة بفواصل — حتى ٥٠ بريداً في الدفعة"></textarea></div>
+<div><button class="btn btn-md btn-primary" id="svySendBtn" type="submit"><svg class="ico"><use href="#ic-send"/></svg> إرسال الدعوات</button></div>
 </form>
 </div>
 
-<div class="tbl-wrap" style="margin-bottom:var(--s5)">
-<div class="tbl-head"><h3><svg class="ico"><use href="#ic-globe"/></svg> رابط استبيان عام</h3></div>
-<div style="padding:var(--s5);display:flex;flex-direction:column;gap:var(--s4)">
-<p style="color:var(--muted);font-size:var(--f-sm);margin:0;max-width:70ch">بلا دعوة ولا بريد لكل شخص — رابط واحد تشاركه في واتساب أو مجموعة أو منشور، يدخل منه أي أحد ويعبّي الاستبانة مباشرة، وتظهر إجاباته هنا مع بقية النتائج تحت اسم الحملة نفسه.</p>
-<div class="form-group">
-<label for="expOpenCampaign">اسم الحملة</label>
-<input class="form-input" id="expOpenCampaign" maxlength="80" placeholder="مثال: استبيان معرض التقنية المساندة" autocomplete="off" oninput="buildOpenSurveyLink()">
-</div>
-<div style="display:flex;gap:var(--s3);align-items:center;flex-wrap:wrap">
-<input class="form-input" id="expOpenLink" readonly style="flex:1;min-width:220px" onclick="this.select()">
-<button class="btn btn-md btn-surface" type="button" onclick="copyOpenSurveyLink()"><svg class="ico"><use href="#ic-copy"/></svg> نسخ الرابط</button>
-</div>
-</div>
+<div class="tbl-wrap" style="margin-bottom:var(--s5)" data-needs-id hidden>
+<div class="tbl-head"><h3>مؤشرات وتحليل الأسئلة</h3></div>
+<div class="dash-stats" id="svyMetrics" style="padding:0 var(--s5) var(--s5)"></div>
+<div id="svyQuestionMetrics" style="padding:0 var(--s5) var(--s5);display:flex;flex-direction:column;gap:var(--s4)"></div>
 </div>
 
-<div class="tbl-wrap" style="margin-bottom:var(--s5)">
+<div class="tbl-wrap" style="margin-bottom:var(--s5)" data-needs-id hidden>
 <div class="tbl-head"><h3>الدعوات المُرسلة</h3></div>
-<div class="tbl-scroll"><table class="tbl"><thead><tr><th>البريد</th><th>الحملة</th><th>الحالة</th><th>أُرسلت</th><th>فُتحت</th><th>جرّب</th><th>الرابط</th></tr></thead><tbody id="expInvBody"></tbody></table></div>
-<div class="empty-state" id="expInvEmpty" hidden><svg><use href="#ic-mail"/></svg><p>لا توجد دعوات بعد — أرسل أول دفعة من النموذج أعلاه.</p></div>
+<div class="tbl-scroll"><table class="tbl"><thead><tr><th>البريد</th><th>الحملة</th><th>الحالة</th><th>أُرسلت</th><th>فُتحت</th><th>أكملت</th><th>الرابط</th></tr></thead><tbody id="svyInvBody"></tbody></table></div>
+<div class="empty-state" id="svyInvEmpty" hidden><svg><use href="#ic-mail"/></svg><p>لا توجد دعوات بعد — أرسل أول دفعة من النموذج أعلاه.</p></div>
 </div>
 
-<div class="tbl-wrap">
-<div class="tbl-head"><h3>إجابات الاستبانة</h3></div>
-<div class="tbl-scroll"><table class="tbl"><thead><tr><th>المُجيب</th><th>الحملة</th><th>الإعاقة</th><th>السهولة</th><th>صعوبة وصول</th><th>الثقة</th><th>ساعدك؟</th><th>PMF</th><th>NPS</th><th>سيعود؟</th><th>خدمة ناقصة</th><th>ملاحظات</th><th>التاريخ</th></tr></thead><tbody id="expResBody"></tbody></table></div>
-<div class="empty-state" id="expResEmpty" hidden><svg><use href="#ic-star"/></svg><p>لا توجد إجابات بعد — تظهر هنا فور إكمال أول مدعو للاستبانة.</p></div>
+<div class="tbl-wrap" data-needs-id hidden>
+<div class="tbl-head"><h3>الردود</h3></div>
+<div class="tbl-scroll"><table class="tbl"><thead id="svyResHead"></thead><tbody id="svyResBody"></tbody></table></div>
+<div class="empty-state" id="svyResEmpty" hidden><svg><use href="#ic-star"/></svg><p>لا توجد ردود بعد.</p></div>
 </div>
 
+</div>
 </div>
 
 </div>
@@ -3334,10 +3357,10 @@ async function loadAudit(){
   });
 }
 
-/* ================= تجربة المستخدم وقياس الأداء =================
-   جانبان: جلسة المدعو (تجربة موسّعة بلا حدّ للأسئلة، ثم دعوة لطيفة واحدة
-   للاستبانة بعد أول إجابة يحصل عليها)، ولوحة مدير النظام والمشرف
-   (إرسال الدعوات، قمع التحويل، مؤشرات PMF وNPS). الخادم: api/experience.php */
+/* ================= التجربة الموسّعة والاستبيانات =================
+   جانبان: جلسة المدعو (تجربة موسّعة بلا حدّ للأسئلة لمن دُعي باستبيان يمنحها،
+   ثم دعوة لطيفة واحدة لتعبئته بعد أول إجابة يحصل عليها)، ولوحة مدير النظام
+   والمشرف (منشئ الاستبيانات، الدعوات، الردود والمؤشرات). الخادم: api/surveys.php */
 
 /* تجربة المدعو في المتصفح مرآة لجلسة الخادم — الحَكم الفعلي chat.php */
 function betaTrial(){
@@ -3355,25 +3378,354 @@ function maybeSurveyNudge(){
   bt.nudged=true;LS.set('betaTrial',bt);
   const body=document.getElementById('chatBody');if(!body)return;
   const d=document.createElement('div');d.className='msg msg-ai';
-  d.innerHTML='<div class="msg-avatar">و</div><div><div class="msg-bubble">جرّبت وصال بنفسك الآن — رأيك يحدّد وش نطوّر بعد كذا. الاستبانة عشرة أسئلة قصيرة، تاخذ أقل من دقيقة.<br><br><a class="btn btn-md btn-primary"><svg class="ico"><use href="#ic-star"/></svg> شاركنا رأيك الآن</a></div></div>';
+  d.innerHTML='<div class="msg-avatar">و</div><div><div class="msg-bubble">جرّبت وصال بنفسك الآن — رأيك يحدّد وش نطوّر بعد كذا. استبانة قصيرة تاخذ أقل من دقيقة.<br><br><a class="btn btn-md btn-primary"><svg class="ico"><use href="#ic-star"/></svg> شاركنا رأيك الآن</a></div></div>';
   d.querySelector('a').href='survey.html?t='+encodeURIComponent(bt.token);
   body.appendChild(d);body.scrollTop=body.scrollHeight;
 }
 
-/* ---------- لوحة المؤشرات والدعوات (experience.view) ---------- */
-const EXP_STATUS={sent:'أُرسلت',clicked:'فُتحت',tried:'جرّب',completed_survey:'أكمل الاستبانة'};
-const EXP_PMF={very_disappointed:'سأنزعج جداً',somewhat_disappointed:'سأنزعج قليلاً',not_disappointed:'لن أنزعج'};
-const EXP_RETURN={yes:'نعم',maybe:'ربما',no:'لا'};
+/* ---------- الاستبيانات (experience.view) ----------
+   منشئ استبيانات كامل: قائمة، محرّر أسئلة، رابط عام، دعوات، وردود ومؤشرات
+   لكل استبيان على حدة. الخادم: api/surveys.php */
+let CUR_SURVEY = null;      // الاستبيان المفتوح حالياً في المحرّر، أو null قبل أول حفظ
+let CUR_QUESTIONS = [];     // النموذج الحي الذي يحرره المشرف
+const QTYPE_LABELS = {single_choice:'اختيار فردي', multi_choice:'اختيار متعدد', scale:'مقياس رقمي', short_text:'نص قصير', long_text:'نص طويل'};
+const SVY_STATUS = {draft:'مسودة', published:'منشور', archived:'مؤرشف'};
 
-async function loadExperience(){
+function loadExperience(){
   if(!can('experience.view'))return;
-  const [m,inv,res]=await Promise.all([
-    api('experience.php',{action:'metrics'}),
-    api('experience.php',{action:'invitations'}),
-    api('experience.php',{action:'responses'})
-  ]);
-  if(m.offline)return toast('تعذّر الوصول للخادم — جرّب التحديث بعد قليل.','err');
-  paintExpMetrics(m);paintExpInvites(inv);paintExpResponses(res);
+  $('svyEditorView').hidden=true; $('svyListView').hidden=false;
+  loadSurveyList();
+}
+
+/* ---------- قائمة الاستبيانات ---------- */
+async function loadSurveyList(){
+  const r=await api('surveys.php',{action:'survey_list'});
+  if(r.offline)return toast('تعذّر الوصول للخادم — جرّب التحديث بعد قليل.','err');
+  const body=$('svyListBody'),empty=$('svyListEmpty');
+  const l=(r.ok&&r.surveys)?r.surveys:[];
+  body.innerHTML='';if(empty)empty.hidden=!!l.length;
+  l.forEach(v=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML='<td></td><td></td><td></td><td></td><td><button class="btn btn-md btn-surface">تعديل</button></td>';
+    const td=tr.querySelectorAll('td');
+    td[0].textContent=v.title;
+    td[1].textContent=SVY_STATUS[v.status]||v.status;
+    td[2].textContent=ar(v.response_count);
+    td[3].textContent=v.public_link_enabled?'مفعّل':'—';
+    td[4].querySelector('button').onclick=()=>openSurveyEditor(v.id);
+    body.appendChild(tr);
+  });
+}
+
+/* ---------- المحرّر: فتح/إغلاق وتحميل ---------- */
+function blankQuestion(type){
+  const q={id:null,type,question_text:'',help_text:'',is_required:false};
+  if(type==='scale')Object.assign(q,{scale_min:1,scale_max:5,scale_min_label:'',scale_max_label:''});
+  if(type==='single_choice'||type==='multi_choice')q.options=[
+    {id:null,text:'',value:'',has_followup:false,followup_label:'',followup_max:500},
+    {id:null,text:'',value:'',has_followup:false,followup_label:'',followup_max:500}];
+  if(type==='short_text'||type==='long_text'){q.placeholder='';q.max_length=type==='short_text'?200:1000;}
+  return q;
+}
+function openSurveyEditor(id){
+  $('svyListView').hidden=true;$('svyEditorView').hidden=false;
+  $('svyTitle').value='';$('svyDesc').value='';$('svyThanks').value='';
+  document.querySelectorAll('#svyEditorView [data-needs-id]').forEach(el=>el.hidden=!id);
+  if(id){CUR_SURVEY={id};loadSurveyIntoEditor(id);}
+  else{CUR_SURVEY=null;CUR_QUESTIONS=[blankQuestion('single_choice')];renderQuestions();updatePublishBtn(null);}
+}
+function closeSurveyEditor(){
+  $('svyEditorView').hidden=true;$('svyListView').hidden=false;
+  loadSurveyList();
+}
+async function loadSurveyIntoEditor(id){
+  const r=await api('surveys.php',{action:'survey_get',survey_id:id});
+  if(!r.ok)return toast(r.error||'تعذّر تحميل الاستبيان.','err');
+  CUR_SURVEY=r.survey;
+  $('svyTitle').value=r.survey.title;
+  $('svyDesc').value=r.survey.description||'';
+  $('svyThanks').value=r.survey.thank_you_message||'';
+  CUR_QUESTIONS=r.questions;
+  renderQuestions();
+  updatePublishBtn(r.survey.status);
+  $('svyPublicEnabled').checked=r.survey.public_link_enabled;
+  paintPublicLinkRow(r.survey.public_link_enabled,r.survey.public_link);
+  loadSurveyInvites();loadSurveyResponses();loadSurveyMetrics();
+}
+function updatePublishBtn(status){
+  const b=$('svyPublishBtn');
+  if(!status){b.textContent='نشر الاستبيان';b.disabled=true;return;}
+  b.disabled=false;
+  b.textContent=status==='published'?'إيقاف النشر (إرجاع لمسودة)':'نشر الاستبيان';
+}
+
+/* ---------- محرّر الأسئلة ---------- */
+function renderQuestions(){
+  const box=$('svyQuestions');box.innerHTML='';
+  CUR_QUESTIONS.forEach((q,qi)=>box.appendChild(buildQuestionEditor(q,qi)));
+}
+function buildQuestionEditor(q,qi){
+  const card=document.createElement('div');
+  card.style.cssText='border:1px solid var(--border);border-radius:var(--r-lg);padding:var(--s5)';
+
+  const head=document.createElement('div');
+  head.style.cssText='display:flex;gap:var(--s3);align-items:center;flex-wrap:wrap;margin-bottom:var(--s4)';
+  const numLbl=document.createElement('b');numLbl.style.color='var(--ink)';numLbl.textContent='س'+ar(qi+1);
+  const typeSel=document.createElement('select');typeSel.className='form-input';typeSel.style.maxWidth='170px';
+  Object.entries(QTYPE_LABELS).forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;o.selected=v===q.type;typeSel.appendChild(o);});
+  typeSel.onchange=()=>{const nq=blankQuestion(typeSel.value);nq.question_text=q.question_text;nq.help_text=q.help_text;nq.is_required=q.is_required;CUR_QUESTIONS[qi]=nq;renderQuestions();};
+  const spacer=document.createElement('div');spacer.style.flex='1';
+  const up=document.createElement('button');up.type='button';up.className='btn btn-md btn-ghost';up.textContent='↑';up.setAttribute('aria-label','رفع السؤال');up.disabled=qi===0;
+  up.onclick=()=>{[CUR_QUESTIONS[qi-1],CUR_QUESTIONS[qi]]=[CUR_QUESTIONS[qi],CUR_QUESTIONS[qi-1]];renderQuestions();};
+  const down=document.createElement('button');down.type='button';down.className='btn btn-md btn-ghost';down.textContent='↓';down.setAttribute('aria-label','خفض السؤال');down.disabled=qi===CUR_QUESTIONS.length-1;
+  down.onclick=()=>{[CUR_QUESTIONS[qi+1],CUR_QUESTIONS[qi]]=[CUR_QUESTIONS[qi],CUR_QUESTIONS[qi+1]];renderQuestions();};
+  const del=document.createElement('button');del.type='button';del.className='btn btn-md btn-ghost';del.style.color='#c0392b';
+  del.innerHTML='<svg class="ico"><use href="#ic-trash"/></svg>';del.setAttribute('aria-label','حذف السؤال');
+  del.onclick=()=>{if(CUR_QUESTIONS.length<=1)return toast('لازم يبقى سؤال واحد على الأقل.','err');CUR_QUESTIONS.splice(qi,1);renderQuestions();};
+  head.append(numLbl,typeSel,spacer,up,down,del);
+  card.appendChild(head);
+
+  const qtext=document.createElement('input');qtext.className='form-input';qtext.placeholder='نص السؤال';qtext.maxLength=500;qtext.value=q.question_text||'';qtext.style.marginBottom='var(--s3)';
+  qtext.oninput=()=>{CUR_QUESTIONS[qi].question_text=qtext.value;};
+  card.appendChild(qtext);
+
+  const help=document.createElement('input');help.className='form-input';help.placeholder='تلميح توضيحي (اختياري)';help.maxLength=300;help.value=q.help_text||'';help.style.marginBottom='var(--s3)';
+  help.oninput=()=>{CUR_QUESTIONS[qi].help_text=help.value;};
+  card.appendChild(help);
+
+  const reqLbl=document.createElement('label');reqLbl.className='chk';reqLbl.style.cssText='display:flex;gap:8px;align-items:center;margin-bottom:var(--s4);font-size:var(--f-sm)';
+  const reqChk=document.createElement('input');reqChk.type='checkbox';reqChk.checked=!!q.is_required;
+  reqChk.onchange=()=>{CUR_QUESTIONS[qi].is_required=reqChk.checked;};
+  reqLbl.append(reqChk,' إلزامي (ما يقدر يتخطّاه)');
+  card.appendChild(reqLbl);
+
+  if(q.type==='single_choice'||q.type==='multi_choice')card.appendChild(buildOptionsEditor(q));
+  else if(q.type==='scale')card.appendChild(buildScaleEditor(q));
+  else card.appendChild(buildTextEditor(q));
+  return card;
+}
+function buildOptionsEditor(q){
+  const wrap=document.createElement('div');
+  const list=document.createElement('div');list.style.cssText='display:flex;flex-direction:column;gap:var(--s3)';
+  q.options.forEach((o,oi)=>{
+    const row=document.createElement('div');row.style.cssText='display:flex;gap:var(--s2);align-items:center;flex-wrap:wrap';
+    const txt=document.createElement('input');txt.className='form-input';txt.placeholder='نص الخيار';txt.maxLength=200;txt.style.cssText='flex:1;min-width:160px';txt.value=o.text||'';
+    txt.oninput=()=>{o.text=txt.value;};
+    const rm=document.createElement('button');rm.type='button';rm.className='btn btn-md btn-ghost';rm.style.color='#c0392b';
+    rm.innerHTML='<svg class="ico"><use href="#ic-x"/></svg>';rm.setAttribute('aria-label','حذف الخيار');
+    rm.onclick=()=>{if(q.options.length<=2)return toast('لازم يبقى خياران على الأقل.','err');q.options.splice(oi,1);renderQuestions();};
+    row.append(txt,rm);
+    if(q.type==='single_choice'){
+      const flLbl=document.createElement('label');flLbl.className='chk';flLbl.style.cssText='display:flex;gap:6px;align-items:center;font-size:var(--f-xs);color:var(--muted);width:100%;margin-top:2px';
+      const flChk=document.createElement('input');flChk.type='checkbox';flChk.checked=!!o.has_followup;
+      flChk.onchange=()=>{o.has_followup=flChk.checked;if(!o.followup_label)o.followup_label='تفاصيل إضافية';renderQuestions();};
+      flLbl.append(flChk,' يفتح سؤال متابعة نصي عند اختيار هذا الخيار');
+      row.appendChild(flLbl);
+      if(o.has_followup){
+        const fl=document.createElement('input');fl.className='form-input';fl.placeholder='عنوان سؤال المتابعة';fl.maxLength=200;fl.value=o.followup_label||'';fl.style.width='100%';
+        fl.oninput=()=>{o.followup_label=fl.value;};
+        row.appendChild(fl);
+      }
+    }
+    list.appendChild(row);
+  });
+  wrap.appendChild(list);
+  const add=document.createElement('button');add.type='button';add.className='btn btn-md btn-ghost';add.style.marginTop='var(--s3)';add.textContent='+ أضف خياراً';
+  add.onclick=()=>{q.options.push({id:null,text:'',value:'',has_followup:false,followup_label:'',followup_max:500});renderQuestions();};
+  wrap.appendChild(add);
+  return wrap;
+}
+function buildScaleEditor(q){
+  const wrap=document.createElement('div');wrap.style.cssText='display:flex;gap:var(--s3);flex-wrap:wrap';
+  const mk=(labelTxt,val,onSet,opts)=>{
+    opts=opts||{};
+    const g=document.createElement('div');g.style.cssText='display:flex;flex-direction:column;gap:4px;'+(opts.width?('width:'+opts.width):'flex:1;min-width:120px');
+    const lb=document.createElement('label');lb.className='form-hint';lb.textContent=labelTxt;
+    const inp=document.createElement('input');inp.className='form-input';inp.type=opts.numeric?'number':'text';inp.value=val??'';
+    inp.oninput=()=>onSet(inp.value);
+    g.append(lb,inp);return g;
+  };
+  wrap.appendChild(mk('من (رقم)',q.scale_min,v=>q.scale_min=parseInt(v)||0,{width:'90px',numeric:true}));
+  wrap.appendChild(mk('إلى (رقم)',q.scale_max,v=>q.scale_max=parseInt(v)||0,{width:'90px',numeric:true}));
+  wrap.appendChild(mk('تسمية أدنى قيمة',q.scale_min_label,v=>q.scale_min_label=v));
+  wrap.appendChild(mk('تسمية أعلى قيمة',q.scale_max_label,v=>q.scale_max_label=v));
+  return wrap;
+}
+function buildTextEditor(q){
+  const wrap=document.createElement('div');wrap.style.cssText='display:flex;gap:var(--s3);flex-wrap:wrap';
+  const ph=document.createElement('div');ph.style.cssText='flex:1;min-width:200px;display:flex;flex-direction:column;gap:4px';
+  const lb1=document.createElement('label');lb1.className='form-hint';lb1.textContent='نص إرشادي داخل الحقل (اختياري)';
+  const inp1=document.createElement('input');inp1.className='form-input';inp1.maxLength=200;inp1.value=q.placeholder||'';
+  inp1.oninput=()=>{q.placeholder=inp1.value;};
+  ph.append(lb1,inp1);
+  const ml=document.createElement('div');ml.style.cssText='width:110px;display:flex;flex-direction:column;gap:4px';
+  const lb2=document.createElement('label');lb2.className='form-hint';lb2.textContent='أقصى طول';
+  const inp2=document.createElement('input');inp2.className='form-input';inp2.type='number';inp2.value=q.max_length||(q.type==='short_text'?200:1000);
+  inp2.oninput=()=>{q.max_length=parseInt(inp2.value)||500;};
+  ml.append(lb2,inp2);
+  wrap.append(ph,ml);
+  return wrap;
+}
+function addQuestion(){CUR_QUESTIONS.push(blankQuestion('single_choice'));renderQuestions();}
+
+/* ---------- الحفظ والنشر والأرشفة ---------- */
+async function saveSurvey(){
+  const title=$('svyTitle').value.trim();
+  if(!title)return toast('اكتب عنوان الاستبيان أولاً.','err');
+  if(!CUR_QUESTIONS.length)return toast('أضف سؤالاً واحداً على الأقل.','err');
+  for(const q of CUR_QUESTIONS){
+    if(!q.question_text||!q.question_text.trim())return toast('كل سؤال لازم له نص.','err');
+    if((q.type==='single_choice'||q.type==='multi_choice')&&(!q.options||q.options.length<2||q.options.some(o=>!o.text||!o.text.trim())))
+      return toast('كل سؤال اختيار لازم خيارين على الأقل بنص لكل خيار.','err');
+  }
+  btnLoad('svySaveBtn',true,'جارٍ الحفظ');
+  const isNew=!(CUR_SURVEY&&CUR_SURVEY.id);
+  const r=await api('surveys.php',{action:'survey_save',
+    survey_id:isNew?null:CUR_SURVEY.id,
+    title,description:$('svyDesc').value.trim(),thank_you_message:$('svyThanks').value.trim(),
+    questions:CUR_QUESTIONS});
+  btnLoad('svySaveBtn',false);
+  if(!r.ok)return toast(r.error||'تعذّر حفظ الاستبيان.','err',7000);
+  toast('تم الحفظ.','ok');
+  await loadSurveyIntoEditor(r.survey_id);
+  if(isNew)document.querySelectorAll('#svyEditorView [data-needs-id]').forEach(el=>el.hidden=false);
+}
+async function toggleSurveyPublish(){
+  if(!CUR_SURVEY||!CUR_SURVEY.id)return toast('احفظ الاستبيان أولاً.','err');
+  const publish=CUR_SURVEY.status!=='published';
+  const r=await api('surveys.php',{action:'survey_publish',survey_id:CUR_SURVEY.id,publish});
+  if(!r.ok)return toast(r.error||'تعذّر تنفيذ العملية.','err');
+  toast(publish?'نُشر الاستبيان.':'أُرجع لمسودة.','ok');
+  loadSurveyIntoEditor(CUR_SURVEY.id);
+}
+async function archiveSurvey(){
+  if(!CUR_SURVEY||!CUR_SURVEY.id)return;
+  if(!confirm('أرشفة هذا الاستبيان؟ يتوقف عن استقبال ردود جديدة، وتبقى نتائجه محفوظة.'))return;
+  const r=await api('surveys.php',{action:'survey_archive',survey_id:CUR_SURVEY.id});
+  if(!r.ok)return toast(r.error||'تعذّر الأرشفة.','err');
+  toast('أُرشف الاستبيان.','ok');
+  closeSurveyEditor();
+}
+
+/* ---------- الرابط العام ---------- */
+async function setSurveyPublicLink(regenerate){
+  if(!CUR_SURVEY||!CUR_SURVEY.id)return toast('احفظ الاستبيان أولاً.','err');
+  const enabled=regenerate?true:$('svyPublicEnabled').checked;
+  const r=await api('surveys.php',{action:'survey_set_public_link',survey_id:CUR_SURVEY.id,enabled,regenerate:!!regenerate});
+  if(!r.ok)return toast(r.error||'تعذّر تحديث الرابط العام.','err');
+  $('svyPublicEnabled').checked=r.public_link_enabled;
+  paintPublicLinkRow(r.public_link_enabled,r.public_link);
+  toast(regenerate?'تجدد الرمز — الرابط القديم لم يعد يعمل.':(enabled?'فُعِّل الرابط العام.':'أُوقف الرابط العام.'),'ok');
+}
+function paintPublicLinkRow(enabled,link){
+  $('svyPublicLinkRow').hidden=!enabled;
+  $('svyPublicLinkInput').value=link||'';
+}
+function copyText(id){
+  const input=$(id);if(!input.value)return;
+  navigator.clipboard.writeText(input.value).then(()=>toast('انتسخ الرابط.','ok'),()=>{input.select();toast('حدّد وانسخه يدوياً.','info');});
+}
+
+/* ---------- الدعوات ---------- */
+async function sendSurveyInvites(e){
+  e.preventDefault();
+  if(!CUR_SURVEY||!CUR_SURVEY.id)return toast('احفظ وانشر الاستبيان أولاً.','err');
+  const campaign=$('svyCampaign').value.trim();
+  const emails=$('svyEmails').value.trim();
+  if(!campaign||!emails)return toast('اكتب اسم الحملة وبريد مدعو واحد على الأقل.','err');
+  const btn=$('svySendBtn');btn.disabled=true;
+  const r=await api('surveys.php',{action:'survey_send_invitations',survey_id:CUR_SURVEY.id,campaign,emails});
+  btn.disabled=false;
+  if(!r.ok)return toast(r.error||'تعذّر إرسال الدعوات.','err');
+  let msg='أُرسلت '+ar(r.sent)+' دعوة';
+  if(r.skipped)msg+=' — تخطّينا '+ar(r.skipped)+' مكررة';
+  if(r.failed)msg+=' — تعذّر بريد '+ar(r.failed);
+  toast(msg+'.',r.sent?'ok':'info');
+  if(r.sent)$('svyEmails').value='';
+  loadSurveyInvites();
+}
+async function loadSurveyInvites(){
+  if(!CUR_SURVEY||!CUR_SURVEY.id)return;
+  const r=await api('surveys.php',{action:'survey_invitations_list',survey_id:CUR_SURVEY.id});
+  const body=$('svyInvBody'),empty=$('svyInvEmpty'),quota=$('svyQuota');
+  const l=(r.ok&&r.invitations)?r.invitations:[];
+  if(quota)quota.textContent=r.quota_left!=null?'المتبقي من حصة اليوم: '+ar(r.quota_left)+' دعوة':'';
+  body.innerHTML='';if(empty)empty.hidden=!!l.length;
+  const STAT={sent:'أُرسلت',opened:'فُتحت',completed:'أكملت'};
+  l.forEach(v=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML='<td></td><td></td><td></td><td></td><td></td><td></td><td><button class="btn btn-md btn-surface" aria-label="نسخ رابط الدعوة"><svg class="ico"><use href="#ic-copy"/></svg> نسخ</button></td>';
+    const td=tr.querySelectorAll('td');
+    td[0].textContent=v.email;td[1].textContent=v.campaign;td[2].textContent=STAT[v.status]||v.status;
+    td[3].textContent=fmtWhen(v.sent);td[4].textContent=v.opened?fmtWhen(v.opened):'—';td[5].textContent=v.completed?fmtWhen(v.completed):'—';
+    tr.querySelector('button').onclick=()=>navigator.clipboard.writeText(v.link).then(()=>toast('انتسخ رابط الدعوة.','ok'),()=>toast('تعذّر النسخ.','err'));
+    body.appendChild(tr);
+  });
+}
+
+/* ---------- الردود والمؤشرات ---------- */
+async function loadSurveyResponses(){
+  if(!CUR_SURVEY||!CUR_SURVEY.id)return;
+  const r=await api('surveys.php',{action:'survey_responses_list',survey_id:CUR_SURVEY.id});
+  if(!r.ok)return;
+  const head=$('svyResHead'),body=$('svyResBody'),empty=$('svyResEmpty');
+  const qs=r.questions||[],list=r.responses||[];
+  head.innerHTML='';
+  const htr=document.createElement('tr');
+  ['المُجيب','الحملة'].concat(qs.map(q=>q.question_text)).concat(['التاريخ']).forEach(t=>{const th=document.createElement('th');th.textContent=t;htr.appendChild(th);});
+  head.appendChild(htr);
+  body.innerHTML='';if(empty)empty.hidden=!!list.length;
+  const dash=v=>(v==null||v==='')?'—':v;
+  list.forEach(v=>{
+    const tr=document.createElement('tr');
+    [v.respondent||'زائر',dash(v.campaign)].concat(qs.map(q=>dash(v.answers[q.id]))).concat([fmtWhen(v.t)]).forEach(t=>{
+      const td=document.createElement('td');td.textContent=t;tr.appendChild(td);
+    });
+    body.appendChild(tr);
+  });
+}
+async function loadSurveyMetrics(){
+  if(!CUR_SURVEY||!CUR_SURVEY.id)return;
+  const r=await api('surveys.php',{action:'survey_metrics',survey_id:CUR_SURVEY.id});
+  const grid=$('svyMetrics'),qbox=$('svyQuestionMetrics');
+  grid.innerHTML='';qbox.innerHTML='';
+  if(!r.ok||!r.metrics)return;
+  const M=r.metrics;
+  const pc=v=>v==null?'—':ar(v)+'٪';
+  grid.appendChild(expStat('ic-mail','navy',ar(M.sent),'دعوة أُرسلت'+(M.quota_left!=null?' — متبقٍ اليوم '+ar(M.quota_left):'')));
+  grid.appendChild(expStat('ic-eye','blue',pc(M.open_rate),'فتحوا الرابط ('+ar(M.opened)+')'));
+  grid.appendChild(expStat('ic-check','purple',pc(M.completion_rate),'أكملوا عبر الدعوة ('+ar(M.completed)+')'));
+  grid.appendChild(expStat('ic-star','blue',ar(M.responses),'إجمالي الردود (مع الرابط العام)'));
+  if(M.tried!=null)grid.appendChild(expStat('ic-zap','purple',ar(M.tried),'جرّبوا المساعد'));
+
+  (M.questions||[]).forEach(qm=>{
+    const box=document.createElement('div');
+    box.style.cssText='border:1px solid var(--border);border-radius:var(--r-md);padding:var(--s4)';
+    const h=document.createElement('div');h.style.cssText='font-weight:600;color:var(--ink);margin-bottom:var(--s3)';h.textContent=qm.question_text;
+    box.appendChild(h);
+    if(qm.options){
+      const total=qm.options.reduce((a,o)=>a+o.count,0)||1;
+      qm.options.forEach(o=>{
+        const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:var(--s3);margin-bottom:6px;font-size:var(--f-sm)';
+        const lbl=document.createElement('span');lbl.style.minWidth='140px';lbl.textContent=o.text;
+        const track=document.createElement('div');track.style.cssText='flex:1;height:8px;background:var(--surface-alt);border-radius:99px;overflow:hidden';
+        const fill=document.createElement('div');fill.style.cssText='height:100%;background:var(--g-brand);width:'+Math.round(o.count/total*100)+'%';
+        track.appendChild(fill);
+        const cnt=document.createElement('span');cnt.style.cssText='min-width:50px;text-align:left;color:var(--muted)';cnt.textContent=ar(o.count);
+        row.append(lbl,track,cnt);
+        box.appendChild(row);
+      });
+    }else if(qm.type==='scale'){
+      const p=document.createElement('p');p.style.cssText='color:var(--muted);font-size:var(--f-sm)';
+      p.textContent=qm.average!=null?('المتوسط: '+ar(qm.average)+' من '+ar(qm.scale_max)+' — '+ar(qm.count)+' إجابة'):'لا إجابات بعد.';
+      box.appendChild(p);
+    }else{
+      const p=document.createElement('p');p.style.cssText='color:var(--muted);font-size:var(--f-sm)';
+      p.textContent=ar(qm.count)+' إجابة نصية — التفاصيل في جدول الردود بالأسفل.';
+      box.appendChild(p);
+    }
+    qbox.appendChild(box);
+  });
 }
 
 function expStat(icon,tone,num,label){
@@ -3388,109 +3740,6 @@ function expStat(icon,tone,num,label){
   d.querySelector('.dash-stat-num').textContent=num;
   d.querySelector('.dash-stat-label').textContent=label;
   return d;
-}
-
-function paintExpMetrics(r){
-  const grid=document.getElementById('expMetrics');if(!grid)return;
-  grid.innerHTML='';
-  if(!r.ok||!r.metrics)return;
-  const M=r.metrics;
-  const pc=v=>v==null?'—':ar(v)+'٪';           // النسب — الشرطة تعني «لا بيانات بعد»
-  const av=v=>v==null?'—':ar(v)+' / ٥';         // متوسطات مقياس ١-٥
-  grid.appendChild(expStat('ic-mail','navy',ar(M.sent),'دعوة أُرسلت'+(M.quota_left!=null?' — متبقٍ اليوم '+ar(M.quota_left):'')));
-  grid.appendChild(expStat('ic-eye','blue',pc(M.click_rate),'فتحوا الرابط ('+ar(M.clicked)+')'));
-  grid.appendChild(expStat('ic-zap','purple',pc(M.try_rate),'جرّبوا المساعد ('+ar(M.tried)+')'));
-  grid.appendChild(expStat('ic-check','purple',pc(M.survey_rate),'أكملوا الاستبانة ('+ar(M.surveyed)+')'));
-  grid.appendChild(expStat('ic-heart','purple',pc(M.pmf),'ملاءمة المنتج PMF — الهدف ٤٠٪ فأكثر'));
-  grid.appendChild(expStat('ic-star','blue',M.nps==null?'—':ar(M.nps),'صافي نقاط الترويج NPS'));
-  grid.appendChild(expStat('ic-zap','navy',av(M.ease),'متوسط سهولة الاستخدام'));
-  grid.appendChild(expStat('ic-shield','navy',av(M.trust),'متوسط الثقة بالمصادر'));
-  grid.appendChild(expStat('ic-hand-heart','purple',av(M.helped),'ساعدهم بالوصول لخدمة'));
-  grid.appendChild(expStat('ic-a11y','blue',pc(M.difficulty),'واجهوا صعوبة وصول'));
-  grid.appendChild(expStat('ic-users','navy',ar(M.return_yes),'سيعودون (ربما '+ar(M.return_maybe)+' — لا '+ar(M.return_no)+')'));
-}
-
-function paintExpInvites(r){
-  const body=document.getElementById('expInvBody'),empty=document.getElementById('expInvEmpty'),quota=document.getElementById('expQuota');
-  if(!body)return;
-  const l=(r.ok&&r.invitations)?r.invitations:[];
-  if(quota)quota.textContent=r.quota_left!=null?'المتبقي من حصة اليوم: '+ar(r.quota_left)+' دعوة':'';
-  body.innerHTML='';
-  if(empty)empty.hidden=!!l.length;
-  l.forEach(v=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML='<td></td><td></td><td></td><td></td><td></td><td></td><td><button class="btn btn-md btn-surface" aria-label="نسخ رابط الدعوة"><svg class="ico"><use href="#ic-copy"/></svg> نسخ</button></td>';
-    const td=tr.querySelectorAll('td');
-    td[0].textContent=v.email;
-    td[1].textContent=v.campaign;
-    td[2].textContent=EXP_STATUS[v.status]||v.status;
-    td[3].textContent=fmtWhen(v.t);
-    td[4].textContent=v.clicked?fmtWhen(v.clicked):'—';
-    td[5].textContent=v.tried?fmtWhen(v.tried):'—';
-    tr.querySelector('button').onclick=()=>navigator.clipboard.writeText(v.link).then(()=>toast('انتسخ رابط الدعوة.','ok'),()=>toast('تعذّر النسخ.','err'));
-    body.appendChild(tr);
-  });
-}
-
-function paintExpResponses(r){
-  const body=document.getElementById('expResBody'),empty=document.getElementById('expResEmpty');
-  if(!body)return;
-  const l=(r.ok&&r.responses)?r.responses:[];
-  body.innerHTML='';
-  if(empty)empty.hidden=!!l.length;
-  const dash=v=>v==null||v===''?'—':v;
-  l.forEach(v=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML='<td></td>'.repeat(13);
-    const td=tr.querySelectorAll('td');
-    td[0].textContent=v.email||'زائر';
-    td[1].textContent=dash(v.campaign);
-    td[2].textContent=dash(v.need);
-    td[3].textContent=v.ease==null?'—':ar(v.ease)+'/٥';
-    td[4].textContent=v.difficulty==null?'—':(v.difficulty?'نعم'+(v.difficulty_details?' — '+v.difficulty_details:''):'لا');
-    td[5].textContent=v.trust==null?'—':ar(v.trust)+'/٥';
-    td[6].textContent=v.helped==null?'—':ar(v.helped)+'/٥';
-    td[7].textContent=v.pmf?(EXP_PMF[v.pmf]||v.pmf):'—';
-    td[8].textContent=v.nps==null?'—':ar(v.nps);
-    td[9].textContent=v['return']?(EXP_RETURN[v['return']]||v['return']):'—';
-    td[10].textContent=dash(v.missing);
-    td[11].textContent=dash(v.feedback);
-    td[12].textContent=fmtWhen(v.t);
-    body.appendChild(tr);
-  });
-}
-
-async function sendInvites(e){
-  e.preventDefault();
-  const campaign=document.getElementById('expCampaign').value.trim();
-  const emails=document.getElementById('expEmails').value.trim();
-  if(!campaign||!emails)return toast('اكتب اسم الحملة وبريد مدعو واحد على الأقل.','err');
-  const btn=document.getElementById('expSendBtn');btn.disabled=true;
-  const r=await api('experience.php',{action:'send_invitations',campaign,emails});
-  btn.disabled=false;
-  if(!r.ok)return toast(r.error||'تعذّر إرسال الدعوات.','err');
-  let msg='أُرسلت '+ar(r.sent)+' دعوة';
-  if(r.skipped)msg+=' — تخطّينا '+ar(r.skipped)+' مكررة';
-  if(r.failed)msg+=' — تعذّر بريد '+ar(r.failed);
-  toast(msg+'.',r.sent?'ok':'info');
-  if(r.sent)document.getElementById('expEmails').value='';
-  loadExperience();
-}
-
-/* رابط استبيان عام بلا دعوة ولا بريد — نفس صفحة survey.html تكتشف غياب
-   رمز الدعوة وتتعامل معه كزائر مجهول من البداية، فلا حاجة لأي شيء من
-   الخادم هنا: مجرد بناء الرابط بحملته على الجهاز نفسه. */
-function buildOpenSurveyLink(){
-  const name=(document.getElementById('expOpenCampaign').value||'').trim();
-  document.getElementById('expOpenLink').value=
-    name?location.origin+'/survey.html?c='+encodeURIComponent(name):'';
-}
-function copyOpenSurveyLink(){
-  const input=document.getElementById('expOpenLink');
-  if(!input.value)return toast('اكتب اسم الحملة أولاً.','err');
-  navigator.clipboard.writeText(input.value).then(
-    ()=>toast('نُسخ الرابط.','ok'),
-    ()=>{input.select();toast('حدّد الرابط وانسخه يدوياً.','info');});
 }
 
 /* ================= المصادقة =================
