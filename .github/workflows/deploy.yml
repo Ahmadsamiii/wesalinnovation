@@ -1,0 +1,36 @@
+name: نشر إلى الإنتاج
+
+# ينفَّذ عبر SSH على خادم Hostinger نفسه، لا على عامل GitHub — عامل GitHub
+# يتصل فقط وينفّذ أمر النشر على الخادم، ثم ينتهي.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: تجهيز مفتاح SSH ومصادقة الخادم
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.HOSTINGER_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # تحقّق بصمة الخادم فعلياً بدل تعطيل الفحص — يمنع اتصالاً بخادم منتحل.
+          ssh-keyscan -p "${{ secrets.HOSTINGER_PORT }}" -H "${{ secrets.HOSTINGER_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: نشر عبر السطر الآمر المقيَّد على الخادم
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/deploy_key \
+              -p "${{ secrets.HOSTINGER_PORT }}" \
+              -o StrictHostKeyChecking=yes \
+              -o BatchMode=yes \
+              "${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}" \
+              "cd ~/wesal-repo && git pull origin main --quiet && bash deploy.sh"
