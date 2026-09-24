@@ -22,4 +22,14 @@ enum Priority: string
             self::Low => 'منخفضة',
         };
     }
+
+    public function color(): string
+    {
+        return match ($this) {
+            self::Critical => 'red',
+            self::High => 'orange',
+            self::Normal => 'blue',
+            self::Low => 'gray',
+        };
+    }
 }

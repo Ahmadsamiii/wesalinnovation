@@ -84,7 +84,7 @@ function monoError(t, v) {
   if (t === 'url' && !/^https:\/\/[^\s/]+\.[^\s]+$/i.test(v)) return 'الرابط لازم يبدأ بـ https:// ويكون صحيحاً';
   if (t === 'email' && !/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(v)) return 'بريد إلكتروني غير صحيح';
   if (t === 'tel' && !/^\+?[0-9][0-9\s\-()]{5,22}$/.test(v)) return 'أرقام ومسافات و+ فقط';
-  if (t === 'domain' && !/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+(\/\S*)?$/i.test(v)) return 'نطاق غير صحيح — مثال: moh.gov.sa';
+  if (t === 'domain' && !/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+(\/\S*)?$/i.test(v)) return 'نطاق غير صحيح، ومثاله: moh.gov.sa';
   return '';
 }
 
@@ -214,7 +214,7 @@ async function saveNow() {
         if (S.dirty.has(id) || ids.includes(id) || !S.secMap[id]) return;
         if (JSON.stringify(S.draft[id]) !== JSON.stringify(r.draft[id])) { S.draft[id] = r.draft[id]; changed.push(id); }
       });
-      toast('عدّل ' + (r.by || 'مدير آخر') + ' المسودة أيضاً — دمجنا تعديلاته مع تعديلاتك.', 'info', 6500);
+      toast('عدّل ' + (r.by || 'مدير آخر') + ' المسودة أيضاً، ودمجنا تعديلاته مع تعديلاتك.', 'info', 6500);
       if (changed.length) { renderMain(); pushPreview(true); }
     }
     if (r.liveEtag && r.liveEtag !== S.liveEtag) {
@@ -382,8 +382,8 @@ function fieldRow(o) {
       id: baseId + '-' + l, maxlength: fd.max, rows: multi ? 3 : null,
       type: multi ? null : ({ url: 'url', email: 'email', tel: 'tel' }[fd.t] || 'text'),
       dir: l === 'ar' ? 'rtl' : 'ltr', lang: l === 'v' ? null : l,
-      'aria-label': langs.length > 1 ? fd.l + ' — ' + ln : null,
-      placeholder: o.def ? (o.def[l] || '') : (l === 'en' ? 'اختياري — يظهر النص العربي إن بقي فارغاً' : ''),
+      'aria-label': langs.length > 1 ? fd.l + ' (' + ln + ')' : null,
+      placeholder: o.def ? (o.def[l] || '') : (l === 'en' ? 'اختياري، ويظهر النص العربي إن بقي فارغاً' : ''),
       dataset: { path: o.path, lang: l },
     });
     inp.value = o.val[l] || '';
@@ -606,7 +606,7 @@ function renderSection() {
   card.append(h('div', { class: 'lpe-sec-head' }, h('div', {}, h('h3', { text: sec.label }), h('p', { text: sec.desc })), tools));
   if (d.hidden) {
     card.append(h('p', { class: 'lpe-note', role: 'note' }, ico('info'),
-      'هذا القسم مخفي عن الزوار' + (lv.hidden ? '' : ' بعد النشر') + ' — نصوصه محفوظة، وتقدر تظهره متى شئت.'));
+      'هذا القسم مخفي عن الزوار' + (lv.hidden ? '' : ' بعد النشر') + '. نصوصه محفوظة، ويمكنك إظهاره متى شئت.'));
   }
   if (sec.fields.length) {
     const fb = h('div', { class: 'lpe-fields' });
@@ -647,7 +647,7 @@ function renderSearch() {
   });
   card.append(h('div', { class: 'lpe-results-head', role: 'status' }, hits.length ? hits.length + ' نتيجة لـ «' + S.q.trim() + '»' : 'لا نتائج'));
   if (!hits.length) {
-    card.append(h('p', { class: 'lpe-empty', text: 'ما لقينا نصاً يطابق «' + S.q.trim() + '» — جرّب كلمة أخرى، أو امسح البحث وتصفّح الأقسام.' }));
+    card.append(h('p', { class: 'lpe-empty', text: 'لم نجد نصاً يطابق «' + S.q.trim() + '». جرّب كلمة أخرى، أو امسح البحث وتصفّح الأقسام.' }));
     return card;
   }
   hits.slice(0, 80).forEach(x => {
@@ -702,7 +702,7 @@ async function resetScope(ids, what) {
     touch(id);
   });
   renderMain();
-  toast('رجع ' + what + ' للأصل في المسودة — انشر ليراه الزوار.', 'ok');
+  toast('رجع ' + what + ' إلى الأصل في المسودة، فانشر ليراه الزوار.', 'ok');
 }
 
 /* ------------------------------------------------------------ النشر والتجاهل */
@@ -718,7 +718,7 @@ async function publish() {
   S.busy = true; paintBar();
   await flush();
   S.busy = false;
-  if (S.dirty.size || S.saveErr) { paintBar(); return toast('تعذّر حفظ آخر تعديلاتك — ' + (S.saveErr || 'حاول مرة ثانية.'), 'err', 7000); }
+  if (S.dirty.size || S.saveErr) { paintBar(); return toast('تعذّر حفظ آخر تعديلاتك: ' + (S.saveErr || 'حاول مرة ثانية.'), 'err', 7000); }
   const n = totalChanges();
   if (!S.hasDraft || !n) { paintBar(); return toast('ما فيه تغييرات غير منشورة.', 'info'); }
   const secs = S.schema.filter(s => secChanges(s.id)).map(s => s.label);
@@ -736,14 +736,14 @@ async function publish() {
   const r = await api('content.php', { action: 'publish', etag: S.etag });
   S.busy = false;
   if (!r || !r.ok) {
-    toast((r && r.error) || 'تعذّر النشر — حاول مرة ثانية.', 'err', 8000);
+    toast((r && r.error) || 'تعذّر النشر. حاول مرة أخرى.', 'err', 8000);
     await refresh(true);
     return;
   }
   applyPayload(r);
   if (typeof window.lpPublished === 'function') window.lpPublished(r.live, r.liveEtag);
   renderMain(); pushPreview(true);
-  toast('نُشرت التغييرات — يراها الزوار الآن.', 'ok', 6000);
+  toast('نُشرت التغييرات، ويراها الزوار الآن.', 'ok', 6000);
 }
 
 async function discard() {
@@ -785,12 +785,12 @@ function paintBar() {
   const n = totalChanges(), errs = allErrors();
   let dot = 'ok', title, sub;
   if (S.saving || S.busy) { dot = 'saving'; title = S.busy ? 'لحظة…' : 'جارٍ حفظ المسودة…'; sub = 'لا تغلق الصفحة قبل انتهاء الحفظ.'; }
-  else if (errs.size) { dot = 'err'; title = 'فيه حقل غير صحيح'; sub = errs.values().next().value.label + ': ' + errs.values().next().value.msg + ' — التعديلات في هذا القسم لا تُحفظ حتى تُصحَّح.'; }
-  else if (S.saveErr) { dot = 'err'; title = 'تعذّر حفظ المسودة'; sub = S.saveErr + ' — نعيد المحاولة تلقائياً مع أي تعديل.'; }
-  else if (!n) { title = 'لا تغييرات غير منشورة'; sub = S.liveAt ? 'آخر نشر ' + relTime(S.liveAt) + (S.liveBy ? ' — ' + S.liveBy : '') : 'الصفحة تعرض النصوص الأصلية.'; }
+  else if (errs.size) { dot = 'err'; title = 'فيه حقل غير صحيح'; sub = errs.values().next().value.label + ': ' + errs.values().next().value.msg + '. التعديلات في هذا القسم لا تُحفظ حتى تُصحَّح.'; }
+  else if (S.saveErr) { dot = 'err'; title = 'تعذّر حفظ المسودة'; sub = S.saveErr + '، ونعيد المحاولة تلقائياً مع أي تعديل.'; }
+  else if (!n) { title = 'لا تغييرات غير منشورة'; sub = S.liveAt ? 'آخر نشر ' + relTime(S.liveAt) + (S.liveBy ? ' (' + S.liveBy + ')' : '') : 'الصفحة تعرض النصوص الأصلية.'; }
   else {
     dot = 'pending'; title = plural(n);
-    sub = S.dirty.size ? 'بانتظار الحفظ…' : 'المسودة محفوظة' + (S.draftAt ? ' ' + relTime(S.draftAt) : '') + (S.draftBy ? ' — آخر تعديل: ' + S.draftBy : '') + ' · الزوار يرون المنشور حتى تنشر.';
+    sub = S.dirty.size ? 'بانتظار الحفظ…' : 'المسودة محفوظة' + (S.draftAt ? ' ' + relTime(S.draftAt) : '') + (S.draftBy ? '، وآخر تعديل: ' + S.draftBy : '') + '. يرى الزوار النسخة المنشورة حتى تنشر.';
   }
   b.dot.className = 'lpe-dot' + (dot === 'ok' ? '' : ' ' + dot);
   b.title.textContent = title;
@@ -832,7 +832,7 @@ function buildShell() {
     h('p', { text: 'حرّر كل نصوص الصفحة الرئيسية وبطاقاتها بالعربي والإنجليزي، وشاهد أثر كل حرف حيّاً على شاشة الحاسوب والجوال قبل أن يراه الزوار.' }));
 
   const search = h('input', {
-    type: 'search', placeholder: 'ابحث في نصوص الصفحة كلها — بالعربي أو الإنجليزي', 'aria-label': 'ابحث في نصوص الصفحة',
+    type: 'search', placeholder: 'ابحث في كل نصوص الصفحة بالعربية أو الإنجليزية', 'aria-label': 'ابحث في نصوص الصفحة',
     oninput: () => { S.q = search.value; paintChips(); renderMain(); },
   });
   S.el.search = search;
@@ -854,7 +854,7 @@ function buildShell() {
   const resetAll = h('button', { type: 'button', class: 'lpe-btn danger', onclick: () => resetScope(S.schema.map(s => s.id), 'الصفحة كلها') }, ico('refresh'), 'إرجاع الصفحة كلها');
   const toolbar = h('div', { class: 'lpe-card lpe-toolbar' },
     h('div', { class: 'lpe-search' }, ico('search'), search), langSeg.g, pvBtn, resetAll,
-    h('p', { class: 'lpe-hint', text: 'اختر قسماً، وحرّر نصوصه، وشاهد أثرها في المعاينة جانبه — أو اضغط أي نص في المعاينة ليفتح حقله. تعديلاتك مسودة تُحفظ تلقائياً، ولا يراها الزوار حتى تضغط «نشر».' }));
+    h('p', { class: 'lpe-hint', text: 'اختر قسماً وحرّر نصوصه، وشاهد أثرها في المعاينة بجانبه، أو اضغط أي نص في المعاينة ليفتح حقله. تعديلاتك مسودة تُحفظ تلقائياً، ولا يراها الزوار حتى تضغط «نشر».' }));
 
   const chips = h('nav', { class: 'lpe-chips', 'aria-label': 'أقسام الصفحة' });
   S.el.chips = {};
@@ -896,7 +896,7 @@ function buildShell() {
         h('button', { type: 'button', class: 'lpe-btn icon', title: 'فتح المعاينة في تبويب جديد', 'aria-label': 'فتح المعاينة في تبويب جديد',
           onclick: () => { saveNow(); window.open(pvUrl(), '_blank', 'noopener'); } }, ico('arrow-left')))),
     stage,
-    h('p', { class: 'lpe-pv-note' }, ico('info'), 'المعاينة تعرض مسودتك — الزوار يرون النسخة المنشورة حتى تضغط «نشر».'));
+    h('p', { class: 'lpe-pv-note' }, ico('info'), 'المعاينة تعرض مسودتك، ويرى الزوار النسخة المنشورة حتى تضغط «نشر».'));
 
   const grid = h('div', { class: 'lpe-grid' }, main, pv);
   S.el.grid = grid;
@@ -962,7 +962,7 @@ async function open(root) {
   if (!r || !r.ok) {
     root.textContent = '';
     root.append(h('div', { class: 'lpe-fail', role: 'alert' },
-      h('p', { text: (r && r.error) || 'تعذّر تحميل المحتوى — تأكد من اتصالك.' }),
+      h('p', { text: (r && r.error) || 'تعذّر تحميل المحتوى. تأكد من اتصالك.' }),
       h('button', { type: 'button', class: 'lpe-btn', onclick: () => open(root) }, ico('refresh'), 'إعادة المحاولة')));
     return;
   }

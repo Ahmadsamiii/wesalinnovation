@@ -65,14 +65,14 @@ function landingSchema(): array {
             'id' => 'hero', 'label' => 'الواجهة الرئيسية', 'hideable' => false,
             'desc' => 'أول ما يراه الزائر: الشارة والعنوان (يُكتب أمام الزائر حرفاً حرفاً) والنص وحقل السؤال وأمثلته والأزرار ومؤشرات الثقة.',
             'fields' => [
-                lpT('chip', 'الشارة العلوية', 'منصة ذكاء اصطناعي مُيسّرة للجميع', 'An accessible AI platform for everyone', 80),
-                lpT('title', 'العنوان الرئيسي', 'وصال — نفهمك ونسهّل وصولك', 'Wesal — we understand you and ease your access', 90),
+                lpT('chip', 'الشارة العلوية', 'مساعد ذكي للأشخاص ذوي الإعاقة في السعودية', 'An AI assistant for people with disabilities in Saudi Arabia', 80),
+                lpT('title', 'العنوان الرئيسي', 'نفهمك ونسهّل وصولك', 'We understand you and make access easier', 90),
                 lpA('sub', 'النص التعريفي',
-                    'اسأل بلغتك عن حقوقك أو خدماتك أو التقنيات المساعدة، ويجيبك وصال بوضوح من مصادر رسمية سعودية مع ذكر المصدر — قراءةً أو استماعاً. النسخة التجريبية تركّز حالياً على الإعاقة الحركية والبصرية.',
-                    'Ask in your own words about your rights, services or assistive technology, and Wesal answers clearly from official Saudi sources, naming each one — to read or to listen. The beta currently focuses on physical and visual disabilities.', 420),
-                lpT('ph', 'نص حقل السؤال', 'اسأل وصال عن أي شيء...', 'Ask Wesal anything…', 60),
+                    'اسأل بأسلوبك عن حقوقك والخدمات المتاحة لك والتقنيات المساعدة، كتابةً أو بصوتك. يجيبك وصال بلغة واضحة من مصادر سعودية رسمية، ويمكنك قراءة الإجابة أو الاستماع إليها. تركّز النسخة التجريبية حالياً على الإعاقة الحركية والبصرية.',
+                    'Ask in your own words about your rights, the services available to you and assistive technology, by typing or speaking. Wesal answers in clear language from official Saudi sources, and you can read the answer or listen to it. The beta currently focuses on physical and visual disabilities.', 420),
+                lpT('ph', 'نص حقل السؤال', 'اسأل عن حقوقك أو خدماتك...', 'Ask about your rights or services…', 60),
                 lpT('cta1', 'زر الإجراء الأول', 'جرّب الآن مجاناً', 'Try it free now', 30),
-                lpT('cta2', 'زر الإجراء الثاني', 'كيف يشتغل وصال', 'How Wesal works', 30),
+                lpT('cta2', 'زر الإجراء الثاني', 'كيف يعمل وصال', 'How Wesal works', 30),
             ],
             'lists' => [
                 ['k' => 'trust', 'l' => 'مؤشرات الثقة', 'item' => 'مؤشر', 'min' => 0, 'max' => 4, 'icon' => false,
@@ -82,8 +82,8 @@ function landingSchema(): array {
                  ],
                  'items' => [
                      ['id' => 'beta',    'f' => ['t' => ['ar' => 'نسخة تجريبية', 'en' => 'Beta'],           's' => ['ar' => 'مفتوحة للجميع', 'en' => 'Open to everyone']]],
-                     ['id' => 'sources', 'f' => ['t' => ['ar' => 'بمصادر رسمية', 'en' => 'Official sources'], 's' => ['ar' => 'مع كل إجابة', 'en' => 'with every answer']]],
-                     ['id' => 'always',  'f' => ['t' => ['ar' => '24/7', 'en' => '24/7'],                   's' => ['ar' => 'متاح', 'en' => 'Available']]],
+                     ['id' => 'sources', 'f' => ['t' => ['ar' => 'مصادر رسمية', 'en' => 'Official sources'], 's' => ['ar' => 'من جهات سعودية معتمدة', 'en' => 'From accredited Saudi bodies']]],
+                     ['id' => 'always',  'f' => ['t' => ['ar' => '24/7', 'en' => '24/7'],                   's' => ['ar' => 'متاح في أي وقت', 'en' => 'Available anytime']]],
                  ]],
                 // تُكتب واحداً واحداً داخل حقل السؤال بعد ظهور الصفحة، دورة واحدة ثم يعود
                 // «نص حقل السؤال». لا تظهر لمن فعّل «تقليل الحركة»؛ حذفها كلها يوقف الحركة.
@@ -92,21 +92,21 @@ function landingSchema(): array {
                      lpT('q', 'السؤال', '', '', 60),
                  ],
                  'items' => [
-                     ['id' => 'card',    'f' => ['q' => ['ar' => 'كيف أحصل على بطاقة الإعاقة؟', 'en' => 'How do I get a disability card?']]],
+                     ['id' => 'card',    'f' => ['q' => ['ar' => 'كيف أحصل على بطاقة إثبات الإعاقة؟', 'en' => 'How do I get a disability ID card?']]],
                      ['id' => 'work',    'f' => ['q' => ['ar' => 'ما حقوقي في العمل؟', 'en' => 'What are my rights at work?']]],
-                     ['id' => 'vision',  'f' => ['q' => ['ar' => 'ما التقنيات المساعدة لضعاف البصر؟', 'en' => 'What assistive tech helps with low vision?']]],
-                     ['id' => 'support', 'f' => ['q' => ['ar' => 'كيف أتقدم للدعم المالي؟', 'en' => 'How do I apply for financial support?']]],
+                     ['id' => 'vision',  'f' => ['q' => ['ar' => 'ما التقنيات المساعدة للإعاقة البصرية؟', 'en' => 'What assistive tech helps with visual disabilities?']]],
+                     ['id' => 'support', 'f' => ['q' => ['ar' => 'كيف أتقدّم بطلب دعم مالي؟', 'en' => 'How do I apply for financial support?']]],
                  ]],
             ],
         ],
         [
             'id' => 'features', 'label' => 'المزايا', 'hideable' => true,
-            'desc' => 'بطاقات المزايا تحت الواجهة الرئيسية — لكل بطاقة أيقونة وعنوان ووصف.',
+            'desc' => 'بطاقات المزايا تحت الواجهة الرئيسية، ولكل بطاقة أيقونة وعنوان ووصف.',
             'fields' => [
                 lpT('label', 'العنوان الصغير', 'المزايا', 'Features', 40),
-                lpT('title', 'عنوان القسم', 'تجربة ذكية مصممة لتكون في متناول الجميع', "A smart experience designed to be within everyone's reach", 100),
-                lpA('sub', 'وصف القسم', 'نجمع بين قوة الذكاء الاصطناعي وأفضل معايير إمكانية الوصول لنقدم تجربة فريدة ومُيسّرة',
-                    'We combine the power of AI with the best accessibility standards to deliver a unique, accessible experience', 240),
+                lpT('title', 'عنوان القسم', 'صمّمنا وصال ليناسب طريقتك في الوصول إلى المعلومة', 'We built Wesal around the way you reach information', 100),
+                lpA('sub', 'وصف القسم', 'يعمل وصال مع قارئ الشاشة ولوحة المفاتيح، ويتيح لك السؤال بصوتك والاستماع إلى الإجابة وضبط طريقة العرض.',
+                    'Wesal works with screen readers and keyboards, and lets you ask by voice, listen to answers and adjust how the page looks.', 240),
             ],
             'lists' => [
                 ['k' => 'items', 'l' => 'بطاقات المزايا', 'item' => 'ميزة', 'min' => 0, 'max' => 12, 'icon' => true,
@@ -116,29 +116,29 @@ function landingSchema(): array {
                  ],
                  'items' => [
                      ['id' => 'smart', 'i' => 'brain', 'f' => [
-                         'title' => ['ar' => 'إجابات ذكية ومبسّطة', 'en' => 'Smart, simplified answers'],
-                         'desc'  => ['ar' => 'يفهم وصال أسئلتك ويقدّم إجابات واضحة ومبسّطة تناسب احتياجاتك المعلوماتية', 'en' => 'Wesal understands your questions and gives clear, simple answers that fit your information needs']]],
+                         'title' => ['ar' => 'إجابات بلغة واضحة', 'en' => 'Answers in plain language'],
+                         'desc'  => ['ar' => 'اكتب سؤالك كما تقوله عادةً، ويبدأ وصال بالخلاصة ثم الخطوات والجهة المسؤولة، ويمكنك طلب التفصيل متى شئت.', 'en' => 'Ask the way you normally would. Wesal starts with the short answer, then the steps and the responsible authority, and you can ask for more detail at any time.']]],
                      ['id' => 'voice', 'i' => 'mic', 'f' => [
-                         'title' => ['ar' => 'تفاعل صوتي طبيعي', 'en' => 'Natural voice interaction'],
-                         'desc'  => ['ar' => 'تحدّث مع وصال بصوتك واستمع للإجابات — مصمم لسهولة الاستخدام لجميع القدرات', 'en' => 'Talk to Wesal and listen to the answers — designed to be easy for every ability']]],
+                         'title' => ['ar' => 'اسأل بصوتك واستمع للإجابة', 'en' => 'Ask by voice, listen to the answer'],
+                         'desc'  => ['ar' => 'انطق سؤالك بدل كتابته، واستمع إلى الإجابة بالسرعة التي تناسبك.', 'en' => 'Say your question instead of typing it, and listen to the answer at the speed that suits you.']]],
                      ['id' => 'accessible', 'i' => 'eye', 'f' => [
-                         'title' => ['ar' => 'واجهة مُيسّرة بالكامل', 'en' => 'Fully accessible interface'],
-                         'desc'  => ['ar' => 'تحكم بحجم الخط والتباين والألوان والحركة لتجربة تناسبك تماماً', 'en' => 'Control font size, contrast, colours and motion for an experience that fits you perfectly']]],
+                         'title' => ['ar' => 'واجهة تتكيّف معك', 'en' => 'An interface that adapts to you'],
+                         'desc'  => ['ar' => 'كبّر الخط، وفعّل التباين العالي أو الوضع الداكن، وخفّف الحركة من إعدادات الوصول.', 'en' => 'Enlarge the text, switch on high contrast or dark mode, and reduce motion from the accessibility settings.']]],
                      ['id' => 'trusted', 'i' => 'shield', 'f' => [
-                         'title' => ['ar' => 'معلومات موثوقة وآمنة', 'en' => 'Trusted, safe information'],
-                         'desc'  => ['ar' => 'إجاباتنا من الجهات الرسمية السعودية، ومع كل إجابة اسم مصدرها — وزر إبلاغ فوري عن أي معلومة غير دقيقة', 'en' => 'Our answers come from official Saudi entities, each naming its source — with an instant button to report anything inaccurate']]],
+                         'title' => ['ar' => 'معلومات من مصادر رسمية', 'en' => 'Information from official sources'],
+                         'desc'  => ['ar' => 'يستند وصال إلى أنظمة الجهات الرسمية السعودية وخدماتها، وإذا لاحظت معلومة غير دقيقة فأبلغنا من الزر أسفل الإجابة.', 'en' => 'Wesal draws on the regulations and services of official Saudi bodies. If something looks wrong, report it with the button under the answer.']]],
                      ['id' => 'library', 'i' => 'book', 'f' => [
-                         'title' => ['ar' => 'مكتبة معرفية شاملة', 'en' => 'Comprehensive knowledge library'],
-                         'desc'  => ['ar' => 'آلاف الموارد والأدلة الإرشادية المصنّفة والمُيسّرة لسهولة الوصول', 'en' => 'Thousands of categorised, accessible resources and guides, easy to reach']]],
+                         'title' => ['ar' => 'دليل مرتّب حسب الموضوع', 'en' => 'A guide organised by topic'],
+                         'desc'  => ['ar' => 'أدلة مختصرة في الحقوق والتعليم والصحة والتوظيف والتقنيات المساعدة، ويمكنك سؤال وصال عن أي دليل منها مباشرة.', 'en' => 'Short guides on rights, education, health, employment and assistive technology, and you can ask Wesal about any of them directly.']]],
                      ['id' => 'privacy', 'i' => 'hand-heart', 'f' => [
-                         'title' => ['ar' => 'خصوصية في صميم التصميم', 'en' => 'Privacy by design'],
-                         'desc'  => ['ar' => 'بياناتك لك وحدك: بلا إعلانات، بلا مشاركة مع أي طرف، وتقدر تصدّرها أو تحذفها في أي وقت من حسابك', 'en' => 'Your data is yours alone: no ads, no sharing with anyone, and you can export or delete it any time from your account']]],
+                         'title' => ['ar' => 'خصوصيتك محفوظة', 'en' => 'Your privacy is respected'],
+                         'desc'  => ['ar' => 'لا إعلانات في وصال ولا نبيع بياناتك، ويمكنك تنزيل نسخة منها أو حذفها في أي وقت من حسابك.', 'en' => 'There are no ads on Wesal and we never sell your data. You can download a copy or delete it at any time from your account.']]],
                  ]],
             ],
         ],
         [
             'id' => 'how', 'label' => 'آلية العمل', 'hideable' => true,
-            'desc' => 'خطوات مرقّمة تشرح كيف يعمل وصال — الترقيم تلقائي حسب الترتيب.',
+            'desc' => 'خطوات مرقّمة تشرح كيف يعمل وصال، ويُضاف الترقيم تلقائياً حسب الترتيب.',
             'fields' => [
                 lpT('label', 'العنوان الصغير', 'آلية العمل', 'How it works', 40),
                 lpT('title', 'عنوان القسم', 'كيف يعمل وصال؟', 'How does Wesal work?', 100),
@@ -152,24 +152,24 @@ function landingSchema(): array {
                  'items' => [
                      ['id' => 'ask', 'f' => [
                          'title' => ['ar' => 'اسأل سؤالك', 'en' => 'Ask your question'],
-                         'desc'  => ['ar' => 'اكتب أو انطق سؤالك بالعربية — وصال يفهم لغتك الطبيعية', 'en' => 'Type or speak your question in Arabic — Wesal understands natural language']]],
+                         'desc'  => ['ar' => 'اكتب سؤالك أو انطقه بالعربية، بالفصحى أو بلهجتك.', 'en' => 'Type or say your question in Arabic, in formal Arabic or your own dialect.']]],
                      ['id' => 'search', 'f' => [
                          'title' => ['ar' => 'وصال يبحث لك', 'en' => 'Wesal searches for you'],
-                         'desc'  => ['ar' => 'يحلل وصال سؤالك ويبحث في قاعدة المعرفة عن أفضل إجابة', 'en' => 'Wesal analyses your question and searches its knowledge base for the best answer']]],
+                         'desc'  => ['ar' => 'يبحث وصال في قاعدته المعرفية المبنية من مصادر رسمية عن المعلومات المرتبطة بسؤالك.', 'en' => 'Wesal searches its knowledge base, built from official sources, for information related to your question.']]],
                      ['id' => 'answer', 'f' => [
                          'title' => ['ar' => 'احصل على الإجابة', 'en' => 'Get your answer'],
-                         'desc'  => ['ar' => 'تحصل على إجابة واضحة ومبسّطة مع إمكانية طلب مزيد من التفصيل', 'en' => 'You get a clear, simple answer — and can ask for more detail']]],
+                         'desc'  => ['ar' => 'تصلك إجابة مختصرة تبدأ بالخلاصة، ويمكنك طلب التفصيل أو الاستماع إليها.', 'en' => 'You get a short answer that starts with the key point, and you can ask for more detail or listen to it.']]],
                  ]],
             ],
         ],
         [
             'id' => 'sources', 'label' => 'مصادر البيانات', 'hideable' => true,
-            'desc' => 'الجهات الرسمية التي يجيب منها وصال — لكل جهة اسم ونطاق ووصف قصير.',
+            'desc' => 'الجهات الرسمية التي يستند إليها وصال، ولكل جهة اسم ونطاق ووصف قصير.',
             'fields' => [
                 lpT('label', 'العنوان الصغير', 'مصادر البيانات', 'Data sources', 40),
                 lpT('title', 'عنوان القسم', 'من أين يجيب وصال؟', 'Where do Wesal answers come from?', 100),
-                lpA('sub', 'وصف القسم', 'قاعدة وصال المعرفية مبنية من أنظمة وخدمات الجهات الرسمية السعودية، ومع كل إجابة نذكر مصدرها. الإجابات إرشادية، والمرجع النهائي يبقى الجهة الرسمية نفسها.',
-                    "Wesal's knowledge base is built from the regulations and services of official Saudi entities, and every answer names its source. Answers are guidance — the official entity remains the final reference.", 360),
+                lpA('sub', 'وصف القسم', 'بُنيت قاعدة وصال المعرفية من الأنظمة والخدمات المنشورة لدى الجهات الرسمية السعودية. إجابات وصال إرشادية، والمرجع النهائي هو الجهة الرسمية نفسها.',
+                    "Wesal's knowledge base is built from the published regulations and services of official Saudi bodies. Wesal's answers are for guidance, and the official body itself is always the final reference.", 360),
             ],
             'lists' => [
                 ['k' => 'items', 'l' => 'الجهات', 'item' => 'جهة', 'min' => 0, 'max' => 16, 'icon' => false,
@@ -179,22 +179,22 @@ function landingSchema(): array {
                      lpT('note', 'الوصف', '', '', 100),
                  ],
                  'items' => [
-                     ['id' => 'hrsd', 'f' => ['name' => ['ar' => 'وزارة الموارد البشرية والتنمية الاجتماعية', 'en' => 'Ministry of Human Resources and Social Development'], 'domain' => ['v' => 'hrsd.gov.sa'], 'note' => ['ar' => 'بطاقة الإعاقة، الإعانات، التأهيل', 'en' => 'Disability card, allowances, rehabilitation']]],
+                     ['id' => 'hrsd', 'f' => ['name' => ['ar' => 'وزارة الموارد البشرية والتنمية الاجتماعية', 'en' => 'Ministry of Human Resources and Social Development'], 'domain' => ['v' => 'hrsd.gov.sa'], 'note' => ['ar' => 'بطاقة إثبات الإعاقة والإعانات والتأهيل', 'en' => 'Disability card, allowances, rehabilitation']]],
                      ['id' => 'apd', 'f' => ['name' => ['ar' => 'هيئة رعاية الأشخاص ذوي الإعاقة', 'en' => 'Authority for the Care of Persons with Disabilities'], 'domain' => ['v' => 'apd.gov.sa'], 'note' => ['ar' => 'التمكين والسياسات والمبادرات', 'en' => 'Empowerment, policies and initiatives']]],
                      ['id' => 'kscdr', 'f' => ['name' => ['ar' => 'مركز الملك سلمان لأبحاث الإعاقة', 'en' => 'King Salman Center for Disability Research'], 'domain' => ['v' => 'kscdr.org.sa'], 'note' => ['ar' => 'الأبحاث والمكتبة العلمية', 'en' => 'Research and scientific library']]],
                      ['id' => 'moh', 'f' => ['name' => ['ar' => 'وزارة الصحة', 'en' => 'Ministry of Health'], 'domain' => ['v' => 'moh.gov.sa'], 'note' => ['ar' => 'الخدمات الصحية والتأهيلية', 'en' => 'Health and rehabilitation services']]],
                      ['id' => 'moe', 'f' => ['name' => ['ar' => 'وزارة التعليم', 'en' => 'Ministry of Education'], 'domain' => ['v' => 'moe.gov.sa'], 'note' => ['ar' => 'التعليم الشامل والدمج', 'en' => 'Inclusive education and integration']]],
-                     ['id' => 'hrdf', 'f' => ['name' => ['ar' => 'هدف — صندوق تنمية الموارد البشرية', 'en' => 'HADAF — Human Resources Development Fund'], 'domain' => ['v' => 'hrdf.org.sa'], 'note' => ['ar' => 'التوظيف والتمكين المهني', 'en' => 'Employment and career empowerment']]],
+                     ['id' => 'hrdf', 'f' => ['name' => ['ar' => 'صندوق تنمية الموارد البشرية (هدف)', 'en' => 'Human Resources Development Fund (HADAF)'], 'domain' => ['v' => 'hrdf.org.sa'], 'note' => ['ar' => 'التوظيف والتمكين المهني', 'en' => 'Employment and career empowerment']]],
                      ['id' => 'mygov', 'f' => ['name' => ['ar' => 'المنصة الوطنية الموحدة', 'en' => 'Unified National Platform'], 'domain' => ['v' => 'my.gov.sa'], 'note' => ['ar' => 'الخدمات الحكومية الإلكترونية', 'en' => 'Government e-services']]],
                  ]],
             ],
         ],
         [
             'id' => 'privacy', 'label' => 'حماية البيانات', 'hideable' => true,
-            'desc' => 'التزامات الخصوصية — لكل بطاقة أيقونة وعنوان ووصف.',
+            'desc' => 'التزامات الخصوصية، ولكل بطاقة أيقونة وعنوان ووصف.',
             'fields' => [
                 lpT('label', 'العنوان الصغير', 'حماية البيانات', 'Data protection', 40),
-                lpT('title', 'عنوان القسم', 'بياناتك محمية — وبيدك', 'Your data, protected and in your hands', 100),
+                lpT('title', 'عنوان القسم', 'بياناتك محمية وأنت صاحب القرار فيها', 'Your data is protected and you stay in control', 100),
             ],
             'lists' => [
                 ['k' => 'items', 'l' => 'البطاقات', 'item' => 'بطاقة', 'min' => 0, 'max' => 9, 'icon' => true,
@@ -204,14 +204,14 @@ function landingSchema(): array {
                  ],
                  'items' => [
                      ['id' => 'encryption', 'i' => 'shield', 'f' => [
-                         'title' => ['ar' => 'تشفير وتقييد وصول', 'en' => 'Encryption & access control'],
-                         'desc'  => ['ar' => 'اتصال مشفّر، كلمات مرور مجزّأة لا يطّلع عليها أحد، وصلاحيات أدوار تحصر الوصول الإداري في أضيق نطاق', 'en' => 'Encrypted connections, hashed passwords nobody can read, and role permissions that keep admin access as narrow as possible']]],
+                         'title' => ['ar' => 'اتصال مشفّر ووصول محدود', 'en' => 'Encrypted, with limited access'],
+                         'desc'  => ['ar' => 'يصل اتصالك بالمنصة مشفّراً، ولا نخزّن كلمة مرورك بصيغة يمكن قراءتها، ولا يطّلع على البيانات من فريقنا إلا من يحتاج إليها في عمله.', 'en' => 'Your connection is encrypted, your password is never stored in readable form, and only team members who need the data for their work can access it.']]],
                      ['id' => 'control', 'i' => 'settings', 'f' => [
-                         'title' => ['ar' => 'تحكم كامل ببياناتك', 'en' => 'Full control of your data'],
-                         'desc'  => ['ar' => 'من حسابك: نزّل نسخة من بياناتك، امسح محادثاتك، أو احذف حسابك نهائياً — بدون مراسلات ولا انتظار', 'en' => 'From your account: download a copy of your data, clear your chats, or delete your account for good — no emails, no waiting']]],
+                         'title' => ['ar' => 'بياناتك تحت تصرّفك', 'en' => 'Your data, your call'],
+                         'desc'  => ['ar' => 'من صفحة حسابك تستطيع تنزيل نسخة من بياناتك، أو مسح محادثاتك، أو حذف حسابك نهائياً، دون الحاجة إلى مراسلتنا.', 'en' => 'From your account page you can download a copy of your data, clear your chats or delete your account permanently, without having to contact us.']]],
                      ['id' => 'transparency', 'i' => 'eye', 'f' => [
-                         'title' => ['ar' => 'شفافية كاملة', 'en' => 'Full transparency'],
-                         'desc'  => ['ar' => 'لا نبيع بياناتك ولا نشاركها مع معلنين، ونوضح في سياسة الخصوصية ما نجمعه ولماذا وكم نحتفظ به', 'en' => 'We never sell your data or share it with advertisers, and our privacy policy explains what we collect, why, and how long we keep it']]],
+                         'title' => ['ar' => 'وضوح في ما نجمعه', 'en' => 'Clear about what we collect'],
+                         'desc'  => ['ar' => 'لا نبيع بياناتك ولا نشاركها مع معلنين، وتوضّح سياسة الخصوصية ما نجمعه وسبب جمعه ومدة الاحتفاظ به.', 'en' => 'We never sell your data or share it with advertisers, and our privacy policy explains what we collect, why, and how long we keep it']]],
                  ]],
             ],
         ],
@@ -219,9 +219,9 @@ function landingSchema(): array {
             'id' => 'cta', 'label' => 'شريط الدعوة', 'hideable' => true,
             'desc' => 'الشريط الملوّن في آخر الصفحة يدعو الزائر للبدء.',
             'fields' => [
-                lpT('title', 'العنوان', 'ابدأ رحلتك المعرفية مع وصال اليوم', 'Start your journey with Wesal today', 90),
-                lpT('sub', 'النص', 'اسأل أي سؤال واحصل على إجابات واضحة ومُيسّرة — مجاناً', 'Ask anything and get clear, accessible answers — free', 160),
-                lpT('btn', 'نص الزر', 'ابدأ الآن', 'Start now', 30),
+                lpT('title', 'العنوان', 'هل لديك سؤال عن حقوقك أو خدماتك؟', 'Have a question about your rights or services?', 90),
+                lpT('sub', 'النص', 'اسأل وصال الآن مجاناً، ولا تحتاج إلى حساب لتبدأ.', 'Ask Wesal now for free. You do not need an account to start.', 160),
+                lpT('btn', 'نص الزر', 'ابدأ المحادثة', 'Start a chat', 30),
             ],
             'lists' => [],
         ],
@@ -229,15 +229,15 @@ function landingSchema(): array {
             'id' => 'footer', 'label' => 'التذييل', 'hideable' => false,
             'desc' => 'أسفل كل صفحة. بيانات الاتصال تظهر أيضاً في صفحة «تواصل معنا».',
             'fields' => [
-                lpA('about', 'النبذة', 'منصة ذكاء اصطناعي سعودية مُيسّرة تجيب الأشخاص ذوي الإعاقة من مصادر رسمية موثوقة، مع ذكر المصدر في كل إجابة',
-                    'A Saudi accessible AI platform that answers people with disabilities from trusted official sources, naming the source in every answer', 300, 'الهوية'),
+                lpA('about', 'النبذة', 'وصال مساعد ذكي سعودي يجيب الأشخاص ذوي الإعاقة وأسرهم عن حقوقهم والخدمات المتاحة لهم، استناداً إلى مصادر رسمية.',
+                    'Wesal is a Saudi AI assistant that answers people with disabilities and their families about their rights and the services available to them, based on official sources.', 300, 'الهوية'),
                 lpM('x', 'حساب إكس (X)', 'url', 'https://x.com/Wesalhub', 200, 'حسابات التواصل الاجتماعي'),
                 lpM('instagram', 'حساب إنستقرام', 'url', 'https://www.instagram.com/wesalhub', 200, 'حسابات التواصل الاجتماعي'),
                 lpM('linkedin', 'حساب لينكد إن', 'url', 'https://www.linkedin.com/company/wesalksa0', 200, 'حسابات التواصل الاجتماعي'),
                 lpT('quickTitle', 'عنوان العمود', 'روابط سريعة', 'Quick links', 30, 'عمود الروابط السريعة'),
                 lpT('lHome', 'رابط الرئيسية', 'الرئيسية', 'Home', 30, 'عمود الروابط السريعة'),
                 lpT('lChat', 'رابط المحادثة', 'محادثة مع وصال', 'Chat with Wesal', 30, 'عمود الروابط السريعة'),
-                lpT('lGuide', 'رابط الدليل', 'الدليل الشامل', 'Complete guide', 30, 'عمود الروابط السريعة'),
+                lpT('lGuide', 'رابط الدليل', 'دليل وصال', 'Wesal guide', 30, 'عمود الروابط السريعة'),
                 lpT('lAbout', 'رابط «عن وصال»', 'عن وصال', 'About', 30, 'عمود الروابط السريعة'),
                 lpT('supportTitle', 'عنوان العمود', 'الدعم', 'Support', 30, 'عمود الدعم'),
                 lpT('lA11y', 'رابط إمكانية الوصول', 'إمكانية الوصول', 'Accessibility', 30, 'عمود الدعم'),
@@ -251,9 +251,9 @@ function landingSchema(): array {
                 lpT('contactTitle', 'عنوان العمود', 'تواصل', 'Contact', 30, 'عمود التواصل'),
                 lpM('email', 'البريد الإلكتروني', 'email', 'info@wesalinnovation.sa', 120, 'عمود التواصل'),
                 lpM('phone', 'رقم الجوال', 'tel', '+966 50 112 0161', 24, 'عمود التواصل'),
-                lpT('hours', 'ساعات العمل', 'الأحد - الخميس، 8 ص - 6 م', 'Sunday – Thursday, 8 AM – 6 PM', 60, 'عمود التواصل'),
-                lpT('copy', 'حقوق النشر', '© 2026 وصال — جميع الحقوق محفوظة', '© 2026 Wesal — All rights reserved', 90, 'السطر الأخير'),
-                lpT('tagline', 'السطر الختامي', 'منصة سعودية · إجابات بمصادر رسمية · وصول مُيسّر WCAG 2.2', 'A Saudi platform · Answers from official sources · Accessible to WCAG 2.2', 120, 'السطر الأخير'),
+                lpT('hours', 'ساعات العمل', 'الأحد إلى الخميس، 8 صباحاً إلى 6 مساءً', 'Sunday to Thursday, 8 AM to 6 PM', 60, 'عمود التواصل'),
+                lpT('copy', 'حقوق النشر', '© 2026 وصال الابتكار لتقنية المعلومات. جميع الحقوق محفوظة.', '© 2026 Wesal Innovation. All rights reserved.', 90, 'السطر الأخير'),
+                lpT('tagline', 'السطر الختامي', 'صُمّمت المنصة وفق إرشادات الوصول الرقمي WCAG 2.2', 'Designed to the WCAG 2.2 accessibility guidelines', 120, 'السطر الأخير'),
             ],
             'lists' => [],
         ],

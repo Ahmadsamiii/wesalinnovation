@@ -9,7 +9,7 @@ $subject = clean($in['subject'] ?? '', 120);
 $message = clean($in['message'] ?? '', 4000);
 
 if (mb_strlen($name) < 3)                       fail('اكتب اسمك كاملاً.');
-if (!filter_var($email, FILTER_VALIDATE_EMAIL)) fail('اكتب بريداً إلكترونياً صحيحاً حتى نقدر نرد عليك.');
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) fail('اكتب بريداً إلكترونياً صحيحاً لنتمكن من الرد عليك.');
 if ($subject === '')                            fail('اختر موضوع الرسالة.');
 if (mb_strlen($message) < 10)                   fail('اكتب رسالتك بتفصيل أكثر.');
 

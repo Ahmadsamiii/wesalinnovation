@@ -1,0 +1,126 @@
+name: اختبارات مساحة العمل
+
+# workspace/ تطبيق Laravel مستقل. سير عمل اختباراته كان داخل workspace/.github/
+# وهو مجلد لا يقرؤه GitHub أصلاً (يقرأ .github في جذر المستودع فقط)، فلم يُشغَّل
+# له أي اختبار منذ إنشائه — وبقي عطل غياب مجلد storage/ مخفياً بسبب ذلك.
+on:
+  pull_request:
+    paths:
+      - 'workspace/**'
+      - 'deploy.sh'
+      - '.github/workflows/workspace.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'workspace/**'
+      - 'deploy.sh'
+      - '.github/workflows/workspace.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: workspace-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: workspace
+
+    steps:
+      - name: جلب الكود
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # الحزم المقفلة (Symfony 8) تشترط PHP 8.4.1 فأحدث.
+      - name: تجهيز PHP 8.4
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: '8.4'
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, intl, fileinfo
+          coverage: none
+
+      - name: تثبيت اعتماديات Composer
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: ملف البيئة من النموذج المرفوع
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: فحص الأسلوب
+        run: vendor/bin/pint --test
+
+      - name: فحص صياغة سكربتي النشر
+        run: bash -n deploy.sh && bash -n ../deploy.sh
+
+      - name: الاختبارات
+        run: php artisan test
+
+      - name: تجميع الواجهة
+        run: |
+          node --version
+          npm ci --ignore-scripts
+          npm run build
+
+  # الإنتاج MySQL/MariaDB والاختبارات السريعة أعلاه SQLite، والفروق بينهما تكسر
+  # النشر لا الاختبارات: ترتيب utf8mb4_unicode_ci يتجاهل التشكيل، فعدّ كلمتين
+  # تختلفان بشدّة فقط مكرّرتين في قيد تفرّد وأسقط ترحيلاً في أول نشر تجريبي.
+  tests-mariadb:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: workspace
+
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MARIADB_DATABASE: workspace_test
+          MARIADB_USER: workspace
+          MARIADB_PASSWORD: secret
+          MARIADB_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    env:
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: workspace_test
+      DB_USERNAME: workspace
+      DB_PASSWORD: secret
+
+    steps:
+      - name: جلب الكود
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: تجهيز PHP 8.4
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: '8.4'
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, pdo_mysql, intl, fileinfo
+          coverage: none
+
+      - name: تثبيت اعتماديات Composer
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: ملف البيئة من النموذج المرفوع
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: الاختبارات على MariaDB
+        run: php artisan test

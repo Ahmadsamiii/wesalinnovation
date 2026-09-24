@@ -122,7 +122,7 @@ function taskSlaWarnings(): int
         if ($remaining > $total * 0.25) continue; // ما زال أمامها أكثر من ربع مدتها
 
         $id    = (int)$t['id'];
-        $title = $t['ref'] . ' — قرُبت من مخالفة اتفاقية مستوى الخدمة';
+        $title = $t['ref'] . ': اقتربت من تجاوز موعد اتفاقية مستوى الخدمة';
         $body  = (string)($t['subject'] ?: $t['type']);
         if ($t['assignee_id']) {
             notify((int)$t['assignee_id'], 'ticket_sla_warning', $title, $body, '/tickets.html?id=' . $id);
@@ -179,7 +179,7 @@ function taskWaitingTickets(): array
             $upd->execute([$id]);
             if ($upd->rowCount() === 0) continue;
             cronSystemEntry($id,
-                'تبقّى يومان فقط قبل إغلاق هذه التذكرة تلقائياً لعدم الرد — أرسل ردّك إن كنت ما زلت بحاجة للمساعدة.',
+                'بقي يومان على إغلاق هذه التذكرة تلقائياً لعدم الرد. أرسل ردّك إن كنت ما زلت بحاجة إلى المساعدة.',
                 ['auto' => true, 'reminder' => 2], false);
             if ($t['user_id']) {
                 notify((int)$t['user_id'], 'ticket_waiting_reminder', 'تذكير أخير: ' . $t['ref'],
@@ -271,7 +271,7 @@ function taskWeeklyReport(): int
     $avgTxt    = $avgRow['a'] !== null ? round((float)$avgRow['a'], 1) . ' ساعة' : 'لا توجد تذاكر حُلّت هذا الأسبوع';
 
     $html = '<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;line-height:1.9">'
-        . '<p>تقرير أسبوعي — تذاكر الدعم في وصال</p>'
+        . '<p>التقرير الأسبوعي لتذاكر الدعم في وصال</p>'
         . '<ul>'
         . '<li>التذاكر المفتوحة حالياً: <b>' . $open . '</b></li>'
         . '<li>المتجاوزة لموعد حلّها: <b>' . $overdue . '</b></li>'
@@ -281,7 +281,7 @@ function taskWeeklyReport(): int
     $sent = 0;
     foreach (db()->query("SELECT email FROM users WHERE support_level IN ('lead','exec')")->fetchAll() as $u) {
         try {
-            if (sendMail($u['email'], 'تقرير أسبوعي — تذاكر الدعم', $html)) $sent++;
+            if (sendMail($u['email'], 'التقرير الأسبوعي لتذاكر الدعم', $html)) $sent++;
         } catch (Throwable $e) { error_log('WESAL_CRON_WEEKLY_MAIL_FAIL: ' . $e->getMessage()); }
     }
 

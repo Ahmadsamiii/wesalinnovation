@@ -64,6 +64,28 @@ return [
             ]) : [],
         ],
 
+        /*
+         * قاعدة بيانات المنصة العامة (الموقع ومساعد الذكاء الاصطناعي). قراءة
+         * فقط: منها إحصاءات «تكامل الذكاء الاصطناعي» و«تنبيهات الأسئلة عالية
+         * الحساسية». اختيارية؛ بلا PLATFORM_DB_DATABASE تشرح الصفحتان طريقة
+         * الربط بدل البيانات. يُفضَّل مستخدم MySQL بصلاحية SELECT وحدها.
+         */
+        'platform' => [
+            'driver' => 'mysql',
+            'host' => env('PLATFORM_DB_HOST') ?: env('DB_HOST', '127.0.0.1'),
+            'port' => env('PLATFORM_DB_PORT') ?: env('DB_PORT', '3306'),
+            'database' => env('PLATFORM_DB_DATABASE'),
+            'username' => env('PLATFORM_DB_USERNAME'),
+            'password' => env('PLATFORM_DB_PASSWORD', ''),
+            'unix_socket' => env('PLATFORM_DB_SOCKET', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+        ],
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),

@@ -2,6 +2,9 @@
 
 namespace App\Enums;
 
+/**
+ * أعمدة لوحة الكانبان بهذا الترتيب نفسه.
+ */
 enum TaskStatus: string
 {
     case Todo = 'todo';
@@ -18,6 +21,17 @@ enum TaskStatus: string
             self::Review => 'مراجعة',
             self::Blocked => 'معطّلة',
             self::Done => 'منجزة',
+        };
+    }
+
+    public function color(): string
+    {
+        return match ($this) {
+            self::Todo => 'gray',
+            self::InProgress => 'brand',
+            self::Review => 'purple',
+            self::Blocked => 'red',
+            self::Done => 'green',
         };
     }
 }
