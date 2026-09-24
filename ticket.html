@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="تابع حالة تذكرة الدعم الفني الخاصة بك في وصال الابتكار برمز المتابعة السرّي — بلا حاجة لإنشاء حساب">
-<title>متابعة تذكرة الدعم — وصال الابتكار</title>
+<meta name="description" content="تابع حالة تذكرة الدعم الفني في وصال الابتكار برمز المتابعة الخاص بك، دون الحاجة إلى حساب.">
+<title>متابعة تذكرة الدعم | وصال الابتكار</title>
 <meta name="theme-color" content="#282692">
 <meta name="robots" content="noindex">
 <link rel="preload" href="fonts/thmanyahsans-Regular.woff2" as="font" type="font/woff2" crossorigin>
@@ -171,15 +171,15 @@ footer a{color:var(--secondary);text-decoration:underline}
 <div id="ticketView" hidden>
 
 <div class="card ticket-head">
-<h1 id="tType">—</h1>
-<span class="ticket-ref" id="tRef">—</span>
+<h1 id="tType">-</h1>
+<span class="ticket-ref" id="tRef">-</span>
 <div class="status-row" id="statusRow" aria-live="polite">
-<span class="pill" id="statusPill">—</span>
-<span class="pill" id="prioPill">—</span>
+<span class="pill" id="statusPill">-</span>
+<span class="pill" id="prioPill">-</span>
 </div>
 <div class="meta-grid">
-<div><span>أُنشئت</span><b id="tCreated">—</b></div>
-<div><span>آخر تحديث</span><b id="tUpdated">—</b></div>
+<div><span>أُنشئت</span><b id="tCreated">-</b></div>
+<div><span>آخر تحديث</span><b id="tUpdated">-</b></div>
 </div>
 </div>
 
@@ -212,20 +212,20 @@ footer a{color:var(--secondary);text-decoration:underline}
 <!-- يظهر فقط عندما تكون الحالة resolved -->
 <div class="action-block" id="resolvedBlock" hidden>
 <h3>هل تم حل مشكلتك؟</h3>
-<p style="color:var(--muted);font-size:var(--f-sm);margin-bottom:var(--s4)">إن كان الحل كافياً فلا داعي لأي إجراء — ستُغلق التذكرة تلقائياً خلال أسبوع من تاريخ الحل ما لم تعترض قبل ذلك. إن كانت المشكلة قائمة، أعد فتح التذكرة وسنكمل معك:</p>
+<p style="color:var(--muted);font-size:var(--f-sm);margin-bottom:var(--s4)">إذا كان الحل كافياً فلا تحتاج إلى أي إجراء، وستُغلق التذكرة تلقائياً بعد أسبوع من تاريخ الحل. وإذا كانت المشكلة ما زالت قائمة فأعد فتح التذكرة وسنكمل معك.</p>
 <div class="form-group">
 <label for="reopenNote1">صف ما زال ناقصاً (اختياري)</label>
 <textarea id="reopenNote1" class="form-input" rows="3" placeholder="اكتب هنا إن أردت توضيح سبب إعادة الفتح..."></textarea>
 </div>
 <div class="form-error" id="reopenErr1" role="alert" aria-live="assertive"></div>
-<button type="button" class="btn btn-outline" id="reopenBtn1">لم تُحل بعد — أعد فتحها</button>
+<button type="button" class="btn btn-outline" id="reopenBtn1">لم تُحل، أعد فتحها</button>
 </div>
 
 <!-- يظهر فقط عندما تكون الحالة closed -->
 <div class="action-block" id="closedBlock" hidden>
 <div id="rateBlock">
 <h3>قيّم تجربتك معنا</h3>
-<p style="color:var(--muted);font-size:var(--f-sm);margin-bottom:var(--s4)">تذكرتك مغلقة الآن — تقييمك يساعدنا نتحسّن.</p>
+<p style="color:var(--muted);font-size:var(--f-sm);margin-bottom:var(--s4)">أُغلقت تذكرتك، ويساعدنا تقييمك على تحسين خدمتنا.</p>
 <fieldset class="stars" id="starsField">
 <legend style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">التقييم من 1 إلى 5 نجوم</legend>
 <label class="star-lbl" data-v="1"><input type="radio" name="csat" value="1"><span class="star-ico" aria-hidden="true">★</span><span class="star-txt">1</span></label>
@@ -257,7 +257,7 @@ footer a{color:var(--secondary);text-decoration:underline}
 </main>
 
 <footer>
-<p>وصال الابتكار لتقنية المعلومات — تواجه مشكلة في هذه الصفحة؟ راسلنا على <a href="mailto:info@wesalinnovation.sa">info@wesalinnovation.sa</a></p>
+<p>وصال الابتكار لتقنية المعلومات. إذا واجهت مشكلة في هذه الصفحة فراسلنا على <a href="mailto:info@wesalinnovation.sa">info@wesalinnovation.sa</a></p>
 </footer>
 
 <script>
@@ -284,7 +284,7 @@ function btnLoad(id,on,label){
 }
 /* نفس تنسيق التاريخ في index.html: ميلادي بأرقام لاتينية، بلا تقويم هجري مربك */
 function fmtDate(ts){
-  if(!ts)return '—';
+  if(!ts)return '-';
   const d=new Date(ts);
   return d.toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{year:'numeric',month:'2-digit',day:'2-digit'})
        +' '+d.toLocaleTimeString('ar-SA-u-nu-latn',{hour:'2-digit',minute:'2-digit'});
@@ -306,7 +306,7 @@ async function loadTicket(){
   if(!res.ok){
     loadingView.hidden=true; ticketView.hidden=true;
     document.getElementById('errorMsg').textContent = res.offline
-      ? 'تعذّر الاتصال بالخادم — تحقّق من اتصالك بالإنترنت وأعد تحميل الصفحة.'
+      ? 'تعذّر الاتصال بالخادم. تحقّق من اتصالك بالإنترنت وأعد تحميل الصفحة.'
       : (res.error || 'رابط المتابعة غير صحيح أو انتهت صلاحيته.');
     errorView.hidden=false;
     document.title='تعذّر فتح التذكرة | وصال الابتكار';
@@ -317,7 +317,7 @@ async function loadTicket(){
 }
 
 function render(t, entries){
-  document.title='تذكرة '+t.ref+' — '+(STATUS_LABELS[t.status]||t.status)+' | وصال الابتكار';
+  document.title='تذكرة '+t.ref+' ('+(STATUS_LABELS[t.status]||t.status)+') | وصال الابتكار';
 
   document.getElementById('tType').textContent=t.subject||t.type;
   document.getElementById('tRef').textContent=t.ref;
@@ -394,7 +394,7 @@ document.getElementById('replyForm').addEventListener('submit', async e=>{
   const res=await api('tickets.php',{action:'reply',token,body});
   btnLoad('replyBtn',false);
   if(!res.ok) return showMsg('replyErr', res.offline
-    ? 'ما وصل ردك — يبدو أن الاتصال منقطع. حاول مرة أخرى.'
+    ? 'لم يصل ردك، ويبدو أن الاتصال منقطع. حاول مرة أخرى.'
     : (res.error||'تعذّر إرسال الرد.'));
   document.getElementById('replyBody').value='';
   showMsg('replyOk','تم إرسال ردك.');
@@ -409,7 +409,7 @@ async function doReopen(noteId, errId, btnId){
   const res=await api('tickets.php',{action:'reopen',token,body});
   btnLoad(btnId,false);
   if(!res.ok) return showMsg(errId, res.offline
-    ? 'تعذّر الاتصال — حاول مرة أخرى.'
+    ? 'تعذّر الاتصال. حاول مرة أخرى.'
     : (res.error||'تعذّرت إعادة فتح التذكرة.'));
   await loadTicket();
 }
@@ -431,7 +431,7 @@ document.getElementById('rateBtn').addEventListener('click', async ()=>{
   const res=await api('tickets.php',{action:'rate',token,csat:currentRating});
   btnLoad('rateBtn',false);
   if(!res.ok) return showMsg('rateErr', res.offline
-    ? 'تعذّر الاتصال — حاول مرة أخرى.'
+    ? 'تعذّر الاتصال. حاول مرة أخرى.'
     : (res.error||'تعذّر إرسال التقييم.'));
   await loadTicket();
 });

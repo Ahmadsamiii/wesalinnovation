@@ -19,7 +19,7 @@ $act   = $in['action'] ?? '';
 /** بعض الأقسام لا يراها مراجع المحتوى */
 function needRole(array $staff, array $roles): void {
     if (!in_array($staff['role'], $roles, true))
-        fail('ما عندك صلاحية لهذا الإجراء.', 403);
+        fail('ليست لديك صلاحية لهذا الإجراء.', 403);
 }
 
 /** يجلب المستخدم الهدف مع التحقق من أن الإجراء عليه مسموح */
@@ -30,7 +30,7 @@ function targetUser(array $staff, $id, string $what): array {
     $t = $s->fetch();
     if (!$t) fail('المستخدم غير موجود.');
     if ((int)$t['id'] === (int)$staff['id'])
-        fail('ما تقدر ' . $what . ' حسابك بنفسك — اطلب من مدير نظام آخر.');
+        fail('لا يمكنك أن ' . $what . ' حسابك بنفسك، فاطلب ذلك من مدير نظام آخر.');
     return $t;
 }
 
@@ -38,7 +38,7 @@ function targetUser(array $staff, $id, string $what): array {
 function guardLastAdmin(array $target): void {
     if ($target['role'] !== 'admin') return;
     $n = (int) db()->query("SELECT COUNT(*) c FROM users WHERE role='admin' AND status='active'")->fetch()['c'];
-    if ($n <= 1) fail('هذا آخر مدير نظام نشط في المنصة — عيّن مديراً آخر قبل تغيير صلاحيته أو إيقافه.');
+    if ($n <= 1) fail('هذا آخر مدير نظام نشط في المنصة، فعيّن مديراً آخر قبل تغيير صلاحيته أو إيقافه.');
 }
 
 switch ($act) {
@@ -77,7 +77,7 @@ switch ($act) {
         needRole($STAFF, ['admin']);
         $role = (string)($in['role'] ?? '');
         if (!in_array($role, ROLES, true)) fail('دور غير معروف.');
-        if ($role === 'admin' && $STAFF['role'] !== 'admin') fail('ترقية مدير نظام صلاحية لمدير النظام.', 403);
+        if ($role === 'admin' && $STAFF['role'] !== 'admin') fail('الترقية إلى مدير نظام من صلاحيات مدير النظام فقط.', 403);
         $t = targetUser($STAFF, $in['user_id'] ?? 0, 'تعدّل صلاحية');
         if ($t['role'] === $role) out(['ok' => true, 'role' => $role]);
         if ($t['role'] === 'admin') guardLastAdmin($t);
@@ -122,7 +122,7 @@ switch ($act) {
         out(['ok' => true, 'mode' => 'link', 'link' => $link, 'mailed' => $mailed,
              'message' => $mailed
                 ? 'أُرسل رابط إعادة التعيين لبريد المستخدم. الرابط صالح ساعتين.'
-                : 'تعذّر إرسال البريد من الخادم — انسخ الرابط وسلّمه للمستخدم. صالح ساعتين.']);
+                : 'تعذّر إرسال البريد من الخادم، فانسخ الرابط وسلّمه للمستخدم. الرابط صالح لمدة ساعتين.']);
     }
 
     case 'grant_tokens': {
@@ -215,7 +215,7 @@ switch ($act) {
         if (!$ticket) fail('التذكرة غير موجودة.', 404);
         /* والمراجع لا يغلق إلا ما يراه — كان يقدر يغلق أي تذكرة برقمها */
         if (($STAFF['role'] ?? '') === 'reviewer' && $ticket['type'] !== TICKET_TYPE_ACCURACY) {
-            fail('ما عندك صلاحية على هذه التذكرة.', 403);
+            fail('ليست لديك صلاحية على هذه التذكرة.', 403);
         }
         db()->prepare('UPDATE support_tickets SET status=? WHERE id=?')->execute([$status, $id]);
         audit($STAFF, 'ticket', '#' . $id, $status === 'done' ? 'أُغلقت' : 'أُعيد فتحها');
@@ -256,7 +256,7 @@ switch ($act) {
         $email = mb_strtolower(clean($in['email'] ?? '', 120));
         $role  = in_array($in['role'] ?? 'user', ['user', 'reviewer', 'mod'], true) ? $in['role'] : 'user';
         if ($role !== 'user' && $STAFF['role'] !== 'admin')
-            fail('دعوة أعضاء الفريق صلاحية لمدير النظام.', 403);
+            fail('دعوة أعضاء الفريق من صلاحيات مدير النظام فقط.', 403);
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) fail('اكتب بريداً إلكترونياً صحيحاً.');
         $s = db()->prepare('SELECT id FROM users WHERE email=? LIMIT 1');
         $s->execute([$email]);
@@ -278,7 +278,7 @@ switch ($act) {
         $mailed = sendMail($email,
             $role === 'user' ? 'دعوة لتجربة منصة وصال' : 'دعوة للانضمام لفريق وصال',
             inviteEmailHtml($STAFF['name'], $role, $link));
-        audit($STAFF, 'invite', $email, roleName($role) . ($mailed ? '' : ' — تعذّر إرسال البريد'));
+        audit($STAFF, 'invite', $email, roleName($role) . ($mailed ? '' : ' (تعذّر إرسال البريد)'));
         out(['ok' => true, 'mailed' => $mailed, 'link' => $link]);
     }
 
@@ -321,7 +321,7 @@ switch ($act) {
             fail(APP_DEBUG ? $e->getMessage() : 'تعذّر إنشاء الحسابات التجريبية. حاول مرة أخرى.', 500);
         }
         out(['ok' => true, 'accounts' => $accounts,
-             'message' => 'كلمات المرور تُعرض هذه المرة فقط — انسخها الآن. لو ضاعت، أعد الإنشاء وتتولّد كلمات جديدة.']);
+             'message' => 'تُعرض كلمات المرور هذه المرة فقط، فانسخها الآن. وإذا فقدتها فأعد الإنشاء لتتولد كلمات جديدة.']);
     }
 
     case 'demo_purge': {
@@ -333,7 +333,7 @@ switch ($act) {
             fail(APP_DEBUG ? $e->getMessage() : 'تعذّر حذف الحسابات التجريبية.', 500);
         }
         out(['ok' => true, 'deleted' => $n,
-             'message' => $n ? 'حُذفت الحسابات التجريبية وبيانات الأمثلة.' : 'ما فيه حسابات تجريبية أصلاً.']);
+             'message' => $n ? 'حُذفت الحسابات التجريبية وبيانات الأمثلة.' : 'لا توجد حسابات تجريبية.']);
     }
 
     /* ==================== سجل العمليات ==================== */

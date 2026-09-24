@@ -60,15 +60,15 @@ function lpMonoError(string $type, string $v): ?string {
         case 'url':
             // https فقط — javascript: وأخواتها تصير ثغرة عند النقر
             if (!preg_match('#^https://#i', $v) || !filter_var($v, FILTER_VALIDATE_URL))
-                return 'الرابط لازم يبدأ بـ https:// ويكون صحيحاً';
+                return 'يجب أن يكون الرابط صحيحاً ويبدأ بـ https://';
             return null;
         case 'email':
             return filter_var($v, FILTER_VALIDATE_EMAIL) ? null : 'بريد إلكتروني غير صحيح';
         case 'tel':
-            return preg_match('/^\+?[0-9][0-9\s\-()]{5,22}$/', $v) ? null : 'رقم غير صحيح — أرقام ومسافات و+ فقط';
+            return preg_match('/^\+?[0-9][0-9\s\-()]{5,22}$/', $v) ? null : 'رقم غير صحيح، واستخدم الأرقام والمسافات وعلامة + فقط';
         case 'domain':
             return preg_match('/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+(\/[^\s]*)?$/i', $v)
-                ? null : 'النطاق غير صحيح — مثال: moh.gov.sa';
+                ? null : 'النطاق غير صحيح، ومثاله: moh.gov.sa';
     }
     return null;
 }
@@ -372,7 +372,7 @@ try {
             $admin = requireAdmin();
             rateLimit('landing', 240);
             $secs = $in['sections'] ?? null;
-            if (!is_array($secs) || !$secs) fail('ما فيه تغييرات للحفظ.');
+            if (!is_array($secs) || !$secs) fail('لا توجد تغييرات للحفظ.');
             $base = (string)($in['etag'] ?? '');
 
             db()->beginTransaction();
@@ -417,10 +417,10 @@ try {
 
             db()->beginTransaction();
             $row = lpRow('draft', true);
-            if (!$row) fail('ما فيه تغييرات غير منشورة.', 409);
+            if (!$row) fail('لا توجد تغييرات غير منشورة.', 409);
             if ($row['etag'] !== $base) {
                 fail('تغيّرت المسودة للتو' . ($row['by'] ? ' (آخر تعديل: ' . $row['by'] . ')' : '')
-                     . ' — راجع آخر نسخة ثم انشر.', 409);
+                     . '. راجع آخر نسخة ثم انشر.', 409);
             }
             $live = lpLive();
             $a = lpCanon($live['doc']);
@@ -441,5 +441,5 @@ try {
     }
 } catch (Throwable $e) {
     if (db()->inTransaction()) db()->rollBack();
-    fail(APP_DEBUG ? $e->getMessage() : 'صار خطأ غير متوقع. حاول مرة أخرى.', 500);
+    fail(APP_DEBUG ? $e->getMessage() : 'حدث خطأ غير متوقع. حاول مرة أخرى.', 500);
 }

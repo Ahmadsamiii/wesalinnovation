@@ -223,7 +223,7 @@ if ($act === 'survey_submit') {
 
     if (!$answeredAny) {
         if ($isNew) db()->prepare('DELETE FROM survey_submissions WHERE id=?')->execute([$subId]);
-        fail('جاوب على سؤال واحد على الأقل قبل الإرسال.');
+        fail('أجب عن سؤال واحد على الأقل قبل الإرسال.');
     }
 
     if ($invId !== null) {
@@ -329,7 +329,7 @@ case 'survey_save': {
         $type = (string)($q['type'] ?? '');
         if (!in_array($type, $validTypes, true)) fail('نوع سؤال غير معروف.');
         $qtext = clean($q['question_text'] ?? '', 500);
-        if ($qtext === '') fail('كل سؤال لازم له نص.');
+        if ($qtext === '') fail('اكتب نصاً لكل سؤال.');
         $help = clean($q['help_text'] ?? '', 300) ?: null;
         $placeholder = ($type === 'short_text' || $type === 'long_text') ? (clean($q['placeholder'] ?? '', 200) ?: null) : null;
         $required = !empty($q['is_required']) ? 1 : 0;
@@ -350,7 +350,7 @@ case 'survey_save': {
             $opts = [];
             foreach ($rawOpts as $oi => $o) {
                 $otext = clean($o['text'] ?? '', 200);
-                if ($otext === '') fail('كل خيار لازم له نص.');
+                if ($otext === '') fail('اكتب نصاً لكل خيار.');
                 $hasFollow = ($type === 'single_choice' && !empty($o['has_followup'])) ? 1 : 0;
                 $opts[] = [
                     'id' => isset($o['id']) ? (int)$o['id'] : 0,
@@ -493,7 +493,7 @@ case 'survey_send_invitations': {
     $surveyId = (int)$survey['id'];
 
     $campaign = clean($in['campaign'] ?? '', 80);
-    if ($campaign === '') fail('اكتب اسم الحملة أولاً — هو اللي يجمع نتائجها لاحقاً.');
+    if ($campaign === '') fail('اكتب اسم الحملة أولاً، فبه تُجمع نتائجها لاحقاً.');
     $rawList = is_array($in['emails'] ?? null) ? $in['emails'] : preg_split('/[\s,;،]+/u', (string)($in['emails'] ?? ''));
     $emails = [];
     foreach ($rawList as $e) {
@@ -505,8 +505,8 @@ case 'survey_send_invitations': {
     if (count($emails) > 50) fail('خمسون بريداً كحد أقصى في الدفعة الواحدة.');
 
     $quota = inviteQuotaLeft();
-    if ($quota !== null && $quota <= 0) fail('وصلت سقف دعوات اليوم (' . INVITE_DAILY_LIMIT . '). أكمل بكرة.');
-    if ($quota !== null && count($emails) > $quota) fail('باقي من سقف اليوم ' . $quota . ' دعوة فقط — قلّل القائمة أو أكمل بكرة.');
+    if ($quota !== null && $quota <= 0) fail('بلغت سقف دعوات اليوم (' . INVITE_DAILY_LIMIT . '). أكمل غداً.');
+    if ($quota !== null && count($emails) > $quota) fail('المتبقي من سقف اليوم ' . $quota . ' دعوة فقط. قلّل القائمة أو أكمل غداً.');
 
     $sent = 0; $failedMail = 0; $skipped = 0;
     $dupe = db()->prepare('SELECT id FROM survey_invitations WHERE survey_id=? AND email=? AND campaign_name=? LIMIT 1');
@@ -521,7 +521,7 @@ case 'survey_send_invitations': {
             surveyInviteEmailHtml($survey['title'], SITE_URL . '/invite/' . $token, (bool)$survey['grants_trial']));
         $mailed ? $sent++ : $failedMail++;
     }
-    audit($STAFF, 'survey_invite', $survey['title'], "الحملة $campaign — أُرسلت $sent، تعذّر بريد $failedMail، مكررة $skipped");
+    audit($STAFF, 'survey_invite', $survey['title'], "الحملة $campaign: أُرسلت $sent، وتعذّر بريد $failedMail، ومكررة $skipped");
     out(['ok' => true, 'sent' => $sent, 'failed' => $failedMail, 'skipped' => $skipped, 'quota_left' => inviteQuotaLeft()]);
 }
 
@@ -584,7 +584,7 @@ case 'survey_responses_list': {
             $a = $answersBySub[$sid][$qid] ?? null;
             if ($a === null) { $answers[$qid] = null; continue; }
             $answers[$qid] = match ($q['type']) {
-                'single_choice' => trim(($a['option_text'] ?? '') . ($a['answer_text'] ? ' — ' . $a['answer_text'] : '')) ?: null,
+                'single_choice' => trim(($a['option_text'] ?? '') . ($a['answer_text'] ? ': ' . $a['answer_text'] : '')) ?: null,
                 'scale' => $a['number_value'] !== null ? (int)$a['number_value'] : null,
                 default => $a['answer_text'],
             };

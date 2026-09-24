@@ -28,7 +28,7 @@ function supportLevel(?array $u): string
 function requireAgent(): array
 {
     $u = currentUser();
-    if (!$u || supportLevel($u) === 'none') fail('ما عندك صلاحية على تذاكر الدعم.', 403);
+    if (!$u || supportLevel($u) === 'none') fail('ليست لديك صلاحية على تذاكر الدعم.', 403);
     return $u;
 }
 
@@ -202,7 +202,7 @@ function notifyAgents(int $ticketId, string $ref, string $title, string $priorit
     $s = db()->query("SELECT id FROM users WHERE support_level IN ('lead','exec')");
     $prLabel = ['critical' => 'حرجة', 'high' => 'عالية', 'normal' => 'عادية', 'low' => 'منخفضة'][$priority] ?? 'عادية';
     foreach ($s->fetchAll() as $row) {
-        notify((int)$row['id'], 'ticket_new', $ref . ' — ' . $title, 'أولوية: ' . $prLabel, '/tickets.html?id=' . $ticketId);
+        notify((int)$row['id'], 'ticket_new', $ref . ': ' . $title, 'أولوية: ' . $prLabel, '/tickets.html?id=' . $ticketId);
     }
 }
 
@@ -214,7 +214,7 @@ function notifyNewTicket(string $ref, string $token, string $name, string $email
         . '<p>مرحباً ' . htmlspecialchars($name) . '،</p>'
         . '<p>وصلنا طلبك وأُعطي الرقم المرجعي <b>' . htmlspecialchars($ref) . '</b> (أولوية: ' . $prLabel . ').</p>'
         . '<p><a href="' . htmlspecialchars($link) . '">اضغط هنا لمتابعة تذكرتك في أي وقت</a></p>'
-        . '<p style="color:#666;font-size:13px">احتفظ بهذا الرابط — هو وسيلتك الوحيدة لمتابعة الطلب إن لم يكن لديك حساب.</p>'
+        . '<p style="color:#666;font-size:13px">احتفظ بهذا الرابط، فهو وسيلتك الوحيدة لمتابعة الطلب إن لم يكن لديك حساب.</p>'
         . '</div>';
     /* فشل البريد لا يوقف إنشاء التذكرة — التذكرة محفوظة والرابط سيصل لاحقاً
        عبر البريد الاحتياطي mail() إن كانت SMTP معطّلة، أو يمكن استرجاعه من
@@ -247,7 +247,7 @@ switch ($action) {
             $name  = clean($in['name'] ?? '', 80);
             $email = mb_strtolower(clean($in['email'] ?? '', 120));
             if (mb_strlen($name) < 3)                       fail('اكتب اسمك كاملاً حتى نعرف من نخاطب.');
-            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) fail('اكتب بريداً إلكترونياً صحيحاً — عليه نرسل لك رابط المتابعة.');
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) fail('اكتب بريداً إلكترونياً صحيحاً، فعليه نرسل لك رابط المتابعة.');
         }
 
         $priority = computePriority($type, $urgency);
@@ -473,7 +473,7 @@ switch ($action) {
 
         db()->prepare("UPDATE support_tickets SET status='waiting' WHERE id=?")->execute([$id]);
         ticketEntry($id, $agent, 'reply', 'public', $body);
-        ticketEntry($id, null, 'status', 'internal', 'انتقلت لبانتظار صاحب التذكرة — عدّاد الاتفاقية مجمَّد.',
+        ticketEntry($id, null, 'status', 'internal', 'أصبحت التذكرة بانتظار رد صاحبها، وتوقف عدّاد اتفاقية مستوى الخدمة.',
                     ['from' => $t['status'], 'to' => 'waiting']);
         out(['ok' => true]);
     }
@@ -485,14 +485,14 @@ switch ($action) {
         $toId    = (int)($in['to_user_id'] ?? 0);
         $reason  = clean($in['reason'] ?? '', 1000);
         $showWhy = !empty($in['reason_visible_to_requester']);
-        if ($reason === '') fail('اكتب سبب الإحالة — الإحالة بلا سبب تمرير مسؤولية.');
+        if ($reason === '') fail('اكتب سبب الإحالة قبل تأكيدها.');
 
         $t = requireTicketAccess($agent, $id);
         $s = db()->prepare('SELECT id,name,support_level FROM users WHERE id=?'); $s->execute([$toId]);
         $target = $s->fetch();
         if (!$target || supportLevel($target) === 'none') fail('اختر مُعالجاً فعلياً لإحالة التذكرة إليه.');
         if (levelRank(supportLevel($target)) < levelRank(supportLevel($agent)) && $target['id'] != $agent['id'])
-            fail('لا تُحال التذكرة إلى مستوى أدنى — أعد فتحها إلى الطابور العام بدل ذلك إن لزم.');
+            fail('لا تُحال التذكرة إلى مستوى أدنى، ويمكنك إعادتها إلى الطابور العام إن لزم.');
 
         db()->prepare("UPDATE support_tickets SET assignee_id=?, status='escalated' WHERE id=?")
             ->execute([$toId, $id]);
@@ -512,7 +512,7 @@ switch ($action) {
         $agent = requireAgent();
         $id  = (int)($in['id'] ?? 0);
         $res = clean($in['resolution'] ?? '', 2000);
-        if (mb_strlen($res) < 5) fail('اكتب ملخّص الحل — لا يُغلق طلب بلا تفسير لصاحبه.');
+        if (mb_strlen($res) < 5) fail('اكتب ملخّص الحل، فلا يُغلق طلب دون توضيح لصاحبه.');
         $t = requireTicketAccess($agent, $id);
 
         db()->prepare("UPDATE support_tickets SET status='resolved', resolved_at=NOW(), resolution=? WHERE id=?")
@@ -534,13 +534,13 @@ switch ($action) {
         if (!in_array($t['status'], ['resolved', 'closed'], true)) fail('هذه التذكرة ليست مغلقة.', 409);
         $closedAt = $t['closed_at'] ?: $t['resolved_at'];
         if ($closedAt && (time() - strtotime($closedAt)) > 14 * 86400) {
-            fail('مضى أكثر من 14 يوماً على إغلاقها — افتح تذكرة جديدة وسنربطها بهذه.', 409);
+            fail('مضى أكثر من 14 يوماً على إغلاقها. افتح تذكرة جديدة وسنربطها بهذه التذكرة.', 409);
         }
         db()->prepare("UPDATE support_tickets SET status='reopened', assignee_id=? WHERE id=?")
             ->execute([$t['assignee_id'], $t['id']]);
         $body = clean($in['body'] ?? '', 2000);
         ticketEntry((int)$t['id'], null, 'reply', 'public', $body !== '' ? $body : 'أعاد صاحب التذكرة فتحها.');
-        ticketEntry((int)$t['id'], null, 'status', 'internal', 'أُعيد الفتح خلال مهلة الـ14 يوماً — رجعت لنفس المعالج بأولوية أعلى.',
+        ticketEntry((int)$t['id'], null, 'status', 'internal', 'أُعيد الفتح خلال مهلة الـ14 يوماً، ورجعت التذكرة إلى المعالج نفسه بأولوية أعلى.',
                     ['from' => $t['status'], 'to' => 'reopened']);
         db()->prepare("UPDATE support_tickets SET priority=? WHERE id=?")->execute([bumpPriority($t['priority']), $t['id']]);
         if ($t['assignee_id']) notify((int)$t['assignee_id'], 'ticket_reopened', 'أُعيدت ' . $t['ref'] . ' للفتح', $body, '/tickets.html?id=' . $t['id']);
