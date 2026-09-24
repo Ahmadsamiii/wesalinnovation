@@ -62,6 +62,16 @@ enum AuditAction: string
 
     case MailTestSent = 'system.mail_test';
 
+    case ContentCreated = 'content.created';
+    case ContentSubmitted = 'content.submitted';
+    case ContentApproved = 'content.approved';
+    case ContentRejected = 'content.rejected';
+    case ContentWithdrawn = 'content.withdrawn';
+    case ContentDeleted = 'content.deleted';
+    case AlertReviewed = 'content.alert_reviewed';
+    case SensitiveTermAdded = 'content.term_added';
+    case SensitiveTermRemoved = 'content.term_removed';
+
     public function label(): string
     {
         return match ($this) {
@@ -111,6 +121,15 @@ enum AuditAction: string
             self::HiringFilled => 'شغل وظيفة',
             self::HiringCancelled => 'إلغاء طلب توظيف',
             self::MailTestSent => 'رسالة بريد تجريبية',
+            self::ContentCreated => 'إنشاء محتوى صحي',
+            self::ContentSubmitted => 'تقديم محتوى للمراجعة الطبية',
+            self::ContentApproved => 'اعتماد محتوى صحي ونشره',
+            self::ContentRejected => 'رفض محتوى صحي',
+            self::ContentWithdrawn => 'سحب محتوى منشور',
+            self::ContentDeleted => 'حذف مسودة محتوى',
+            self::AlertReviewed => 'مراجعة سؤال حساس',
+            self::SensitiveTermAdded => 'إضافة كلمة تنبيه',
+            self::SensitiveTermRemoved => 'حذف كلمة تنبيه',
         };
     }
 
@@ -119,11 +138,11 @@ enum AuditAction: string
         return match ($this) {
             self::AuthFailed, self::UserDeactivated, self::ProjectDeleted, self::TaskDeleted, self::AttachmentDeleted,
             self::PurchaseOrderCancelled, self::InvoiceCancelled, self::CertificateRevoked, self::ReferenceLetterRejected,
-            self::HiringRejected, self::HiringCancelled => 'red',
+            self::HiringRejected, self::HiringCancelled, self::ContentRejected, self::ContentWithdrawn, self::ContentDeleted => 'red',
             self::UserRoleChanged, self::PasswordReset, self::ProjectDecided, self::PurchaseOrderReviewed, self::PurchaseOrderDecided => 'orange',
             self::UserCreated, self::InvitationAccepted, self::UserReactivated, self::ProjectCreated, self::ProjectCompleted,
             self::ContractActivated, self::InvoiceIssued, self::PaymentRecorded, self::CertificateIssued, self::ReferenceLetterApproved,
-            self::HiringApproved, self::HiringFilled => 'green',
+            self::HiringApproved, self::HiringFilled, self::ContentApproved => 'green',
             self::AuthLogin => 'gray',
             default => 'blue',
         };
@@ -151,6 +170,7 @@ enum AuditAction: string
             'certificate' => 'الشهادات والإفادات',
             'hiring' => 'التوظيف',
             'system' => 'النظام',
+            'content' => 'المحتوى الصحي',
             default => $group,
         };
     }

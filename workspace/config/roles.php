@@ -72,7 +72,7 @@ return [
     'medical' => [
         'label' => 'المدير الطبي',
         'tabs' => [
-            'content_review' => ['label' => 'قائمة مراجعة المحتوى الصحي', 'route' => 'medical.review'],
+            'content_review' => ['label' => 'قائمة مراجعة المحتوى الصحي', 'route' => 'medical.review', 'active' => ['medical.review', 'medical.review.*']],
             'content_log' => ['label' => 'سجل المحتوى المعتمد والمرفوض', 'route' => 'medical.log'],
             'sensitive_alerts' => ['label' => 'تنبيهات الأسئلة عالية الحساسية', 'route' => 'medical.alerts'],
             'review_reports' => ['label' => 'تقارير المراجعة', 'route' => 'reports.medical'],

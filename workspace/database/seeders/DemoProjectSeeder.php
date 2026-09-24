@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Enums\ApprovalDecision;
 use App\Enums\CertificateType;
 use App\Enums\EmploymentType;
+use App\Enums\HealthContentCategory;
 use App\Enums\PaymentMethod;
 use App\Enums\Priority;
 use App\Enums\ProjectDecisionType;
@@ -12,6 +13,7 @@ use App\Enums\ProjectMemberRole;
 use App\Enums\TaskStatus;
 use App\Models\Certificate;
 use App\Models\Contract;
+use App\Models\HealthContent;
 use App\Models\HiringRequest;
 use App\Models\Invoice;
 use App\Models\Project;
@@ -132,6 +134,54 @@ class DemoProjectSeeder extends Seeder
         $this->seedFinance($platform, $done, $pm, $executive);
         $this->seedCertificates($done, $pm, $executive, $member, $designer);
         $this->seedHiring($platform, $pm, $executive);
+        $this->seedHealthContent();
+    }
+
+    /**
+     * محتوى صحي في كل مرحلة: منشور، وقيد المراجعة، ومُعاد للتعديل، ومسودة.
+     */
+    private function seedHealthContent(): void
+    {
+        $sysadmin = User::where('email', 'sysadmin@wesalinnovation.sa')->firstOrFail();
+        $medical = User::where('email', 'medical@wesalinnovation.sa')->firstOrFail();
+
+        $pressure = $this->healthContent($sysadmin, HealthContentCategory::HealthCare, 'الوقاية من قرح الفراش لمستخدمي الكراسي المتحركة',
+            'علامات الإنذار المبكر وخطوات الوقاية اليومية لمن يجلس فترات طويلة.',
+            "قرحة الفراش (قرحة الضغط) إصابة في الجلد والأنسجة تحته بسبب ضغط مستمر على موضع واحد، وأكثر مواضعها لمستخدمي الكراسي المتحركة أسفل الظهر والوركان.\n\nللوقاية:\n- خفف الضغط أو غيّر وضعية الجلوس كل ١٥ إلى ٣٠ دقيقة بالميل للأمام أو للجانبين.\n- استخدم وسادة مخصصة لتوزيع الضغط، وتأكد من ملاءمتها مع أخصائي العلاج.\n- افحص الجلد يومياً بمرآة أو بمساعدة أحد، خاصة المواضع التي لا تشعر بها.\n- حافظ على جفاف الجلد ونظافته، وعلى تغذية كافية وشرب الماء.\n\nراجع الطبيب إذا لاحظت احمراراً لا يزول بعد ٣٠ دقيقة من إزالة الضغط، أو تغيّراً في لون الجلد أو حرارته، أو أي جرح مفتوح.");
+        $pressure->submit($sysadmin);
+        $pressure->approve($medical, 'مطابق للإرشادات المعتمدة.');
+
+        $school = $this->healthContent($sysadmin, HealthContentCategory::Rights, 'حق الطلاب ذوي الإعاقة في التعليم العام',
+            'ما يحق للطالب من تهيئة وخدمات داخل المدرسة، وكيف تطلبها الأسرة.',
+            "يحق للطالب ذي الإعاقة التعليم في بيئة ملائمة مع التهيئة التي يحتاجها، في فصول الدمج أو البرامج الخاصة.\n\nمن التهيئة المعقولة: وقت إضافي في الاختبارات، ومواد بخط كبير أو بطريقة برايل، ومترجم للغة الإشارة، ومقعد مناسب وممرات يسهل الوصول إليها.\n\nتبدأ الأسرة بمراجعة إدارة المدرسة ومعها التقارير الطبية أو التشخيصية، ويُعدّ للطالب برنامج تربوي فردي يُراجع دورياً.",
+            'https://moe.gov.sa');
+        $school->submit($sysadmin);
+        $school->approve($medical);
+        $school->forceFill(['review_due_on' => today()->addDays(12)])->save();
+
+        $this->healthContent($sysadmin, HealthContentCategory::HealthCare, 'التصرف الصحيح عند نوبة صرع',
+            'ما تفعله وما تتجنبه أثناء النوبة وبعدها، ومتى تتصل بالإسعاف.',
+            "أثناء النوبة: ابقَ هادئاً وسجّل وقت بدايتها، وأبعد الأشياء الصلبة أو الحادة من حول الشخص، وضع شيئاً ليناً تحت رأسه.\n\nلا تضع شيئاً في فمه ولا تحاول تثبيت حركته.\n\nبعد توقف النوبة: ضعه على جنبه في وضعية الإفاقة وابقَ معه حتى يستعيد وعيه تماماً.\n\nاتصل بالإسعاف (٩٩٧) إذا استمرت النوبة أكثر من خمس دقائق، أو تكررت دون أن يستعيد وعيه بينها، أو أصيب أثناءها، أو كانت أول نوبة له.")
+            ->submit($sysadmin);
+
+        $stroke = $this->healthContent($sysadmin, HealthContentCategory::Rehabilitation, 'تمارين منزلية بعد الجلطة الدماغية',
+            null,
+            "تمارين بسيطة تساعد على استعادة الحركة: تحريك الأصابع والرسغ، ورفع الذراع بمساعدة الذراع السليمة، والوقوف بمساعدة.\n\nكررها ثلاث مرات يومياً.");
+        $stroke->submit($sysadmin);
+        $stroke->reject($medical, 'التمارين تختلف بحسب الحالة: أضف تنبيهاً صريحاً بأن البرنامج يحدده أخصائي العلاج الطبيعي، واحذف «ثلاث مرات يومياً» لأنها ليست توصية عامة.');
+
+        $this->healthContent($sysadmin, HealthContentCategory::AssistiveTech, 'اختيار الكرسي المتحرك المناسب',
+            null,
+            'مقاس المقعد وارتفاعه، ونوع الدفع اليدوي أو الكهربائي، ووزن الكرسي إن كان سيُحمل في السيارة.');
+    }
+
+    private function healthContent(User $author, HealthContentCategory $category, string $title, ?string $summary, string $body, ?string $source = null): HealthContent
+    {
+        $content = new HealthContent(['category' => $category, 'title' => $title, 'summary' => $summary, 'body' => $body, 'source_url' => $source]);
+        $content->author_id = $author->id;
+        $content->save();
+
+        return $content;
     }
 
     /**

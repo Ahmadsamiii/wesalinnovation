@@ -22,12 +22,14 @@ class NavigationTest extends TestCase
 
     public function test_unbuilt_tab_opens_a_pending_page_for_its_own_role(): void
     {
+        // كل تبويبات الأدوار مبنية الآن؛ تبويب مستقبلي يُضاف للإعداد قبل مساره.
+        config(['roles.medical.tabs.future_tab' => ['label' => 'تبويب قادم', 'route' => 'medical.future']]);
         $medical = User::factory()->role('medical')->create();
 
-        $response = $this->actingAs($medical)->get(route('sections.show', 'content_review'));
+        $response = $this->actingAs($medical)->get(route('sections.show', 'future_tab'));
 
         $response->assertOk();
-        $response->assertSee('قائمة مراجعة المحتوى الصحي');
+        $response->assertSee('تبويب قادم');
         $response->assertSee('قيد البناء');
         $response->assertSee('aria-current="page"', false);
     }

@@ -89,9 +89,13 @@ class DashboardRoleAccessTest extends TestCase
 
     public function test_dashboard_sends_each_role_to_its_first_built_tab(): void
     {
-        // «إدارة المحتوى» أول تبويبات مدير النظام ولم تُبنَ؛ الثاني مبني.
         $sysadmin = User::factory()->role('sysadmin')->create();
 
-        $this->actingAs($sysadmin)->get('/dashboard')->assertRedirect(route('users.index'));
+        $this->actingAs($sysadmin)->get('/dashboard')->assertRedirect(route('content.index'));
+
+        // تبويب أول لم يُبنَ مساره بعد يُتخطّى إلى أول تبويب مبني.
+        config(['roles.sysadmin.tabs' => ['future' => ['label' => 'قريباً', 'route' => 'system.future'], ...config('roles.sysadmin.tabs')]]);
+
+        $this->actingAs($sysadmin)->get('/dashboard')->assertRedirect(route('content.index'));
     }
 }

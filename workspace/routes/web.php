@@ -17,9 +17,14 @@ use App\Http\Controllers\Executive\DecisionLogController;
 use App\Http\Controllers\Executive\FinancialApprovalController;
 use App\Http\Controllers\Executive\ProjectApprovalController;
 use App\Http\Controllers\Executive\TeamController;
+use App\Http\Controllers\HealthContentController;
 use App\Http\Controllers\HiringRequestController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\InvoicePaymentController;
+use App\Http\Controllers\KnowledgeBaseController;
+use App\Http\Controllers\Medical\ContentReviewController;
+use App\Http\Controllers\Medical\QuestionAlertController;
+use App\Http\Controllers\Medical\ReviewLogController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectMemberController;
@@ -32,6 +37,7 @@ use App\Http\Controllers\ReferenceLetterController;
 use App\Http\Controllers\Reports\ClientStatusReportController;
 use App\Http\Controllers\Reports\ExecutiveReportController;
 use App\Http\Controllers\Reports\FinanceReportController;
+use App\Http\Controllers\Reports\MedicalReportController;
 use App\Http\Controllers\Reports\MyTasksReportController;
 use App\Http\Controllers\Reports\ProjectManagerReportController;
 use App\Http\Controllers\Reports\TechnicalReportController;
@@ -51,6 +57,9 @@ Route::get('/', function () {
 Route::get('verify/{code?}', VerificationController::class)
     ->middleware('throttle:30,1')
     ->name('verify.show');
+
+/* المحتوى الصحي المعتمد: صفحة عامة يستشهد بها مساعد المنصة حين يجيب منه. */
+Route::get('kb/{content}', KnowledgeBaseController::class)->name('kb.show');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -144,6 +153,28 @@ Route::middleware('auth')->group(function () {
         Route::get('my-tasks', MyTasksReportController::class)->middleware('role:team_member')->name('mine');
         Route::get('project-status', ClientStatusReportController::class)->middleware('role:client')->name('client');
         Route::get('technical', TechnicalReportController::class)->middleware('role:sysadmin')->name('technical');
+        Route::get('medical', MedicalReportController::class)->middleware('role:medical')->name('medical');
+    });
+
+    /* المحتوى الصحي: يحرّره مدير النظام ويعتمده المدير الطبي قبل نشره. */
+    Route::middleware('role:sysadmin|medical')->group(function () {
+        Route::resource('content', HealthContentController::class);
+        Route::post('content/{content}/submit', [HealthContentController::class, 'submit'])->name('content.submit');
+        Route::post('content/{content}/withdraw', [HealthContentController::class, 'withdraw'])->name('content.withdraw');
+    });
+
+    /* المدير الطبي: المراجعة وسجلها والتنبيهات. */
+    Route::middleware('role:medical')->prefix('medical')->name('medical.')->group(function () {
+        Route::get('review', [ContentReviewController::class, 'index'])->name('review');
+        Route::get('review/{content}', [ContentReviewController::class, 'show'])->name('review.show');
+        Route::post('review/{content}/approve', [ContentReviewController::class, 'approve'])->name('review.approve');
+        Route::post('review/{content}/reject', [ContentReviewController::class, 'reject'])->name('review.reject');
+        Route::post('review/{content}/renew', [ContentReviewController::class, 'renew'])->name('review.renew');
+        Route::get('log', [ReviewLogController::class, 'index'])->name('log');
+        Route::get('alerts', [QuestionAlertController::class, 'index'])->name('alerts');
+        Route::post('alerts/{chatLog}/review', [QuestionAlertController::class, 'review'])->whereNumber('chatLog')->name('alerts.review');
+        Route::post('alerts/terms', [QuestionAlertController::class, 'storeTerm'])->name('terms.store');
+        Route::delete('alerts/terms/{term}', [QuestionAlertController::class, 'destroyTerm'])->name('terms.destroy');
     });
 
     /* المدير التنفيذي. */
