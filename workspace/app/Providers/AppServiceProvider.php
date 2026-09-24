@@ -13,6 +13,7 @@ use App\Models\ReferenceLetter;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -31,6 +32,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // خلف وسيط ينهي TLS يرى التطبيق الطلب http فيولّد روابط وأصولاً http
+        // (محتوى مختلط ونماذج تُرسل بلا تشفير). رابط أساسي https يحسم المخطط.
+        if (str_starts_with((string) config('app.url'), 'https://')) {
+            URL::forceScheme('https');
+        }
+
         // أسماء قصيرة ثابتة في أعمدة الربط المتعدد (المرفقات، سجل التدقيق،
         // أدوار Spatie) بدل أسماء الأصناف: إعادة تسمية صنف لا تكسر البيانات.
         Relation::enforceMorphMap([

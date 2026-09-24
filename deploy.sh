@@ -140,3 +140,14 @@ ok "الواجهة البرمجية ترد بـ JSON صالح"
 
 say "تم النشر بنجاح — ${local_sha:0:7}"
 printf 'للتراجع:\n  tar -xzf %s -C %s\n\n' "$archive" "$TARGET"
+
+# ------------------------------------------- مساحة العمل (بعد نجاح الموقع)
+# تطبيق Laravel مستقل في workspace/ بسكربت نشره الخاص، لا يُنشر إلا إذا جُهّز
+# له الخادم (وُجد ملف .env المشترك — workspace/DEPLOY.md). يأتي بعد نشر
+# الموقع العام والتحقق منه، ففشله لا يمس الموقع المنشور للتو؛ لكنه يُفشل
+# التشغيل كله كي لا يمر دون أن يلاحظه أحد.
+WORKSPACE_BASE="${WORKSPACE_BASE:-$HOME/domains/workspace.wesalinnovation.sa}"
+if [ -f "$WORKSPACE_BASE/shared/.env" ]; then
+    WORKSPACE_BASE="$WORKSPACE_BASE" bash "$REPO_DIR/workspace/deploy.sh" \
+      || die "الموقع العام منشور وسليم، لكن نشر مساحة العمل فشل — رسالته أعلاه تذكر حالتها وطريقة التراجع."
+fi
