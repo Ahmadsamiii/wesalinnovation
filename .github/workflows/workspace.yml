@@ -1,0 +1,64 @@
+name: اختبارات مساحة العمل
+
+# workspace/ تطبيق Laravel مستقل. سير عمل اختباراته كان داخل workspace/.github/
+# وهو مجلد لا يقرؤه GitHub أصلاً (يقرأ .github في جذر المستودع فقط)، فلم يُشغَّل
+# له أي اختبار منذ إنشائه — وبقي عطل غياب مجلد storage/ مخفياً بسبب ذلك.
+on:
+  pull_request:
+    paths:
+      - 'workspace/**'
+      - '.github/workflows/workspace.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'workspace/**'
+      - '.github/workflows/workspace.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: workspace-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: workspace
+
+    steps:
+      - name: جلب الكود
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # الحزم المقفلة (Symfony 8) تشترط PHP 8.4.1 فأحدث.
+      - name: تجهيز PHP 8.4
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: '8.4'
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, intl, fileinfo
+          coverage: none
+
+      - name: تثبيت اعتماديات Composer
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: ملف البيئة من النموذج المرفوع
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: فحص الأسلوب
+        run: vendor/bin/pint --test
+
+      - name: الاختبارات
+        run: php artisan test
+
+      - name: تجميع الواجهة
+        run: |
+          node --version
+          npm ci --ignore-scripts
+          npm run build

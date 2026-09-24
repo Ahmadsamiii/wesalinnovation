@@ -1,58 +1,67 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# مساحة عمل وصال
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+نظام إدارة المشاريع الداخلي لوصال الابتكار: المشاريع والمهام، والعقود والفواتير
+وأوامر الشراء، والشهادات والإفادات، والتقارير. تطبيق Laravel مستقل تماماً عن
+منصة وصال العامة في جذر المستودع: قاعدة بيانات منفصلة وحسابات منفصلة ونطاق
+منفصل (`workspace.wesalinnovation.sa`)، عزلاً للبيانات المالية والعقود.
 
-## About Laravel
+## المتطلبات
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- PHP **8.4.1** فأحدث (تشترطه حزم Symfony 8 المقفلة في `composer.lock`)، مع
+  `pdo_mysql` (أو `pdo_sqlite` محلياً) و`mbstring` و`intl` و`fileinfo`
+- Composer 2
+- Node.js 20.19 أو 22.12 فأحدث — لتجميع الواجهة فقط، لا يلزم وقت التشغيل
+- MySQL 5.7 فأحدث في الإنتاج، وSQLite للتطوير المحلي
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## التشغيل محلياً
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+cd workspace
+composer install
+cp .env.example .env
+php artisan key:generate
+touch database/database.sqlite
+php artisan migrate --seed
+npm ci && npm run build
+php artisan serve
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+`--seed` ينشئ حساباً تجريبياً لكل دور: `{الدور}@wesalinnovation.sa` بكلمة
+المرور `password`، مثل `pm@wesalinnovation.sa`. للتطوير المحلي فقط — لا تشغّل
+البذرة على قاعدة إنتاج.
 
-## Contributing
+## الأدوار
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+سبعة أدوار معرّفة مع تبويبات لوحة كل منها في مصدر واحد:
+`config/roles.php`. البذرة ولوحة التحكم تقرآن منه، فلا تُضف دوراً في أي مكان
+آخر.
 
-## Code of Conduct
+| المفتاح | الدور |
+|---|---|
+| `executive` | المدير التنفيذي |
+| `pm` | مدير المشاريع |
+| `finance` | المدير المالي |
+| `sysadmin` | مدير النظام |
+| `medical` | المدير الطبي |
+| `team_member` | عضو الفريق |
+| `client` | العميل |
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+لا يوجد تسجيل ذاتي: كل حساب ينشئه مدير النظام.
 
-## Security Vulnerabilities
+## الاختبارات والأسلوب
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+php artisan test
+vendor/bin/pint
+```
 
-## License
+الاختبارات لا تحتاج تجميع الواجهة (`withoutVite()` في `tests/TestCase.php`).
+سير `.github/workflows/workspace.yml` في جذر المستودع يشغّل الأسلوب
+والاختبارات والتجميع على كل طلب دمج يمس `workspace/`.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## ملاحظات
+
+- اللغة العربية واتجاه RTL وتوقيت الرياض افتراضات في `config/app.php` نفسه،
+  لا في `.env` وحده.
+- `storage/` مرفوع بهيكله فقط؛ ملفات `.gitignore` داخله تستثني محتواه.
+- `deploy.sh` في جذر المستودع لا ينشر هذا المجلد.
