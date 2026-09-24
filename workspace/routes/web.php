@@ -24,6 +24,11 @@ use App\Http\Controllers\ProjectWorkflowController;
 use App\Http\Controllers\PurchaseOrderApprovalController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\ReferenceLetterController;
+use App\Http\Controllers\Reports\ClientStatusReportController;
+use App\Http\Controllers\Reports\ExecutiveReportController;
+use App\Http\Controllers\Reports\FinanceReportController;
+use App\Http\Controllers\Reports\MyTasksReportController;
+use App\Http\Controllers\Reports\ProjectManagerReportController;
 use App\Http\Controllers\SectionController;
 use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
@@ -117,6 +122,15 @@ Route::middleware('auth')->group(function () {
     Route::post('reference-letters/{reference_letter}/approve', [ReferenceLetterController::class, 'approve'])->name('reference-letters.approve');
     Route::post('reference-letters/{reference_letter}/reject', [ReferenceLetterController::class, 'reject'])->name('reference-letters.reject');
     Route::get('my-card', CardController::class)->name('card.show');
+
+    /* التقارير: لكل دور تقريره، والمدير التنفيذي يطّلع على المالي أيضاً. */
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('executive', ExecutiveReportController::class)->middleware('role:executive')->name('executive');
+        Route::get('projects', ProjectManagerReportController::class)->middleware('role:pm')->name('pm');
+        Route::get('finance', FinanceReportController::class)->middleware('role:finance|executive')->name('finance');
+        Route::get('my-tasks', MyTasksReportController::class)->middleware('role:team_member')->name('mine');
+        Route::get('project-status', ClientStatusReportController::class)->middleware('role:client')->name('client');
+    });
 
     /* المدير التنفيذي. */
     Route::middleware('role:executive')->group(function () {

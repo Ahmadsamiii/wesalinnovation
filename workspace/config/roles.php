@@ -29,7 +29,7 @@ return [
             'financial_approvals' => ['label' => 'الاعتمادات المالية', 'route' => 'approvals.financial'],
             'hiring_requests' => ['label' => 'طلبات التوظيف', 'route' => 'hiring-requests.index'],
             'team' => ['label' => 'الفريق', 'route' => 'team.index'],
-            'reports' => ['label' => 'التقارير الشاملة', 'route' => 'reports.executive'],
+            'reports' => ['label' => 'التقارير الشاملة', 'route' => 'reports.executive', 'active' => ['reports.executive', 'reports.finance']],
             'decisions_log' => ['label' => 'سجل القرارات', 'route' => 'decisions.index'],
         ],
     ],

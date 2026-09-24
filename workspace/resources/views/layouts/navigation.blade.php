@@ -1,6 +1,6 @@
 @php($user = Auth::user())
 
-<nav class="bg-white border-b border-gray-200" aria-label="التنقل الرئيسي">
+<nav class="no-print bg-white border-b border-gray-200" aria-label="التنقل الرئيسي">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between gap-4 h-16">
             <a href="{{ route('dashboard') }}" class="flex items-center gap-3 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600">

@@ -10,7 +10,7 @@
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans antialiased bg-surface text-ink">
+    <body class="font-sans antialiased bg-surface text-ink print:bg-white">
         <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:start-2 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:shadow focus:ring-2 focus:ring-brand-600">
             تخطَّ إلى المحتوى
         </a>
@@ -19,7 +19,7 @@
             @include('layouts.navigation')
 
             @isset($header)
-                <header class="bg-white border-b border-gray-200">
+                <header class="no-print bg-white border-b border-gray-200">
                     <div class="max-w-7xl mx-auto py-5 px-4 sm:px-6 lg:px-8">
                         {{ $header }}
                     </div>

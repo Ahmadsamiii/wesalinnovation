@@ -182,18 +182,35 @@ class DemoProjectSeeder extends Seeder
 
         $paid = $this->invoice($platform, $finance, $contract, [['الدفعة الأولى — التحليل والتصميم', 1, 126000]]);
         $paid->issue($finance);
+        $this->backdate($paid, daysAgo: 49);
         $paid->recordPayment($paid->total, today()->subWeeks(3), PaymentMethod::BankTransfer, 'TRX-88231', $finance);
 
         $overdue = $this->invoice($platform, $finance, $contract, [['الدفعة الثانية — التطوير (٥٠٪)', 1, 84000]]);
-        $overdue->forceFill(['due_date' => today()->subDays(10)])->save();
         $overdue->issue($finance);
+        $this->backdate($overdue, daysAgo: 40);
         $overdue->recordPayment('30000', today()->subDays(4), PaymentMethod::BankTransfer, 'TRX-90112', $finance);
 
         $this->invoice($platform, $finance, $contract, [['الدفعة الثالثة — الإطلاق', 1, 126000]]);
 
         $closing = $this->invoice($done, $finance, $audit, [['تقرير تدقيق الوصولية', 1, 45000]]);
         $closing->issue($finance);
+        $this->backdate($closing, daysAgo: 100);
         $closing->recordPayment($closing->total, today()->subMonths(2), PaymentMethod::BankTransfer, 'TRX-70045', $finance);
+    }
+
+    /**
+     * الإصدار يؤرَّخ بيومه؛ البيانات التجريبية تحتاج فواتير صدرت قبل أسابيع كي
+     * تظهر أعمار الذمم والرسوم الشهرية كما في الاستخدام الفعلي.
+     */
+    private function backdate(Invoice $invoice, int $daysAgo): void
+    {
+        $issued = today()->subDays($daysAgo);
+
+        $invoice->forceFill([
+            'issue_date' => $issued,
+            'issued_at' => $issued->copy()->setTime(10, 0),
+            'due_date' => $issued->copy()->addDays(config('workspace.invoice_payment_terms_days')),
+        ])->save();
     }
 
     /**
