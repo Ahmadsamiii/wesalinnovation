@@ -236,6 +236,15 @@ switch ($act) {
             'chats'     => (int)$d->query('SELECT COUNT(*) c FROM chat_logs')->fetch()['c'],
             'today'     => (int)$d->query('SELECT COUNT(*) c FROM chat_logs WHERE DATE(created_at)=CURDATE()')->fetch()['c'],
             'new7'      => (int)$d->query('SELECT COUNT(*) c FROM users WHERE created_at >= (NOW() - INTERVAL 7 DAY)')->fetch()['c'],
+            /* زمن الاستجابة — آخر ٧ أيام، مسار الرد الفوري المتدفق */
+            'avgTtfb'   => (int)$d->query("SELECT ROUND(AVG(ttfb_ms)) v FROM chat_logs
+                                            WHERE stream=1 AND ttfb_ms IS NOT NULL
+                                              AND created_at >= (NOW() - INTERVAL 7 DAY)")->fetch()['v'],
+            'avgTotal'  => (int)$d->query("SELECT ROUND(AVG(total_ms)) v FROM chat_logs
+                                            WHERE total_ms IS NOT NULL
+                                              AND created_at >= (NOW() - INTERVAL 7 DAY)")->fetch()['v'],
+            'streamPct' => (int)$d->query("SELECT ROUND(100*AVG(stream)) v FROM chat_logs
+                                            WHERE created_at >= (NOW() - INTERVAL 7 DAY)")->fetch()['v'],
         ]]);
     }
 

@@ -268,6 +268,10 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
    مظهر سطح المكتب (المؤشر الدقيق). */
 @media(pointer:coarse){.chat-chip,.chat-mode-btn,.res-chip,.footer-link{min-height:36px;}}
 .chat-chip:hover{border-color:var(--secondary);color:var(--secondary);}
+.msg-suggestions{display:flex;gap:var(--s2);flex-wrap:wrap;margin-top:var(--s2);}
+.msg-user .msg-actions{justify-content:flex-end;}
+.msg-user .msg-edit-btn{display:none;}
+.msg-user.msg-editable .msg-edit-btn{display:inline-flex;}
 .chat-input-row{display:flex;align-items:flex-end;gap:var(--s2);background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--r-xl);padding:var(--s2);transition:border-color var(--dur) var(--ease);}
 .chat-input-row:focus-within{border-color:var(--secondary);box-shadow:0 0 0 3px rgba(129,79,195,.1);}
 .chat-input-row textarea{flex:1;border:none;background:none;font-family:inherit;font-size:var(--f-sm);color:var(--ink);resize:none;outline:none;padding:var(--s2) var(--s3);min-height:40px;max-height:120px;line-height:1.6;}
@@ -779,6 +783,8 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <symbol id="ic-arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></symbol>
 <symbol id="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></symbol>
 <symbol id="ic-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+<symbol id="ic-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></symbol>
+<symbol id="ic-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></symbol>
 <symbol id="ic-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
 <symbol id="ic-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
 <symbol id="ic-brain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 1 4.56 2.95A4.5 4.5 0 0 1 20 9.5a4.5 4.5 0 0 1-2.59 4.07A5 5 0 0 1 12 18"/><path d="M12 2a5 5 0 0 0-4.56 2.95A4.5 4.5 0 0 0 4 9.5a4.5 4.5 0 0 0 2.59 4.07A5 5 0 0 0 12 18"/><path d="M12 18v4"/><path d="M8 10h.01"/><path d="M16 10h.01"/></symbol>
@@ -1008,7 +1014,7 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <span style="color:var(--muted);font-size:var(--f-xs)" id="chatRenew"></span>
 <button class="btn btn-md btn-primary" id="chatGuestCta" onclick="go('register')" style="padding:6px 16px;font-size:var(--f-xs)">أنشئ حساباً</button>
 </div>
-<div class="chat-body" id="chatBody">
+<div class="chat-body" id="chatBody" role="log" aria-label="سجل المحادثة مع وصال">
 <div class="msg msg-ai">
 <div class="msg-avatar">و</div>
 <div>
@@ -1025,6 +1031,7 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 </div>
 </div>
 </div>
+<div id="chatStreamStatus" role="status" aria-live="polite" class="sr-only"></div>
 <div class="chat-input-area">
 <div class="chat-chips" id="chatChips">
 <button class="chat-chip" onclick="askSug(this)">ما حقوقي في العمل؟</button>
@@ -1035,7 +1042,7 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <div class="chat-input-row">
 <textarea id="chatInput" rows="1" placeholder="اكتب سؤالك هنا..." aria-label="اكتب سؤالك" onkeydown="chatKey(event)" oninput="autoResize(this)"></textarea>
 <button class="chat-input-btn chat-mic-btn" id="voiceBtn" onclick="toggleVoice()" aria-label="تسجيل صوتي"><svg class="ico"><use href="#ic-mic"/></svg></button>
-<button class="chat-input-btn chat-send-btn" onclick="send()" aria-label="إرسال"><svg class="ico"><use href="#ic-send"/></svg></button>
+<button class="chat-input-btn chat-send-btn" id="chatSendBtn" onclick="send()" aria-label="إرسال"><svg class="ico"><use href="#ic-send"/></svg></button>
 </div>
 <p class="chat-disclaimer" style="margin:6px 2px 0;font-size:var(--f-xs);color:var(--muted)">إجابات وصال إرشادية وقد تخطئ — تحقّق من الجهة الرسمية المذكورة في المصدر، وبلّغنا عن أي خطأ من زر البلاغ تحت الإجابة.</p>
 </div>
@@ -1072,6 +1079,9 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 </div>
 <div class="setting-row"><span class="setting-label">صوت القراءة</span>
 <div class="setting-btns" id="voiceBtns"><button class="setting-btn on" onclick="setVoice('male',this)">ذكر</button><button class="setting-btn" onclick="setVoice('female',this)">أنثى</button></div>
+</div>
+<div class="setting-row"><span class="setting-label">توقيت القراءة الصوتية</span>
+<div class="setting-btns" id="readModeBtns"><button class="setting-btn on" onclick="setReadMode('after',this)">بعد الاكتمال</button><button class="setting-btn" onclick="setReadMode('while',this)">أثناء الكتابة</button></div>
 </div>
 </div>
 <div class="card settings-group glass anim" style="transition-delay:.2s">
@@ -1133,6 +1143,14 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <div class="card dash-stat glass anim admin-only blk" style="transition-delay:.4s">
 <div class="dash-stat-icon" style="background:rgba(245,158,11,.12);color:#b45309"><svg class="ico ico-lg"><use href="#ic-users"/></svg></div>
 <div><div class="dash-stat-num" id="stUsers">0</div><div class="dash-stat-label" id="stUsersL">مستخدم مسجّل</div></div>
+</div>
+<div class="card dash-stat glass anim admin-only blk" style="transition-delay:.5s">
+<div class="dash-stat-icon" style="background:rgba(62,158,237,.1);color:var(--blue)"><svg class="ico ico-lg"><use href="#ic-clock"/></svg></div>
+<div><div class="dash-stat-num" id="stTtfb">0</div><div class="dash-stat-label">مللي‌ثانية لأول كلمة (٧ أيام)</div></div>
+</div>
+<div class="card dash-stat glass anim admin-only blk" style="transition-delay:.6s">
+<div class="dash-stat-icon" style="background:rgba(129,79,195,.1);color:var(--secondary)"><svg class="ico ico-lg"><use href="#ic-zap"/></svg></div>
+<div><div class="dash-stat-num" id="stTotal">0</div><div class="dash-stat-label">مللي‌ثانية لاكتمال الرد (٧ أيام)</div></div>
 </div>
 </div>
 <div class="card glass anim comp-card" id="compCard" style="margin-bottom:var(--s6)">
@@ -1937,7 +1955,9 @@ if(ml)ml.textContent=mode==='dark'?'الوضع الفاتح':'الوضع الد�
 function toggleDark(){setC(document.documentElement.getAttribute('data-contrast')==='dark'?'':'dark');}
 
 // Chat
+let _streaming=false, _streamAbort=null;
 async function send(){
+if(_streaming){stopStreaming();return;}
 const inp=document.getElementById('chatInput');
 const txt=inp.value.trim();
 if(!txt)return;
@@ -1960,14 +1980,8 @@ inp.style.height='auto';
 const chips=document.getElementById('chatChips');
 if(chips)chips.style.display='none';
 addMsg('user',txt);
-showTyping();
 spendTokens(cost);
-let reply;
-try{reply=await sendToModel(txt);}catch(e){reply=localAnswer(txt);}
-if(typeof reply==='string')reply={a:reply,src:null};
-hideTyping();
-addMsg('ai',reply.a,{src:reply.src,report:true});
-saveChatEntry(txt,reply.a);
+await streamReply(txt);
 maybeSurveyNudge();
 }
 function startTrial(){go('chat');setTimeout(()=>{const i=document.getElementById('chatInput');if(i)i.focus();},400);}
@@ -1983,17 +1997,46 @@ const body=document.getElementById('chatBody');
 const d=document.createElement('div');
 d.className='msg msg-'+(role==='user'?'user':'ai');
 if(role==='user'){
-d.innerHTML='<div class="msg-avatar">'+(USER?esc((USER.name||'أ').charAt(0)):'أ')+'</div><div><div class="msg-bubble">'+esc(text).replace(/\n/g,'<br>')+'</div></div>';
+d.innerHTML='<div class="msg-avatar">'+(USER?esc((USER.name||'أ').charAt(0)):'أ')+'</div><div><div class="msg-bubble">'+esc(text).replace(/\n/g,'<br>')+'</div><div class="msg-actions"><button class="msg-act-btn msg-edit-btn" onclick="editLastQuestion(this)" aria-label="تعديل السؤال" title="تعديل"><svg class="ico" style="width:14px;height:14px"><use href="#ic-edit"/></svg></button></div></div>';
+d.dataset.raw=text;
+body.querySelectorAll('.msg-user.msg-editable').forEach(m=>m.classList.remove('msg-editable'));
+d.classList.add('msg-editable');
+}else if(opts.streaming){
+d.innerHTML='<div class="msg-avatar">و</div><div><div class="msg-bubble" aria-live="off"><div class="typing"><span></span><span></span><span></span></div></div></div>';
 }else{
-let srcHtml='';
-if(opts.src==='server'){srcHtml='<div class="msg-src"><svg class="ico" style="width:12px;height:12px"><use href="#ic-book"/></svg> وفق قاعدة وصال من المصادر الرسمية — تحقّق من الجهة المختصة</div>';}
-else if(opts.src&&opts.src.n){srcHtml='<div class="msg-src"><svg class="ico" style="width:12px;height:12px"><use href="#ic-book"/></svg> المصدر: '+esc(opts.src.n)+(opts.src.u?' — <a href="https://'+esc(opts.src.u)+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">'+esc(opts.src.u)+'</a>':'')+'</div>';}
-const repHtml=opts.report?'<button class="msg-act-btn" onclick="reportMsg(this)" aria-label="أبلغ عن خطأ في هذه الإجابة" title="أبلغ عن خطأ"><svg class="ico" style="width:14px;height:14px"><use href="#ic-info"/></svg></button>':'';
-d.innerHTML='<div class="msg-avatar">و</div><div><div class="msg-bubble">'+esc(text).replace(/\n/g,'<br>')+'</div>'+srcHtml+'<div class="msg-actions">'+repHtml+'<button class="msg-act-btn" onclick="copyMsg(this)" aria-label="نسخ"><svg class="ico" style="width:14px;height:14px"><use href="#ic-copy"/></svg></button><button class="msg-act-btn" onclick="speakMsg(this)" aria-label="قراءة صوتية"><svg class="ico" style="width:14px;height:14px"><use href="#ic-volume"/></svg></button><button class="msg-act-btn" aria-label="حفظ"><svg class="ico" style="width:14px;height:14px"><use href="#ic-bookmark"/></svg></button></div></div>';
+d.innerHTML='<div class="msg-avatar">و</div><div><div class="msg-bubble">'+mdLite(esc(text))+'</div>'+srcHtml(opts.src)+'<div class="msg-actions">'+aiActionsHtml(opts)+'</div></div>';
+d.dataset.raw=text;
 }
 body.appendChild(d);
-body.scrollTop=body.scrollHeight;
-if(role!=='user'&&A11Y.auto)speakText(text);
+if(!opts.streaming)body.scrollTop=body.scrollHeight;
+if(role!=='user'&&!opts.streaming&&A11Y.auto)speakText(text);
+return d;
+}
+function srcHtml(src){
+if(src==='server')return '<div class="msg-src"><svg class="ico" style="width:12px;height:12px"><use href="#ic-book"/></svg> وفق قاعدة وصال من المصادر الرسمية — تحقّق من الجهة المختصة</div>';
+if(src&&src.n)return '<div class="msg-src"><svg class="ico" style="width:12px;height:12px"><use href="#ic-book"/></svg> المصدر: '+esc(src.n)+(src.u?' — <a href="https://'+esc(src.u)+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">'+esc(src.u)+'</a>':'')+'</div>';
+return '';
+}
+function aiActionsHtml(opts){
+opts=opts||{};
+const rep=opts.report?'<button class="msg-act-btn" onclick="reportMsg(this)" aria-label="أبلغ عن خطأ في هذه الإجابة" title="أبلغ عن خطأ"><svg class="ico" style="width:14px;height:14px"><use href="#ic-info"/></svg></button>':'';
+const regen=opts.canRegenerate?'<button class="msg-act-btn" onclick="regenerateMsg(this)" aria-label="إعادة توليد الرد" title="إعادة توليد"><svg class="ico" style="width:14px;height:14px"><use href="#ic-refresh"/></svg></button>':'';
+return rep+'<button class="msg-act-btn" onclick="copyMsg(this)" aria-label="نسخ"><svg class="ico" style="width:14px;height:14px"><use href="#ic-copy"/></svg></button><button class="msg-act-btn" onclick="speakMsg(this)" aria-label="قراءة صوتية"><svg class="ico" style="width:14px;height:14px"><use href="#ic-volume"/></svg></button><button class="msg-act-btn" aria-label="حفظ"><svg class="ico" style="width:14px;height:14px"><use href="#ic-bookmark"/></svg></button>'+regen;
+}
+/* تنسيق خفيف يُطبَّق دائماً بعد esc() لا قبله — لا يتعامل إلا مع نص مُفرَغ من
+   HTML أصلاً، فلا خطر XSS من نص يولّده النموذج. */
+function mdLite(escapedText){
+const lines=escapedText.split('\n');
+const parts=[];
+let list=null;
+for(const line of lines){
+  const m=line.match(/^(?:-|•)\s+(.+)$/);
+  if(m){ if(!list){list=[];parts.push(list);} list.push(m[1]); }
+  else { list=null; parts.push(line); }
+}
+let html=parts.map(p=>Array.isArray(p)?('<ul>'+p.map(li=>'<li>'+li+'</li>').join('')+'</ul>'):p).join('<br>');
+html=html.replace(/<br>(<ul>)/g,'$1').replace(/(<\/ul>)<br>/g,'$1');
+return html.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
 }
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function showTyping(){
@@ -2025,7 +2068,10 @@ function toggleMode(btn){
 btn.parentElement.querySelectorAll('.chat-mode-btn').forEach(b=>b.classList.remove('on'));
 btn.classList.add('on');
 }
-function chatKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}
+function chatKey(e){
+if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}
+else if(e.key==='Escape'&&_streaming){e.preventDefault();stopStreaming();}
+}
 function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px';}
 
 // Hero ask
@@ -2094,7 +2140,7 @@ const LS={
   set(k,v){try{localStorage.setItem('wesal_'+k,JSON.stringify(v));}catch(e){}},
   del(k){try{localStorage.removeItem('wesal_'+k);}catch(e){}}
 };
-let A11Y=Object.assign({auto:false,rate:1,voice:'male',touch:false,links:false,kbd:false,motion:false},LS.get('a11y',{}));
+let A11Y=Object.assign({auto:false,rate:1,voice:'male',touch:false,links:false,kbd:false,motion:false,readMode:'after'},LS.get('a11y',{}));
 function saveA11y(){LS.set('a11y',A11Y);applyA11y();}
 function applyA11y(){
   const d=document.documentElement;
@@ -2111,8 +2157,11 @@ function applyA11y(){
   if(g('setRate'))g('setRate').value=A11Y.rate;
   const vb=g('voiceBtns');
   if(vb)[...vb.children].forEach((b,i)=>b.classList.toggle('on',(A11Y.voice==='male')===(i===0)));
+  const rb=g('readModeBtns');
+  if(rb)[...rb.children].forEach((b,i)=>b.classList.toggle('on',(A11Y.readMode==='after')===(i===0)));
 }
 function setVoice(v,btn){A11Y.voice=v;saveA11y();speakText(v==='male'?'مرحباً، أنا صوت وصال':'مرحباً، أنا صوت وصال');}
+function setReadMode(v,btn){A11Y.readMode=v;saveA11y();}
 function pickVoice(){
   try{const vs=speechSynthesis.getVoices().filter(v=>/^ar/i.test(v.lang));
   if(!vs.length)return null;
@@ -2418,6 +2467,252 @@ async function sendToModel(q){
 }
 function currentMode(){const b=document.querySelector('.chat-mode-btn.on');return b?b.dataset.mode:'simple';}
 function askText(t){go('chat');setTimeout(()=>{const i=document.getElementById('chatInput');i.value=t;send();},220);}
+function askQuestion(t){const i=document.getElementById('chatInput');if(i)i.value=t;send();}
+
+/* ---------- الرد الفوري المتدفق (chat-stream.php) ----------
+   fetch+getReader لا EventSource: نحتاج إرسال جسم POST (السؤال + آخر ٦ أدوار
+   من السجل) لا معامِلات رابط — EventSource لا يرسل جسماً أصلاً. */
+async function streamReply(txt){
+  setStreamingUI(true);
+  setStreamStatus('وصال يكتب…');
+  resetReadQueue();
+  const bubble=addMsg('ai','',{streaming:true});
+  const hist=(LS.get('hist',[])||[]).slice(-6);
+  _streamAbort=new AbortController();
+  let streamText='', gotAnyDelta=false, sawJson=null, sawBroken=false, committedClient=false;
+  try{
+    const res=await fetch(API+'chat-stream.php',{
+      method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
+      body:JSON.stringify({message:txt,history:hist,mode:currentMode(),user:USER?USER.id:0}),
+      signal:_streamAbort.signal
+    });
+    const ctype=res.headers.get('Content-Type')||'';
+    if(ctype.indexOf('application/json')===0){
+      sawJson=await res.json().catch(()=>null);
+    }else{
+      // Content-Type بثّي يعني الخادم التزم فعلاً (وخصم الرصيد) — أي عطل بعد
+      // هذي النقطة لا يجوز أن يُعيد المحاولة عبر chat.php فيخصم مرتين.
+      committedClient=true;
+      const reader=res.body.getReader();
+      const decoder=new TextDecoder();
+      let buf='';
+      while(true){
+        const {done,value}=await reader.read();
+        if(done)break;
+        buf+=decoder.decode(value,{stream:true});
+        let idx;
+        while((idx=buf.indexOf('\n\n'))>-1){
+          const frame=buf.slice(0,idx);buf=buf.slice(idx+2);
+          const evM=frame.match(/^event:\s*(.+)$/m);
+          const dataM=frame.match(/^data:\s*(.*)$/m);
+          const ev=evM?evM[1].trim():'';
+          let data=null;
+          if(dataM){try{data=JSON.parse(dataM[1]);}catch(e){}}
+          if(ev==='delta'&&data&&typeof data.text==='string'){
+            gotAnyDelta=true;
+            streamText+=data.text;
+            updateStreamingBubble(bubble,streamText);
+            smartScroll();
+            handleReadWhileTyping(streamText);
+          }else if(ev==='suggestions'&&data&&Array.isArray(data.items)){
+            renderSuggestions(bubble,data.items);
+          }else if(ev==='error'){
+            sawBroken=true;
+          }
+        }
+      }
+    }
+  }catch(e){
+    if(e&&e.name==='AbortError'){
+      setStreamingUI(false);
+      finalizeStreamBubble(bubble,streamText,{report:gotAnyDelta,canRegenerate:gotAnyDelta});
+      setStreamStatus('توقف الرد.');
+      cancelReadQueue();
+      return;
+    }
+    if(!committedClient&&sawJson===null){
+      await streamFallbackToClassic(bubble,txt);
+      return;
+    }
+    sawBroken=true;   // التزم الخادم لكن انقطع الاتصال هنا — لا سقوط لـchat.php، فقط إنهاء بالجزء المتوفر
+  }
+  setStreamingUI(false);
+
+  if(sawJson){
+    bubble.remove();
+    if(sawJson.ok&&sawJson.reply){
+      addMsg('ai',sawJson.reply,{src:sawJson.small?null:'server',report:!sawJson.small,canRegenerate:!sawJson.small});
+      if(!sawJson.small)saveChatEntry(txt,sawJson.reply);
+      setStreamStatus(sawJson.small?'':'انتهى الرد.');
+      return;
+    }
+    const reply=localAnswer(txt);
+    addMsg('ai',reply.a,{src:reply.src,report:true});
+    saveChatEntry(txt,reply.a);
+    setStreamStatus('');
+    return;
+  }
+
+  if(!gotAnyDelta&&!committedClient){
+    await streamFallbackToClassic(bubble,txt);
+    return;
+  }
+
+  finalizeStreamBubble(bubble,streamText,{report:true,canRegenerate:true});
+  if(!sawBroken)saveChatEntry(txt,streamText);
+  setStreamStatus(sawBroken?'انقطع الاتصال قبل اكتمال الرد.':'انتهى الرد.');
+  if(A11Y.auto&&A11Y.readMode==='after')speakText(streamText);
+  else flushReadQueue(streamText);
+}
+/* لا محتوى وصل إطلاقاً ولا رد JSON — يعني chat-stream.php لم يخصم رصيداً بعد
+   (الالتزام بالبث لم يحدث)، فالسقوط لـchat.php آمن ولا يخصم مرتين. */
+async function streamFallbackToClassic(bubble,txt){
+  bubble.remove();
+  setStreamingUI(false);
+  setStreamStatus('');
+  showTyping();
+  let reply;
+  try{reply=await sendToModel(txt);}catch(e){reply=localAnswer(txt);}
+  if(typeof reply==='string')reply={a:reply,src:null};
+  hideTyping();
+  addMsg('ai',reply.a,{src:reply.src,report:true});
+  saveChatEntry(txt,reply.a);
+}
+function updateStreamingBubble(el,text){
+  const b=el.querySelector('.msg-bubble');
+  if(!b)return;
+  b.innerHTML=mdLite(esc(text))+'<span class="msg-cursor">▍</span>';
+}
+function finalizeStreamBubble(el,text,opts){
+  opts=opts||{};
+  const b=el.querySelector('.msg-bubble');
+  if(b){
+    b.innerHTML=text?mdLite(esc(text)):'<span style="color:var(--muted)">(ما وصل رد — جرّب مرة ثانية)</span>';
+    b.removeAttribute('aria-live');
+  }
+  const content=el.children[1];
+  if(content&&!content.querySelector('.msg-actions')){
+    const actions=document.createElement('div');
+    actions.className='msg-actions';
+    actions.innerHTML=aiActionsHtml(opts);
+    content.appendChild(actions);
+  }
+  el.dataset.raw=text;
+}
+function renderSuggestions(bubble,items){
+  if(!items||!items.length)return;
+  const content=bubble.children[1];
+  const actions=content&&content.querySelector('.msg-actions');
+  if(!content)return;
+  const box=document.createElement('div');
+  box.className='msg-suggestions';
+  items.slice(0,3).forEach(q=>{
+    const b=document.createElement('button');
+    b.className='chat-chip';
+    b.textContent=q;
+    b.onclick=()=>askQuestion(q);
+    box.appendChild(b);
+  });
+  if(actions)content.insertBefore(box,actions);else content.appendChild(box);
+}
+function smartScroll(){
+  const body=document.getElementById('chatBody');
+  if(!body)return;
+  const nearBottom=body.scrollHeight-body.scrollTop-body.clientHeight<80;
+  if(nearBottom)body.scrollTop=body.scrollHeight;
+}
+function setStreamingUI(on){
+  _streaming=on;
+  const b=document.getElementById('chatSendBtn');
+  if(!b)return;
+  const u=b.querySelector('use');
+  if(u)u.setAttribute('href',on?'#ic-x':'#ic-send');
+  b.setAttribute('aria-label',on?'إيقاف':'إرسال');
+}
+function setStreamStatus(text){
+  const el=document.getElementById('chatStreamStatus');
+  if(!el)return;
+  if(el.textContent===text){el.textContent='';requestAnimationFrame(()=>{el.textContent=text;});}
+  else el.textContent=text;
+}
+function stopStreaming(){
+  if(_streamAbort)_streamAbort.abort();
+}
+async function regenerateMsg(btn){
+  if(_streaming)return;
+  const msgEl=btn.closest('.msg');
+  if(!msgEl)return;
+  let prev=msgEl.previousElementSibling;
+  while(prev&&!prev.classList.contains('msg-user'))prev=prev.previousElementSibling;
+  const q=prev?prev.dataset.raw:null;
+  if(!q)return;
+  const st=tokenState(),cost=costOf(q);
+  if(st.left<cost){if(st.guest){requireAuth('chat');return;}toast('خلص رصيدك من الأسئلة لهذي الفترة.','err');return;}
+  spendTokens(cost);
+  await streamReply(q);
+  maybeSurveyNudge();
+}
+function editLastQuestion(btn){
+  if(_streaming)return;
+  const msgEl=btn.closest('.msg');
+  if(!msgEl||!msgEl.classList.contains('msg-editable'))return;
+  const raw=msgEl.dataset.raw||'';
+  const next=msgEl.nextElementSibling;
+  if(next&&next.classList.contains('msg-ai'))next.remove();
+  msgEl.remove();
+  const inp=document.getElementById('chatInput');
+  if(inp){inp.value=raw;autoResize(inp);inp.focus();}
+}
+/* ---------- القراءة أثناء الكتابة (A11Y.readMode==='while') ----------
+   تبدأ قراءة أول جملة تكتمل بدل انتظار الرد كاملاً، وتُشغَّل الجمل تباعاً عبر
+   onend فلا تتقاطع ولا تُقاطَع منتصف جملة — speakText() العادية لا تصلح هنا
+   لأنها تُلغي أي نطق جارٍ فوراً بلا طابور. */
+let _speechConsumedLen=0, _speechQueue=[], _speaking=false;
+function resetReadQueue(){_speechConsumedLen=0;_speechQueue=[];_speaking=false;}
+function handleReadWhileTyping(streamText){
+  if(!A11Y.auto||A11Y.readMode!=='while')return;
+  queueNewSentences(streamText,false);
+}
+function flushReadQueue(streamText){
+  if(!A11Y.auto||A11Y.readMode!=='while')return;
+  queueNewSentences(streamText||'',true);
+}
+function cancelReadQueue(){
+  _speechQueue=[];
+  _speechConsumedLen=0;
+  if('speechSynthesis' in window)window.speechSynthesis.cancel();
+  _speaking=false;
+}
+function queueNewSentences(fullText,isFinal){
+  const fresh=fullText.slice(_speechConsumedLen);
+  if(!fresh){ if(isFinal)playReadQueue(); return; }
+  const re=/[^.!؟?\n]*[.!؟?\n]/g;
+  let m, lastEnd=0;
+  while((m=re.exec(fresh))){
+    const s=m[0].trim();
+    if(s)_speechQueue.push(s);
+    lastEnd=re.lastIndex;
+  }
+  const rest=fresh.slice(lastEnd);
+  _speechConsumedLen+=lastEnd;
+  if(isFinal&&rest.trim()){
+    _speechQueue.push(rest.trim());
+    _speechConsumedLen=fullText.length;
+  }
+  playReadQueue();
+}
+function playReadQueue(){
+  if(_speaking||!_speechQueue.length)return;
+  if(!('speechSynthesis' in window))return;
+  const s=_speechQueue.shift();
+  const u=new SpeechSynthesisUtterance(s);
+  u.lang='ar-SA';u.rate=A11Y.rate||1;
+  const v=pickVoice();if(v)u.voice=v;
+  _speaking=true;
+  u.onend=()=>{_speaking=false;playReadQueue();};
+  u.onerror=()=>{_speaking=false;playReadQueue();};
+  window.speechSynthesis.speak(u);
+}
 
 /* ---------- تطبيع عربي + ردود التحيات الفورية ---------- */
 function normAr(s){return s.toLowerCase()
@@ -3763,6 +4058,8 @@ async function paintStats(){
       set('stQs',ar(t.today));    lab('stQs','سؤال اليوم');
       set('stSaved',ar(t.tickets));lab('stSaved','طلب دعم مفتوح');
       set('stUsers',ar(t.users)); lab('stUsers','مستخدم مسجّل');
+      set('stTtfb',ar(t.avgTtfb||0));
+      set('stTotal',ar(t.avgTotal||0));
       return;
     }
   }

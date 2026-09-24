@@ -731,6 +731,20 @@ function ensureSchema(): void {
             INDEX (source_url)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
+        /* قياس زمن الاستجابة (مسار الرد الفوري المتدفق): اسم النموذج/المزوّد
+           الفعليَين سجلٌّ تشغيلي داخلي يقرأه الإداري فقط، ولا يخالف قاعدة
+           "لا يُذكر المزوّد" التي تحكم النص المعروض للمستخدم المحادث حصراً. */
+        if (!colExists('chat_logs', 'model')) {
+            db()->exec("ALTER TABLE chat_logs
+                ADD COLUMN model     VARCHAR(40)      NULL,
+                ADD COLUMN provider  VARCHAR(20)      NULL,
+                ADD COLUMN stream    TINYINT(1)       NOT NULL DEFAULT 0,
+                ADD COLUMN ttfb_ms   INT UNSIGNED     NULL,
+                ADD COLUMN total_ms  INT UNSIGNED     NULL,
+                ADD COLUMN aborted   TINYINT(1)       NOT NULL DEFAULT 0,
+                ADD INDEX ix_provider (provider, created_at)");
+        }
+
         migrateSurveys();
         ensureRateTable();
     } catch (Throwable $e) {
