@@ -35,7 +35,6 @@ $left = $bal['left'];
 
 $SYSTEM = chatSystemPrompt($mode);
 [$SYSTEM, ] = chatAugmentWithRag($SYSTEM, $message);
-$thinkingLevel = chatThinkingLevel($mode);
 
 /* ---------- البث ---------- */
 function sseCommitHeaders(): void {
@@ -119,7 +118,7 @@ $onDelta = function (string $text) use (
 $providerUsed = null;
 $r = ['committed' => false, 'broken' => false, 'aborted' => false];
 foreach (chatProviderOrder() as $p) {
-    $r = chatAskProviderStream($p, $SYSTEM, $message, $history, $thinkingLevel, $onDelta);
+    $r = chatAskProviderStream($p, $SYSTEM, $message, $history, $onDelta);
     if ($committedHeaders) { $providerUsed = $p; break; }
 }
 

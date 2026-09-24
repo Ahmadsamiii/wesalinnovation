@@ -86,30 +86,30 @@ function chatStreamCurl(string $url, string $body, array $headers, callable $ext
 }
 
 /* ---------- Gemini ---------- */
-function askGeminiStream(string $sys, string $msg, array $hist, ?string $thinkingLevel, callable $onDelta): array {
+function askGeminiStream(string $sys, string $msg, array $hist, callable $onDelta, bool $noThinking = true): array {
     $models = [GEMINI_MODEL];
     if (defined('GEMINI_FALLBACKS'))
         foreach (explode(',', GEMINI_FALLBACKS) as $m) { $m = trim($m); if ($m !== '') $models[] = $m; }
     foreach ($models as $model) {
-        $tl = $thinkingLevel;
-        $r = askGeminiOnceStream($model, $sys, $msg, $hist, $tl, $onDelta);
+        $nt = $noThinking;
+        $r = askGeminiOnceStream($model, $sys, $msg, $hist, $onDelta, $nt);
         if ($r['committed']) return $r;
         $err = $GLOBALS['ai_last_error'] ?? '';
         if (strpos($err, 'HTTP 429') !== false) {                 // حصة: انتظر ثم أعد نفس المحاولة مرة واحدة
             usleep(1300000);
-            $r = askGeminiOnceStream($model, $sys, $msg, $hist, $tl, $onDelta);
+            $r = askGeminiOnceStream($model, $sys, $msg, $hist, $onDelta, $nt);
             if ($r['committed']) return $r;
             $err = $GLOBALS['ai_last_error'] ?? '';
         }
-        if ($tl !== null && strpos($err, 'HTTP 400') !== false) { // تراجع آمن: قد يكون الحقل غير مدعوم لهذا النموذج
-            $r = askGeminiOnceStream($model, $sys, $msg, $hist, null, $onDelta);
+        if ($nt && strpos($err, 'HTTP 400') !== false) { // تراجع آمن: قد يكون حقل thinkingConfig غير مدعوم لهذا النموذج
+            $r = askGeminiOnceStream($model, $sys, $msg, $hist, $onDelta, false);   // بلا thinkingConfig إطلاقاً
             if ($r['committed']) return $r;
         }
         // أي خطأ آخر → جرّب النموذج التالي فوراً
     }
     return ['committed' => false, 'broken' => false, 'aborted' => false];
 }
-function askGeminiOnceStream(string $model, string $sys, string $msg, array $hist, ?string $thinkingLevel, callable $onDelta): array {
+function askGeminiOnceStream(string $model, string $sys, string $msg, array $hist, callable $onDelta, bool $noThinking = true): array {
     if (!GEMINI_KEY) return ['committed' => false, 'broken' => false, 'aborted' => false];
     $contents = [];
     foreach ($hist as $h) {
@@ -118,7 +118,7 @@ function askGeminiOnceStream(string $model, string $sys, string $msg, array $his
     }
     $contents[] = ['role' => 'user', 'parts' => [['text' => $msg]]];
     $generationConfig = ['temperature' => AI_TEMPERATURE, 'maxOutputTokens' => AI_MAX_OUTPUT_TOKENS, 'topP' => AI_TOP_P];
-    if ($thinkingLevel !== null) $generationConfig['thinkingConfig'] = ['thinkingLevel' => $thinkingLevel];
+    if ($noThinking) $generationConfig['thinkingConfig'] = ['thinkingBudget' => 0];
     $body = json_encode([
         'system_instruction' => ['parts' => [['text' => $sys]]],
         'contents' => $contents,
@@ -126,8 +126,7 @@ function askGeminiOnceStream(string $model, string $sys, string $msg, array $his
     ], JSON_UNESCAPED_UNICODE);
     $url = 'https://generativelanguage.googleapis.com/v1beta/models/' . $model
          . ':streamGenerateContent?alt=sse&key=' . GEMINI_KEY;
-    $extract = fn(array $j): ?string => $j['candidates'][0]['content']['parts'][0]['text'] ?? null;
-    $r = chatStreamCurl($url, $body, [], $extract, $onDelta);
+    $r = chatStreamCurl($url, $body, [], 'chatExtractGeminiText', $onDelta);
     if ($r['committed']) $GLOBALS['ai_last_model'] = $model;
     return $r;
 }
@@ -188,9 +187,9 @@ function askKimiStream(string $sys, string $msg, array $hist, callable $onDelta)
     return $r;
 }
 
-function chatAskProviderStream(string $provider, string $sys, string $msg, array $hist, ?string $thinkingLevel, callable $onDelta): array {
+function chatAskProviderStream(string $provider, string $sys, string $msg, array $hist, callable $onDelta): array {
     switch ($provider) {
-        case 'gemini': return askGeminiStream($sys, $msg, $hist, $thinkingLevel, $onDelta);
+        case 'gemini': return askGeminiStream($sys, $msg, $hist, $onDelta);
         case 'openai': return askOpenAIStream($sys, $msg, $hist, $onDelta);
         case 'claude': return askClaudeStream($sys, $msg, $hist, $onDelta);
         case 'kimi':   return askKimiStream($sys, $msg, $hist, $onDelta);

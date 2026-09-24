@@ -85,7 +85,9 @@ if (($_GET['sse'] ?? '') === '2') {
         CURLOPT_POST => true,
         CURLOPT_POSTFIELDS => json_encode([
             'contents' => [['role' => 'user', 'parts' => [['text' => 'عدّ من واحد إلى عشرة، رقماً في كل سطر، بلا أي كلام إضافي.']]]],
-            'generationConfig' => ['maxOutputTokens' => 200],
+            // بلا هذا، نماذج Gemini 3.x المفكِّرة تستهلك ميزانية maxOutputTokens
+            // بالكامل على تفكير داخلي غير ظاهر، فيرجع رد فارغ (راجع chat-shared.php).
+            'generationConfig' => ['maxOutputTokens' => 200, 'thinkingConfig' => ['thinkingBudget' => 0]],
         ], JSON_UNESCAPED_UNICODE),
         CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
         CURLOPT_WRITEFUNCTION => $write,
