@@ -7,30 +7,31 @@
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        {{-- حالة القائمة المصغّرة تُطبَّق قبل أول رسم حتى لا تومض موسّعة --}}
+        <script>try{if(localStorage.getItem('wesal_ws_sidebar_collapsed')==='1'){document.documentElement.classList.add('sb-collapsed');}}catch(e){}</script>
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100">
-            @include('layouts.navigation')
+    <body class="font-sans antialiased bg-brand-bg text-brand-text">
+        @php
+            $currentUser = auth()->user();
+            $currentRoleName = $currentUser?->roles->first()?->name;
+            $currentRole = $currentRoleName ? config("roles.{$currentRoleName}") : null;
+        @endphp
+        <div x-data="appShell" x-effect="document.body.classList.toggle('overflow-hidden', mobileOpen)" @keydown.escape.window="closeMobile()" class="min-h-screen">
+            @include('layouts.sidebar')
 
-            <!-- Page Heading -->
-            @isset($header)
-                <header class="bg-white shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                        {{ $header }}
+            <div class="flex min-h-screen flex-col transition-[padding] duration-300 ease-out lg:ps-72 lg:sb-collapsed:ps-20">
+                @include('layouts.navigation')
+
+                <!-- Page Content -->
+                <main class="flex-1">
+                    <div class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+                        {{ $slot }}
                     </div>
-                </header>
-            @endisset
-
-            <!-- Page Content -->
-            <main>
-                {{ $slot }}
-            </main>
+                </main>
+            </div>
         </div>
     </body>
 </html>
