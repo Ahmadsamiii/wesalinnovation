@@ -5,6 +5,8 @@ use App\Http\Controllers\Admin\UserActivationController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\UserInvitationController;
 use App\Http\Controllers\AttachmentController;
+use App\Http\Controllers\CardController;
+use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Executive\DecisionLogController;
@@ -21,16 +23,23 @@ use App\Http\Controllers\ProjectTaskController;
 use App\Http\Controllers\ProjectWorkflowController;
 use App\Http\Controllers\PurchaseOrderApprovalController;
 use App\Http\Controllers\PurchaseOrderController;
+use App\Http\Controllers\ReferenceLetterController;
 use App\Http\Controllers\SectionController;
 use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskMoveController;
+use App\Http\Controllers\VerificationController;
 use Illuminate\Support\Facades\Route;
 
 /* نظام داخلي بلا صفحة تعريفية عامة — الجذر يوجّه مباشرة للوحة أو الدخول. */
 Route::get('/', function () {
     return redirect()->to(auth()->check() ? '/dashboard' : '/login');
 });
+
+/* التحقق العام من الشهادات والإفادات والبطاقات برمزها المطبوع — بلا دخول. */
+Route::get('verify/{code?}', VerificationController::class)
+    ->middleware('throttle:30,1')
+    ->name('verify.show');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -100,6 +109,14 @@ Route::middleware('auth')->group(function () {
     Route::post('invoices/{invoice}/issue', [InvoiceController::class, 'issue'])->name('invoices.issue');
     Route::post('invoices/{invoice}/cancel', [InvoiceController::class, 'cancel'])->name('invoices.cancel');
     Route::post('invoices/{invoice}/payments', [InvoicePaymentController::class, 'store'])->name('invoices.payments.store');
+
+    /* الشهادات والإفادات والبطاقة الرقمية. */
+    Route::resource('certificates', CertificateController::class)->only(['index', 'create', 'store', 'show']);
+    Route::post('certificates/{certificate}/revoke', [CertificateController::class, 'revoke'])->name('certificates.revoke');
+    Route::resource('reference-letters', ReferenceLetterController::class)->only(['index', 'create', 'store', 'show']);
+    Route::post('reference-letters/{reference_letter}/approve', [ReferenceLetterController::class, 'approve'])->name('reference-letters.approve');
+    Route::post('reference-letters/{reference_letter}/reject', [ReferenceLetterController::class, 'reject'])->name('reference-letters.reject');
+    Route::get('my-card', CardController::class)->name('card.show');
 
     /* المدير التنفيذي. */
     Route::middleware('role:executive')->group(function () {

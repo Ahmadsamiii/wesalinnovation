@@ -58,7 +58,8 @@ class ProjectPolicy
             && $project->submitted_at === null
             && $project->contracts()->doesntExist()
             && $project->purchaseOrders()->doesntExist()
-            && $project->invoices()->doesntExist();
+            && $project->invoices()->doesntExist()
+            && $project->certificates()->doesntExist();
     }
 
     public function submit(User $user, Project $project): bool

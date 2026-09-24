@@ -148,6 +148,26 @@ class User extends Authenticatable
         return $this->hasMany(Task::class, 'assignee_id');
     }
 
+    /**
+     * رمز التحقق من البطاقة الرقمية، يُولَّد عند أول طلب له.
+     */
+    public function cardCode(): string
+    {
+        if ($this->card_code === null) {
+            $this->forceFill(['card_code' => Certificate::newVerificationCode()])->saveQuietly();
+        }
+
+        return $this->card_code;
+    }
+
+    /**
+     * رقم وظيفي ثابت مشتق من المعرّف: WSL-0007.
+     */
+    public function employeeNumber(): string
+    {
+        return sprintf('WSL-%04d', $this->id);
+    }
+
     public function isDeactivated(): bool
     {
         return $this->deactivated_at !== null;

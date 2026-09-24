@@ -3,15 +3,18 @@
 namespace Database\Seeders;
 
 use App\Enums\ApprovalDecision;
+use App\Enums\CertificateType;
 use App\Enums\PaymentMethod;
 use App\Enums\Priority;
 use App\Enums\ProjectDecisionType;
 use App\Enums\ProjectMemberRole;
 use App\Enums\TaskStatus;
+use App\Models\Certificate;
 use App\Models\Contract;
 use App\Models\Invoice;
 use App\Models\Project;
 use App\Models\PurchaseOrder;
+use App\Models\ReferenceLetter;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -125,6 +128,25 @@ class DemoProjectSeeder extends Seeder
         $done->complete($pm);
 
         $this->seedFinance($platform, $done, $pm, $executive);
+        $this->seedCertificates($done, $pm, $executive, $member, $designer);
+    }
+
+    private function seedCertificates(Project $done, User $pm, User $executive, User $member, User $designer): void
+    {
+        foreach ([[CertificateType::Completion, $done->client_id, 'سُلّم تقرير تدقيق وفق WCAG 2.2 مع خطة معالجة لكل ملاحظة.'], [CertificateType::Participation, $member->id, null]] as [$type, $recipient, $body]) {
+            $certificate = new Certificate(['type' => $type, 'project_id' => $done->id, 'recipient_id' => $recipient, 'title' => Certificate::defaultTitle($type, $done), 'body' => $body]);
+            $certificate->issued_by = $pm->id;
+            $certificate->save();
+        }
+
+        $approved = new ReferenceLetter(['purpose' => 'بنك الرياض', 'addressee' => 'بنك الرياض — فرع العليا']);
+        $approved->requester_id = $member->id;
+        $approved->save();
+        $approved->approve($executive);
+
+        $pending = new ReferenceLetter(['purpose' => 'سفارة', 'notes' => 'مطلوبة قبل نهاية الشهر.']);
+        $pending->requester_id = $designer->id;
+        $pending->save();
     }
 
     /**

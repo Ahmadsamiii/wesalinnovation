@@ -143,6 +143,14 @@ class Project extends Model
     }
 
     /**
+     * @return HasMany<Certificate, $this>
+     */
+    public function certificates(): HasMany
+    {
+        return $this->hasMany(Certificate::class);
+    }
+
+    /**
      * ما التزم به المشروع من ميزانيته: أوامر الشراء المقدّمة أو المعتمدة أو
      * المستلمة (المسودات والمرفوضة والملغاة لا تُحسب).
      */

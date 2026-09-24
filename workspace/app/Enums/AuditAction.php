@@ -48,6 +48,12 @@ enum AuditAction: string
     case InvoiceCancelled = 'finance.invoice_cancelled';
     case PaymentRecorded = 'finance.payment_recorded';
 
+    case CertificateIssued = 'certificate.issued';
+    case CertificateRevoked = 'certificate.revoked';
+    case ReferenceLetterRequested = 'certificate.letter_requested';
+    case ReferenceLetterApproved = 'certificate.letter_approved';
+    case ReferenceLetterRejected = 'certificate.letter_rejected';
+
     public function label(): string
     {
         return match ($this) {
@@ -86,6 +92,11 @@ enum AuditAction: string
             self::InvoiceIssued => 'إصدار فاتورة',
             self::InvoiceCancelled => 'إلغاء فاتورة',
             self::PaymentRecorded => 'تسجيل دفعة',
+            self::CertificateIssued => 'إصدار شهادة',
+            self::CertificateRevoked => 'إلغاء شهادة',
+            self::ReferenceLetterRequested => 'طلب إفادة',
+            self::ReferenceLetterApproved => 'اعتماد إفادة',
+            self::ReferenceLetterRejected => 'رفض طلب إفادة',
         };
     }
 
@@ -93,10 +104,10 @@ enum AuditAction: string
     {
         return match ($this) {
             self::AuthFailed, self::UserDeactivated, self::ProjectDeleted, self::TaskDeleted, self::AttachmentDeleted,
-            self::PurchaseOrderCancelled, self::InvoiceCancelled => 'red',
+            self::PurchaseOrderCancelled, self::InvoiceCancelled, self::CertificateRevoked, self::ReferenceLetterRejected => 'red',
             self::UserRoleChanged, self::PasswordReset, self::ProjectDecided, self::PurchaseOrderReviewed, self::PurchaseOrderDecided => 'orange',
             self::UserCreated, self::InvitationAccepted, self::UserReactivated, self::ProjectCreated, self::ProjectCompleted,
-            self::ContractActivated, self::InvoiceIssued, self::PaymentRecorded => 'green',
+            self::ContractActivated, self::InvoiceIssued, self::PaymentRecorded, self::CertificateIssued, self::ReferenceLetterApproved => 'green',
             self::AuthLogin => 'gray',
             default => 'blue',
         };
