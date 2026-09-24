@@ -13,6 +13,7 @@ use App\Http\Controllers\Executive\DecisionLogController;
 use App\Http\Controllers\Executive\FinancialApprovalController;
 use App\Http\Controllers\Executive\ProjectApprovalController;
 use App\Http\Controllers\Executive\TeamController;
+use App\Http\Controllers\HiringRequestController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\InvoicePaymentController;
 use App\Http\Controllers\ProfileController;
@@ -122,6 +123,13 @@ Route::middleware('auth')->group(function () {
     Route::post('reference-letters/{reference_letter}/approve', [ReferenceLetterController::class, 'approve'])->name('reference-letters.approve');
     Route::post('reference-letters/{reference_letter}/reject', [ReferenceLetterController::class, 'reject'])->name('reference-letters.reject');
     Route::get('my-card', CardController::class)->name('card.show');
+
+    /* طلبات التوظيف: يطلبها مسؤولو الفرق ويقرّرها المدير التنفيذي. */
+    Route::resource('hiring-requests', HiringRequestController::class)->except(['destroy']);
+    Route::post('hiring-requests/{hiring_request}/approve', [HiringRequestController::class, 'approve'])->name('hiring-requests.approve');
+    Route::post('hiring-requests/{hiring_request}/reject', [HiringRequestController::class, 'reject'])->name('hiring-requests.reject');
+    Route::post('hiring-requests/{hiring_request}/fill', [HiringRequestController::class, 'fill'])->name('hiring-requests.fill');
+    Route::post('hiring-requests/{hiring_request}/cancel', [HiringRequestController::class, 'cancel'])->name('hiring-requests.cancel');
 
     /* التقارير: لكل دور تقريره، والمدير التنفيذي يطّلع على المالي أيضاً. */
     Route::prefix('reports')->name('reports.')->group(function () {

@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Enums\ProjectDecisionType;
 use App\Enums\ProjectStatus;
+use App\Models\HiringRequest;
+use App\Models\Invoice;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
@@ -21,6 +23,25 @@ class ExecutivePagesTest extends TestCase
         parent::setUp();
 
         $this->executive = User::factory()->role('executive')->create();
+    }
+
+    public function test_overview_counts_what_awaits_the_executive_and_flags_trouble(): void
+    {
+        Project::factory()->status(ProjectStatus::PendingApproval)->create();
+        HiringRequest::factory()->create();
+        Project::factory()->status(ProjectStatus::InProgress)->create(['name' => 'مشروع تجاوز موعده', 'end_date' => today()->subDays(3)]);
+        $late = Invoice::factory()->withAmount('1000.00')->issued(today()->subDays(5)->toDateString())->create();
+
+        $this->actingAs($this->executive)->get(route('dashboard'))
+            ->assertOk()
+            ->assertViewHas('queues', fn (array $queues): bool => collect($queues)->pluck('count', 'label')->all() === [
+                'مشاريع بانتظار الاعتماد' => 1,
+                'أوامر شراء بانتظار اعتمادك' => 0,
+                'طلبات توظيف' => 1,
+                'طلبات إفادة' => 0,
+            ])
+            ->assertSee('مشروع تجاوز موعده')
+            ->assertSee($late->number);
     }
 
     public function test_approvals_page_lists_what_awaits_a_decision(): void

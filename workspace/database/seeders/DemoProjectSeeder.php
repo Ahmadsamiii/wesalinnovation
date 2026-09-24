@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Enums\ApprovalDecision;
 use App\Enums\CertificateType;
+use App\Enums\EmploymentType;
 use App\Enums\PaymentMethod;
 use App\Enums\Priority;
 use App\Enums\ProjectDecisionType;
@@ -11,6 +12,7 @@ use App\Enums\ProjectMemberRole;
 use App\Enums\TaskStatus;
 use App\Models\Certificate;
 use App\Models\Contract;
+use App\Models\HiringRequest;
 use App\Models\Invoice;
 use App\Models\Project;
 use App\Models\PurchaseOrder;
@@ -129,6 +131,65 @@ class DemoProjectSeeder extends Seeder
 
         $this->seedFinance($platform, $done, $pm, $executive);
         $this->seedCertificates($done, $pm, $executive, $member, $designer);
+        $this->seedHiring($platform, $pm, $executive);
+    }
+
+    /**
+     * طلب في كل مرحلة: بانتظار القرار، ومعتمد قيد التوظيف، ومشغول، ومرفوض.
+     */
+    private function seedHiring(Project $platform, User $pm, User $executive): void
+    {
+        $finance = User::where('email', 'finance@wesalinnovation.sa')->firstOrFail();
+        $medical = User::where('email', 'medical@wesalinnovation.sa')->firstOrFail();
+        $sysadmin = User::where('email', 'sysadmin@wesalinnovation.sa')->firstOrFail();
+
+        $this->hiringRequest($pm, [
+            'title' => 'مطور واجهات أمامية',
+            'department' => 'الهندسة',
+            'headcount' => 2,
+            'employment_type' => EmploymentType::FullTime,
+            'justification' => "مرحلة التطوير في منصة التأهيل الرقمي متأخرة أسبوعين، والحمل الحالي على مطور واحد.\nبلا تعزيز ينزاح الإطلاق إلى ما بعد موعد العقد.",
+            'requirements' => "خبرة ثلاث سنوات في واجهات الويب.\nمعرفة عملية بمعايير الوصولية WCAG واختبارها بقارئات الشاشة.",
+            'monthly_budget' => 14000,
+            'target_start_date' => today()->addMonth()->startOfMonth(),
+            'project_id' => $platform->id,
+        ]);
+
+        $this->hiringRequest($medical, [
+            'title' => 'مراجِعة محتوى صحي',
+            'department' => 'المراجعة الطبية',
+            'employment_type' => EmploymentType::PartTime,
+            'justification' => 'قائمة المحتوى الصحي المنتظر للمراجعة تتجاوز طاقة مراجِعة واحدة، والمحتوى لا يُنشر قبل اعتماده.',
+            'monthly_budget' => 9000,
+        ])->approve($executive, 'ضروري قبل توسيع قاعدة المعرفة.');
+
+        $accountant = $this->hiringRequest($finance, [
+            'title' => 'محاسب',
+            'department' => 'المالية',
+            'justification' => 'نمو عدد الفواتير وأوامر الشراء يحتاج محاسباً متفرغاً للذمم والتحصيل.',
+            'monthly_budget' => 11000,
+        ]);
+        $accountant->approve($executive);
+        $accountant->markFilled($finance, 'عُيّن سعد الحربي، وباشر أول الشهر.');
+
+        $this->hiringRequest($sysadmin, [
+            'title' => 'مهندس عمليات سحابية',
+            'department' => 'التقنية',
+            'employment_type' => EmploymentType::Contract,
+            'justification' => 'نقل الاستضافة إلى بيئة سحابية مُدارة وأتمتة النشر.',
+        ])->reject($executive, 'تغطيه الاستضافة المُدارة حالياً؛ يُعاد النظر بعد الإطلاق.');
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    private function hiringRequest(User $requester, array $attributes): HiringRequest
+    {
+        $request = new HiringRequest($attributes);
+        $request->requested_by = $requester->id;
+        $request->save();
+
+        return $request;
     }
 
     private function seedCertificates(Project $done, User $pm, User $executive, User $member, User $designer): void

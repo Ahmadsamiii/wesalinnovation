@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Certificate;
 use App\Models\Contract;
+use App\Models\HiringRequest;
 use App\Models\Invoice;
 use App\Models\Project;
 use App\Models\PurchaseOrder;
@@ -40,6 +41,7 @@ class AppServiceProvider extends ServiceProvider
             'invoice' => Invoice::class,
             'certificate' => Certificate::class,
             'reference_letter' => ReferenceLetter::class,
+            'hiring_request' => HiringRequest::class,
         ]);
 
         // النظام يحوي عقوداً وبيانات مالية: عشرة أحرف بحروف وأرقام في

@@ -54,6 +54,12 @@ enum AuditAction: string
     case ReferenceLetterApproved = 'certificate.letter_approved';
     case ReferenceLetterRejected = 'certificate.letter_rejected';
 
+    case HiringRequested = 'hiring.requested';
+    case HiringApproved = 'hiring.approved';
+    case HiringRejected = 'hiring.rejected';
+    case HiringFilled = 'hiring.filled';
+    case HiringCancelled = 'hiring.cancelled';
+
     public function label(): string
     {
         return match ($this) {
@@ -97,6 +103,11 @@ enum AuditAction: string
             self::ReferenceLetterRequested => 'طلب إفادة',
             self::ReferenceLetterApproved => 'اعتماد إفادة',
             self::ReferenceLetterRejected => 'رفض طلب إفادة',
+            self::HiringRequested => 'طلب توظيف',
+            self::HiringApproved => 'اعتماد طلب توظيف',
+            self::HiringRejected => 'رفض طلب توظيف',
+            self::HiringFilled => 'شغل وظيفة',
+            self::HiringCancelled => 'إلغاء طلب توظيف',
         };
     }
 
@@ -104,10 +115,12 @@ enum AuditAction: string
     {
         return match ($this) {
             self::AuthFailed, self::UserDeactivated, self::ProjectDeleted, self::TaskDeleted, self::AttachmentDeleted,
-            self::PurchaseOrderCancelled, self::InvoiceCancelled, self::CertificateRevoked, self::ReferenceLetterRejected => 'red',
+            self::PurchaseOrderCancelled, self::InvoiceCancelled, self::CertificateRevoked, self::ReferenceLetterRejected,
+            self::HiringRejected, self::HiringCancelled => 'red',
             self::UserRoleChanged, self::PasswordReset, self::ProjectDecided, self::PurchaseOrderReviewed, self::PurchaseOrderDecided => 'orange',
             self::UserCreated, self::InvitationAccepted, self::UserReactivated, self::ProjectCreated, self::ProjectCompleted,
-            self::ContractActivated, self::InvoiceIssued, self::PaymentRecorded, self::CertificateIssued, self::ReferenceLetterApproved => 'green',
+            self::ContractActivated, self::InvoiceIssued, self::PaymentRecorded, self::CertificateIssued, self::ReferenceLetterApproved,
+            self::HiringApproved, self::HiringFilled => 'green',
             self::AuthLogin => 'gray',
             default => 'blue',
         };

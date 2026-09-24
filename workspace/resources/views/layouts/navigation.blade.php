@@ -1,4 +1,13 @@
-@php($user = Auth::user())
+@php
+    $user = Auth::user();
+
+    // خدمات يصل إليها الدور خارج تبويباته (إفادة، طلب توظيف): في قائمة الحساب ما لم تكن تبويباً.
+    $tabRoutes = collect($user->roleTabs())->pluck('route');
+    $menuLinks = collect([
+        ['label' => $user->hasRole('executive') ? 'طلبات الإفادة' : 'طلب إفادة', 'route' => 'reference-letters.index', 'allowed' => $user->can('viewAny', \App\Models\ReferenceLetter::class)],
+        ['label' => 'طلبات التوظيف', 'route' => 'hiring-requests.index', 'allowed' => $user->can('viewAny', \App\Models\HiringRequest::class)],
+    ])->filter(fn (array $link): bool => $link['allowed'] && ! $tabRoutes->contains($link['route']));
+@endphp
 
 <nav class="no-print bg-white border-b border-gray-200" aria-label="التنقل الرئيسي">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -31,6 +40,9 @@
                     <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none">
                         {{ __('Profile') }}
                     </a>
+                    @foreach ($menuLinks as $link)
+                        <a href="{{ route($link['route']) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none">{{ $link['label'] }}</a>
+                    @endforeach
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit" class="block w-full px-4 py-2 text-start text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none">
