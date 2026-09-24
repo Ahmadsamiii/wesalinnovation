@@ -17,7 +17,9 @@
 
     <div class="relative flex h-16 shrink-0 items-center gap-2 border-b border-brand-border px-5 lg:sb-collapsed:justify-center lg:sb-collapsed:px-0">
         <a href="{{ route('dashboard') }}" class="flex min-w-0 items-center rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-sky">
-            <x-application-logo class="h-10 w-auto lg:sb-collapsed:w-11 lg:sb-collapsed:object-cover lg:sb-collapsed:object-right" />
+            <x-application-logo class="h-10 w-auto lg:sb-collapsed:hidden" />
+            {{-- العلامة وحدها للوضع المصغّر — صورة مستقلة بدل قص الشعار فلا تنقص --}}
+            <img src="{{ asset('images/wesal-mark.png') }}" alt="{{ config('app.name', 'Wesal') }}" class="hidden size-10 lg:sb-collapsed:block" width="40" height="40">
         </a>
 
         <button type="button" @click="toggleCollapsed()" aria-controls="app-sidebar"
