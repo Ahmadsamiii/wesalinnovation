@@ -317,6 +317,22 @@ php tools/check-beta.php
 
 ---
 
+## محركات البحث (SEO)
+
+- **النطاق المعتمد** `https://wesalinnovation.sa` — `.htaccess` يحوّل `www` و`http`
+  إليه بـ 301، وكل صفحة عامة تحمل `<link rel="canonical">` بهذا النطاق.
+- **`robots.txt`** يترك `/api/` مفتوحاً عمداً (الصفحة الرئيسية تجلب محتواها
+  المنشور منه)، ولا يحجب `survey.html`/`ticket.html` لأن فيهما `noindex`.
+- **`sitemap.xml`** يدوي: أي صفحة عامة جديدة تُضاف إليه، وإلى `SYNC_FILES` في
+  `deploy.sh` — وإلا لا تصل الإنتاج أصلاً.
+- **`og-cover.png`** (1200×630) و`favicon-192.png` و`favicon.ico` مولّدة من
+  `assets/logo-color.png`. روابط `og:image` مطلقة لأن منصات المشاركة لا تحلّ
+  المسارات النسبية.
+- التحقق في Google Search Console يكون بسجل DNS (خاصية «نطاق») فيغطي `chat.`
+  تلقائياً بعد النقل، وBing يستورد الموقع منه مباشرة.
+
+---
+
 ## الأمان
 
 - **لا ترفع `api/config.php` إلى Git أبداً.** لو تسرّب مفتاح، جدّده فوراً من
