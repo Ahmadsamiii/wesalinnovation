@@ -7,6 +7,7 @@ use App\Enums\Priority;
 use App\Enums\ProjectDecisionType;
 use App\Enums\ProjectMemberRole;
 use App\Enums\ProjectStatus;
+use App\Enums\PurchaseOrderStatus;
 use App\Enums\TaskStatus;
 use Database\Factories\ProjectFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -115,6 +116,39 @@ class Project extends Model
     public function decisions(): HasMany
     {
         return $this->hasMany(ProjectDecision::class)->latest('decided_at')->latest('id');
+    }
+
+    /**
+     * @return HasMany<Contract, $this>
+     */
+    public function contracts(): HasMany
+    {
+        return $this->hasMany(Contract::class);
+    }
+
+    /**
+     * @return HasMany<PurchaseOrder, $this>
+     */
+    public function purchaseOrders(): HasMany
+    {
+        return $this->hasMany(PurchaseOrder::class);
+    }
+
+    /**
+     * @return HasMany<Invoice, $this>
+     */
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    /**
+     * ما التزم به المشروع من ميزانيته: أوامر الشراء المقدّمة أو المعتمدة أو
+     * المستلمة (المسودات والمرفوضة والملغاة لا تُحسب).
+     */
+    public function committedSpend(): string
+    {
+        return (string) $this->purchaseOrders()->whereIn('status', PurchaseOrderStatus::committed())->sum('total');
     }
 
     /**

@@ -88,4 +88,15 @@ class ProjectVisibilityTest extends TestCase
         $this->actingAs($finance)->get(route('projects.edit', $project))->assertForbidden();
         $this->actingAs($finance)->post(route('projects.submit', $project))->assertForbidden();
     }
+
+    public function test_project_finances_are_shown_to_management_not_to_the_team(): void
+    {
+        $pm = User::factory()->role('pm')->create();
+        $member = User::factory()->role('team_member')->create();
+        $project = Project::factory()->create(['pm_id' => $pm->id, 'budget' => 90000]);
+        ProjectMember::factory()->create(['project_id' => $project->id, 'user_id' => $member->id]);
+
+        $this->actingAs($pm)->get(route('projects.show', $project))->assertSee('أوامر شراء ملتزَم بها');
+        $this->actingAs($member)->get(route('projects.show', $project))->assertOk()->assertDontSee('أوامر شراء ملتزَم بها');
+    }
 }

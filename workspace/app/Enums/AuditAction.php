@@ -34,6 +34,20 @@ enum AuditAction: string
 
     case TaskDeleted = 'task.deleted';
 
+    case ContractCreated = 'finance.contract_created';
+    case ContractActivated = 'finance.contract_activated';
+    case ContractClosed = 'finance.contract_closed';
+    case PurchaseOrderCreated = 'finance.po_created';
+    case PurchaseOrderSubmitted = 'finance.po_submitted';
+    case PurchaseOrderReviewed = 'finance.po_reviewed';
+    case PurchaseOrderDecided = 'finance.po_decided';
+    case PurchaseOrderReceived = 'finance.po_received';
+    case PurchaseOrderCancelled = 'finance.po_cancelled';
+    case InvoiceCreated = 'finance.invoice_created';
+    case InvoiceIssued = 'finance.invoice_issued';
+    case InvoiceCancelled = 'finance.invoice_cancelled';
+    case PaymentRecorded = 'finance.payment_recorded';
+
     public function label(): string
     {
         return match ($this) {
@@ -59,15 +73,30 @@ enum AuditAction: string
             self::AttachmentUploaded => 'رفع مرفق',
             self::AttachmentDeleted => 'حذف مرفق',
             self::TaskDeleted => 'حذف مهمة',
+            self::ContractCreated => 'إنشاء عقد',
+            self::ContractActivated => 'توقيع عقد وتفعيله',
+            self::ContractClosed => 'إغلاق عقد',
+            self::PurchaseOrderCreated => 'إنشاء أمر شراء',
+            self::PurchaseOrderSubmitted => 'تقديم أمر شراء',
+            self::PurchaseOrderReviewed => 'مراجعة مالية لأمر شراء',
+            self::PurchaseOrderDecided => 'قرار تنفيذي على أمر شراء',
+            self::PurchaseOrderReceived => 'استلام أمر شراء',
+            self::PurchaseOrderCancelled => 'إلغاء أمر شراء',
+            self::InvoiceCreated => 'إنشاء فاتورة',
+            self::InvoiceIssued => 'إصدار فاتورة',
+            self::InvoiceCancelled => 'إلغاء فاتورة',
+            self::PaymentRecorded => 'تسجيل دفعة',
         };
     }
 
     public function color(): string
     {
         return match ($this) {
-            self::AuthFailed, self::UserDeactivated, self::ProjectDeleted, self::TaskDeleted, self::AttachmentDeleted => 'red',
-            self::UserRoleChanged, self::PasswordReset, self::ProjectDecided => 'orange',
-            self::UserCreated, self::InvitationAccepted, self::UserReactivated, self::ProjectCreated, self::ProjectCompleted => 'green',
+            self::AuthFailed, self::UserDeactivated, self::ProjectDeleted, self::TaskDeleted, self::AttachmentDeleted,
+            self::PurchaseOrderCancelled, self::InvoiceCancelled => 'red',
+            self::UserRoleChanged, self::PasswordReset, self::ProjectDecided, self::PurchaseOrderReviewed, self::PurchaseOrderDecided => 'orange',
+            self::UserCreated, self::InvitationAccepted, self::UserReactivated, self::ProjectCreated, self::ProjectCompleted,
+            self::ContractActivated, self::InvoiceIssued, self::PaymentRecorded => 'green',
             self::AuthLogin => 'gray',
             default => 'blue',
         };

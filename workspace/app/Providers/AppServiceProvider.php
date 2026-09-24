@@ -2,7 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\Contract;
+use App\Models\Invoice;
 use App\Models\Project;
+use App\Models\PurchaseOrder;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -30,6 +33,9 @@ class AppServiceProvider extends ServiceProvider
             'user' => User::class,
             'project' => Project::class,
             'task' => Task::class,
+            'contract' => Contract::class,
+            'purchase_order' => PurchaseOrder::class,
+            'invoice' => Invoice::class,
         ]);
 
         // النظام يحوي عقوداً وبيانات مالية: عشرة أحرف بحروف وأرقام في

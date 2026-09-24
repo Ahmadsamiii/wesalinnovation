@@ -53,7 +53,12 @@ class ProjectPolicy
      */
     public function delete(User $user, Project $project): bool
     {
-        return $project->pm_id === $user->id && $project->status === ProjectStatus::Draft && $project->submitted_at === null;
+        return $project->pm_id === $user->id
+            && $project->status === ProjectStatus::Draft
+            && $project->submitted_at === null
+            && $project->contracts()->doesntExist()
+            && $project->purchaseOrders()->doesntExist()
+            && $project->invoices()->doesntExist();
     }
 
     public function submit(User $user, Project $project): bool

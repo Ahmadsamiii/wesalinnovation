@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Enums\AuditAction;
+use App\Enums\ContractStatus;
+use App\Enums\InvoiceStatus;
 use App\Enums\Priority;
 use App\Enums\ProjectDecisionType;
 use App\Enums\ProjectStatus;
@@ -93,8 +95,17 @@ class ProjectController extends Controller
             ->groupBy('status')
             ->pluck('total', 'status');
 
+        $user = $request->user();
+        $finance = $user->hasAnyRole(['executive', 'finance']) || $project->pm_id === $user->id ? [
+            'committed' => $project->committedSpend(),
+            'contracted' => (string) $project->contracts()->whereIn('status', [ContractStatus::Active, ContractStatus::Completed])->sum('value'),
+            'invoiced' => (string) $project->invoices()->whereIn('status', [InvoiceStatus::Issued, InvoiceStatus::Paid])->sum('total'),
+            'collected' => (string) $project->invoices()->whereIn('status', [InvoiceStatus::Issued, InvoiceStatus::Paid])->sum('paid_amount'),
+        ] : null;
+
         return view('projects.show', [
             'project' => $project,
+            'finance' => $finance,
             'taskCounts' => $taskCounts,
             'overdueTasks' => $project->tasks()->overdue()->with('assignee')->orderBy('due_date')->limit(5)->get(),
             'decisionTypes' => collect(ProjectDecisionType::cases())

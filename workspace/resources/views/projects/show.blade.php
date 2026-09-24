@@ -181,6 +181,26 @@
                 </dl>
             </x-card>
 
+            @if ($finance)
+                <x-card title="المالية">
+                    <dl class="space-y-2 text-sm">
+                        <div class="flex justify-between gap-2"><dt class="text-gray-500">الميزانية</dt><dd>@if ($project->budget !== null)<x-money :amount="$project->budget" />@else — @endif</dd></div>
+                        <div class="flex justify-between gap-2"><dt class="text-gray-500">أوامر شراء ملتزَم بها</dt><dd><x-money :amount="$finance['committed']" /></dd></div>
+                        <div class="flex justify-between gap-2"><dt class="text-gray-500">قيمة العقود</dt><dd><x-money :amount="$finance['contracted']" /></dd></div>
+                        <div class="flex justify-between gap-2"><dt class="text-gray-500">المفوتر</dt><dd><x-money :amount="$finance['invoiced']" /></dd></div>
+                        <div class="flex justify-between gap-2"><dt class="text-gray-500">المحصّل</dt><dd><x-money :amount="$finance['collected']" /></dd></div>
+                    </dl>
+                    @if ($project->budget !== null && (float) $finance['committed'] > (float) $project->budget)
+                        <p class="mt-3 rounded-lg bg-red-50 p-3 text-xs text-red-800" role="alert">الالتزامات تتجاوز الميزانية.</p>
+                    @endif
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <x-button variant="ghost" size="sm" :href="route('contracts.index', ['project' => $project->id])">العقود</x-button>
+                        <x-button variant="ghost" size="sm" :href="route('purchase-orders.index', ['project' => $project->id])">أوامر الشراء</x-button>
+                        <x-button variant="ghost" size="sm" :href="route('invoices.index', ['project' => $project->id])">الفواتير</x-button>
+                    </div>
+                </x-card>
+            @endif
+
             <x-card title="الفريق" :padding="false">
                 <x-slot:actions>
                     <x-button variant="ghost" size="sm" :href="route('projects.members.index', $project)">إدارة الفريق</x-button>

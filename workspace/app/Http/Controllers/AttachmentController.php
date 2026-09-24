@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Enums\AuditAction;
 use App\Models\Attachment;
 use App\Models\AuditLog;
+use App\Models\Contract;
 use App\Models\Project;
+use App\Models\PurchaseOrder;
 use App\Models\Task;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
@@ -51,6 +53,20 @@ class AttachmentController extends Controller
         Gate::authorize('upload', $task->project);
 
         return $this->store($request, $task, $task->project);
+    }
+
+    public function storeForContract(Request $request, Contract $contract): RedirectResponse
+    {
+        Gate::authorize('upload', $contract);
+
+        return $this->store($request, $contract, $contract->project);
+    }
+
+    public function storeForPurchaseOrder(Request $request, PurchaseOrder $purchaseOrder): RedirectResponse
+    {
+        Gate::authorize('upload', $purchaseOrder);
+
+        return $this->store($request, $purchaseOrder, $purchaseOrder->project);
     }
 
     public function show(Attachment $attachment): StreamedResponse

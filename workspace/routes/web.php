@@ -5,16 +5,22 @@ use App\Http\Controllers\Admin\UserActivationController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\UserInvitationController;
 use App\Http\Controllers\AttachmentController;
+use App\Http\Controllers\ContractController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Executive\DecisionLogController;
+use App\Http\Controllers\Executive\FinancialApprovalController;
 use App\Http\Controllers\Executive\ProjectApprovalController;
 use App\Http\Controllers\Executive\TeamController;
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\InvoicePaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectMilestoneController;
 use App\Http\Controllers\ProjectTaskController;
 use App\Http\Controllers\ProjectWorkflowController;
+use App\Http\Controllers\PurchaseOrderApprovalController;
+use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\SectionController;
 use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
@@ -75,9 +81,30 @@ Route::middleware('auth')->group(function () {
     Route::get('attachments/{attachment}', [AttachmentController::class, 'show'])->name('attachments.show');
     Route::delete('attachments/{attachment}', [AttachmentController::class, 'destroy'])->name('attachments.destroy');
 
+    /* المالية: العقود وأوامر الشراء والفواتير. الصلاحيات في سياسات كل مستند. */
+    Route::resource('contracts', ContractController::class);
+    Route::post('contracts/{contract}/activate', [ContractController::class, 'activate'])->name('contracts.activate');
+    Route::post('contracts/{contract}/close', [ContractController::class, 'close'])->name('contracts.close');
+    Route::post('contracts/{contract}/files', [AttachmentController::class, 'storeForContract'])->name('contracts.files.store');
+
+    Route::resource('purchase-orders', PurchaseOrderController::class);
+    Route::post('purchase-orders/{purchase_order}/submit', [PurchaseOrderController::class, 'submit'])->name('purchase-orders.submit');
+    Route::post('purchase-orders/{purchase_order}/review', [PurchaseOrderApprovalController::class, 'review'])->name('purchase-orders.review');
+    Route::post('purchase-orders/{purchase_order}/decision', [PurchaseOrderApprovalController::class, 'decide'])->name('purchase-orders.decide');
+    Route::post('purchase-orders/{purchase_order}/receive', [PurchaseOrderController::class, 'receive'])->name('purchase-orders.receive');
+    Route::post('purchase-orders/{purchase_order}/cancel', [PurchaseOrderController::class, 'cancel'])->name('purchase-orders.cancel');
+    Route::post('purchase-orders/{purchase_order}/files', [AttachmentController::class, 'storeForPurchaseOrder'])->name('purchase-orders.files.store');
+
+    Route::resource('invoices', InvoiceController::class);
+    Route::get('invoices/{invoice}/print', [InvoiceController::class, 'print'])->name('invoices.print');
+    Route::post('invoices/{invoice}/issue', [InvoiceController::class, 'issue'])->name('invoices.issue');
+    Route::post('invoices/{invoice}/cancel', [InvoiceController::class, 'cancel'])->name('invoices.cancel');
+    Route::post('invoices/{invoice}/payments', [InvoicePaymentController::class, 'store'])->name('invoices.payments.store');
+
     /* المدير التنفيذي. */
     Route::middleware('role:executive')->group(function () {
         Route::get('approvals/projects', [ProjectApprovalController::class, 'index'])->name('approvals.projects');
+        Route::get('approvals/financial', [FinancialApprovalController::class, 'index'])->name('approvals.financial');
         Route::get('decisions', [DecisionLogController::class, 'index'])->name('decisions.index');
         Route::get('team', [TeamController::class, 'index'])->name('team.index');
     });

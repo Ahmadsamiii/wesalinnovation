@@ -71,11 +71,12 @@ class Attachment extends Model
     }
 
     /**
-     * المشروع الذي ينتمي إليه المرفق، سواء رُفع على المشروع أو على إحدى مهامه.
+     * المشروع الذي ينتمي إليه المرفق، سواء رُفع على المشروع نفسه أو على مهمة
+     * أو عقد أو أمر شراء فيه.
      */
     public function project(): Project
     {
-        return $this->attachable instanceof Task ? $this->attachable->project : $this->attachable;
+        return $this->attachable instanceof Project ? $this->attachable : $this->attachable->project;
     }
 
     public function deleteWithFile(): void

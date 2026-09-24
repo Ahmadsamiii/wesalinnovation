@@ -84,6 +84,50 @@ Alpine.data('kanban', () => ({
     },
 }));
 
+/**
+ * محرر بنود الفاتورة وأمر الشراء. المجاميع هنا معاينة فقط بنفس حساب الخادم
+ * (بالهللات أعداداً صحيحة، تقريب نصف للأعلى)؛ الخادم يعيد الحساب ويخزّنه.
+ */
+const toHalalas = (value) => Math.round((parseFloat(value) || 0) * 100);
+const money = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+Alpine.data('lineItems', (initial, vatRate, errors) => ({
+    items: initial.length ? initial : [{ description: '', quantity: '1', unit_price: '' }],
+    vatRate: parseFloat(vatRate),
+    errors,
+
+    add() {
+        this.items.push({ description: '', quantity: '1', unit_price: '' });
+        this.$nextTick(() => this.$root.querySelector(`#item-${this.items.length - 1}-description`)?.focus());
+    },
+
+    remove(index) {
+        if (this.items.length > 1) {
+            this.items.splice(index, 1);
+        }
+    },
+
+    error(index, field) {
+        return (this.errors[`items.${index}.${field}`] ?? [])[0] ?? '';
+    },
+
+    lineHalalas(item) {
+        return Math.floor((toHalalas(item.quantity) * toHalalas(item.unit_price) + 50) / 100);
+    },
+
+    get subtotal() {
+        return this.items.reduce((sum, item) => sum + this.lineHalalas(item), 0);
+    },
+
+    get vat() {
+        return Math.floor((this.subtotal * Math.round(this.vatRate * 100) + 5000) / 10000);
+    },
+
+    format(halalas) {
+        return `${money.format(halalas / 100)} ر.س`;
+    },
+}));
+
 window.Alpine = Alpine;
 
 Alpine.start();

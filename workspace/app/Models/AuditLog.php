@@ -104,7 +104,7 @@ class AuditLog extends Model
                 ))
                 : null,
             AuditAction::AuthFailed, AuditAction::InvitationSent => $properties['email'] ?? null,
-            AuditAction::ProjectDecided => trim(($properties['decision_label'] ?? '').(isset($properties['note']) ? ': '.$properties['note'] : '')),
+            AuditAction::ProjectDecided, AuditAction::PurchaseOrderReviewed, AuditAction::PurchaseOrderDecided => trim(($properties['decision_label'] ?? '').(isset($properties['note']) ? ': '.$properties['note'] : '')),
             AuditAction::ProjectMemberAdded, AuditAction::ProjectMemberRemoved => $properties['member'] ?? null,
             AuditAction::AttachmentUploaded, AuditAction::AttachmentDeleted => $properties['file'] ?? null,
             default => $properties['note'] ?? null,
