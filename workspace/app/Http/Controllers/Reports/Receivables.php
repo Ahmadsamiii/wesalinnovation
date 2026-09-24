@@ -18,7 +18,7 @@ trait Receivables
      */
     protected function agingBuckets(?Builder $scope = null): array
     {
-        $buckets = ['لم يستحق بعد' => 0.0, '١–٣٠ يوماً' => 0.0, '٣١–٦٠ يوماً' => 0.0, '٦١–٩٠ يوماً' => 0.0, 'أكثر من ٩٠ يوماً' => 0.0];
+        $buckets = ['لم يستحق بعد' => 0.0, '١ إلى ٣٠ يوماً' => 0.0, '٣١ إلى ٦٠ يوماً' => 0.0, '٦١ إلى ٩٠ يوماً' => 0.0, 'أكثر من ٩٠ يوماً' => 0.0];
 
         ($scope ?? Invoice::query())
             ->where('status', InvoiceStatus::Issued)
@@ -27,9 +27,9 @@ trait Receivables
                 $late = $invoice->due_date && $invoice->due_date->isPast() ? (int) $invoice->due_date->diffInDays(today()) : 0;
                 $key = match (true) {
                     $late <= 0 => 'لم يستحق بعد',
-                    $late <= 30 => '١–٣٠ يوماً',
-                    $late <= 60 => '٣١–٦٠ يوماً',
-                    $late <= 90 => '٦١–٩٠ يوماً',
+                    $late <= 30 => '١ إلى ٣٠ يوماً',
+                    $late <= 60 => '٣١ إلى ٦٠ يوماً',
+                    $late <= 90 => '٦١ إلى ٩٠ يوماً',
                     default => 'أكثر من ٩٠ يوماً',
                 };
                 $buckets[$key] += (float) $invoice->balance();

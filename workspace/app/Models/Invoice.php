@@ -200,7 +200,7 @@ class Invoice extends Model
                 'paid_at' => $isSettled ? now() : null,
             ])->save();
 
-            AuditLog::record(AuditAction::PaymentRecorded, $this, ['note' => number_format($amountHalalas / 100, 2).' ر.س — '.$method->label()], $by);
+            AuditLog::record(AuditAction::PaymentRecorded, $this, ['note' => number_format($amountHalalas / 100, 2).' ر.س ('.$method->label().')'], $by);
 
             return $payment;
         });

@@ -49,7 +49,7 @@ if (($_GET['sse'] ?? '') === '2') {
     $t0 = microtime(true);
     $cfgFile = __DIR__ . '/config.php';
     if (!is_file($cfgFile)) {
-        echo 'data: ' . json_encode(['err' => 'config.php غير موجود — لا يمكن قراءة GEMINI_KEY']) . "\n\n";
+        echo 'data: ' . json_encode(['err' => 'config.php غير موجود، فلا يمكن قراءة GEMINI_KEY']) . "\n\n";
         flush();
         echo "event: done\ndata: {}\n\n"; flush(); exit;
     }
@@ -102,7 +102,7 @@ if (($_GET['sse'] ?? '') === '2') {
     }
     curl_close($ch);
     if ($n === 0) {
-        echo 'data: ' . json_encode(['err' => 'ما وصل أي جزء نصي — راجع صلاحية GEMINI_KEY واسم النموذج']) . "\n\n";
+        echo 'data: ' . json_encode(['err' => 'لم يصل أي جزء نصي. راجع صلاحية GEMINI_KEY واسم النموذج']) . "\n\n";
         flush();
     }
     echo "event: done\ndata: {}\n\n";
@@ -114,7 +114,7 @@ header('Content-Type: text/html; charset=utf-8');
 ?>
 <!doctype html>
 <html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>اختبار البث — وصال</title>
+<title>اختبار البث | وصال</title>
 <style>body{font-family:system-ui,Tahoma,sans-serif;max-width:560px;margin:2rem auto;padding:0 1rem;line-height:1.8}
 #log1 div,#log2 div{padding:.3rem .6rem;border-bottom:1px solid #ddd}
 .verdict{font-weight:700;font-size:1.1rem;margin:.5rem 0 1.5rem}
@@ -123,13 +123,13 @@ h3{margin-bottom:.3rem}</style></head>
 <body>
 <h2>اختبار البث على الخادم</h2>
 
-<h3>١) الاتجاه الوارد — خادمنا إلى المتصفح</h3>
+<h3>١) الاتجاه الوارد: من خادمنا إلى المتصفح</h3>
 <p>خمس دفعات مُصطنعة، واحدة كل ثانية.</p>
 <button onclick="run(1)">شغّل الاختبار الأول</button>
 <div id="log1"></div>
 <div id="verdict1" class="verdict"></div>
 
-<h3>٢) الاتجاه الصادر — Gemini إلى خادمنا</h3>
+<h3>٢) الاتجاه الصادر: من Gemini إلى خادمنا</h3>
 <p>نداء حقيقي صغير لـGemini، يحتاج مفتاحاً صالحاً في config.php. شغّله بعد نجاح الاختبار الأول فقط.</p>
 <button onclick="run(2)">شغّل الاختبار الثاني</button>
 <div id="log2"></div>
@@ -145,13 +145,13 @@ function run(which){
     const d=JSON.parse(e.data);
     if(d.err){sawErr=true;const el=document.createElement('div');el.textContent='خطأ: '+d.err;log.appendChild(el);return;}
     const now=(performance.now()-t0)/1000; arrivals.push(now);
-    const el=document.createElement('div');el.textContent='وصلت الدفعة '+d.n+' بعد '+now.toFixed(2)+' ث'+(d.len?(' — '+d.len+' حرفاً'):'');
+    const el=document.createElement('div');el.textContent='وصلت الدفعة '+d.n+' بعد '+now.toFixed(2)+' ث'+(d.len?(' ('+d.len+' حرفاً)'):'');
     log.appendChild(el);
   };
   es.addEventListener('done',()=>{
     es.close();
-    if(sawErr){v.textContent='⚠️ تعذّر إكمال الاختبار — راجع رسالة الخطأ أعلاه.';return;}
-    if(arrivals.length<2){v.textContent='⚠️ وصلت دفعة واحدة أو لا شيء — لا يكفي للحكم.';return;}
+    if(sawErr){v.textContent='⚠️ تعذّر إكمال الاختبار. راجع رسالة الخطأ أعلاه.';return;}
+    if(arrivals.length<2){v.textContent='⚠️ وصلت دفعة واحدة أو لا شيء، وهذا لا يكفي للحكم.';return;}
     const spread=arrivals[arrivals.length-1]-arrivals[0];
     v.textContent=spread>1.0
       ?'✅ يعمل تدريجياً: الدفعات وصلت متباعدة ('+spread.toFixed(1)+' ث بين الأولى والأخيرة).'

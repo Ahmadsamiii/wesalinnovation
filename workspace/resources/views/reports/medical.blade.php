@@ -9,7 +9,7 @@
         <x-stat label="بانتظار مراجعتك الآن" :value="$kpis['inReview']" :href="route('medical.review')" />
         <x-stat label="اعتمادات في الفترة" :value="$kpis['approved']" />
         <x-stat label="إعادات للتعديل في الفترة" :value="$kpis['rejected']" />
-        <x-stat label="زمن القرار (الوسيط)" :value="$kpis['medianHours'] === null ? '—' : ($kpis['medianHours'] < 48 ? number_format($kpis['medianHours'], 1).' ساعة' : number_format($kpis['medianHours'] / 24, 1).' يوم')" hint="من التقديم إلى القرار" />
+        <x-stat label="زمن القرار (الوسيط)" :value="$kpis['medianHours'] === null ? '-' : ($kpis['medianHours'] < 48 ? number_format($kpis['medianHours'], 1).' ساعة' : number_format($kpis['medianHours'] / 24, 1).' يوم')" hint="من التقديم إلى القرار" />
         <x-stat label="محتوى منشور" :value="$kpis['published']" :href="route('content.index', ['status' => 'approved'])" />
         <x-stat label="مراجعة دورية خلال ٣٠ يوماً" :value="$kpis['dueSoon']" :href="route('medical.review')" />
     </section>

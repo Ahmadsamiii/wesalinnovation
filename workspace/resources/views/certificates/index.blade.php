@@ -15,7 +15,7 @@
             <ul class="divide-y divide-gray-100 text-sm" role="list">
                 @foreach ($awaiting as $project)
                     <li class="flex flex-wrap items-center justify-between gap-2 px-5 py-3">
-                        <span><span class="font-medium">{{ $project->name }}</span> <span class="text-gray-500">— أُنجز <x-date :value="$project->actual_end_date" /></span></span>
+                        <span><span class="font-medium">{{ $project->name }}</span><span class="text-gray-500">، أُنجز في <x-date :value="$project->actual_end_date" /></span></span>
                         <x-button size="sm" :href="route('certificates.create', ['project' => $project->id, 'type' => 'completion'])">إصدار شهادة الإنجاز</x-button>
                     </li>
                 @endforeach

@@ -59,7 +59,7 @@ class FinanceReportController extends Controller
             'collectedSeries' => $this->monthly($payments, $period['keys'], fn (InvoicePayment $payment) => $payment->paid_on, fn (InvoicePayment $payment) => $payment->amount),
             'aging' => $this->agingBuckets(),
             'byClient' => $open
-                ->groupBy(fn (Invoice $invoice): string => $invoice->client?->name ?? '—')
+                ->groupBy(fn (Invoice $invoice): string => $invoice->client?->name ?? 'بلا عميل')
                 ->map(fn (Collection $invoices, string $client): array => [
                     'label' => $client,
                     'value' => $invoices->sum(fn (Invoice $invoice) => (float) $invoice->balance()),

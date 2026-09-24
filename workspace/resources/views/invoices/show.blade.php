@@ -51,8 +51,8 @@
                     <ul class="divide-y divide-gray-100 text-sm" role="list">
                         @foreach ($invoice->payments as $payment)
                             <li class="flex flex-wrap items-center justify-between gap-2 px-5 py-3">
-                                <span><x-money :amount="$payment->amount" class="font-semibold" /> — {{ $payment->method->label() }}{{ $payment->reference ? ' — '.$payment->reference : '' }}</span>
-                                <span class="text-xs text-gray-500"><x-date :value="$payment->paid_on" /> — سجّلها {{ $payment->recorder->name }}</span>
+                                <span><x-money :amount="$payment->amount" class="font-semibold" /> ({{ $payment->method->label() }}{{ $payment->reference ? '، '.$payment->reference : '' }})</span>
+                                <span class="text-xs text-gray-500"><x-date :value="$payment->paid_on" /> (المسجِّل: {{ $payment->recorder->name }})</span>
                             </li>
                         @endforeach
                     </ul>
@@ -84,7 +84,7 @@
 
         <x-card title="البيانات">
             <dl class="space-y-2 text-sm">
-                <div class="flex justify-between gap-2"><dt class="text-gray-500">العميل</dt><dd>{{ $invoice->client?->name ?? '— (مشروع بلا عميل)' }}</dd></div>
+                <div class="flex justify-between gap-2"><dt class="text-gray-500">العميل</dt><dd>{{ $invoice->client?->name ?? 'مشروع داخلي' }}</dd></div>
                 <div class="flex justify-between gap-2"><dt class="text-gray-500">المشروع</dt><dd>
                     @can('view', $invoice->project)
                         <a href="{{ route('projects.show', $invoice->project) }}" class="text-brand-800 hover:underline">{{ $invoice->project->name }}</a>
@@ -96,7 +96,7 @@
                     @if ($invoice->contract)
                         <a href="{{ route('contracts.show', $invoice->contract) }}" class="text-brand-800 hover:underline" dir="ltr">{{ $invoice->contract->number }}</a>
                     @else
-                        —
+                        -
                     @endif
                 </dd></div>
                 <div class="flex justify-between gap-2"><dt class="text-gray-500">الإصدار</dt><dd><x-date :value="$invoice->issue_date" /></dd></div>

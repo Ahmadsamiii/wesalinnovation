@@ -4,13 +4,13 @@
                 <div>
                     <h1 class="text-2xl font-bold">
                         @if ($invoice->status === \App\Enums\InvoiceStatus::Draft)
-                            مسودة فاتورة — ليست للتحصيل
+                            مسودة فاتورة (ليست للتحصيل)
                         @else
                             فاتورة
                         @endif
                     </h1>
                     <dl class="mt-3 space-y-1 text-sm">
-                        <div><dt class="inline text-gray-500">رقم الفاتورة:</dt> <dd class="inline font-semibold" dir="ltr">{{ $invoice->number ?? '—' }}</dd></div>
+                        <div><dt class="inline text-gray-500">رقم الفاتورة:</dt> <dd class="inline font-semibold" dir="ltr">{{ $invoice->number ?? '-' }}</dd></div>
                         <div><dt class="inline text-gray-500">تاريخ الإصدار:</dt> <dd class="inline"><x-date :value="$invoice->issue_date" /></dd></div>
                         <div><dt class="inline text-gray-500">تاريخ الاستحقاق:</dt> <dd class="inline"><x-date :value="$invoice->due_date" /></dd></div>
                         @if ($invoice->contract)
@@ -32,7 +32,7 @@
             <section class="grid grid-cols-2 gap-6 py-6 text-sm">
                 <div>
                     <h2 class="mb-1 text-xs font-semibold text-gray-500">فاتورة إلى</h2>
-                    <p class="font-semibold">{{ $invoice->client?->name ?? '—' }}</p>
+                    <p class="font-semibold">{{ $invoice->client?->name ?? '-' }}</p>
                     @if ($invoice->client)
                         <p class="text-gray-600" dir="ltr">{{ $invoice->client->email }}</p>
                     @endif
@@ -59,7 +59,7 @@
             </section>
     
             @if ($invoice->status === \App\Enums\InvoiceStatus::Cancelled)
-                <p class="mt-8 rounded-lg border-2 border-red-300 p-4 text-center font-bold text-red-700">فاتورة ملغاة — {{ $invoice->cancellation_reason }}</p>
+                <p class="mt-8 rounded-lg border-2 border-red-300 p-4 text-center font-bold text-red-700">فاتورة ملغاة. السبب: {{ $invoice->cancellation_reason }}</p>
             @endif
         </main>
 </x-print-layout>

@@ -39,7 +39,7 @@
                                         <span class="block text-xs text-red-700" dir="ltr">{{ $test->properties['error'] }}</span>
                                     @endif
                                 </span>
-                                <span class="text-xs text-gray-500">{{ $test->user?->name }} — <x-date :value="$test->created_at" relative /></span>
+                                <span class="text-xs text-gray-500">{{ $test->user?->name }}، <x-date :value="$test->created_at" relative /></span>
                             </li>
                         @endforeach
                     </ul>

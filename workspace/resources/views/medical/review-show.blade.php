@@ -54,7 +54,7 @@
                     <form method="POST" action="{{ route('medical.review.renew', $content) }}" class="mt-3 space-y-3">
                         @csrf
                         <x-form.textarea name="note" label="ملاحظة" rows="2" />
-                        <x-button type="submit" variant="secondary" class="w-full">راجعته — جدّد الاعتماد</x-button>
+                        <x-button type="submit" variant="secondary" class="w-full">تأكيد المراجعة وتجديد الاعتماد</x-button>
                     </form>
                 </x-card>
             @endcan
@@ -80,7 +80,7 @@
                         @foreach ($content->reviews as $review)
                             <li class="px-5 py-3">
                                 <p><x-badge :color="$review->decision->color()">{{ $review->decision->label() }}</x-badge> النسخة {{ $review->version }}</p>
-                                <p class="mt-1 text-xs text-gray-500">{{ $review->reviewer->name }} — <x-date :value="$review->created_at" /></p>
+                                <p class="mt-1 text-xs text-gray-500">{{ $review->reviewer->name }}، <x-date :value="$review->created_at" /></p>
                                 @if ($review->note)
                                     <p class="mt-1 whitespace-pre-line text-xs text-gray-700">{{ $review->note }}</p>
                                 @endif

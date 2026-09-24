@@ -58,7 +58,7 @@
                                     <x-badge color="orange">تجاوز موعده</x-badge>
                                     <a href="{{ route('projects.show', $project) }}" class="ms-1 font-medium text-brand-800 hover:underline">{{ $project->name }}</a>
                                 </span>
-                                <span class="text-xs text-gray-500">كان مقرراً <x-date :value="$project->end_date" /> — {{ $project->pm->name }}</span>
+                                <span class="text-xs text-gray-500">{{ $project->pm->name }}، كان مقرراً <x-date :value="$project->end_date" /></span>
                             </li>
                         @endforeach
                         @foreach ($overBudget as $project)
@@ -75,7 +75,7 @@
                                 <span>
                                     <x-badge color="red">فاتورة متأخرة</x-badge>
                                     <a href="{{ route('invoices.show', $invoice) }}" class="ms-1 font-medium text-brand-800 hover:underline" dir="ltr">{{ $invoice->number }}</a>
-                                    <span class="text-gray-600">— {{ $invoice->client?->name ?? $invoice->project->name }}</span>
+                                    <span class="text-gray-600">({{ $invoice->client?->name ?? $invoice->project->name }})</span>
                                 </span>
                                 <span class="text-xs text-gray-500">متبقٍ <x-money :amount="$invoice->balance()" />، استحقت <x-date :value="$invoice->due_date" /></span>
                             </li>
@@ -93,7 +93,7 @@
                             <li class="flex flex-wrap items-center justify-between gap-2 px-5 py-3">
                                 <span>
                                     <span class="font-medium">{{ $milestone->title }}</span>
-                                    <a href="{{ route('projects.show', $milestone->project) }}" class="text-gray-600 hover:underline">— {{ $milestone->project->name }}</a>
+                                    <span class="text-gray-600">(<a href="{{ route('projects.show', $milestone->project) }}" class="hover:underline">{{ $milestone->project->name }}</a>)</span>
                                 </span>
                                 <x-date :value="$milestone->due_date" class="text-xs text-gray-500" />
                             </li>

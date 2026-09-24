@@ -174,7 +174,7 @@ class PurchaseOrder extends Model
 
     public function auditLabel(): string
     {
-        return $this->number.' — '.$this->vendor_name;
+        return $this->number.': '.$this->vendor_name;
     }
 
     private function recordDecision(ApprovalStage $stage, ApprovalDecision $decision, PurchaseOrderStatus $next, User $by, ?string $note, AuditAction $action): void

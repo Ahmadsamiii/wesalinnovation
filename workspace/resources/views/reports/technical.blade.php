@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot:title>التقارير التقنية</x-slot:title>
 
-    <x-page-header title="التقارير التقنية" description="الدخول ومحاولاته الفاشلة، ومن يستخدم النظام فعلاً، والحسابات الخاملة." />
+    <x-page-header title="التقارير التقنية" description="الدخول ومحاولاته الفاشلة، ومن يستخدم النظام، والحسابات الخاملة." />
 
     <x-report-period :period="$period" route="reports.technical" class="mb-6" />
 
@@ -31,7 +31,7 @@
                         <li class="flex flex-wrap items-center justify-between gap-2 px-5 py-3">
                             <span>
                                 <a href="{{ route('users.edit', $row['user']) }}" class="font-medium text-brand-800 hover:underline">{{ $row['user']->name }}</a>
-                                <span class="text-gray-500">— {{ $row['user']->roleLabel() ?? 'بلا دور' }}</span>
+                                <span class="text-gray-500">({{ $row['user']->roleLabel() ?? 'بلا دور' }})</span>
                             </span>
                             <span class="text-xs text-gray-500">
                                 @if ($row['lastLogin'])

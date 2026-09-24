@@ -25,7 +25,7 @@
                         <tr>
                             <td class="px-5 py-3">
                                 <div class="font-medium">{{ $member->user->name }}</div>
-                                <div class="text-xs text-gray-500">{{ $member->user->roleLabel() }}{{ $member->user->job_title ? ' — '.$member->user->job_title : '' }}</div>
+                                <div class="text-xs text-gray-500">{{ $member->user->roleLabel() }}{{ $member->user->job_title ? '، '.$member->user->job_title : '' }}</div>
                             </td>
                             <td class="px-5 py-3">
                                 @can('manage', $project)

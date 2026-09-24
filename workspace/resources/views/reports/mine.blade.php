@@ -13,7 +13,7 @@
         <x-stat label="مهام مفتوحة" :value="$kpis['open']" :href="route('tasks.mine')" />
         <x-stat label="مهام متأخرة" :value="$kpis['overdue']" :href="route('tasks.mine')" />
         <x-stat label="أنجزتها في الفترة" :value="$kpis['completed']" />
-        <x-stat label="الإنجاز في الموعد" :value="$kpis['onTimeRate'] === null ? '—' : $kpis['onTimeRate'].'٪'" hint="من المنجزات التي لها موعد استحقاق" />
+        <x-stat label="الإنجاز في الموعد" :value="$kpis['onTimeRate'] === null ? '-' : $kpis['onTimeRate'].'٪'" hint="من المنجزات التي لها موعد استحقاق" />
     </section>
 
     <div class="mb-6 grid [&>*]:min-w-0 gap-6 lg:grid-cols-2">

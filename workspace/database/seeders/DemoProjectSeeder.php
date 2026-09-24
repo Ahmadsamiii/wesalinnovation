@@ -250,7 +250,7 @@ class DemoProjectSeeder extends Seeder
             $certificate->save();
         }
 
-        $approved = new ReferenceLetter(['purpose' => 'بنك الرياض', 'addressee' => 'بنك الرياض — فرع العليا']);
+        $approved = new ReferenceLetter(['purpose' => 'بنك الرياض', 'addressee' => 'بنك الرياض، فرع العليا']);
         $approved->requester_id = $member->id;
         $approved->save();
         $approved->approve($executive);
@@ -291,17 +291,17 @@ class DemoProjectSeeder extends Seeder
 
         $this->purchaseOrder($platform, $pm, 'متجر المستلزمات', [['لوحات مفاتيح برايل', 3, 2100]]);
 
-        $paid = $this->invoice($platform, $finance, $contract, [['الدفعة الأولى — التحليل والتصميم', 1, 126000]]);
+        $paid = $this->invoice($platform, $finance, $contract, [['الدفعة الأولى: التحليل والتصميم', 1, 126000]]);
         $paid->issue($finance);
         $this->backdate($paid, daysAgo: 49);
         $paid->recordPayment($paid->total, today()->subWeeks(3), PaymentMethod::BankTransfer, 'TRX-88231', $finance);
 
-        $overdue = $this->invoice($platform, $finance, $contract, [['الدفعة الثانية — التطوير (٥٠٪)', 1, 84000]]);
+        $overdue = $this->invoice($platform, $finance, $contract, [['الدفعة الثانية: التطوير (٥٠٪)', 1, 84000]]);
         $overdue->issue($finance);
         $this->backdate($overdue, daysAgo: 40);
         $overdue->recordPayment('30000', today()->subDays(4), PaymentMethod::BankTransfer, 'TRX-90112', $finance);
 
-        $this->invoice($platform, $finance, $contract, [['الدفعة الثالثة — الإطلاق', 1, 126000]]);
+        $this->invoice($platform, $finance, $contract, [['الدفعة الثالثة: الإطلاق', 1, 126000]]);
 
         $closing = $this->invoice($done, $finance, $audit, [['تقرير تدقيق الوصولية', 1, 45000]]);
         $closing->issue($finance);

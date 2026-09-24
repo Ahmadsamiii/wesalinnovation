@@ -6,7 +6,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="robots" content="noindex, nofollow">
 
-        <title>{{ isset($title) ? $title.' — ' : '' }}{{ config('app.name') }}</title>
+        <title>{{ isset($title) ? $title.' | ' : '' }}{{ config('app.name') }}</title>
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
@@ -20,7 +20,7 @@
                 {{ $slot }}
             </main>
 
-            <p class="mt-6 text-xs text-brand-muted">{{ config('app.name') }} — نظام داخلي لوصال الابتكار</p>
+            <p class="mt-6 text-xs text-brand-muted">{{ config('app.name') }}، نظام داخلي لوصال الابتكار</p>
         </div>
     </body>
 </html>

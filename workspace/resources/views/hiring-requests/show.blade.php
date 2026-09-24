@@ -1,5 +1,5 @@
 <x-app-layout>
-    <x-slot:title>{{ $hiringRequest->number }} — {{ $hiringRequest->title }}</x-slot:title>
+    <x-slot:title>{{ $hiringRequest->number }}: {{ $hiringRequest->title }}</x-slot:title>
 
     <x-page-header :title="$hiringRequest->title">
         <x-slot:breadcrumb><a href="{{ route('hiring-requests.index') }}" class="hover:underline">طلبات التوظيف</a> / <span dir="ltr">{{ $hiringRequest->number }}</span></x-slot:breadcrumb>
@@ -16,9 +16,9 @@
             <x-card title="الوظيفة">
                 <dl class="grid gap-4 text-sm sm:grid-cols-2">
                     <div><dt class="text-gray-500">العدد ونوع التوظيف</dt><dd class="mt-0.5 font-medium">{{ $hiringRequest->headcount }} × {{ $hiringRequest->employment_type->label() }}</dd></div>
-                    <div><dt class="text-gray-500">القسم</dt><dd class="mt-0.5 font-medium">{{ $hiringRequest->department ?? '—' }}</dd></div>
+                    <div><dt class="text-gray-500">القسم</dt><dd class="mt-0.5 font-medium">{{ $hiringRequest->department ?? '-' }}</dd></div>
                     <div><dt class="text-gray-500">المباشرة المطلوبة</dt><dd class="mt-0.5 font-medium"><x-date :value="$hiringRequest->target_start_date" empty="حين تتوفر" /></dd></div>
-                    <div><dt class="text-gray-500">التكلفة الشهرية التقديرية للوظيفة</dt><dd class="mt-0.5 font-medium">@if ($hiringRequest->monthly_budget !== null)<x-money :amount="$hiringRequest->monthly_budget" />@else — @endif</dd></div>
+                    <div><dt class="text-gray-500">التكلفة الشهرية التقديرية للوظيفة</dt><dd class="mt-0.5 font-medium">@if ($hiringRequest->monthly_budget !== null)<x-money :amount="$hiringRequest->monthly_budget" />@else - @endif</dd></div>
                     @if ($hiringRequest->project)
                         <div class="sm:col-span-2"><dt class="text-gray-500">لمشروع</dt><dd class="mt-0.5 font-medium"><a href="{{ route('projects.show', $hiringRequest->project) }}" class="text-brand-800 hover:underline">{{ $hiringRequest->project->name }}</a></dd></div>
                     @endif

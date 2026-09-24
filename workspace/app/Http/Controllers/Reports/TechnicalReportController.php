@@ -54,11 +54,11 @@ class TechnicalReportController extends Controller
             'loginSeries' => $this->monthly($logins, $period['keys'], fn (AuditLog $log) => $log->created_at),
             'failedSeries' => $this->monthly($authEvents->where('action', AuditAction::AuthFailed), $period['keys'], fn (AuditLog $log) => $log->created_at),
             'byRole' => $accounts
-                ->groupBy(fn (User $user): string => $user->roleName() ?? '—')
+                ->groupBy(fn (User $user): string => $user->roleName() ?? '')
                 ->map(fn ($users, string $role): array => [
                     'label' => config("roles.{$role}.label", 'بلا دور'),
                     'value' => $users->count(),
-                    'url' => route('users.index', ['role' => $role]),
+                    'url' => $role === '' ? null : route('users.index', ['role' => $role]),
                 ])
                 ->sortByDesc('value')
                 ->values()

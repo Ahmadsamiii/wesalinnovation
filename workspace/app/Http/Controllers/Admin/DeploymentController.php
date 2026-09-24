@@ -40,7 +40,7 @@ class DeploymentController extends Controller
                 ['label' => 'وضع التطوير مطفأ (APP_DEBUG=false)', 'done' => ! config('app.debug')],
                 ['label' => 'الرابط الأساسي https', 'done' => str_starts_with((string) config('app.url'), 'https://')],
                 ['label' => 'الطلب الحالي وصل عبر https', 'done' => $request->isSecure()],
-                ['label' => 'البريد يُرسل فعلاً (لا log)', 'done' => ! in_array(config('mail.default'), ['log', 'array'], true)],
+                ['label' => 'البريد يصل إلى المستلمين (لا log)', 'done' => ! in_array(config('mail.default'), ['log', 'array'], true)],
                 ['label' => 'ملفات الواجهة مبنية', 'done' => file_exists(public_path('build/manifest.json'))],
                 ['label' => 'الإعدادات مخزّنة (config:cache)', 'done' => app()->configurationIsCached()],
                 ['label' => 'المسارات مخزّنة (route:cache)', 'done' => app()->routesAreCached()],

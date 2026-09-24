@@ -38,11 +38,11 @@
                             <td class="whitespace-nowrap px-5 py-3 text-gray-600">
                                 <x-date :value="$log->created_at" time />
                             </td>
-                            <td class="px-5 py-3">{{ $log->user?->name ?? '—' }}</td>
+                            <td class="px-5 py-3">{{ $log->user?->name ?? '-' }}</td>
                             <td class="px-5 py-3"><x-badge :color="$log->action->color()">{{ $log->action->label() }}</x-badge></td>
-                            <td class="px-5 py-3">{{ $log->subjectLabel() ?? '—' }}</td>
-                            <td class="px-5 py-3 text-gray-600">{{ $log->details() ?? '—' }}</td>
-                            <td class="px-5 py-3 text-xs text-gray-500" dir="ltr">{{ $log->ip_address ?? '—' }}</td>
+                            <td class="px-5 py-3">{{ $log->subjectLabel() ?? '-' }}</td>
+                            <td class="px-5 py-3 text-gray-600">{{ $log->details() ?? '-' }}</td>
+                            <td class="px-5 py-3 text-xs text-gray-500" dir="ltr">{{ $log->ip_address ?? '-' }}</td>
                         </tr>
                     @endforeach
                 </tbody>

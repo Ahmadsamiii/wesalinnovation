@@ -20,7 +20,7 @@ enum HiringRequestStatus: string
     {
         return match ($this) {
             self::Pending => 'بانتظار الاعتماد',
-            self::Approved => 'معتمد — قيد التوظيف',
+            self::Approved => 'معتمد وقيد التوظيف',
             self::Rejected => 'مرفوض',
             self::Filled => 'شُغلت',
             self::Cancelled => 'ملغى',

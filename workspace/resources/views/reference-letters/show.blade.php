@@ -21,8 +21,8 @@
         <table class="mt-4 w-full border border-gray-200 text-sm">
             <tbody class="divide-y divide-gray-200">
                 <tr><th scope="row" class="w-1/3 bg-gray-50 px-4 py-3 text-start font-medium">الاسم</th><td class="px-4 py-3">{{ $letter->holder_name }}</td></tr>
-                <tr><th scope="row" class="bg-gray-50 px-4 py-3 text-start font-medium">المسمى الوظيفي</th><td class="px-4 py-3">{{ $letter->job_title ?? '—' }}</td></tr>
-                <tr><th scope="row" class="bg-gray-50 px-4 py-3 text-start font-medium">القسم</th><td class="px-4 py-3">{{ $letter->department ?? '—' }}</td></tr>
+                <tr><th scope="row" class="bg-gray-50 px-4 py-3 text-start font-medium">المسمى الوظيفي</th><td class="px-4 py-3">{{ $letter->job_title ?? '-' }}</td></tr>
+                <tr><th scope="row" class="bg-gray-50 px-4 py-3 text-start font-medium">القسم</th><td class="px-4 py-3">{{ $letter->department ?? '-' }}</td></tr>
                 <tr><th scope="row" class="bg-gray-50 px-4 py-3 text-start font-medium">تاريخ الالتحاق</th><td class="px-4 py-3"><x-date :value="$letter->joined_at" /></td></tr>
                 <tr><th scope="row" class="bg-gray-50 px-4 py-3 text-start font-medium">الحالة الوظيفية</th><td class="px-4 py-3">على رأس العمل حتى تاريخ هذه الإفادة</td></tr>
             </tbody>
@@ -38,8 +38,9 @@
         </div>
 
         <footer class="mt-16 border-t border-gray-100 pt-4 text-xs text-gray-500">
-            للتحقق من صحة هذه الإفادة: <span dir="ltr">{{ route('verify.show') }}</span> — الرمز:
+            يمكن التحقق من صحة هذه الإفادة بإدخال الرمز
             <span dir="ltr" class="font-mono text-sm font-semibold text-gray-700">{{ \App\Models\ReferenceLetter::formatVerificationCode($letter->verification_code) }}</span>
+            في <span dir="ltr">{{ route('verify.show') }}</span>
         </footer>
     </main>
 </x-print-layout>

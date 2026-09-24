@@ -24,7 +24,7 @@ enum HealthContentStatus: string
             self::Draft => 'مسودة',
             self::InReview => 'قيد المراجعة الطبية',
             self::Approved => 'معتمد',
-            self::Rejected => 'مرفوض — يحتاج تعديلاً',
+            self::Rejected => 'مرفوض ويحتاج تعديلاً',
             self::Withdrawn => 'مسحوب',
         };
     }

@@ -108,7 +108,7 @@ class ProjectMemberController extends Controller
             ->whereNotIn('id', $project->members()->select('user_id'))
             ->orderBy('name')
             ->get()
-            ->mapWithKeys(fn (User $user): array => [$user->id => $user->name.' — '.$user->roleLabel()])
+            ->mapWithKeys(fn (User $user): array => [$user->id => $user->name.' ('.$user->roleLabel().')'])
             ->all();
     }
 }

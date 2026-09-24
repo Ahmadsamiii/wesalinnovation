@@ -32,4 +32,19 @@ class ViewConventionsTest extends TestCase
         $this->assertStringContainsString('&lt;script&gt;', $html);
         $this->assertStringNotContainsString('<script>', $html);
     }
+
+    /**
+     * سطر جديد في آخر مكوّن التاريخ أو المبلغ يظهر مسافةً قبل الفاصلة أو النقطة
+     * التي تليه في النص («منذ يومين ،»).
+     */
+    public function test_date_and_money_components_let_punctuation_follow_them_directly(): void
+    {
+        $html = Blade::render('<x-date :value="$date" />، <x-date :value="$date" relative />. <x-date :value="null" />، <x-money :amount="5" />.', ['date' => now()->subDays(3)]);
+
+        $this->assertSame(2, substr_count($html, '</time>'));
+        $this->assertStringContainsString('</time>،', $html);
+        $this->assertStringContainsString('</time>.', $html);
+        $this->assertStringContainsString(' -،', $html);
+        $this->assertStringContainsString('ر.س</span>.', $html);
+    }
 }

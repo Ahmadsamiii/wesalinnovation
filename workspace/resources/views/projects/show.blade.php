@@ -22,7 +22,7 @@
                 <x-card title="الخطوة التالية">
                     @if ($project->status === \App\Enums\ProjectStatus::Rejected && $lastDecision)
                         <div class="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-                            <p class="font-semibold">رُفض بتاريخ <x-date :value="$lastDecision->decided_at" /> — {{ $lastDecision->decider->name }}</p>
+                            <p class="font-semibold">رُفض في <x-date :value="$lastDecision->decided_at" /> بقرار من {{ $lastDecision->decider->name }}</p>
                             <p class="mt-1">{{ $lastDecision->note }}</p>
                         </div>
                     @endif
@@ -42,7 +42,7 @@
                     @endcan
 
                     @if ($project->status === \App\Enums\ProjectStatus::PendingApproval && auth()->user()->cannot('decide', $project))
-                        <p class="text-sm text-gray-600">بانتظار قرار المدير التنفيذي منذ <x-date :value="$project->submitted_at" relative />.</p>
+                        <p class="text-sm text-gray-600">بانتظار قرار المدير التنفيذي، وقد قُدّم <x-date :value="$project->submitted_at" relative />.</p>
                     @endif
 
                     @can('start', $project)
@@ -106,7 +106,7 @@
                         @foreach ($overdueTasks as $task)
                             <li class="flex flex-wrap items-center justify-between gap-2 py-2">
                                 <a href="{{ route('tasks.show', $task) }}" class="font-medium text-brand-800 hover:underline">{{ $task->title }}</a>
-                                <span class="text-gray-500">{{ $task->assignee?->name ?? 'بلا إسناد' }} — كان مستحقاً <x-date :value="$task->due_date" /></span>
+                                <span class="text-gray-500">{{ $task->assignee?->name ?? 'بلا إسناد' }}، كان موعدها <x-date :value="$task->due_date" /></span>
                             </li>
                         @endforeach
                     </ul>
@@ -132,7 +132,7 @@
                                     <span class="font-medium">{{ $milestone->title }}</span>
                                 </div>
                                 <span class="text-gray-500">
-                                    {{ $milestone->done_tasks_count }}/{{ $milestone->tasks_count }} مهام —
+                                    {{ $milestone->done_tasks_count }}/{{ $milestone->tasks_count }} مهام،
                                     <x-date :value="$milestone->due_date" empty="بلا موعد" />
                                 </span>
                             </li>
@@ -174,7 +174,7 @@
                     <div class="flex justify-between gap-2"><dt class="text-gray-500">مدير المشروع</dt><dd>{{ $project->pm->name }}</dd></div>
                     <div class="flex justify-between gap-2"><dt class="text-gray-500">العميل</dt><dd>{{ $project->client?->name ?? 'داخلي' }}</dd></div>
                     <div class="flex justify-between gap-2"><dt class="text-gray-500">الأولوية</dt><dd><x-badge :color="$project->priority->color()">{{ $project->priority->label() }}</x-badge></dd></div>
-                    <div class="flex justify-between gap-2"><dt class="text-gray-500">الميزانية</dt><dd>{{ $project->budget !== null ? number_format((float) $project->budget, 2).' ر.س' : '—' }}</dd></div>
+                    <div class="flex justify-between gap-2"><dt class="text-gray-500">الميزانية</dt><dd>{{ $project->budget !== null ? number_format((float) $project->budget, 2).' ر.س' : '-' }}</dd></div>
                     <div class="flex justify-between gap-2"><dt class="text-gray-500">المخطط</dt><dd><x-date :value="$project->start_date" /> ← <x-date :value="$project->end_date" /></dd></div>
                     <div class="flex justify-between gap-2"><dt class="text-gray-500">الفعلي</dt><dd><x-date :value="$project->actual_start_date" /> ← <x-date :value="$project->actual_end_date" /></dd></div>
                     <div class="flex justify-between gap-2"><dt class="text-gray-500">أنشأه</dt><dd>{{ $project->creator->name }}</dd></div>
@@ -184,7 +184,7 @@
             @if ($finance)
                 <x-card title="المالية">
                     <dl class="space-y-2 text-sm">
-                        <div class="flex justify-between gap-2"><dt class="text-gray-500">الميزانية</dt><dd>@if ($project->budget !== null)<x-money :amount="$project->budget" />@else — @endif</dd></div>
+                        <div class="flex justify-between gap-2"><dt class="text-gray-500">الميزانية</dt><dd>@if ($project->budget !== null)<x-money :amount="$project->budget" />@else - @endif</dd></div>
                         <div class="flex justify-between gap-2"><dt class="text-gray-500">أوامر شراء ملتزَم بها</dt><dd><x-money :amount="$finance['committed']" /></dd></div>
                         <div class="flex justify-between gap-2"><dt class="text-gray-500">قيمة العقود</dt><dd><x-money :amount="$finance['contracted']" /></dd></div>
                         <div class="flex justify-between gap-2"><dt class="text-gray-500">المفوتر</dt><dd><x-money :amount="$finance['invoiced']" /></dd></div>

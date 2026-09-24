@@ -99,7 +99,7 @@ $lastIndex = $count - 1;
                                 };
                             @endphp
                             <li class="group relative flex h-full flex-1 items-end justify-center gap-[2px] rounded-sm outline-none hover:bg-gray-50/80 focus-visible:bg-brand-50 focus-visible:ring-2 focus-visible:ring-brand-600"
-                                tabindex="0" aria-label="{{ $titles[$i] }} — {{ $readout }}">
+                                tabindex="0" aria-label="{{ $titles[$i] }}، {{ $readout }}">
                                 @foreach ($series as $index => $item)
                                     @php
                                         $value = (float) $item['values'][$i];

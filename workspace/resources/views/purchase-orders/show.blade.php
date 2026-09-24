@@ -1,9 +1,9 @@
 <x-app-layout>
     <x-slot:title>{{ $order->number }}</x-slot:title>
 
-    <x-page-header :title="'أمر شراء — '.$order->vendor_name">
+    <x-page-header :title="'أمر شراء من '.$order->vendor_name">
         <x-slot:breadcrumb>
-            <a href="{{ route('purchase-orders.index') }}" class="hover:underline">أوامر الشراء</a> — <span dir="ltr">{{ $order->number }}</span>
+            <a href="{{ route('purchase-orders.index') }}" class="hover:underline">أوامر الشراء</a> / <span dir="ltr">{{ $order->number }}</span>
         </x-slot:breadcrumb>
         <x-slot:actions>
             <x-badge :color="$order->status->color()">{{ $order->status->label() }}</x-badge>
@@ -25,7 +25,7 @@
             @php($lastRejection = $order->approvals->firstWhere('decision', \App\Enums\ApprovalDecision::Rejected))
             @if ($order->status === \App\Enums\PurchaseOrderStatus::Rejected && $lastRejection)
                 <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="note">
-                    <p class="font-semibold">رُفض في {{ $lastRejection->stage->label() }} — {{ $lastRejection->decider->name }}</p>
+                    <p class="font-semibold">رُفض في {{ $lastRejection->stage->label() }} بقرار من {{ $lastRejection->decider->name }}</p>
                     <p class="mt-1">{{ $lastRejection->note }}</p>
                     <p class="mt-2 text-xs">عدّل الأمر ثم أعد تقديمه.</p>
                 </div>
@@ -104,7 +104,7 @@
                                 <div class="flex flex-wrap items-center justify-between gap-2">
                                     <span class="flex items-center gap-2">
                                         <x-badge :color="$approval->decision->color()">{{ $approval->decision->label() }}</x-badge>
-                                        {{ $approval->stage->label() }} — {{ $approval->decider->name }}
+                                        {{ $approval->stage->label() }}: {{ $approval->decider->name }}
                                     </span>
                                     <x-date :value="$approval->decided_at" time class="text-xs text-gray-500" />
                                 </div>
@@ -142,7 +142,7 @@
                     <div class="flex justify-between gap-2"><dt class="text-gray-500">المشروع</dt><dd><a href="{{ route('projects.show', $order->project) }}" class="text-brand-800 hover:underline">{{ $order->project->name }}</a></dd></div>
                     <div class="flex justify-between gap-2"><dt class="text-gray-500">طلبه</dt><dd>{{ $order->requester->name }}</dd></div>
                     <div class="flex justify-between gap-2"><dt class="text-gray-500">المورّد</dt><dd>{{ $order->vendor_name }}</dd></div>
-                    <div class="flex justify-between gap-2"><dt class="text-gray-500">التواصل</dt><dd>{{ $order->vendor_contact ?? '—' }}</dd></div>
+                    <div class="flex justify-between gap-2"><dt class="text-gray-500">التواصل</dt><dd>{{ $order->vendor_contact ?? '-' }}</dd></div>
                     <div class="flex justify-between gap-2"><dt class="text-gray-500">مطلوب قبل</dt><dd><x-date :value="$order->needed_by" /></dd></div>
                     <div class="flex justify-between gap-2"><dt class="text-gray-500">قُدّم</dt><dd><x-date :value="$order->submitted_at" /></dd></div>
                     <div class="flex justify-between gap-2"><dt class="text-gray-500">استُلم</dt><dd><x-date :value="$order->received_at" /></dd></div>

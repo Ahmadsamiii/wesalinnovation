@@ -10,10 +10,13 @@
  *    - صفحات HTML: النصوص والسمات، والسلاسل داخل <script>
  *    - assets/landing-editor.js: سلاسله النصية
  *    - api/*.php: كل سلسلة نصية (رسائل الأخطاء والبريد والنصوص الافتراضية)
- *  ولا يفحص التعليقات البرمجية ولا CSS. الشرطة المحصورة بين قوسين أو علامتي
- *  تنصيص مثل «(—)» ذِكرٌ للحرف نفسه لا استعمالٌ له، فتُتجاوز.
+ *      وما فيها من HTML مباشر
+ *    - مساحة العمل: قوالب Blade، والسلاسل في app وconfig وlang وdatabase/seeders
+ *      وroutes، وترجمات lang/*.json، وسلاسل resources/js
+ *  ولا يفحص التعليقات البرمجية ولا CSS. الشرطة بين قوسين مثل «(—)» ذِكرٌ للحرف
+ *  نفسه لا استعمالٌ له، فتُتجاوز.
  *  ويطبع تنبيهاً غير مانع لعبارات جاهزة يُفضّل تجنّبها (انظر README.md).
- *  لا يحتاج قاعدة بيانات ولا إعدادات.
+ *  لا يحتاج قاعدة بيانات ولا إعدادات ولا اعتماديات Composer.
  * ========================================================================== */
 
 if (PHP_SAPI !== 'cli') {
@@ -24,8 +27,8 @@ if (PHP_SAPI !== 'cli') {
 $ROOT = realpath(__DIR__ . '/..');
 const HTML_FILES = ['index.html', 'corporate.html', 'survey.html', 'ticket.html'];
 const JS_FILES   = ['assets/landing-editor.js'];
-/* أدوات تشخيص للمطوّر، يوصي README بحذفها من الإنتاج */
-const PHP_SKIP   = ['diag.php', 'stream-test.php'];
+/* مساحة العمل: مجلدات PHP التي تحمل نصوصاً ظاهرة (المصانع والاختبارات بيانات وهمية) */
+const WS_PHP_DIRS = ['app', 'config', 'lang', 'database/seeders', 'routes'];
 const CLICHES    = ['رحلتك المعرفية', 'في صميم', 'تجربة فريدة', 'قوة الذكاء الاصطناعي', 'أحدث تقنيات',
                     'ليس مجرد', 'ليست مجرد', 'لا شعارات', 'بكل سهولة ويسر', 'نؤمن بأن'];
 
@@ -34,7 +37,7 @@ $warnings = 0;
 
 /** يزيل ذِكر الحرف نفسه مثل (—) أو «–» ثم يبحث عن الشرطات */
 function hasDash(string $s): bool {
-    $s = preg_replace('/[(«"\'`]\s?[\x{2013}\x{2014}]\s?[)»"\'`]/u', '', $s);
+    $s = preg_replace('/[(«]\s?[\x{2013}\x{2014}]\s?[)»]/u', '', $s);
     return (bool) preg_match('/[\x{2013}\x{2014}]/u', $s);
 }
 
@@ -53,6 +56,11 @@ function warnCliches(string $file, int $line, string $text): void {
             echo "  ! $file:$line عبارة جاهزة «{$c}»\n";
         }
     }
+}
+
+function check(string $file, int $line, string $kind, string $text): void {
+    if (hasDash($text)) report($file, $line, $kind, $kind === 'HTML' || $kind === 'Blade' ? (trim(strip_tags($text)) ?: $text) : $text);
+    warnCliches($file, $line, $text);
 }
 
 /** السلاسل النصية في شيفرة JS مع أرقام أسطرها، بتخطي التعليقات والتعابير النمطية */
@@ -129,47 +137,90 @@ function jsStrings(string $src, int $line = 1): array {
 /** يستبدل مقطعاً بأسطر فارغة بعددها حتى تبقى أرقام الأسطر صحيحة */
 function blankOut(string $s): string { return str_repeat("\n", substr_count($s, "\n")); }
 
-echo "صفحات HTML:\n";
-foreach (HTML_FILES as $f) {
-    $src = file_get_contents("$ROOT/$f");
-    $scripts = [];
-    $markup = preg_replace_callback('/<script\b([^>]*)>(.*?)<\/script>/is', function ($m) use (&$scripts) {
-        if (stripos($m[1], 'application/ld+json') === false) $scripts[] = $m[0];
-        return blankOut($m[0]);
-    }, $src);
-    /* ما يبقى بعد حذف السكربت والأنماط والتعليقات نصٌّ ظاهر أو سمة ظاهرة */
-    $markup = preg_replace_callback('/<!--.*?-->|<style\b.*?<\/style>/is', fn($m) => blankOut($m[0]), $markup);
-    foreach (explode("\n", $markup) as $k => $row) {
-        if (hasDash($row)) report($f, $k + 1, 'HTML', trim(strip_tags($row)) ?: $row);
-        warnCliches($f, $k + 1, $row);
-    }
-    foreach ($scripts as $block) {
-        $at = strpos($src, $block);
-        $base = substr_count($src, "\n", 0, $at) + 1;
-        foreach (jsStrings($block, $base) as [$ln, $s]) {
-            if (hasDash($s)) report($f, $ln, 'JS', $s);
-            warnCliches($f, $ln, $s);
+/** سلاسل PHP النصية بلا علامتي التنصيص، وما بين وسوم PHP من HTML مباشر */
+function scanPhp(string $file, string $code, int $base = 1): void {
+    foreach (token_get_all($code) as $tk) {
+        if (!is_array($tk)) continue;
+        $line = $base + $tk[2] - 1;
+        if ($tk[0] === T_INLINE_HTML) {
+            scanMarkup($file, $tk[1], $line);
+        } elseif ($tk[0] === T_CONSTANT_ENCAPSED_STRING) {
+            check($file, $line, 'PHP', substr($tk[1], 1, -1));
+        } elseif ($tk[0] === T_ENCAPSED_AND_WHITESPACE) {
+            check($file, $line, 'PHP', $tk[1]);
         }
     }
 }
 
+/** HTML أو قالب Blade: النص والسمات سطراً سطراً، وسلاسل <script> وكتل @php وحدها */
+function scanMarkup(string $file, string $src, int $base = 1, bool $blade = false): void {
+    /* كل مرحلة تستبدل ما تفحصه بأسطر فارغة، فيبقى رقم السطر من أي مرحلة صحيحاً */
+    if ($blade) {
+        $src = preg_replace_callback('/\{\{--.*?--\}\}/s', fn ($m) => blankOut($m[0]), $src);
+        $at = $src;
+        $src = preg_replace_callback('/(?<!@)@php(?!\s*\()(.*?)@endphp/s', function ($m) use ($file, $at, $base) {
+            scanPhp($file, '<?php ' . $m[1][0], $base + substr_count($at, "\n", 0, $m[1][1]));
+            return blankOut($m[0][0]);
+        }, $src, -1, $count, PREG_OFFSET_CAPTURE);
+    }
+    $at = $src;
+    $markup = preg_replace_callback('/<script\b([^>]*)>(.*?)<\/script>/is', function ($m) use ($file, $at, $base) {
+        if (stripos($m[1][0], 'application/ld+json') === false) {
+            foreach (jsStrings($m[2][0], $base + substr_count($at, "\n", 0, $m[2][1])) as [$ln, $s]) check($file, $ln, 'JS', $s);
+        }
+        return blankOut($m[0][0]);
+    }, $src, -1, $count, PREG_OFFSET_CAPTURE);
+    /* ما يبقى بعد حذف السكربت والأنماط والتعليقات نصٌّ ظاهر أو سمة ظاهرة */
+    $markup = preg_replace_callback('/<!--.*?-->|<style\b.*?<\/style>/is', fn ($m) => blankOut($m[0]), $markup);
+    foreach (explode("\n", $markup) as $k => $row) {
+        check($file, $base + $k, $blade ? 'Blade' : 'HTML', $row);
+    }
+}
+
+/** ملفات مجلد بامتداد معيّن، بترتيب ثابت */
+function filesIn(string $dir, string $suffix): array {
+    if (!is_dir($dir)) return [];
+    $out = [];
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS)) as $f) {
+        if (str_ends_with($f->getFilename(), $suffix)) $out[] = $f->getPathname();
+    }
+    sort($out);
+    return $out;
+}
+
+$rel = fn (string $path): string => ltrim(substr($path, strlen($ROOT)), '/');
+
+echo "صفحات HTML:\n";
+foreach (HTML_FILES as $f) {
+    scanMarkup($f, file_get_contents("$ROOT/$f"));
+}
+
 echo "ملفات JS:\n";
 foreach (JS_FILES as $f) {
-    foreach (jsStrings(file_get_contents("$ROOT/$f")) as [$ln, $s]) {
-        if (hasDash($s)) report($f, $ln, 'JS', $s);
-        warnCliches($f, $ln, $s);
-    }
+    foreach (jsStrings(file_get_contents("$ROOT/$f")) as [$ln, $s]) check($f, $ln, 'JS', $s);
 }
 
 echo "رسائل الخادم (api/*.php):\n";
 foreach (glob("$ROOT/api/*.php") as $path) {
-    $f = 'api/' . basename($path);
-    if (in_array(basename($path), PHP_SKIP, true)) continue;
-    foreach (token_get_all(file_get_contents($path)) as $tk) {
-        if (!is_array($tk) || !in_array($tk[0], [T_CONSTANT_ENCAPSED_STRING, T_ENCAPSED_AND_WHITESPACE], true)) continue;
-        if (hasDash($tk[1])) report($f, $tk[2], 'PHP', $tk[1]);
-        warnCliches($f, $tk[2], $tk[1]);
+    scanPhp($rel($path), file_get_contents($path));
+}
+
+echo "مساحة العمل (workspace/):\n";
+$ws = "$ROOT/workspace";
+foreach (filesIn("$ws/resources/views", '.blade.php') as $path) {
+    scanMarkup($rel($path), file_get_contents($path), 1, true);
+}
+foreach (WS_PHP_DIRS as $dir) {
+    foreach (filesIn("$ws/$dir", '.php') as $path) scanPhp($rel($path), file_get_contents($path));
+}
+foreach (glob("$ws/lang/*.json") ?: [] as $path) {
+    /* المفاتيح نصوص Laravel الإنجليزية الأصلية، والقيم ترجمتها الظاهرة */
+    foreach (explode("\n", file_get_contents($path)) as $k => $row) {
+        if (preg_match('/^\s*"(?:[^"\\\\]|\\\\.)*"\s*:\s*"((?:[^"\\\\]|\\\\.)*)"/u', $row, $m)) check($rel($path), $k + 1, 'JSON', $m[1]);
     }
+}
+foreach (filesIn("$ws/resources/js", '.js') as $path) {
+    foreach (jsStrings(file_get_contents($path)) as [$ln, $s]) check($rel($path), $ln, 'JS', $s);
 }
 
 if ($warnings) echo "\n! $warnings تنبيه لعبارات جاهزة (لا يمنع النجاح)\n";

@@ -136,7 +136,7 @@ class HiringRequest extends Model
 
     public function auditLabel(): string
     {
-        return $this->number.' — '.$this->title;
+        return $this->number.': '.$this->title;
     }
 
     private function decide(HiringRequestStatus $status, User $by, ?string $note): void

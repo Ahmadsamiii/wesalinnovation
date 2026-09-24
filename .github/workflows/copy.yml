@@ -1,0 +1,39 @@
+name: فحص النصوص الظاهرة
+
+# يشغّل الفحصين اللذين يطلبهما README.md قبل أي دمج يغيّر نصاً ظاهراً: لا شرطة
+# طويلة أو قصيرة في نصوص الموقع ومساحة العمل، وسجل صفحة الهبوط مطابق لـ index.html.
+# لا يحتاج الفحصان قاعدة بيانات ولا اعتماديات، فيكفيهما PHP وحده.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: copy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  copy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: جلب الكود
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: تجهيز PHP 8.4
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: '8.4'
+          extensions: dom, mbstring, tokenizer
+          coverage: none
+
+      - name: لا شرطات في النصوص الظاهرة
+        run: php tools/check-copy.php
+
+      - name: سجل صفحة الهبوط يطابق index.html
+        run: php tools/check-landing.php

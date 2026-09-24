@@ -79,7 +79,7 @@ class MyTasksReportController extends Controller
                 $task->project->name,
                 $task->due_date?->toDateString(),
                 $task->completed_at->toDateString(),
-                $task->due_date === null ? '—' : (self::finishedOnTime($task) ? 'نعم' : 'لا'),
+                $task->due_date === null ? 'بلا موعد' : (self::finishedOnTime($task) ? 'نعم' : 'لا'),
             ]),
         );
     }

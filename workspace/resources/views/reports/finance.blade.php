@@ -53,7 +53,7 @@
                                 <td class="w-48 px-5 py-3">
                                     <x-progress :value="min(100, $share)" label="نسبة المفوتر من العقد" />
                                     <div @class(['mt-1 text-xs', 'font-semibold text-red-700' => $share > 100, 'text-gray-500' => $share <= 100])>
-                                        <x-money :amount="$contract->invoiced_sum ?? 0" /> @if ($share > 100) — تجاوز قيمة العقد @endif
+                                        <x-money :amount="$contract->invoiced_sum ?? 0" /> @if ($share > 100) (تجاوز قيمة العقد) @endif
                                     </div>
                                 </td>
                             </tr>

@@ -41,8 +41,8 @@
             <x-card title="الإصدار المنشور">
                 @if ($release)
                     <dl class="space-y-2 text-sm">
-                        <div class="flex justify-between gap-2"><dt class="text-gray-500">الإيداع</dt><dd class="font-mono font-medium" dir="ltr">{{ $release['commit'] ?? '—' }}</dd></div>
-                        <div class="flex justify-between gap-2"><dt class="text-gray-500">الفرع</dt><dd class="font-medium" dir="ltr">{{ $release['branch'] ?? '—' }}</dd></div>
+                        <div class="flex justify-between gap-2"><dt class="text-gray-500">الإيداع</dt><dd class="font-mono font-medium" dir="ltr">{{ $release['commit'] ?? '-' }}</dd></div>
+                        <div class="flex justify-between gap-2"><dt class="text-gray-500">الفرع</dt><dd class="font-medium" dir="ltr">{{ $release['branch'] ?? '-' }}</dd></div>
                         <div class="flex justify-between gap-2"><dt class="text-gray-500">وقت النشر</dt><dd class="font-medium"><x-date :value="$release['deployed_at']" time /></dd></div>
                     </dl>
                 @else

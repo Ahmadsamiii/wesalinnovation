@@ -64,9 +64,9 @@ class ReportsTest extends TestCase
             ->assertViewHas('kpis', fn (array $kpis): bool => $kpis['outstanding'] == 3300 && $kpis['overdueReceivables'] == 2300)
             ->assertViewHas('aging', fn (array $aging): bool => collect($aging)->pluck('value', 'label')->all() == [
                 'لم يستحق بعد' => 1000,
-                '١–٣٠ يوماً' => 0,
-                '٣١–٦٠ يوماً' => 2300,
-                '٦١–٩٠ يوماً' => 0,
+                '١ إلى ٣٠ يوماً' => 0,
+                '٣١ إلى ٦٠ يوماً' => 2300,
+                '٦١ إلى ٩٠ يوماً' => 0,
                 'أكثر من ٩٠ يوماً' => 0,
             ]);
     }

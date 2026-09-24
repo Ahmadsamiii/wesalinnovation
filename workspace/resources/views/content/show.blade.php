@@ -19,7 +19,7 @@
 
     @if ($content->status === \App\Enums\HealthContentStatus::InReview)
         <p class="mb-6 rounded-xl border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800" role="note">
-            النسخة {{ $content->version }} عند المدير الطبي منذ <x-date :value="$content->submitted_at" relative />، والتعديل مقفل حتى يقرّر.
+            قُدّمت النسخة {{ $content->version }} للمدير الطبي <x-date :value="$content->submitted_at" relative />، والتعديل مقفل حتى يقرّر.
         </p>
     @elseif ($content->hasUnpublishedChanges())
         <p class="mb-6 rounded-xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-800" role="note">
@@ -70,7 +70,7 @@
                         @foreach ($content->reviews as $review)
                             <li class="px-5 py-3">
                                 <p><x-badge :color="$review->decision->color()">{{ $review->decision->label() }}</x-badge> النسخة {{ $review->version }}</p>
-                                <p class="mt-1 text-xs text-gray-500">{{ $review->reviewer->name }} — <x-date :value="$review->created_at" /></p>
+                                <p class="mt-1 text-xs text-gray-500">{{ $review->reviewer->name }}، <x-date :value="$review->created_at" /></p>
                                 @if ($review->note)
                                     <p class="mt-1 whitespace-pre-line rounded-lg bg-surface p-2 text-xs text-gray-700">{{ $review->note }}</p>
                                 @endif

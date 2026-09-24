@@ -14,12 +14,12 @@
                 <div class="flex flex-wrap items-start justify-between gap-4">
                     <div class="min-w-0 flex-1">
                         <h3 class="font-semibold">
-                            <a href="{{ route('purchase-orders.show', $order) }}" class="text-brand-800 hover:underline"><span dir="ltr">{{ $order->number }}</span> — {{ $order->vendor_name }}</a>
+                            <a href="{{ route('purchase-orders.show', $order) }}" class="text-brand-800 hover:underline"><span dir="ltr">{{ $order->number }}</span>: {{ $order->vendor_name }}</a>
                         </h3>
-                        <p class="mt-1 text-xs text-gray-500">{{ $order->project->name }} — طلبه {{ $order->requester->name }} — <x-date :value="$order->submitted_at" relative /></p>
+                        <p class="mt-1 text-xs text-gray-500">{{ $order->project->name }}، بطلب من {{ $order->requester->name }} <x-date :value="$order->submitted_at" relative /></p>
                         <ul class="mt-3 list-inside list-disc text-sm text-gray-700">
                             @foreach ($order->items->take(4) as $item)
-                                <li>{{ $item->description }} — <x-money :amount="$item->total" /></li>
+                                <li>{{ $item->description }}: <x-money :amount="$item->total" /></li>
                             @endforeach
                             @if ($order->items->count() > 4)
                                 <li class="text-gray-500">و{{ $order->items->count() - 4 }} بنود أخرى</li>
@@ -27,7 +27,7 @@
                         </ul>
                         <dl class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
                             <div><dt class="inline text-gray-500">الإجمالي:</dt> <dd class="inline font-semibold"><x-money :amount="$order->total" /></dd></div>
-                            <div><dt class="inline text-gray-500">ميزانية المشروع:</dt> <dd class="inline">@if ($budget !== null)<x-money :amount="$budget" />@else — @endif</dd></div>
+                            <div><dt class="inline text-gray-500">ميزانية المشروع:</dt> <dd class="inline">@if ($budget !== null)<x-money :amount="$budget" />@else - @endif</dd></div>
                             <div><dt class="inline text-gray-500">الملتزَم به:</dt> <dd class="inline"><x-money :amount="$committed" /></dd></div>
                         </dl>
                         @if ($budget !== null && (float) $committed > (float) $budget)

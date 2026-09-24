@@ -18,7 +18,7 @@
                         <td class="whitespace-nowrap px-5 py-3 text-gray-600"><x-date :value="$decision->decided_at" time /></td>
                         <td class="px-5 py-3"><a href="{{ route('projects.show', $decision->project) }}" class="font-medium text-brand-800 hover:underline">{{ $decision->project->name }}</a></td>
                         <td class="px-5 py-3"><x-badge :color="$decision->type->color()">{{ $decision->type->label() }}</x-badge></td>
-                        <td class="px-5 py-3 text-gray-600">{{ $decision->note ?? '—' }}</td>
+                        <td class="px-5 py-3 text-gray-600">{{ $decision->note ?? '-' }}</td>
                         <td class="px-5 py-3">{{ $decision->decider->name }}</td>
                     </tr>
                 @endforeach

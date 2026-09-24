@@ -109,6 +109,6 @@ class Certificate extends Model
 
     public function auditLabel(): string
     {
-        return $this->number.' — '.($this->recipient?->name ?? '');
+        return $this->number.($this->recipient ? ': '.$this->recipient->name : '');
     }
 }

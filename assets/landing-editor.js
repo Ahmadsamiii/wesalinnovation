@@ -394,9 +394,11 @@ function fieldRow(o) {
       'aria-label': 'إرجاع «' + fd.l + '»' + (ln ? ' ' + ln : '') + ' للنص الأصلي',
     }, ico('refresh'), 'الأصل') : null;
     const err = h('div', { class: 'lpe-err', role: 'alert', hidden: true });
+    /* تنبيه لا يمنع النشر: الشرطة بين الكلام من علامات النص المولَّد آلياً (README.md) */
+    const tip = h('div', { class: 'lpe-tip', role: 'status' });
     const cell = h('div', { class: 'lpe-in' },
       langs.length > 1 ? h('span', { class: 'lpe-tag', 'aria-hidden': 'true', text: ln }) : null,
-      inp, err, h('div', { class: 'lpe-in-foot' }, rst || h('span'), cnt));
+      inp, err, tip, h('div', { class: 'lpe-in-foot' }, rst || h('span'), cnt));
     const sync = () => {
       const n = (inp.value || '').length;
       cnt.textContent = n + '/' + fd.max;
@@ -408,6 +410,8 @@ function fieldRow(o) {
       err.textContent = e; err.hidden = !e;
       cell.classList.toggle('bad', !!e);
       inp.setAttribute('aria-invalid', e ? 'true' : 'false');
+      const dash = /[\u2013\u2014]/.test(inp.value || '');
+      if (dash !== !!tip.textContent) tip.textContent = dash ? 'في النص شرطة طويلة أو قصيرة. ضع مكانها فاصلة أو نقطتين أو قوسين.' : '';
     };
     inp.addEventListener('input', () => {
       o.val[l] = inp.value;

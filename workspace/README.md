@@ -168,7 +168,11 @@ php artisan serve
 ```bash
 php artisan test
 vendor/bin/pint
+php ../tools/check-copy.php   # لا شرطة طويلة أو قصيرة في نص ظاهر
 ```
+
+النصوص الظاهرة تتبع قواعد الكتابة في `README.md` بجذر المستودع (قسم «كتابة
+النصوص الظاهرة للمستخدم»).
 
 الاختبارات لا تحتاج تجميع الواجهة (`withoutVite()` في `tests/TestCase.php`).
 سير `.github/workflows/workspace.yml` في جذر المستودع يشغّل الأسلوب والاختبارات

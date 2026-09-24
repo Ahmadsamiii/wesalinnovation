@@ -35,13 +35,15 @@
                         <span class="text-gray-500" dir="ltr">{{ $hiringRequest->number }}</span>
                     </div>
                     <p class="mt-2 text-gray-700">
-                        {{ $hiringRequest->headcount }} × {{ $hiringRequest->employment_type->label() }}
-                        @if ($hiringRequest->department) — {{ $hiringRequest->department }} @endif
-                        @if ($hiringRequest->project) — لمشروع {{ $hiringRequest->project->name }} @endif
+                        {{ collect([
+                            $hiringRequest->headcount.' × '.$hiringRequest->employment_type->label(),
+                            $hiringRequest->department,
+                            $hiringRequest->project ? 'لمشروع '.$hiringRequest->project->name : null,
+                        ])->filter()->implode('، ') }}
                     </p>
                     <p class="mt-1 line-clamp-2 text-gray-600">{{ $hiringRequest->justification }}</p>
                     <p class="mt-2 text-xs text-gray-500">
-                        @if ($isApprover) طلبه {{ $hiringRequest->requester->name }} — @endif
+                        @if ($isApprover) بطلب من {{ $hiringRequest->requester->name }} @endif
                         <x-date :value="$hiringRequest->created_at" relative />
                     </p>
                 </div>

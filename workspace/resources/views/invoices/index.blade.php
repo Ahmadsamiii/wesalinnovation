@@ -57,7 +57,7 @@
                             <td class="whitespace-nowrap px-5 py-3"><a href="{{ route('invoices.show', $invoice) }}" class="font-medium text-brand-800 hover:underline" dir="ltr">{{ $invoice->number ?? 'مسودة #'.$invoice->id }}</a></td>
                             <td class="px-5 py-3 text-gray-600">{{ $invoice->project->name }}</td>
                             @unless ($isClient)
-                                <td class="px-5 py-3 text-gray-600">{{ $invoice->client?->name ?? '—' }}</td>
+                                <td class="px-5 py-3 text-gray-600">{{ $invoice->client?->name ?? '-' }}</td>
                             @endunless
                             <td class="px-5 py-3 text-gray-600"><x-date :value="$invoice->issue_date" /></td>
                             <td @class(['px-5 py-3', 'font-semibold text-red-700' => $invoice->isOverdue(), 'text-gray-600' => ! $invoice->isOverdue()])><x-date :value="$invoice->due_date" /></td>

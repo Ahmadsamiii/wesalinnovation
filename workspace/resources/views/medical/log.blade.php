@@ -31,9 +31,9 @@
                             <td class="whitespace-nowrap px-5 py-3"><x-badge :color="$review->decision->color()">{{ $review->decision->label() }}</x-badge></td>
                             <td class="px-5 py-3">
                                 <a href="{{ route('medical.review.show', $review->content) }}" class="font-medium text-brand-800 hover:underline">{{ $review->reviewed_title }}</a>
-                                <div class="text-xs text-gray-500">النسخة {{ $review->version }} — {{ $review->content->category->label() }}</div>
+                                <div class="text-xs text-gray-500">النسخة {{ $review->version }}، {{ $review->content->category->label() }}</div>
                             </td>
-                            <td class="max-w-md px-5 py-3 text-gray-700">{{ $review->note ?? '—' }}</td>
+                            <td class="max-w-md px-5 py-3 text-gray-700">{{ $review->note ?? '-' }}</td>
                             <td class="whitespace-nowrap px-5 py-3 text-gray-600">{{ $review->reviewer->name }}<div class="text-xs"><x-date :value="$review->created_at" /></div></td>
                         </tr>
                     @endforeach

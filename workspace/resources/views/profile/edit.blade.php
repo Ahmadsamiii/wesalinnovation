@@ -12,15 +12,15 @@
                 </div>
                 <div>
                     <dt class="text-gray-500">الدور</dt>
-                    <dd class="font-medium">{{ $user->roleLabel() ?? '—' }}</dd>
+                    <dd class="font-medium">{{ $user->roleLabel() ?? '-' }}</dd>
                 </div>
                 <div>
                     <dt class="text-gray-500">القسم</dt>
-                    <dd class="font-medium">{{ $user->department ?? '—' }}</dd>
+                    <dd class="font-medium">{{ $user->department ?? '-' }}</dd>
                 </div>
                 <div>
                     <dt class="text-gray-500">المسمى الوظيفي</dt>
-                    <dd class="font-medium">{{ $user->job_title ?? '—' }}</dd>
+                    <dd class="font-medium">{{ $user->job_title ?? '-' }}</dd>
                 </div>
             </dl>
 

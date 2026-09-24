@@ -21,7 +21,7 @@
                             @if ($content->summary)
                                 <p class="mt-1 text-gray-600">{{ $content->summary }}</p>
                             @endif
-                            <p class="mt-2 text-xs text-gray-500">النسخة {{ $content->version }} — قدّمها {{ $content->author->name }} <x-date :value="$content->submitted_at" relative /></p>
+                            <p class="mt-2 text-xs text-gray-500">النسخة {{ $content->version }}، مقدَّمة من {{ $content->author->name }} <x-date :value="$content->submitted_at" relative /></p>
                         </div>
                         <x-button :href="route('medical.review.show', $content)">مراجعة</x-button>
                     </div>
@@ -46,7 +46,7 @@
                         @can('renew', $content)
                             <form method="POST" action="{{ route('medical.review.renew', $content) }}">
                                 @csrf
-                                <x-button type="submit" variant="secondary" size="sm">راجعته — جدّد الاعتماد</x-button>
+                                <x-button type="submit" variant="secondary" size="sm">تأكيد المراجعة وتجديد الاعتماد</x-button>
                             </form>
                         @endcan
                     </li>

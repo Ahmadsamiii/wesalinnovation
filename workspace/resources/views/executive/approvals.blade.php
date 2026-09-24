@@ -19,13 +19,13 @@
                     <div class="min-w-0 flex-1">
                         <h3 class="text-base font-semibold"><a href="{{ route('projects.show', $project) }}" class="text-brand-800 hover:underline">{{ $project->name }}</a></h3>
                         <p class="mt-1 text-xs text-gray-500">
-                            {{ $project->pm->name }} — {{ $project->client?->name ?? 'مشروع داخلي' }} — قُدّم <x-date :value="$project->submitted_at" relative />
+                            {{ $project->pm->name }}، {{ $project->client?->name ?? 'مشروع داخلي' }}، قُدّم <x-date :value="$project->submitted_at" relative />
                         </p>
                         @if ($project->description)
                             <p class="mt-3 line-clamp-3 text-sm leading-7 text-gray-700">{{ $project->description }}</p>
                         @endif
                         <dl class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
-                            <div><dt class="inline text-gray-500">الميزانية:</dt> <dd class="inline font-medium">{{ $project->budget !== null ? number_format((float) $project->budget, 2).' ر.س' : '—' }}</dd></div>
+                            <div><dt class="inline text-gray-500">الميزانية:</dt> <dd class="inline font-medium">{{ $project->budget !== null ? number_format((float) $project->budget, 2).' ر.س' : '-' }}</dd></div>
                             <div><dt class="inline text-gray-500">المدة:</dt> <dd class="inline"><x-date :value="$project->start_date" /> ← <x-date :value="$project->end_date" /></dd></div>
                             <div><dt class="inline text-gray-500">الأولوية:</dt> <dd class="inline">{{ $project->priority->label() }}</dd></div>
                             <div><dt class="inline text-gray-500">المعالم:</dt> <dd class="inline">{{ $project->milestones_count }}</dd></div>

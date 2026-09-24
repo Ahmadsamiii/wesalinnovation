@@ -49,7 +49,7 @@
                         <li class="flex flex-wrap items-center justify-between gap-2 px-5 py-3">
                             <div>
                                 <a href="{{ route('certificates.show', $certificate) }}" class="font-medium text-brand-800 hover:underline">{{ $certificate->title }}</a>
-                                <p class="text-xs text-gray-500"><span dir="ltr">{{ $certificate->number }}</span> — <x-date :value="$certificate->issued_at" /></p>
+                                <p class="text-xs text-gray-500"><span dir="ltr">{{ $certificate->number }}</span>، <x-date :value="$certificate->issued_at" /></p>
                             </div>
                             @if ($certificate->isRevoked())
                                 <x-badge color="red">ملغاة</x-badge>

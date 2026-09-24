@@ -28,7 +28,7 @@
                             <div class="font-medium">{{ $person->name }}</div>
                             <div class="text-xs text-gray-500">{{ $person->job_title }}</div>
                         </td>
-                        <td class="px-5 py-3 text-gray-600">{{ $person->roleLabel() }}{{ $person->department ? ' — '.$person->department : '' }}</td>
+                        <td class="px-5 py-3 text-gray-600">{{ $person->roleLabel() }}{{ $person->department ? '، '.$person->department : '' }}</td>
                         <td class="px-5 py-3">{{ $managedProjects[$person->id] ?? 0 }}</td>
                         <td class="px-5 py-3">{{ $memberProjects[$person->id] ?? 0 }}</td>
                         <td class="px-5 py-3">{{ $person->open_tasks_count }}</td>

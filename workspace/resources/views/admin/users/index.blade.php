@@ -57,8 +57,8 @@
                                 <div class="font-medium text-ink">{{ $user->name }}</div>
                                 <div class="text-xs text-gray-500" dir="ltr">{{ $user->email }}</div>
                             </td>
-                            <td class="px-5 py-3">{{ $user->roleLabel() ?? '—' }}</td>
-                            <td class="px-5 py-3 text-gray-600">{{ collect([$user->department, $user->job_title])->filter()->implode(' — ') ?: '—' }}</td>
+                            <td class="px-5 py-3">{{ $user->roleLabel() ?? '-' }}</td>
+                            <td class="px-5 py-3 text-gray-600">{{ collect([$user->department, $user->job_title])->filter()->implode('، ') ?: '-' }}</td>
                             <td class="px-5 py-3"><x-badge :color="$user->status()->color()">{{ $user->status()->label() }}</x-badge></td>
                             <td class="px-5 py-3 text-gray-600"><x-date :value="$user->last_login_at" relative empty="لم يدخل بعد" /></td>
                             <td class="px-5 py-3 text-end">

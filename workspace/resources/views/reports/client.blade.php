@@ -22,7 +22,7 @@
         <article class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm sm:p-10 print:rounded-none print:border-0 print:p-0 print:shadow-none">
             <header class="flex flex-wrap items-start justify-between gap-4 border-b border-gray-200 pb-6">
                 <div>
-                    <p class="text-sm text-gray-500">{{ config('workspace.company.name') }} — تقرير حالة مشروع</p>
+                    <p class="text-sm text-gray-500">تقرير حالة مشروع من {{ config('workspace.company.name') }}</p>
                     <h2 class="mt-1 text-2xl font-bold text-ink">{{ $project->name }}</h2>
                     <p class="mt-1 text-sm text-gray-500">حتى تاريخ <x-date :value="today()" /></p>
                 </div>
@@ -42,7 +42,7 @@
                     @else
                         <div><dt class="text-gray-500">النهاية المتوقعة</dt><dd class="mt-0.5 font-medium"><x-date :value="$project->end_date" empty="تُحدَّد لاحقاً" /></dd></div>
                     @endif
-                    <div class="col-span-2"><dt class="text-gray-500">مدير المشروع</dt><dd class="mt-0.5 font-medium">{{ $project->pm->name }} — <span dir="ltr">{{ $project->pm->email }}</span></dd></div>
+                    <div class="col-span-2"><dt class="text-gray-500">مدير المشروع</dt><dd class="mt-0.5 font-medium">{{ $project->pm->name }} (<span dir="ltr">{{ $project->pm->email }}</span>)</dd></div>
                 </dl>
             </section>
 
@@ -161,7 +161,7 @@
                     <h3 class="mb-2 text-base font-semibold text-ink">الشهادات</h3>
                     <ul class="space-y-1 text-sm" role="list">
                         @foreach ($certificates as $certificate)
-                            <li>{{ $certificate->title }} — رقم {{ $certificate->number }}، رمز التحقق <span dir="ltr" class="font-mono">{{ \App\Models\Certificate::formatVerificationCode($certificate->verification_code) }}</span></li>
+                            <li>{{ $certificate->title }} (رقم {{ $certificate->number }}، رمز التحقق <span dir="ltr" class="font-mono">{{ \App\Models\Certificate::formatVerificationCode($certificate->verification_code) }}</span>)</li>
                         @endforeach
                     </ul>
                     <p class="mt-2 text-xs text-gray-500">يتحقق أي طرف من صحتها عبر <span dir="ltr">{{ route('verify.show') }}</span></p>

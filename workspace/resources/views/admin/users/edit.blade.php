@@ -32,7 +32,7 @@
                                     @if ($entry->details())
                                         <span class="text-gray-600">{{ $entry->details() }}</span>
                                     @endif
-                                    <span class="text-gray-500">— {{ $entry->user?->name ?? 'النظام' }}</span>
+                                    <span class="text-gray-500">المنفّذ: {{ $entry->user?->name ?? 'النظام' }}</span>
                                 </div>
                                 <x-date :value="$entry->created_at" time class="text-xs text-gray-500" />
                             </li>

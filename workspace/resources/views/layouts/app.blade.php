@@ -6,7 +6,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="robots" content="noindex, nofollow">
 
-        <title>{{ isset($title) ? $title.' — ' : '' }}{{ config('app.name') }}</title>
+        <title>{{ isset($title) ? $title.' | ' : '' }}{{ config('app.name') }}</title>
 
         {{-- حالة القائمة المصغّرة تُطبَّق قبل أول رسم حتى لا تومض موسّعة --}}
         <script>try{if(localStorage.getItem('wesal_ws_sidebar_collapsed')==='1'){document.documentElement.classList.add('sb-collapsed');}}catch(e){}</script>

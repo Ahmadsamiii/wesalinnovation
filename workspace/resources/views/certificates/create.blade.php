@@ -49,7 +49,7 @@
                             @foreach ($project->members as $member)
                                 <label class="flex items-center gap-2 rounded-lg border border-gray-200 p-3 text-sm">
                                     <input type="checkbox" name="recipients[]" value="{{ $member->user_id }}" checked class="rounded border-gray-300 text-brand-800 focus:ring-brand-600">
-                                    {{ $member->user->name }} <span class="text-xs text-gray-500">— {{ $member->role->label() }}</span>
+                                    {{ $member->user->name }} <span class="text-xs text-gray-500">({{ $member->role->label() }})</span>
                                 </label>
                             @endforeach
                         </div>

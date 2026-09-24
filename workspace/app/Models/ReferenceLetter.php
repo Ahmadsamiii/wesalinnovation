@@ -108,6 +108,6 @@ class ReferenceLetter extends Model
 
     public function auditLabel(): string
     {
-        return ($this->number ?? 'طلب إفادة #'.$this->id).' — '.($this->requester?->name ?? '');
+        return ($this->number ?? 'طلب إفادة #'.$this->id).($this->requester ? ': '.$this->requester->name : '');
     }
 }

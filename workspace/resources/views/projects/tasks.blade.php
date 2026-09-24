@@ -54,16 +54,16 @@
                                     @class(['rounded-lg border bg-white p-3 text-sm shadow-sm', 'cursor-grab' => $canMove,
                                             'border-red-300' => $task->isOverdue(), 'border-gray-200' => ! $task->isOverdue()])>
                                     <a href="{{ route('tasks.show', $task) }}" class="font-medium text-ink hover:text-brand-800 hover:underline">{{ $task->title }}</a>
-                                    <div class="mt-2 flex flex-wrap items-center gap-1 text-xs text-gray-500">
+                                    <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
                                         @if ($task->priority !== \App\Enums\Priority::Normal)
                                             <x-badge :color="$task->priority->color()">{{ $task->priority->label() }}</x-badge>
                                         @endif
                                         <span>{{ $task->assignee?->name ?? 'بلا إسناد' }}</span>
                                         @if ($task->due_date)
-                                            <span @class(['text-red-700 font-semibold' => $task->isOverdue()])>— <x-date :value="$task->due_date" /></span>
+                                            <span @class(['text-red-700 font-semibold' => $task->isOverdue()])>الموعد: <x-date :value="$task->due_date" /></span>
                                         @endif
                                         @if ($task->comments_count)
-                                            <span>— {{ $task->comments_count }} تعليق</span>
+                                            <span>التعليقات: {{ $task->comments_count }}</span>
                                         @endif
                                     </div>
                                     @if ($canMove)
@@ -109,8 +109,8 @@
                                 <td class="px-5 py-3"><a href="{{ route('tasks.show', $task) }}" class="font-medium text-brand-800 hover:underline">{{ $task->title }}</a></td>
                                 <td class="px-5 py-3"><x-badge :color="$task->status->color()">{{ $task->status->label() }}</x-badge></td>
                                 <td class="px-5 py-3"><x-badge :color="$task->priority->color()">{{ $task->priority->label() }}</x-badge></td>
-                                <td class="px-5 py-3">{{ $task->assignee?->name ?? '—' }}</td>
-                                <td class="px-5 py-3 text-gray-600">{{ $task->milestone?->title ?? '—' }}</td>
+                                <td class="px-5 py-3">{{ $task->assignee?->name ?? '-' }}</td>
+                                <td class="px-5 py-3 text-gray-600">{{ $task->milestone?->title ?? '-' }}</td>
                                 <td @class(['px-5 py-3', 'font-semibold text-red-700' => $task->isOverdue()])><x-date :value="$task->due_date" /></td>
                             </tr>
                         @endforeach

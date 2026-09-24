@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot:title>تكامل الذكاء الاصطناعي</x-slot:title>
 
-    <x-page-header title="تكامل الذكاء الاصطناعي" description="كيف يعمل مساعد المنصة العامة فعلاً: أي مزوّد يجيب، وبأي سرعة، وما انقطع أو بقي بلا جواب." />
+    <x-page-header title="تكامل الذكاء الاصطناعي" description="كيف يعمل مساعد المنصة العامة: أي مزوّد يجيب، وبأي سرعة، وما انقطع أو بقي بلا جواب." />
 
     @if (! $connected)
         <x-card title="قاعدة المنصة العامة غير مربوطة">
@@ -21,11 +21,11 @@ PLATFORM_DB_PASSWORD=…</pre>
             <x-stat label="أسئلة آخر ٣٠ يوماً" :value="number_format($total)" />
             <x-stat label="بلا جواب" :value="number_format($unanswered)" hint="فشل المزوّد وبديله معاً" />
             <x-stat label="انقطعت أثناء البث" :value="number_format($aborted)" />
-            <x-stat label="زمن أول كلمة (الوسيط)" :value="$medianTtfb === null ? '—' : number_format($medianTtfb / 1000, 1).' ث'" hint="في الإجابات المبثوثة" />
+            <x-stat label="زمن أول كلمة (الوسيط)" :value="$medianTtfb === null ? '-' : number_format($medianTtfb / 1000, 1).' ث'" hint="في الإجابات المبثوثة" />
         </section>
 
         @if ($latest)
-            <p class="mb-6 text-sm text-gray-600">آخر جواب من <strong dir="ltr">{{ $latest->provider ?? '—' }}</strong> @if ($latest->model)(<span dir="ltr">{{ $latest->model }}</span>)@endif — <x-date :value="$latest->created_at" relative />.</p>
+            <p class="mb-6 text-sm text-gray-600">جاء آخر جواب <x-date :value="$latest->created_at" relative /> من <strong dir="ltr">{{ $latest->provider ?? 'غير معروف' }}</strong>@if ($latest->model) (<span dir="ltr">{{ $latest->model }}</span>)@endif.</p>
         @endif
 
         <div class="mb-6 grid [&>*]:min-w-0 gap-6 lg:grid-cols-2">
@@ -54,9 +54,9 @@ PLATFORM_DB_PASSWORD=…</pre>
                                     </td>
                                     <td class="px-5 py-3">{{ $provider['share'] }}٪ <span class="text-xs text-gray-500">({{ number_format($provider['count']) }})</span></td>
                                     <td class="px-5 py-3">
-                                        {{ $provider['median'] === null ? '—' : number_format($provider['median'] / 1000, 1).' ث' }}
+                                        {{ $provider['median'] === null ? '-' : number_format($provider['median'] / 1000, 1).' ث' }}
                                         /
-                                        {{ $provider['p90'] === null ? '—' : number_format($provider['p90'] / 1000, 1).' ث' }}
+                                        {{ $provider['p90'] === null ? '-' : number_format($provider['p90'] / 1000, 1).' ث' }}
                                     </td>
                                     <td class="px-5 py-3">{{ $provider['aborted'] }}</td>
                                 </tr>

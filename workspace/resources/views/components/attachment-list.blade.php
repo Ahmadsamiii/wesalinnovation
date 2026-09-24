@@ -9,9 +9,9 @@
                 <div class="min-w-0">
                     <a href="{{ route('attachments.show', $attachment) }}" class="font-medium text-brand-800 hover:underline" dir="auto">{{ $attachment->original_name }}</a>
                     <p class="text-xs text-gray-500">
-                        {{ $attachment->humanSize() }} — {{ $attachment->uploader->name }} — <x-date :value="$attachment->created_at" />
+                        {{ $attachment->humanSize() }}، {{ $attachment->uploader->name }}، <x-date :value="$attachment->created_at" />
                         @if ($showSource && $attachment->attachable instanceof \App\Models\Task)
-                            — مهمة: <a href="{{ route('tasks.show', $attachment->attachable) }}" class="hover:underline">{{ $attachment->attachable->title }}</a>
+                            (مهمة: <a href="{{ route('tasks.show', $attachment->attachable) }}" class="hover:underline">{{ $attachment->attachable->title }}</a>)
                         @endif
                     </p>
                 </div>

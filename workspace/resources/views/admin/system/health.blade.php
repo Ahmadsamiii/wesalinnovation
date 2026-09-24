@@ -25,7 +25,7 @@
         @if ($failing + $warning === 0)
             كل الفحوص سليمة.
         @else
-            {{ collect(['أعطال' => $failing, 'تنبيهات' => $warning])->filter()->map(fn ($count, $label) => $label.': '.$count)->implode('، ') }} — التفاصيل أدناه.
+            {{ collect(['أعطال' => $failing, 'تنبيهات' => $warning])->filter()->map(fn ($count, $label) => $label.': '.$count)->implode('، ') }}. التفاصيل أدناه.
         @endif
     </p>
 

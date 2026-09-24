@@ -46,7 +46,7 @@ class AiIntegrationController extends Controller
             'aborted' => $logs->where('aborted', true)->count(),
             'medianTtfb' => self::percentile($logs->where('stream', true)->pluck('ttfb_ms')->filter(), 0.5),
             'latest' => $latest,
-            'providers' => $logs->groupBy(fn (ChatLog $log): string => $log->provider ?? '—')
+            'providers' => $logs->groupBy(fn (ChatLog $log): string => $log->provider ?? 'غير معروف')
                 ->map(fn (Collection $group, string $provider): array => [
                     'provider' => $provider,
                     'models' => $group->pluck('model')->filter()->unique()->values()->all(),

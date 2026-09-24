@@ -46,7 +46,7 @@
                             <td class="px-5 py-3">
                                 <x-badge :color="$order->status->color()">{{ $order->status->label() }}</x-badge>
                                 @if ($awaitingMe && $order->status === $awaitingMe)
-                                    <span class="sr-only">— بانتظار مراجعتك</span>
+                                    <span class="sr-only">(بانتظار مراجعتك)</span>
                                 @endif
                             </td>
                         </tr>

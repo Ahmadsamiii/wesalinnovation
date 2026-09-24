@@ -113,6 +113,6 @@ class AuditLog extends Model
 
     private static function roleLabel(?string $role): string
     {
-        return $role ? config("roles.{$role}.label", $role) : '—';
+        return $role ? config("roles.{$role}.label", $role) : 'بلا دور';
     }
 }

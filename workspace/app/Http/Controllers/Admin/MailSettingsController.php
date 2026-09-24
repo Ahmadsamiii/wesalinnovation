@@ -51,7 +51,7 @@ class MailSettingsController extends Controller
         try {
             Mail::raw(
                 "هذه رسالة اختبار من مساحة عمل وصال.\n\nوصولها يعني أن رسائل الدعوات واستعادة كلمة المرور تصل أيضاً.\n\nأرسلها: {$request->user()->name}",
-                fn ($message) => $message->to($validated['to'])->subject('رسالة اختبار — '.config('app.name')),
+                fn ($message) => $message->to($validated['to'])->subject('رسالة اختبار من '.config('app.name')),
             );
         } catch (Throwable $exception) {
             AuditLog::record(AuditAction::MailTestSent, properties: ['to' => $validated['to'], 'delivered' => false, 'error' => Str::limit($exception->getMessage(), 300)]);

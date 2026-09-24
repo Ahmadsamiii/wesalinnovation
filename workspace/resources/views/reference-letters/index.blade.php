@@ -24,7 +24,7 @@
                         <x-badge :color="$letter->status->color()">{{ $letter->status->label() }}</x-badge>
                         @if ($isApprover)
                             <span class="font-semibold">{{ $letter->requester->name }}</span>
-                            <span class="text-gray-500">— {{ $letter->requester->job_title ?? 'بلا مسمى' }}</span>
+                            <span class="text-gray-500">({{ $letter->requester->job_title ?? 'بلا مسمى' }})</span>
                         @endif
                         @if ($letter->number)
                             <span class="text-gray-500" dir="ltr">{{ $letter->number }}</span>
@@ -36,7 +36,7 @@
                         <p class="mt-1 text-gray-600">{{ $letter->notes }}</p>
                     @endif
                     <p class="mt-2 text-xs text-gray-500">طُلبت <x-date :value="$letter->created_at" relative />
-                        @if ($letter->decider) — قرّرها {{ $letter->decider->name }} <x-date :value="$letter->decided_at" /> @endif
+                        @if ($letter->decider) وصدر القرار عن {{ $letter->decider->name }} في <x-date :value="$letter->decided_at" /> @endif
                     </p>
                     @if ($letter->decision_note)
                         <p @class(['mt-2 rounded-lg p-3 text-xs', 'bg-red-50 text-red-800' => $letter->status === \App\Enums\ReferenceLetterStatus::Rejected, 'bg-surface text-gray-700' => $letter->status !== \App\Enums\ReferenceLetterStatus::Rejected])>{{ $letter->decision_note }}</p>

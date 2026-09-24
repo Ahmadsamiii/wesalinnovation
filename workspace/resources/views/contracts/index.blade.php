@@ -51,7 +51,7 @@
                             <td class="px-5 py-3">{{ $contract->title }}</td>
                             <td class="px-5 py-3 text-gray-600">{{ $contract->project->name }}</td>
                             @unless ($isClient)
-                                <td class="px-5 py-3 text-gray-600">{{ $contract->client?->name ?? '—' }}</td>
+                                <td class="px-5 py-3 text-gray-600">{{ $contract->client?->name ?? '-' }}</td>
                             @endunless
                             <td class="px-5 py-3"><x-money :amount="$contract->value" /></td>
                             <td class="px-5 py-3 text-gray-600"><x-date :value="$contract->start_date" /> ← <x-date :value="$contract->end_date" /></td>

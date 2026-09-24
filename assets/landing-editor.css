@@ -116,6 +116,9 @@
 .lpe-reset:disabled{color:var(--muted);opacity:.45;cursor:default;}
 .lpe-err{font-size:12px;color:#b91c1c;font-weight:600;}
 [data-contrast="dark"] .lpe-err{color:#fca5a5;}
+.lpe-tip{font-size:12px;color:#b45309;font-weight:600;}
+.lpe-tip:empty{display:none;}
+[data-contrast="dark"] .lpe-tip{color:#fcd34d;}
 
 /* ---------- قوائم البطاقات ---------- */
 .lpe-list{padding:var(--s5);border-top:1px solid var(--border);}

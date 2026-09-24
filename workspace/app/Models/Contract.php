@@ -142,6 +142,6 @@ class Contract extends Model
 
     public function auditLabel(): string
     {
-        return $this->number.' — '.$this->title;
+        return $this->number.': '.$this->title;
     }
 }

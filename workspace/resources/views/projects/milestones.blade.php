@@ -21,8 +21,8 @@
                                 <p class="mt-1 text-sm text-gray-600">{{ $milestone->description }}</p>
                             @endif
                             <p class="mt-2 text-xs text-gray-500">
-                                الموعد: <x-date :value="$milestone->due_date" empty="غير محدد" /> —
-                                {{ $milestone->done_tasks_count }} من {{ $milestone->tasks_count }} مهام منجزة
+                                {{ $milestone->done_tasks_count }} من {{ $milestone->tasks_count }} مهام منجزة،
+                                الموعد: <x-date :value="$milestone->due_date" empty="غير محدد" />
                             </p>
                         </div>
                         <div class="flex flex-wrap gap-2">

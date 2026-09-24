@@ -3,7 +3,7 @@
 
     <x-page-header :title="$contract->title">
         <x-slot:breadcrumb>
-            <a href="{{ route('contracts.index') }}" class="hover:underline">العقود</a> — <span dir="ltr">{{ $contract->number }}</span>
+            <a href="{{ route('contracts.index') }}" class="hover:underline">العقود</a> / <span dir="ltr">{{ $contract->number }}</span>
         </x-slot:breadcrumb>
         <x-slot:actions>
             <x-badge :color="$contract->status->color()">{{ $contract->status->label() }}</x-badge>
@@ -90,7 +90,7 @@
                         {{ $contract->project->name }}
                     @endcan
                 </dd></div>
-                <div class="flex justify-between gap-2"><dt class="text-gray-500">العميل</dt><dd>{{ $contract->client?->name ?? '—' }}</dd></div>
+                <div class="flex justify-between gap-2"><dt class="text-gray-500">العميل</dt><dd>{{ $contract->client?->name ?? '-' }}</dd></div>
                 <div class="flex justify-between gap-2"><dt class="text-gray-500">القيمة قبل الضريبة</dt><dd><x-money :amount="$contract->value" /></dd></div>
                 <div class="flex justify-between gap-2"><dt class="text-gray-500">المفوتر منها</dt><dd><x-money :amount="$contract->invoicedTotal()" /></dd></div>
                 <div class="flex justify-between gap-2"><dt class="text-gray-500">السريان</dt><dd><x-date :value="$contract->start_date" /> ← <x-date :value="$contract->end_date" /></dd></div>

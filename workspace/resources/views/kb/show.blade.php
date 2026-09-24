@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $content->published_title }} — {{ config('workspace.company.name') }}</title>
+    <title>{{ $content->published_title }} | {{ config('workspace.company.name') }}</title>
     @if ($content->published_summary)
         <meta name="description" content="{{ $content->published_summary }}">
     @endif

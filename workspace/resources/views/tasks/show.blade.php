@@ -97,7 +97,7 @@
             <x-card title="التفاصيل">
                 <dl class="space-y-2 text-sm">
                     <div class="flex justify-between gap-2"><dt class="text-gray-500">المشروع</dt><dd><a href="{{ route('projects.show', $task->project) }}" class="text-brand-800 hover:underline">{{ $task->project->name }}</a></dd></div>
-                    <div class="flex justify-between gap-2"><dt class="text-gray-500">المعلم</dt><dd>{{ $task->milestone?->title ?? '—' }}</dd></div>
+                    <div class="flex justify-between gap-2"><dt class="text-gray-500">المعلم</dt><dd>{{ $task->milestone?->title ?? '-' }}</dd></div>
                     <div class="flex justify-between gap-2"><dt class="text-gray-500">المسند إليه</dt><dd>{{ $task->assignee?->name ?? 'بلا إسناد' }}</dd></div>
                     <div class="flex justify-between gap-2"><dt class="text-gray-500">الموعد</dt><dd><x-date :value="$task->due_date" /></dd></div>
                     <div class="flex justify-between gap-2"><dt class="text-gray-500">بدأت</dt><dd><x-date :value="$task->started_at" /></dd></div>

@@ -6,7 +6,7 @@ $u = null;
 try { $u = currentUser(); } catch (Throwable $e) {}
 if (!$u || $u['role'] !== 'admin') {
     http_response_code(403);
-    echo json_encode(['ok' => false, 'error' => 'هذه الصفحة خاصة بالمشرف — سجّل دخولك بحساب المشرف في نفس المتصفح ثم افتحها مرة أخرى.'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['ok' => false, 'error' => 'هذه الصفحة خاصة بمدير النظام. سجّل دخولك بحسابه في المتصفح نفسه ثم افتحها مرة أخرى.'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -26,11 +26,11 @@ function tryProvider(string $name, string $url, array $payload, array $headers):
     $body = mb_substr((string)$res, 0, 400);
     if ($err)                    $status = 'فشل الاتصال بالمزوّد من الخادم: ' . $err;
     elseif ($code === 200)       $status = 'يعمل بنجاح ✅';
-    elseif ($code === 400 && str_contains($body, 'API_KEY_INVALID')) $status = 'المفتاح غير صالح ❌ — أنشئ مفتاحاً جديداً من aistudio.google.com/apikey (يبدأ بـ AIza) وضعه في config.php';
-    elseif ($code === 400)       $status = 'طلب مرفوض (400) — راجع التفاصيل';
-    elseif ($code === 401 || $code === 403) $status = 'المفتاح مرفوض أو بلا صلاحية ❌ — جدّد المفتاح';
-    elseif ($code === 404)       $status = 'اسم النموذج غير موجود — راجع GEMINI_MODEL في config.php';
-    elseif ($code === 429)       $status = 'تجاوزت حد الاستخدام مؤقتاً — انتظر دقائق وجرّب';
+    elseif ($code === 400 && str_contains($body, 'API_KEY_INVALID')) $status = 'المفتاح غير صالح ❌. أنشئ مفتاحاً جديداً من aistudio.google.com/apikey (يبدأ بـ AIza) وضعه في config.php';
+    elseif ($code === 400)       $status = 'طلب مرفوض (400). راجع التفاصيل';
+    elseif ($code === 401 || $code === 403) $status = 'المفتاح مرفوض أو بلا صلاحية ❌. جدّد المفتاح';
+    elseif ($code === 404)       $status = 'اسم النموذج غير موجود. راجع GEMINI_MODEL في config.php';
+    elseif ($code === 429)       $status = 'تجاوزت حد الاستخدام مؤقتاً. انتظر دقائق ثم جرّب';
     else                         $status = 'رد غير متوقع (HTTP ' . $code . ')';
     return ['provider' => $name, 'http' => $code, 'status' => $status, 'sample' => $body];
 }
@@ -38,7 +38,7 @@ function tryProvider(string $name, string $url, array $payload, array $headers):
 /* ---------- فحص ملفات الصور: هل هي موجودة؟ وهل محتواها فعلاً صورة؟ ---------- */
 function sniffImage(string $rel): array {
     $path = dirname(__DIR__) . '/' . $rel;
-    if (!file_exists($path)) return ['الحالة' => '⚠️ غير موجود — ارفعه بهذا الاسم بالضبط في public_html'];
+    if (!file_exists($path)) return ['الحالة' => '⚠️ غير موجود. ارفعه بهذا الاسم بالضبط في public_html'];
     $sz = filesize($path);
     $head = (string)file_get_contents($path, false, null, 0, 256);
     $sig = 'غير معروف';
@@ -53,14 +53,14 @@ function sniffImage(string $rel): array {
     $ext = strtolower(pathinfo($rel, PATHINFO_EXTENSION));
     $extNorm = $ext === 'jpeg' ? 'jpg' : $ext;
     $kb = round($sz / 1024) . 'KB';
-    if ($sz < 200)        return ['الحالة' => '❌ الملف شبه فارغ (' . $sz . ' بايت) — أعد رفعه', 'الحجم' => $kb];
-    if ($sig === 'html')  return ['الحالة' => '❌ المحتوى صفحة HTML وليس صورة — غالباً انحفظت صفحة العرض من درايف بدل الملف؛ افتح الرابط واضغط زر التنزيل الفعلي ثم ارفع الصورة نفسها', 'الحجم' => $kb];
-    if ($sig === 'pdf')   return ['الحالة' => '❌ الملف PDF وليس صورة — صدّره كـ PNG', 'الحجم' => $kb];
+    if ($sz < 200)        return ['الحالة' => '❌ الملف شبه فارغ (' . $sz . ' بايت). أعد رفعه', 'الحجم' => $kb];
+    if ($sig === 'html')  return ['الحالة' => '❌ المحتوى صفحة HTML وليس صورة. غالباً حُفظت صفحة العرض في درايف بدل الملف؛ افتح الرابط واضغط زر التنزيل ثم ارفع الصورة نفسها', 'الحجم' => $kb];
+    if ($sig === 'pdf')   return ['الحالة' => '❌ الملف PDF وليس صورة. صدّره بصيغة PNG', 'الحجم' => $kb];
     if ($sig === 'svg' && $extNorm !== 'svg')
-        return ['الحالة' => '❌ الامتداد .' . $ext . ' لكن المحتوى فعلياً SVG — إمّا صدّره PNG حقيقياً أو أعد تسميته بامتداد .svg', 'الحجم' => $kb];
+        return ['الحالة' => '❌ الامتداد .' . $ext . ' لكن المحتوى SVG. صدّره بصيغة PNG أو غيّر امتداده إلى .svg', 'الحجم' => $kb];
     if ($sig !== 'غير معروف' && $extNorm !== $sig && !($sig === 'jpg' && $extNorm === 'jpg'))
-        return ['الحالة' => '⚠️ الامتداد .' . $ext . ' لكن المحتوى ' . $sig . ' — أعد التسمية للامتداد الصحيح', 'الحجم' => $kb, 'النوع_الفعلي' => $sig];
-    if ($sig === 'غير معروف') return ['الحالة' => '❌ المحتوى غير مقروء كصورة — أعد التصدير والرفع', 'الحجم' => $kb];
+        return ['الحالة' => '⚠️ الامتداد .' . $ext . ' لكن المحتوى ' . $sig . '. غيّر الامتداد إلى الصحيح', 'الحجم' => $kb, 'النوع_الفعلي' => $sig];
+    if ($sig === 'غير معروف') return ['الحالة' => '❌ المحتوى غير مقروء كصورة. أعد التصدير والرفع', 'الحجم' => $kb];
     return ['الحالة' => '✅ سليم (' . $sig . '، ' . $kb . ')'];
 }
 
@@ -71,7 +71,7 @@ $out = [
 ];
 
 try { db()->query('SELECT 1'); $out['database'] = 'متصلة ✅'; }
-catch (Throwable $e) { $out['database'] = 'فشل الاتصال ❌ — راجع DB_PASS في config.php'; }
+catch (Throwable $e) { $out['database'] = 'فشل الاتصال ❌. راجع DB_PASS في config.php'; }
 
 if (!defined('GEMINI_KEY') || GEMINI_KEY === '') {
     $out['gemini'] = ['status' => 'المفتاح فارغ في config.php ❌'];
@@ -108,7 +108,7 @@ $g = $out['gemini']['status'] ?? '';
 $logoBad = [];
 foreach (['logo-color.png','logo-white.png'] as $f)
     if (!str_contains($out['ملفات_الشعار'][$f]['الحالة'], '✅')) $logoBad[] = $f;
-$out['الخلاصة'] = (str_contains($g, '✅') ? 'النموذج يعمل ✅. ' : 'النموذج لا يستجيب — عالج حالة Gemini أعلاه. ')
-    . ($logoBad ? 'ملفات الشعار فيها مشكلة (' . implode('، ', $logoBad) . ') — اقرأ حالتها فوق.' : 'ملفات الشعار سليمة ✅ — لو ما زال ما يظهر فهي كاش المتصفح/كلاودفلير: اعمل Ctrl+Shift+R و Purge Cache.');
+$out['الخلاصة'] = (str_contains($g, '✅') ? 'النموذج يعمل ✅. ' : 'النموذج لا يستجيب. عالج حالة Gemini أعلاه. ')
+    . ($logoBad ? 'ملفات الشعار فيها مشكلة (' . implode('، ', $logoBad) . '). اقرأ حالتها أعلاه.' : 'ملفات الشعار سليمة ✅. إن لم يظهر الشعار فالسبب نسخة محفوظة في المتصفح أو في Cloudflare: اضغط Ctrl+Shift+R ثم نفّذ Purge Cache.');
 
 echo json_encode($out, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);

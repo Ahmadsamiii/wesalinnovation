@@ -53,10 +53,10 @@
                         <tr>
                             <td class="px-5 py-3">
                                 <a href="{{ route('projects.show', $project) }}" class="font-medium text-brand-800 hover:underline">{{ $project->name }}</a>
-                                <div class="text-xs text-gray-500">{{ $project->pm->name }} — {{ $project->client?->name ?? 'داخلي' }}</div>
+                                <div class="text-xs text-gray-500">{{ $project->pm->name }}، {{ $project->client?->name ?? 'داخلي' }}</div>
                             </td>
                             <td class="w-48 px-5 py-3"><x-progress :value="$project->progress()" /></td>
-                            <td class="px-5 py-3">@if ($project->budget !== null)<x-money :amount="$project->budget" />@else — @endif</td>
+                            <td class="px-5 py-3">@if ($project->budget !== null)<x-money :amount="$project->budget" />@else - @endif</td>
                             <td @class(['px-5 py-3', 'font-semibold text-red-700' => $project->budget !== null && (float) $project->committed_sum > (float) $project->budget])><x-money :amount="$project->committed_sum ?? 0" /></td>
                             <td class="px-5 py-3"><x-money :amount="$project->invoiced_sum ?? 0" /></td>
                             <td @class(['px-5 py-3', 'font-semibold text-red-700' => $project->isOverdue()])><x-date :value="$project->end_date" /></td>

@@ -19,8 +19,8 @@
         <x-card title="ما ستتضمنه الإفادة">
             <dl class="space-y-2 text-sm">
                 <div class="flex justify-between gap-2"><dt class="text-gray-500">الاسم</dt><dd>{{ $user->name }}</dd></div>
-                <div class="flex justify-between gap-2"><dt class="text-gray-500">المسمى الوظيفي</dt><dd>{{ $user->job_title ?? '—' }}</dd></div>
-                <div class="flex justify-between gap-2"><dt class="text-gray-500">القسم</dt><dd>{{ $user->department ?? '—' }}</dd></div>
+                <div class="flex justify-between gap-2"><dt class="text-gray-500">المسمى الوظيفي</dt><dd>{{ $user->job_title ?? '-' }}</dd></div>
+                <div class="flex justify-between gap-2"><dt class="text-gray-500">القسم</dt><dd>{{ $user->department ?? '-' }}</dd></div>
                 <div class="flex justify-between gap-2"><dt class="text-gray-500">تاريخ الالتحاق</dt><dd><x-date :value="$user->joined_at" /></dd></div>
             </dl>
             <p class="mt-4 text-xs text-gray-500">بيانات ناقصة أو خاطئة؟ يصححها مدير النظام قبل الاعتماد.</p>

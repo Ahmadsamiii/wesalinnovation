@@ -175,7 +175,7 @@ class InvoiceController extends Controller
                 ->with('project')
                 ->latest('id')
                 ->get()
-                ->mapWithKeys(fn (Contract $contract): array => [$contract->id => $contract->number.' — '.$contract->title.' ('.$contract->project->name.')'])
+                ->mapWithKeys(fn (Contract $contract): array => [$contract->id => $contract->number.': '.$contract->title.' ('.$contract->project->name.')'])
                 ->all(),
         ];
     }

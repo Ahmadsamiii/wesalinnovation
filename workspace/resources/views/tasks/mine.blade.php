@@ -26,8 +26,8 @@
                                 <div class="min-w-0">
                                     <a href="{{ route('tasks.show', $task) }}" class="font-medium text-brand-800 hover:underline">{{ $task->title }}</a>
                                     <p class="text-xs text-gray-500">
-                                        {{ $task->project->name }}{{ $task->milestone ? ' — '.$task->milestone->title : '' }}
-                                        — الموعد: <x-date :value="$task->due_date" empty="غير محدد" />
+                                        {{ $task->project->name }}{{ $task->milestone ? '، '.$task->milestone->title : '' }}،
+                                        الموعد: <x-date :value="$task->due_date" empty="غير محدد" />
                                     </p>
                                 </div>
                                 @can('move', $task)
