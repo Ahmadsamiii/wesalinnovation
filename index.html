@@ -56,6 +56,9 @@
 <meta property="og:type" content="website">
 <link rel="preload" href="fonts/thmanyahsans-Regular.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/thmanyahsans-Bold.woff2" as="font" type="font/woff2" crossorigin>
+<!-- «تقليل الحركة» قبل أول رسم حتى لا تومض حركة قبل تحميل السكربت: اختيار الزائر
+     الصريح في وصال أولاً، وإلا إعداد نظامه — نفس منطق motionReduced() أسفل الصفحة -->
+<script>(function(){try{var s=/[?&]lp-preview/.test(location.search)?{}:JSON.parse(localStorage.getItem('wesal_a11y')||'{}');document.documentElement.setAttribute('data-reduce-motion',s.motion===true||(!s.motionSet&&matchMedia('(prefers-reduced-motion: reduce)').matches));}catch(e){}})();</script>
 <style>
 /* ===== خط ثمانية Thmanyah Sans — الخط الرسمي للهوية ===== */
 @font-face{font-family:'Thmanyah Sans';src:url('fonts/thmanyahsans-Light.woff2') format('woff2'),url('fonts/thmanyahsans-Light.otf') format('opentype');font-weight:300;font-style:normal;font-display:swap;}
@@ -71,12 +74,13 @@
 --sh-xs:0 1px 2px rgba(40,38,146,.04);--sh-sm:0 1px 3px rgba(40,38,146,.04),0 4px 12px rgba(40,38,146,.06);--sh-md:0 2px 4px rgba(40,38,146,.04),0 8px 24px rgba(40,38,146,.08);--sh-lg:0 4px 8px rgba(40,38,146,.04),0 16px 40px rgba(40,38,146,.12);--sh-glow:0 0 40px rgba(129,79,195,.15);
 --r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:24px;--r-2xl:32px;--r-full:9999px;
 --g-brand:linear-gradient(135deg,#814fc3 0%,#5039a8 40%,#282692 100%);--g-hero:linear-gradient(160deg,#12103a 0%,#1a1560 20%,#282692 45%,#4a35a8 70%,#6b42bc 85%,#814fc3 100%);--g-glass:linear-gradient(135deg,rgba(255,255,255,.08),rgba(255,255,255,.02));--g-card:linear-gradient(180deg,rgba(255,255,255,.95),rgba(248,246,253,.8));--g-accent:linear-gradient(135deg,#52bdf9 0%,#3e9eed 100%);
---ease:cubic-bezier(.4,0,.2,1);--ease-out:cubic-bezier(0,0,.2,1);--ease-spring:cubic-bezier(.175,.885,.32,1.275);--dur:.2s;--dur-md:.35s;--dur-lg:.5s;
+--ease:cubic-bezier(.4,0,.2,1);--ease-out:cubic-bezier(0,0,.2,1);--ease-spring:cubic-bezier(.175,.885,.32,1.275);--ease-enter:cubic-bezier(.16,1,.3,1);--dur:.2s;--dur-md:.35s;--dur-lg:.5s;
 --f-scale:100;
 }
 [data-contrast="high"]{--bg:#fff;--surface:#f5f5f5;--border:#999;--muted:#333;--text:#111;--ink:#000;}
 [data-contrast="dark"]{--bg:#0f0d1a;--surface:#1a1730;--surface-alt:#221f38;--border:#2d2950;--muted:#7a6e9a;--text:#c8bfe0;--ink:#f0ecf8;}
-[data-reduce-motion="true"] *,[data-reduce-motion="true"] *::before,[data-reduce-motion="true"] *::after{animation-duration:.01ms!important;transition-duration:.01ms!important;}
+[data-reduce-motion="true"] *,[data-reduce-motion="true"] *::before,[data-reduce-motion="true"] *::after{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important;transition-delay:0s!important;}
+[data-reduce-motion="true"]{scroll-behavior:auto!important;}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
 body{font-family:'Thmanyah Sans','Segoe UI',system-ui,-apple-system,sans-serif;letter-spacing:-.005em;color:var(--text);background:var(--bg);line-height:1.7;-webkit-font-smoothing:antialiased;overflow-x:hidden;font-size:calc(var(--f-scale) * 0.01 * 1rem);}
@@ -99,8 +103,10 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
 @keyframes dotBounce{0%,80%,100%{transform:scale(0);}40%{transform:scale(1);}}
-.anim{opacity:0;transform:translateY(24px);transition:opacity var(--dur-lg) var(--ease),transform var(--dur-lg) var(--ease);}
+.anim{opacity:0;transform:translateY(20px);transition:opacity .6s var(--ease-enter),transform .8s var(--ease-enter);}
 .anim.in{opacity:1;transform:translateY(0);}
+/* التنقل بلوحة المفاتيح لا ينتظر الحركة: عنصر وصله التركيز يظهر فوراً */
+.anim:not(.in):focus-within{opacity:1;transform:none;transition:none;}
 .page{display:none;}.page.active{display:block;}
 /* NAV */
 .nav{position:fixed;top:0;right:0;left:0;z-index:1000;padding:var(--s3) 0;transition:background var(--dur-md) var(--ease),box-shadow var(--dur-md) var(--ease);}
@@ -208,7 +214,7 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 .hero-search-inner{display:flex;align-items:center;gap:var(--s2);background:rgba(255,255,255,.12);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.2);border-radius:var(--r-2xl);padding:var(--s2) var(--s3);transition:all var(--dur-md) var(--ease);}
 .hero-search-inner:focus-within{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.4);box-shadow:var(--sh-glow);}
 .hero-search input{flex:1;min-width:0;background:none;border:none;color:#fff;font-family:inherit;font-size:var(--f-body);padding:var(--s3) var(--s4);outline:none;}
-.hero-search input::placeholder{color:rgba(255,255,255,.5);}
+.hero-search input::placeholder{color:rgba(255,255,255,.5);transition:color .3s var(--ease);}
 .hero-search-btn{width:44px;height:44px;border-radius:var(--r-xl);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--dur) var(--ease);flex-shrink:0;}
 .hero-search-btn.mic{background:rgba(255,255,255,.15);color:#fff;}
 .hero-search-btn.mic:hover{background:rgba(255,255,255,.25);}
@@ -220,6 +226,39 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 .hero-trust-item strong{font-size:var(--f-h3);font-weight:700;color:#fff;}
 .hero-trust-item span{font-size:var(--f-xs);color:rgba(255,255,255,.6);}
 .hero-trust-div{width:1px;height:32px;background:rgba(255,255,255,.2);}
+/* ===== حركة الصفحة الرئيسية — المنطق في heroIntro() أسفل الصفحة =====
+   كل ما هنا transform وopacity وclip-path فقط: لا يغيّر تخطيط الصفحة ولا يزحزحها. */
+/* خطوط الوصل في الخلفية ترسم نفسها (pathLength="1" على كل مسار) */
+.hero-deco [data-draw]{stroke-dasharray:1;stroke-dashoffset:1;animation:heroDraw 2.8s var(--ease-enter) .15s forwards;}
+.hero-deco [data-draw]+[data-draw]{animation-delay:.5s;}
+@keyframes heroDraw{to{stroke-dashoffset:0;}}
+.lp-preview .hero-deco [data-draw]{animation:none;stroke-dashoffset:0;}
+/* العنوان يُكتب حيّاً: نصه لا يُمسّ، وإنما يُكشف ما «كُتب» منه بقصّ (clip-path)
+   يرسمه twPaint() من صناديق الحروف نفسها — فتبقى الحروف العربية متصلة والأسطر كما هي */
+.hero h1.tw-on{opacity:1;transform:none;transition:none;}
+.tw-caret{position:absolute;top:0;left:0;width:3px;border-radius:3px;background:var(--sky);box-shadow:0 0 14px rgba(82,189,249,.7);pointer-events:none;opacity:0;transition:opacity .18s var(--ease);}
+.tw-caret.on{opacity:1;}
+.tw-caret.blink{animation:twBlink .9s ease-in-out 2;}
+@keyframes twBlink{0%,100%{opacity:1;}50%{opacity:0;}}
+/* أمثلة تُكتب في حقل السؤال: طبقة مخفية عن قارئ الشاشة فوق الحقل، والنص
+   البديل الحقيقي للحقل يبقى ثابتاً كما هو */
+.hero-search-inner{position:relative;}
+.hero-search input.phx::placeholder{color:transparent;}
+.hero-ph{position:absolute;display:flex;align-items:center;overflow:hidden;white-space:nowrap;pointer-events:none;color:rgba(255,255,255,.5);font-size:var(--f-body);letter-spacing:normal;line-height:normal;transition:opacity .3s var(--ease);}
+.hero-search .hero-search-btn:active{transform:scale(.94);}
+/* تفاصيل التمرير: خط العنوان الصغير يمتدّ، وأرقام الخطوات تبرز مع بطاقتها */
+.sec-label.anim::before{transform:scaleX(0);transform-origin:right;transition:transform .9s var(--ease-enter) .2s;}
+[dir="ltr"] .sec-label.anim::before{transform-origin:left;}
+.sec-label.anim.in::before{transform:none;}
+.how-step.anim .how-num{opacity:0;transform:scale(.6);transition:opacity .5s var(--ease-enter),transform .8s var(--ease-spring);transition-delay:inherit;}
+.how-step.anim.in .how-num{opacity:1;transform:none;}
+.lp-preview .sec-label.anim::before,.lp-preview .how-step.anim .how-num{opacity:1;transform:none;transition:none;}
+/* تفاعلات دقيقة: ضغطة الزر محسوسة، وأيقونة البطاقة تستجيب للمؤشر */
+.btn:not([disabled]):active{transform:scale(.97);transition-duration:.1s;}
+@media (hover:hover){
+.card-icon{transition:transform var(--dur-md) var(--ease-spring);}
+.card:hover .card-icon{transform:translateY(-2px) scale(1.06);}
+}
 
 /* FEATURES */
 /* minmax(0,1fr) بدل 1fr: الافتراضي minmax(auto,1fr) يمنع العمود من الانكماش
@@ -1068,28 +1107,39 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <!-- HERO -->
 <section class="hero" aria-label="القسم الرئيسي" data-lp-sec="hero">
 <div class="hero-deco" aria-hidden="true">
-<svg style="position:absolute;top:10%;right:5%;width:400px;opacity:.12" viewBox="0 0 400 400"><path d="M50 200 Q150 50 250 200 T400 200" fill="none" stroke="#52bdf9" stroke-width="1.5"/><path d="M0 250 Q100 100 200 250 T400 250" fill="none" stroke="#52bdf9" stroke-width="1"/></svg>
-<svg style="position:absolute;bottom:15%;left:5%;width:300px;opacity:.08" viewBox="0 0 300 300"><circle cx="150" cy="150" r="120" fill="none" stroke="#814fc3" stroke-width="1.5"/><circle cx="150" cy="150" r="80" fill="none" stroke="#814fc3" stroke-width="1"/></svg>
+<!-- خطوط الوصل تُرسم من اليمين لليسار، والدائرتان مسارات لا <circle>: pathLength على
+     المسار مدعوم في كل المتصفحات، وعلى الأشكال الأساسية ليس مضموناً في Safari -->
+<svg style="position:absolute;top:10%;right:5%;width:400px;opacity:.12" viewBox="0 0 400 400"><path data-draw pathLength="1" d="M400 200 Q350 350 250 200 Q150 50 50 200" fill="none" stroke="#52bdf9" stroke-width="1.5"/><path data-draw pathLength="1" d="M400 250 Q300 400 200 250 Q100 100 0 250" fill="none" stroke="#52bdf9" stroke-width="1"/></svg>
+<svg style="position:absolute;bottom:15%;left:5%;width:300px;opacity:.08" viewBox="0 0 300 300"><path data-draw pathLength="1" d="M150 30a120 120 0 1 1 0 240a120 120 0 1 1 0-240" fill="none" stroke="#814fc3" stroke-width="1.5"/><path data-draw pathLength="1" d="M150 70a80 80 0 1 1 0 160a80 80 0 1 1 0-160" fill="none" stroke="#814fc3" stroke-width="1"/></svg>
 <div class="hero-orb hero-orb-1"></div>
 <div class="hero-orb hero-orb-2"></div>
 <div class="hero-orb hero-orb-3"></div>
 </div>
 <div class="hero-content">
-<div class="hero-chip anim" style="transition-delay:.1s"><span class="dot"></span> <span data-lp="hero.chip">منصة ذكاء اصطناعي مُيسّرة للجميع</span></div>
-<h1 class="anim" style="transition-delay:.2s" data-lp="hero.title">وصال — نفهمك ونسهّل وصولك</h1>
-<p class="hero-sub anim" style="transition-delay:.3s" data-lp="hero.sub">اسأل بلغتك عن حقوقك أو خدماتك أو التقنيات المساعدة، ويجيبك وصال بوضوح من مصادر رسمية سعودية مع ذكر المصدر — قراءةً أو استماعاً. النسخة التجريبية تركّز حالياً على الإعاقة الحركية والبصرية.</p>
-<div class="hero-search anim" style="transition-delay:.4s">
+<!-- hero-seq: ظهورها بتتابع يديره heroIntro() لا مراقب التمرير -->
+<div class="hero-chip anim hero-seq" style="transition-delay:.1s"><span class="dot"></span> <span data-lp="hero.chip">منصة ذكاء اصطناعي مُيسّرة للجميع</span></div>
+<h1 class="anim hero-seq" style="transition-delay:.2s" data-lp="hero.title">وصال — نفهمك ونسهّل وصولك</h1>
+<p class="hero-sub anim hero-seq" style="transition-delay:.3s" data-lp="hero.sub">اسأل بلغتك عن حقوقك أو خدماتك أو التقنيات المساعدة، ويجيبك وصال بوضوح من مصادر رسمية سعودية مع ذكر المصدر — قراءةً أو استماعاً. النسخة التجريبية تركّز حالياً على الإعاقة الحركية والبصرية.</p>
+<div class="hero-search anim hero-seq" style="transition-delay:.4s">
 <div class="hero-search-inner">
 <input type="text" id="heroInput" placeholder="اسأل وصال عن أي شيء..." data-lp-ph="hero.ph" aria-label="اسأل وصال" onkeydown="if(event.key==='Enter')heroAsk()">
 <button class="hero-search-btn mic" onclick="toggleVoice()" aria-label="البحث الصوتي"><svg class="ico"><use href="#ic-mic"/></svg></button>
 <button class="hero-search-btn snd" onclick="heroAsk()" aria-label="إرسال السؤال"><svg class="ico"><use href="#ic-send"/></svg></button>
 </div>
+<!-- أمثلة تُكتب واحداً واحداً في الحقل بعد ظهور الصفحة (phxStart) — مخزن نصوص فقط، لا يُعرض -->
+<div hidden data-lp-list="hero.examples">
+<template><p><span data-lpf="q"></span></p></template>
+<p data-lp-id="card"><span data-lpf="q">كيف أحصل على بطاقة الإعاقة؟</span></p>
+<p data-lp-id="work"><span data-lpf="q">ما حقوقي في العمل؟</span></p>
+<p data-lp-id="vision"><span data-lpf="q">ما التقنيات المساعدة لضعاف البصر؟</span></p>
+<p data-lp-id="support"><span data-lpf="q">كيف أتقدم للدعم المالي؟</span></p>
 </div>
-<div class="hero-btns anim" style="transition-delay:.5s">
+</div>
+<div class="hero-btns anim hero-seq" style="transition-delay:.5s">
 <button class="btn btn-lg btn-primary" onclick="startTrial()"><svg class="ico"><use href="#ic-chat"/></svg> <span data-lp="hero.cta1">جرّب الآن مجاناً</span></button>
 <button class="btn btn-lg btn-outline" onclick="go('about')"><svg class="ico"><use href="#ic-info"/></svg> <span data-lp="hero.cta2">كيف يشتغل وصال</span></button>
 </div>
-<div class="hero-trust anim" style="transition-delay:.6s" data-lp-list="hero.trust" data-lp-sep="hero-trust-div">
+<div class="hero-trust anim hero-seq" style="transition-delay:.6s" data-lp-list="hero.trust" data-lp-sep="hero-trust-div">
 <template><div class="hero-trust-item"><strong data-lpf="t"></strong><span data-lpf="s"></span></div></template>
 <div class="hero-trust-item" data-lp-id="beta"><strong data-lpf="t">نسخة تجريبية</strong><span data-lpf="s">مفتوحة للجميع</span></div>
 <div class="hero-trust-div" aria-hidden="true"></div>
@@ -1263,7 +1313,7 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <div class="fs-control"><button class="fs-btn" onclick="setFS(_fs-10)" aria-label="تصغير الخط">أ-</button><span class="fs-val" id="fsVal">100%</span><button class="fs-btn" onclick="setFS(_fs+10)" aria-label="تكبير الخط">أ+</button></div>
 </div>
 <div class="setting-row"><span class="setting-label">تقليل الحركة</span>
-<label class="toggle"><input type="checkbox" id="setMotion" onchange="A11Y.motion=this.checked;saveA11y()" aria-label="تقليل الحركة"><span class="toggle-track"></span></label>
+<label class="toggle"><input type="checkbox" id="setMotion" onchange="setMotionPref(this.checked)" aria-label="تقليل الحركة"><span class="toggle-track"></span></label>
 </div>
 </div>
 <div class="card settings-group glass anim" style="transition-delay:.1s">
@@ -2112,7 +2162,7 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 </div>
 <div class="fab-row"><span>تباين عالي</span><label class="toggle"><input type="checkbox" id="fabHigh" onchange="setC(this.checked?'high':'')"><span class="toggle-track"></span></label></div>
 <div class="fab-row"><span>الوضع الداكن</span><label class="toggle"><input type="checkbox" id="fabDark" onchange="setC(this.checked?'dark':'')"><span class="toggle-track"></span></label></div>
-<div class="fab-row"><span>تقليل الحركة</span><label class="toggle"><input type="checkbox" onchange="document.documentElement.setAttribute('data-reduce-motion',this.checked)"><span class="toggle-track"></span></label></div>
+<div class="fab-row"><span>تقليل الحركة</span><label class="toggle"><input type="checkbox" id="fabMotion" onchange="setMotionPref(this.checked)" aria-label="تقليل الحركة"><span class="toggle-track"></span></label></div>
 <button class="fab-link" onclick="go('settings');toggleA11y()">جميع إعدادات الوصول</button>
 </div>
 <button class="fab-btn" onclick="toggleA11y()" aria-label="إعدادات إمكانية الوصول"><svg class="ico"><use href="#ic-a11y"/></svg></button>
@@ -2131,7 +2181,7 @@ document.getElementById('pg-'+p).classList.add('active');
 document.querySelectorAll('.nav-link,.mob-link').forEach(l=>{
 l.classList.toggle('on',l.getAttribute('data-pg')===p);
 });
-window.scrollTo({top:0,behavior:'smooth'});
+window.scrollTo({top:0,behavior:motionReduced()?'auto':'smooth'});
 if(p==='home'){
 document.getElementById('nav').classList.remove('scrolled');
 }else{
@@ -2342,12 +2392,12 @@ _resCat=btn.textContent.trim()==='الكل'?'':btn.textContent.trim();
 resApply();
 }
 
-// Intersection Observer for .anim
+// Intersection Observer for .anim — عناصر الواجهة الرئيسية (.hero-seq) يظهرها heroIntro() بترتيبها
 function initAnims(){
 const obs=new IntersectionObserver((entries)=>{
 entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');obs.unobserve(e.target);}});
 },{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
-document.querySelectorAll('.anim:not(.in)').forEach(el=>obs.observe(el));
+document.querySelectorAll('.anim:not(.in):not(.hero-seq)').forEach(el=>obs.observe(el));
 }
 
 // Escape key
@@ -2375,15 +2425,26 @@ const LS={
 };
 let A11Y=Object.assign({auto:false,rate:1,voice:'male',touch:false,links:false,kbd:false,motion:false,readMode:'after'},LP_PREVIEW?{}:LS.get('a11y',{}));
 function saveA11y(){LS.set('a11y',A11Y);applyA11y();}
+/* «تقليل الحركة»: اختيار الزائر الصريح في وصال أولاً (motionSet)، وإلا إعداد نظامه
+   prefers-reduced-motion — ونفس المنطق في السكربت الصغير أعلى الصفحة قبل أول رسم.
+   motion وحدها لا تكفي: الإعدادات القديمة حفظت motion:false دون أن يختارها أحد. */
+const MOTION_MQ=window.matchMedia?matchMedia('(prefers-reduced-motion: reduce)'):null;
+function motionReduced(){return A11Y.motion===true||(!A11Y.motionSet&&!!(MOTION_MQ&&MOTION_MQ.matches));}
+function setMotionPref(v){A11Y.motion=!!v;A11Y.motionSet=true;saveA11y();if(v)heroFxStop();}
+if(MOTION_MQ){
+  const f=()=>{applyA11y();if(motionReduced())heroFxStop();};
+  if(MOTION_MQ.addEventListener)MOTION_MQ.addEventListener('change',f);else if(MOTION_MQ.addListener)MOTION_MQ.addListener(f);
+}
 function applyA11y(){
   const d=document.documentElement;
   d.setAttribute('data-bigtouch',A11Y.touch);
   d.setAttribute('data-links',A11Y.links);
   d.setAttribute('data-kbd',A11Y.kbd);
-  d.setAttribute('data-reduce-motion',A11Y.motion);
+  d.setAttribute('data-reduce-motion',motionReduced());
   const g=id=>document.getElementById(id);
   if(g('setAuto'))g('setAuto').checked=A11Y.auto;
-  if(g('setMotion'))g('setMotion').checked=A11Y.motion;
+  if(g('setMotion'))g('setMotion').checked=motionReduced();
+  if(g('fabMotion'))g('fabMotion').checked=motionReduced();
   if(g('setTouch'))g('setTouch').checked=A11Y.touch;
   if(g('setLinks'))g('setLinks').checked=A11Y.links;
   if(g('setKbd'))g('setKbd').checked=A11Y.kbd;
@@ -3948,6 +4009,7 @@ function translateAll(l){
     el.childNodes.forEach(function(n){if(n.nodeType===3&&n.nodeValue.trim())direct=true;});
     if(!direct)return;
     if(el.hasAttribute('data-lp')||el.hasAttribute('data-lpf'))return;   // نصوص صفحة الهبوط لها لغتاها في المستند
+    if(el.classList.contains('hero-ph'))return;   // وكذلك أمثلة حقل السؤال المتحركة (hero.examples)
     if(el.closest('.lpe'))return;   // محرر صفحة الهبوط أداة عربية ثابتة — الترجمة الجزئية تخلط لغتين في نفس الشاشة
     swapTextNodes(el,TXT,toEn);
   });
@@ -3998,6 +4060,7 @@ function setLang(l){
     else if(el.dataset.arPh){el.placeholder=el.dataset.arPh;}
   });
   document.querySelectorAll('.lang-label').forEach(e=>e.textContent=l==='ar'?'EN':'ع');
+  phxStop();   // أمثلة حقل السؤال مكتوبة باللغة السابقة
   translateAll(l);
   applyLanding();
   applySidebarState();paintDashTitle();paintHeroDate();hideSbTip();if(_curPage==='dashboard')paintDashHello();
@@ -4504,7 +4567,7 @@ function lpRenderList(box,items,lang){
 }
 function applyLanding(doc,lang){
   doc=doc||LP;lang=lang||LANG;if(!doc)return;
-  document.querySelectorAll('[data-lp]').forEach(el=>{const v=lpGet(doc,el.dataset.lp);if(v)el.textContent=lpText(v,lang);});
+  document.querySelectorAll('[data-lp]').forEach(el=>{const v=lpGet(doc,el.dataset.lp);if(v)lpSetText(el,lpText(v,lang));});
   document.querySelectorAll('[data-lp-ph]').forEach(el=>{const v=lpGet(doc,el.dataset.lpPh);if(v)el.placeholder=lpText(v,lang);});
   document.querySelectorAll('[data-lp-href]').forEach(el=>{
     const t=lpText(lpGet(doc,el.dataset.lpHref),lang),pre=el.dataset.lpPrefix||'';
@@ -4524,6 +4587,263 @@ async function loadLanding(){
 }
 /* يناديه المحرر بعد النشر: صفحة المدير نفسها تعكس المنشور فوراً */
 function lpPublished(doc,etag){LP=doc;LS.set('lp',{etag,doc});applyLanding();}
+
+/* ================= حركة الواجهة الرئيسية =================
+   لغة حركة واحدة مأخوذة من المحادثة نفسها: العنوان يُكتب حيّاً كما يكتب وصال
+   رده، وبقية الواجهة تتتابع بهدوء قبل أن ينتهي، ثم يكتب حقل السؤال أمثلة لما
+   يمكن سؤاله. الأنماط في CSS تحت «حركة الصفحة الرئيسية». قواعد لا تُكسر:
+   - «تقليل الحركة» (من النظام أو من وصال) ووضع المعاينة: كل شيء يظهر فوراً
+   - نص العنوان في الصفحة لا يُمسّ: قارئ الشاشة ومحرك البحث يجدانه كاملاً دائماً
+   - لا شيء يزحزح تخطيط الصفحة أثناء الحركة
+   - كل حركة تنتهي وحدها: الكتابة نحو ثانيتين، والمؤشر يومض مرتين ويختفي،
+     والأمثلة دورة واحدة ثم يعود نص الحقل الأصلي */
+const HERO={tw:null,caret:null,ph:null,phT:0,rest:null,restT:0,phQueued:false,started:false};
+const TW_OK=!!(window.CSS&&CSS.supports&&(CSS.supports('clip-path','path("M0 0H1V1Z")')||CSS.supports('-webkit-clip-path','path("M0 0H1V1Z")')));
+function motionOK(){return !LP_PREVIEW&&!motionReduced();}
+function heroInView(el){const r=el.getBoundingClientRect();return r.height>0&&r.bottom>0&&r.top<innerHeight;}
+/* وحدة الكتابة حرف مع تشكيله: «هّ» تظهر مرة واحدة لا على مرتين */
+function graphemes(s){
+  try{if(window.Intl&&Intl.Segmenter)return Array.from(new Intl.Segmenter(undefined,{granularity:'grapheme'}).segment(s),x=>x.segment);}catch(e){}
+  try{return s.match(new RegExp('\\P{M}\\p{M}*|\\p{M}+','gu'))||[];}catch(e){return Array.from(s);}
+}
+/* اتجاه الحرف: عربي أو لاتيني، وإلا (مسافة، شرطة، رقم) فاتجاه الفقرة */
+function twDir(ch,rtl){
+  if(/[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF]/.test(ch))return true;
+  if(/[A-Za-z\u00C0-\u024F]/.test(ch))return false;
+  return rtl;
+}
+
+/* كل حقول صفحة الهبوط تُكتب نصاً مباشراً إلا العنوان الرئيسي */
+function lpSetText(el,t){if(el.dataset.lp==='hero.title'&&!LP_PREVIEW)heroTitleSet(el,t);else el.textContent=t;}
+function heroTitleSet(h1,t){
+  const st=HERO.tw;
+  if(st&&st.h1===h1){if(st.text!==t)twStart(h1,t);return;}   // وصل نص آخر وسط الكتابة: نكمل من الجزء المشترك
+  if(h1.textContent===t)return;
+  // بعد ظهور الصفحة (تبديل اللغة أو نشر عنوان جديد): يُكتب من جديد إن كان أمام الزائر
+  if(HERO.started&&TW_OK&&motionOK()&&heroInView(h1))twStart(h1,t,{delay:60});
+  else h1.textContent=t;
+}
+
+/* ظهور الواجهة: الشارة، ثم العنوان يُكتب، وبقية العناصر تبدأ عند ٦٠٪ من الكتابة
+   حتى لا ينتظر الزائر ولا تنافس العنوان في بدايته، ثم أمثلة حقل السؤال.
+   التتابع مربوط بتقدّم الكتابة نفسها لا بالساعة: لو تأخرت الكتابة (جهاز بطيء، أو
+   صفحة فُتحت في تبويب بالخلفية فلا تُرسم) يبقى الترتيب كما هو */
+function heroIntro(){
+  HERO.started=true;
+  const seq=[...document.querySelectorAll('#pg-home .hero-seq')];
+  const h1=document.querySelector('#pg-home h1[data-lp="hero.title"]');
+  const show=(el,d)=>{el.style.transitionDelay=d+'s';el.classList.add('in');};
+  const at=seq.indexOf(h1);
+  if(at<0||!h1.textContent||!motionOK()||!heroInView(h1)){seq.forEach(el=>show(el,0));return;}
+  if(!TW_OK){seq.forEach((el,i)=>show(el,.05+i*.08));return;}
+  seq.slice(0,at).forEach((el,i)=>show(el,.05+i*.08));
+  HERO.rest=seq.slice(at+1);HERO.phQueued=true;
+  // شبكة أمان: لا يبقى باقي الواجهة مخفياً مهما حدث للكتابة — مهلتها تُحسب من لحظة
+  // ظهور الصفحة للزائر، فالتبويب المفتوح في الخلفية يرى التتابع كاملاً حين يفتحه
+  const arm=()=>{clearTimeout(HERO.restT);if(HERO.rest)HERO.restT=setTimeout(()=>{if(!document.hidden){twCancel();heroRest();}},4500);};
+  arm();document.addEventListener('visibilitychange',()=>{if(!document.hidden)arm();});
+  twStart(h1,h1.textContent,{delay:260});
+}
+function heroRest(){
+  const r=HERO.rest;if(!r)return;
+  HERO.rest=null;clearTimeout(HERO.restT);
+  r.forEach((el,i)=>{el.style.transitionDelay=(i*.09).toFixed(2)+'s';el.classList.add('in');});
+}
+/* فُعّل «تقليل الحركة» أثناء الظهور: كل شيء إلى حالته النهائية فوراً */
+function heroFxStop(){
+  twCancel();phxStop();clearTimeout(HERO.phT);HERO.phQueued=false;HERO.rest=null;clearTimeout(HERO.restT);
+  document.querySelectorAll('#pg-home .hero-seq').forEach(el=>{el.style.transitionDelay='0s';el.classList.add('in');});
+}
+
+/* ---------- العنوان يُكتب حيّاً ----------
+   النص يبقى عقدة نص واحدة كما في HTML، ويُكشف منه ما «كُتب» بقصّ مرسوم من صناديق
+   الحروف نفسها (Range.getClientRects): الحروف العربية تبقى متصلة، والأسطر والاتجاه
+   كما يرسمها المتصفح تماماً، ولا يتحرك شيء في الصفحة. */
+function twTimes(g,from,rnd){
+  // إيقاع بشري: تفاوت بسيط بين الحروف، ووقفة بعد الشرطة والفواصل، والمدة الكلية
+  // بين ثانية وثانيتين تقريباً مهما طال العنوان أو قصر
+  const n=g.filter(x=>!/^\s+$/.test(x)).length||1,base=Math.min(62,Math.max(26,1250/n));
+  const times=[];let t=0;
+  g.forEach((x,k)=>{
+    if(k<from){times.push(0);return;}
+    t+=/^\s+$/.test(x)?base*.9:base*(.65+rnd()*.7);
+    times.push(t);
+    if(/[—–:،؛;,.!؟?]/.test(x)&&k<g.length-1)t+=240;
+  });
+  return {times,dur:t};
+}
+function twFonts(){
+  // خط العنوان محمَّل مسبقاً؛ ننتظره حتى لا يتبدّل شكل الحروف وسط الكتابة، بحد أقصى أقل من ثانية
+  if(!document.fonts||!document.fonts.load)return null;
+  return Promise.race([document.fonts.load('700 1em "Thmanyah Sans"').catch(()=>{}),new Promise(r=>setTimeout(r,800))]);
+}
+function twStart(h1,text,o){
+  o=o||{};
+  const prev=HERO.tw,now=performance.now(),g=graphemes(text);
+  let from=0,delay=o.delay||0;
+  if(prev){
+    const a=graphemes(prev.text);
+    while(from<prev.shown&&from<g.length&&a[from]===g[from])from++;
+    delay=Math.max(0,prev.at-now);
+  }
+  twCancel();
+  if(h1.textContent!==text)h1.textContent=text;
+  const ends=[];let off=0;g.forEach(x=>ends.push(off+=x.length));
+  const st=Object.assign({h1,text,g,ends,node:h1.firstChild,rtl:getComputedStyle(h1).direction==='rtl',
+    shown:from,at:now+delay,t0:0,raf:0,caret:null},twTimes(g,from,Math.random));
+  HERO.tw=st;
+  // أي خلل غير متوقع في الرسم: العنوان كاملاً ظاهراً وبقية الواجهة معه، لا عنوان مقصوص
+  const fail=()=>{twCancel();heroRest();};
+  try{h1.classList.add('tw-on');twPaint(st);}catch(e){return fail();}   // في نفس اللحظة: لا يظهر النص كاملاً ولو لإطار واحد
+  Promise.all([new Promise(r=>setTimeout(r,delay)),twFonts()]).then(()=>{
+    if(HERO.tw!==st)return;
+    const c=st.caret=document.createElement('span');
+    c.className='tw-caret';c.setAttribute('aria-hidden','true');
+    h1.parentElement.appendChild(c);twPaint(st);
+    st.raf=requestAnimationFrame(t=>{c.classList.add('on');twTick(st,t);});
+  }).catch(fail);
+}
+function twTick(st,now){
+  if(HERO.tw!==st)return;
+  try{
+    if(!st.t0)st.t0=now+140;   // المؤشر يظهر لحظة قبل أول حرف
+    let k=st.shown;
+    while(k<st.g.length&&st.times[k]<=now-st.t0)k++;
+    if(k!==st.shown){st.shown=k;twPaint(st);}
+    if(k>=st.g.length*.6)heroRest();   // بقية الواجهة تبدأ عند ٦٠٪ من العنوان
+    if(k>=st.g.length)return twFinish(st);
+    st.raf=requestAnimationFrame(t=>twTick(st,t));
+  }catch(e){twCancel();heroRest();}   // أي خلل غير متوقع: العنوان كاملاً ظاهراً بدل أن يبقى مقصوصاً
+}
+/* أسطر العنوان كاملاً، ولكل سطر شريط عمودي خاص به: حدّه منتصف المسافة بينه وبين
+   جاره، فكشف سطر لا يُظهر رؤوس حروف السطر التالي (كالألف واللام) */
+function twLines(rects,top){
+  const ls=[];
+  [...rects].forEach(r=>{
+    if(!r.width&&!r.height)return;
+    const t=r.top-top,b=r.bottom-top,c=(t+b)/2,l=ls.find(x=>c>x.t&&c<x.b);
+    if(l){l.t=Math.min(l.t,t);l.b=Math.max(l.b,b);}else ls.push({t,b});
+  });
+  ls.sort((a,b)=>a.t-b.t);
+  ls.forEach((l,j)=>{
+    const pad=(l.b-l.t)*.6;   // متسع للتشكيل والنقاط فوق أول سطر وتحت آخر سطر
+    l.y0=j?(ls[j-1].b+l.t)/2:l.t-pad;
+    l.y1=j<ls.length-1?(l.b+ls[j+1].t)/2:l.b+pad;
+  });
+  return ls;
+}
+function twLineOf(ls,r,top){const c=(r.top+r.bottom)/2-top;let j=0;while(j<ls.length-1&&c>ls[j].y1)j++;return j;}
+function twPaint(st){
+  const {h1,node,shown}=st;
+  if(!node||node.parentNode!==h1)return;
+  const hr=h1.getBoundingClientRect(),W=Math.max(hr.width,1),rg=document.createRange();
+  rg.selectNodeContents(node);
+  const ls=twLines(rg.getClientRects(),hr.top);
+  let d='';
+  if(shown>0&&ls.length){
+    rg.setStart(node,0);rg.setEnd(node,st.ends[shown-1]);
+    const rs=[...rg.getClientRects()].filter(r=>r.width||r.height),L=rs.map(r=>twLineOf(ls,r,hr.top));
+    const cur=Math.max(-1,...L);
+    // أقرب مستطيل لبداية السطر الحالي يمتد لحافة الصفحة (لذيول الحروف)، والباقي بحدود حروفه
+    let edge=null;
+    rs.forEach((r,i)=>{if(L[i]===cur&&(!edge||(st.rtl?r.right>edge.right:r.left<edge.left)))edge=r;});
+    rs.forEach((r,i)=>{
+      const ln=ls[L[i]];let x0=r.left-hr.left,x1=r.right-hr.left;
+      if(L[i]<cur){x0=-W;x1=2*W;}                    // سطر اكتمل: يظهر كله
+      else if(r===edge){if(st.rtl)x1=2*W;else x0=-W;}
+      d+='M'+x0.toFixed(1)+' '+ln.y0.toFixed(1)+'H'+x1.toFixed(1)+'V'+ln.y1.toFixed(1)+'H'+x0.toFixed(1)+'Z';
+    });
+  }
+  const cp=d?'path("'+d+'")':'inset(50%)';
+  h1.style.clipPath=cp;h1.style.webkitClipPath=cp;
+  const c=st.caret;if(!c||!st.g.length)return;
+  // المؤشر بعد آخر حرف ظهر، أو قبل أول حرف إن لم يظهر شيء بعد
+  const k=shown?shown-1:0;
+  rg.setStart(node,k?st.ends[k-1]:0);rg.setEnd(node,st.ends[k]);
+  const cr=rg.getClientRects(),r=cr[cr.length-1];if(!r)return;
+  const rtl=twDir(st.g[k],st.rtl),x=shown?(rtl?r.left:r.right):(rtl?r.right:r.left);
+  const pr=c.parentElement.getBoundingClientRect(),h=Math.max(8,r.height*.72);
+  c.style.height=h.toFixed(1)+'px';
+  c.style.transform='translate('+(x-pr.left-1.5).toFixed(1)+'px,'+(r.top-pr.top+(r.height-h)/2).toFixed(1)+'px)';
+}
+function twUnclip(h1){h1.style.clipPath='';h1.style.webkitClipPath='';h1.classList.add('in');h1.classList.remove('tw-on');}
+function twFinish(st){
+  HERO.tw=null;twUnclip(st.h1);heroRest();
+  // أمثلة حقل السؤال بعد أن يهدأ العنوان ويختفي مؤشره — مرة واحدة بعد ظهور الصفحة
+  if(HERO.phQueued){HERO.phQueued=false;HERO.phT=setTimeout(phxStart,2400);}
+  const c=st.caret;if(!c)return;
+  HERO.caret=c;c.classList.add('blink');   // يومض مرتين كمؤشر كتابة حقيقي ثم يتلاشى
+  setTimeout(()=>{c.classList.remove('on');setTimeout(()=>{c.remove();if(HERO.caret===c)HERO.caret=null;},300);},1800);
+}
+/* يُنهي أي كتابة جارية فوراً: العنوان كاملاً ظاهراً بلا مؤشر */
+function twCancel(){
+  if(HERO.caret){HERO.caret.remove();HERO.caret=null;}
+  const st=HERO.tw;if(!st)return;
+  HERO.tw=null;cancelAnimationFrame(st.raf);
+  if(st.caret)st.caret.remove();
+  twUnclip(st.h1);
+}
+
+/* ---------- أمثلة حقل السؤال ----------
+   طبقة فوق الحقل مخفية عن قارئ الشاشة تكتب أمثلة لما يمكن سؤاله ثم تمسحها — نص
+   الحقل البديل الحقيقي لا يتغيّر أبداً. دورة واحدة ثم يعود نص الحقل الأصلي بتلاشٍ
+   متقاطع. تتوقف نهائياً بلمس الحقل أو أزراره، وتنتظر إن خرج الحقل من الشاشة أو صار
+   التبويب في الخلفية. الأمثلة من محرر صفحة الهبوط (hero.examples). */
+function phxStart(){
+  if(HERO.ph||!motionOK()||_curPage!=='home')return;
+  const inp=document.getElementById('heroInput'),box=inp&&inp.parentElement;
+  const list=document.querySelector('[data-lp-list="hero.examples"]');
+  if(!inp||!box||!list||inp.value||document.activeElement===inp)return;
+  const ov=document.createElement('span');
+  ov.className='hero-ph';ov.setAttribute('aria-hidden','true');box.appendChild(ov);
+  const st=HERO.ph={inp,ov,tm:0,ac:window.AbortController?new AbortController():null};
+  st.place=()=>{
+    const r=inp.getBoundingClientRect(),b=box.getBoundingClientRect(),cs=getComputedStyle(inp);
+    const pl=parseFloat(cs.paddingLeft)||0,pr=parseFloat(cs.paddingRight)||0;
+    ov.style.left=(r.left-b.left-box.clientLeft+pl)+'px';ov.style.top=(r.top-b.top-box.clientTop)+'px';
+    ov.style.width=Math.max(0,r.width-pl-pr)+'px';ov.style.height=r.height+'px';
+  };
+  st.place();
+  // مثال أطول من عرض الحقل (على الجوال مثلاً) يُتخطّى بدل أن يُقصّ
+  const fits=t=>{ov.textContent=t;const ok=ov.scrollWidth<=ov.clientWidth+1;ov.textContent='';return ok;};
+  const qs=[...list.querySelectorAll('[data-lpf="q"]')].map(e=>e.textContent.trim()).filter(t=>t&&fits(t));
+  if(!qs.length)return phxStop();
+  const on=st.ac?{signal:st.ac.signal}:undefined,stop=()=>phxStop();
+  ['focus','input','keydown'].forEach(e=>inp.addEventListener(e,stop,on));
+  box.addEventListener('pointerdown',stop,on);
+  addEventListener('resize',st.place,on);
+  inp.classList.add('phx');
+  const sleep=ms=>new Promise(r=>{st.tm=setTimeout(r,ms);});
+  // تنتظر ولا تتقدّم ما دام الحقل خارج الشاشة أو التبويب في الخلفية؛ true = توقفت الأمثلة
+  const wait=async ms=>{
+    await sleep(ms);
+    while(HERO.ph===st&&(document.hidden||!heroInView(inp))){
+      if(_curPage!=='home'){phxStop();break;}
+      await sleep(400);
+    }
+    if(HERO.ph===st&&inp.value)phxStop();
+    return HERO.ph!==st;
+  };
+  const type=async(t,erase)=>{
+    const g=graphemes(t);
+    for(let k=erase?g.length-1:1;erase?k>=0:k<=g.length;k+=erase?-1:1){
+      if(await wait(erase?16:30+Math.random()*36))return true;
+      ov.textContent=g.slice(0,k).join('');
+    }
+    return false;
+  };
+  (async()=>{
+    for(const q of qs)if(await type(q)||await wait(1500)||await type(q,true)||await wait(320))return;
+    if(await type(inp.placeholder))return;
+    phxStop();
+  })();
+}
+function phxStop(){
+  const st=HERO.ph;if(!st)return;
+  HERO.ph=null;clearTimeout(st.tm);if(st.ac)st.ac.abort();
+  st.inp.classList.remove('phx');   // نص الحقل الأصلي يعود بتلاشٍ والطبقة تتلاشى فوقه
+  st.ov.style.opacity='0';setTimeout(()=>st.ov.remove(),320);
+}
 
 /* ---------- وضع المعاينة داخل المحرر ----------
    الرسائل مقبولة من الصفحة الأم على نفس النطاق فقط. النقر لا ينقل الزائر
@@ -4757,12 +5077,12 @@ Object.assign(TXT,{
 // ================= Init =================
 document.addEventListener('DOMContentLoaded',async()=>{
 initAnims();
-setTimeout(()=>{document.querySelectorAll('.hero .anim').forEach(el=>el.classList.add('in'));},100);
-if(LP_PREVIEW)return lpPreviewBoot();
+if(LP_PREVIEW){heroIntro();return lpPreviewBoot();}
 setC(LS.get('contrast',''));
 initSidebar();
 const _lpc=LS.get('lp',null);if(_lpc&&_lpc.doc){LP=_lpc.doc;applyLanding();}
 const l=LS.get('lang','ar');if(l==='en')setLang('en');
+heroIntro();   // بعد المحتوى المحفوظ واللغة: العنوان يُكتب بنصه الصحيح من أول حرف
 /* تنظيف لمرة واحدة: إصدارات سابقة كانت تخزّن حسابات تجريبية بكلمة مرور معروفة
    في متصفح الزائر. نمسحها هنا حتى لا تبقى على أجهزة من زار الموقع قبل الإصلاح. */
 LS.del('users');

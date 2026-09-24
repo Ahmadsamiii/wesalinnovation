@@ -63,7 +63,7 @@ function landingSchema(): array {
         ],
         [
             'id' => 'hero', 'label' => 'الواجهة الرئيسية', 'hideable' => false,
-            'desc' => 'أول ما يراه الزائر: الشارة والعنوان والنص وحقل السؤال والأزرار ومؤشرات الثقة.',
+            'desc' => 'أول ما يراه الزائر: الشارة والعنوان (يُكتب أمام الزائر حرفاً حرفاً) والنص وحقل السؤال وأمثلته والأزرار ومؤشرات الثقة.',
             'fields' => [
                 lpT('chip', 'الشارة العلوية', 'منصة ذكاء اصطناعي مُيسّرة للجميع', 'An accessible AI platform for everyone', 80),
                 lpT('title', 'العنوان الرئيسي', 'وصال — نفهمك ونسهّل وصولك', 'Wesal — we understand you and ease your access', 90),
@@ -84,6 +84,18 @@ function landingSchema(): array {
                      ['id' => 'beta',    'f' => ['t' => ['ar' => 'نسخة تجريبية', 'en' => 'Beta'],           's' => ['ar' => 'مفتوحة للجميع', 'en' => 'Open to everyone']]],
                      ['id' => 'sources', 'f' => ['t' => ['ar' => 'بمصادر رسمية', 'en' => 'Official sources'], 's' => ['ar' => 'مع كل إجابة', 'en' => 'with every answer']]],
                      ['id' => 'always',  'f' => ['t' => ['ar' => '24/7', 'en' => '24/7'],                   's' => ['ar' => 'متاح', 'en' => 'Available']]],
+                 ]],
+                // تُكتب واحداً واحداً داخل حقل السؤال بعد ظهور الصفحة، دورة واحدة ثم يعود
+                // «نص حقل السؤال». لا تظهر لمن فعّل «تقليل الحركة»؛ حذفها كلها يوقف الحركة.
+                ['k' => 'examples', 'l' => 'أمثلة تُكتب في حقل السؤال', 'item' => 'مثال', 'min' => 0, 'max' => 6, 'icon' => false,
+                 'fields' => [
+                     lpT('q', 'السؤال', '', '', 60),
+                 ],
+                 'items' => [
+                     ['id' => 'card',    'f' => ['q' => ['ar' => 'كيف أحصل على بطاقة الإعاقة؟', 'en' => 'How do I get a disability card?']]],
+                     ['id' => 'work',    'f' => ['q' => ['ar' => 'ما حقوقي في العمل؟', 'en' => 'What are my rights at work?']]],
+                     ['id' => 'vision',  'f' => ['q' => ['ar' => 'ما التقنيات المساعدة لضعاف البصر؟', 'en' => 'What assistive tech helps with low vision?']]],
+                     ['id' => 'support', 'f' => ['q' => ['ar' => 'كيف أتقدم للدعم المالي؟', 'en' => 'How do I apply for financial support?']]],
                  ]],
             ],
         ],
