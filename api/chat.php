@@ -29,12 +29,11 @@ $left = $bal['left'];
 
 $SYSTEM = chatSystemPrompt($mode);
 [$SYSTEM, ] = chatAugmentWithRag($SYSTEM, $message);
-$thinkingLevel = chatThinkingLevel($mode);
 
 $reply = null;
 $providerUsed = null;
 foreach (chatProviderOrder() as $p) {
-    $reply = chatAskProvider($p, $SYSTEM, $message, $history, $thinkingLevel);
+    $reply = chatAskProvider($p, $SYSTEM, $message, $history);
     if ($reply !== null) { $providerUsed = $p; break; }
 }
 

@@ -118,11 +118,25 @@ function chatCheckBalance(?array $u, string $ip, int $cost): array {
     return ['u' => $u, 'guestUsed' => $guestUsed, 'left' => $left];
 }
 
-/* ---------- مستوى التفكير حسب الوضع (Gemini فقط) ----------
-   low للوضع المبسّط والردود المباشرة، high للوضع المفصّل — يخفّض زمن
-   الانتظار الفعلي دون المساس بجودة الإجابة المفصّلة. */
-function chatThinkingLevel(string $mode): string {
-    return $mode === 'detailed' ? 'high' : 'low';
+/* ---------- استخراج نص الرد من Gemini، بتجاهل أجزاء "التفكير" ----------
+   نماذج Gemini 3.x المفكِّرة قد تُرجع أجزاء تفكير داخلي (thought:true) قبل
+   جزء النص الفعلي؛ أخذ parts[0] كما هو كان يخاطر بالتقاط جزء تفكير فارغ
+   من النص. أخطر من هذا: عند تفعيل thinkingConfig، تُخصَم tokens التفكير من
+   نفس ميزانية maxOutputTokens — لو استهلك التفكير الميزانية كاملة، يرجع رد
+   فارغ تماماً (finishReason=MAX_TOKENS بلا أي جزء نص)، وهو خلل موثَّق في
+   نماذج Gemini المفكِّرة عند عدم حجز ميزانية كافية للنص. لهذا نُعطِّل
+   التفكير صراحة (thinkingBudget=0) في askGeminiOnce أدناه بدل ضبط مستوى له. */
+function chatExtractGeminiText(array $j): ?string {
+    $parts = $j['candidates'][0]['content']['parts'] ?? [];
+    $text = '';
+    foreach ($parts as $part) {
+        if (!empty($part['thought'])) continue;
+        if (isset($part['text'])) $text .= $part['text'];
+    }
+    if ($text !== '') return $text;
+    $reason = $j['candidates'][0]['finishReason'] ?? ($j['promptFeedback']['blockReason'] ?? null);
+    if ($reason) $GLOBALS['ai_last_error'] = 'Gemini: بلا نص، finishReason=' . $reason;
+    return null;
 }
 
 /* ---------- تعليمات النموذج ---------- */
@@ -203,30 +217,30 @@ function httpPost(string $url, array $payload, array $headers, int $timeout = AI
     return is_array($j) ? $j : null;
 }
 
-function askGemini(string $sys, string $msg, array $hist, ?string $thinkingLevel = null): ?string {
+function askGemini(string $sys, string $msg, array $hist, bool $noThinking = true): ?string {
     $models = [GEMINI_MODEL];
     if (defined('GEMINI_FALLBACKS'))
         foreach (explode(',', GEMINI_FALLBACKS) as $m) { $m = trim($m); if ($m !== '') $models[] = $m; }
     foreach ($models as $model) {
-        $tl = $thinkingLevel;
-        $t = askGeminiOnce($model, $sys, $msg, $hist, $tl);
+        $nt = $noThinking;
+        $t = askGeminiOnce($model, $sys, $msg, $hist, $nt);
         if ($t !== null) { $GLOBALS['ai_last_model'] = $model; return $t; }
         $err = $GLOBALS['ai_last_error'] ?? '';
         if (strpos($err, 'HTTP 429') !== false) {                   // حصة: انتظر ثم أعد نفس المحاولة مرة واحدة
             usleep(1300000);
-            $t = askGeminiOnce($model, $sys, $msg, $hist, $tl);
+            $t = askGeminiOnce($model, $sys, $msg, $hist, $nt);
             if ($t !== null) { $GLOBALS['ai_last_model'] = $model; return $t; }
             $err = $GLOBALS['ai_last_error'] ?? '';
         }
-        if ($tl !== null && strpos($err, 'HTTP 400') !== false) {   // تراجع آمن: قد يكون الحقل غير مدعوم لهذا النموذج
-            $t = askGeminiOnce($model, $sys, $msg, $hist, null);
+        if ($nt && strpos($err, 'HTTP 400') !== false) {   // تراجع آمن: قد يكون حقل thinkingConfig غير مدعوم لهذا النموذج
+            $t = askGeminiOnce($model, $sys, $msg, $hist, false);   // بلا thinkingConfig إطلاقاً
             if ($t !== null) { $GLOBALS['ai_last_model'] = $model; return $t; }
         }
         // أي خطأ آخر → جرّب النموذج التالي فوراً
     }
     return null;
 }
-function askGeminiOnce(string $model, string $sys, string $msg, array $hist, ?string $thinkingLevel = null): ?string {
+function askGeminiOnce(string $model, string $sys, string $msg, array $hist, bool $noThinking = true): ?string {
     if (!GEMINI_KEY) return null;
     $contents = [];
     foreach ($hist as $h) {
@@ -235,7 +249,7 @@ function askGeminiOnce(string $model, string $sys, string $msg, array $hist, ?st
     }
     $contents[] = ['role' => 'user', 'parts' => [['text' => $msg]]];
     $generationConfig = ['temperature' => AI_TEMPERATURE, 'maxOutputTokens' => AI_MAX_OUTPUT_TOKENS, 'topP' => AI_TOP_P];
-    if ($thinkingLevel !== null) $generationConfig['thinkingConfig'] = ['thinkingLevel' => $thinkingLevel];
+    if ($noThinking) $generationConfig['thinkingConfig'] = ['thinkingBudget' => 0];
     $j = httpPost(
         'https://generativelanguage.googleapis.com/v1beta/models/' . $model . ':generateContent?key=' . GEMINI_KEY,
         ['system_instruction' => ['parts' => [['text' => $sys]]],
@@ -243,7 +257,7 @@ function askGeminiOnce(string $model, string $sys, string $msg, array $hist, ?st
          'generationConfig' => $generationConfig],
         []
     );
-    return $j['candidates'][0]['content']['parts'][0]['text'] ?? null;
+    return is_array($j) ? chatExtractGeminiText($j) : null;
 }
 
 function askOpenAI(string $sys, string $msg, array $hist): ?string {
@@ -320,9 +334,9 @@ function chatProviderOrder(): array {
     }
 }
 
-function chatAskProvider(string $provider, string $sys, string $msg, array $hist, ?string $thinkingLevel = null): ?string {
+function chatAskProvider(string $provider, string $sys, string $msg, array $hist): ?string {
     switch ($provider) {
-        case 'gemini': return askGemini($sys, $msg, $hist, $thinkingLevel);
+        case 'gemini': return askGemini($sys, $msg, $hist);
         case 'openai': return askOpenAI($sys, $msg, $hist);
         case 'claude': return askClaude($sys, $msg, $hist);
         case 'kimi':   return askKimi($sys, $msg, $hist);
