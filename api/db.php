@@ -20,7 +20,7 @@ function apiFail(string $detail): void
     $debug = defined('APP_DEBUG') && APP_DEBUG;
     echo json_encode([
         'ok'    => false,
-        'error' => $debug ? $detail : 'صار خلل مؤقت في الخادم. حاول بعد قليل، وإذا تكرر راسل الدعم الفني.',
+        'error' => $debug ? $detail : 'حدث خلل مؤقت في الخادم. حاول بعد قليل، وإذا تكرر فراسل الدعم الفني.',
     ], JSON_UNESCAPED_UNICODE);
 }
 
@@ -363,8 +363,8 @@ function seedPlatformSurveyAndMigrateLegacyData(): void {
          grants_trial, created_at, updated_at, published_at)
         VALUES (?,?,?,'published',?,1,1,?,?,?)")
         ->execute(['تجربة المنصة',
-            'استبانة قصيرة عن تجربتك مع وصال — عشرة أسئلة، أقل من دقيقة.',
-            'وصلتنا إجاباتك — شكراً لك. رأيك يدخل مباشرة في تطوير وصال.',
+            'استبانة قصيرة عن تجربتك مع وصال، فيها عشرة أسئلة وتستغرق أقل من دقيقة.',
+            'شكراً لك، وصلتنا إجاباتك. سنعتمد على رأيك في تطوير وصال.',
             bin2hex(random_bytes(20)), $now, $now, $now]);
     $surveyId = (int)db()->lastInsertId();
 
@@ -400,26 +400,26 @@ function seedPlatformSurveyAndMigrateLegacyData(): void {
         return (int)db()->lastInsertId();
     };
 
-    [$qNeed, $optNeed] = $addChoice(0, 'وش أقرب وصف لك؟', 'يساعدنا نعرف لمن نصمّم — وتقدر تتخطى السؤال.', [
+    [$qNeed, $optNeed] = $addChoice(0, 'أي وصف ينطبق عليك أكثر؟', 'يساعدنا ذلك على معرفة من نصمّم لهم، ويمكنك تخطي السؤال.', [
         ['أعيش بإعاقة بصرية', 'بصرية'], ['أعيش بإعاقة سمعية', 'سمعية'],
         ['أعيش بإعاقة حركية', 'حركية'], ['أعيش بإعاقة ذهنية أو صعوبات تعلّم', 'ذهنية أو صعوبات تعلم'],
-        ['ما عندي إعاقة — مهتم أو مرافق', 'بلا إعاقة'], ['أفضّل ما أحدد', 'أفضّل عدم التحديد'],
+        ['ليست لدي إعاقة (مهتم أو مرافق)', 'بلا إعاقة'], ['أفضّل عدم التحديد', 'أفضّل عدم التحديد'],
     ]);
-    $qEase = $addScale(1, 'قد إيش كان استخدام وصال سهلاً عليك؟', 'من ١ (صعب جداً) إلى ٥ (سهل جداً).', 1, 5, 'صعب جداً', 'سهل جداً');
-    [$qDiff, $optDiff] = $addChoice(2, 'واجهتك أي صعوبة وأنت تستخدم الموقع؟', 'في القراءة أو التنقل أو فهم الإجابات — أي شيء.', [
+    $qEase = $addScale(1, 'ما مدى سهولة استخدام وصال؟', 'من ١ (صعب جداً) إلى ٥ (سهل جداً).', 1, 5, 'صعب جداً', 'سهل جداً');
+    [$qDiff, $optDiff] = $addChoice(2, 'هل واجهت أي صعوبة أثناء استخدام الموقع؟', 'مثل صعوبة في القراءة أو التنقل أو فهم الإجابات.', [
         ['نعم، واجهتني صعوبة', '1'], ['لا، كل شيء كان واضحاً', '0'],
-    ], ['when' => '1', 'label' => 'احكِ لنا وش صار — حتى لو بسطر واحد', 'max' => 500]);
-    $qTrust = $addScale(3, 'قد إيش تثق بإجابات وصال والمصادر اللي يذكرها؟', 'من ١ (ما أثق) إلى ٥ (أثق تماماً).', 1, 5, 'ما أثق', 'أثق تماماً');
-    $qHelped = $addScale(4, 'قد إيش ساعدك وصال توصل لمعلومة أو خدمة تحتاجها؟', 'من ١ (ما ساعدني) إلى ٥ (ساعدني كثير).', 1, 5, 'ما ساعدني', 'ساعدني كثير');
-    [$qPmf, $optPmf] = $addChoice(5, 'لو اختفى وصال بكرة، وش راح يكون شعورك؟', 'إجابتك هنا أهم مؤشر نقيس به قيمة وصال.', [
-        ['بنزعج جداً', 'very_disappointed'], ['بنزعج شوي', 'somewhat_disappointed'], ['عادي، ما بنزعج', 'not_disappointed'],
+    ], ['when' => '1', 'label' => 'صف لنا ما حدث، ولو بسطر واحد', 'max' => 500]);
+    $qTrust = $addScale(3, 'ما مدى ثقتك بإجابات وصال والمصادر التي يذكرها؟', 'من ١ (لا أثق) إلى ٥ (أثق تماماً).', 1, 5, 'لا أثق', 'أثق تماماً');
+    $qHelped = $addScale(4, 'إلى أي حد ساعدك وصال في الوصول إلى معلومة أو خدمة تحتاجها؟', 'من ١ (لم يساعدني) إلى ٥ (ساعدني كثيراً).', 1, 5, 'لم يساعدني', 'ساعدني كثيراً');
+    [$qPmf, $optPmf] = $addChoice(5, 'لو توقف وصال غداً، فما شعورك؟', 'إجابتك هنا من أهم المؤشرات التي نقيس بها قيمة وصال.', [
+        ['سأنزعج كثيراً', 'very_disappointed'], ['سأنزعج قليلاً', 'somewhat_disappointed'], ['لن أنزعج', 'not_disappointed'],
     ]);
-    $qNps = $addScale(6, 'كم تنصح شخصاً مثلك يجرّب وصال؟', 'من صفر (ما أنصح) إلى عشرة (أنصح بقوة).', 0, 10, 'ما أنصح', 'أنصح بقوة');
-    [$qReturn, $optReturn] = $addChoice(7, 'بترجع تستخدم وصال مرة ثانية؟', '', [
-        ['نعم', 'yes'], ['يمكن', 'maybe'], ['لا', 'no'],
+    $qNps = $addScale(6, 'ما مدى احتمال أن تنصح شخصاً مثلك بتجربة وصال؟', 'من صفر (لن أنصح) إلى عشرة (أنصح بشدة).', 0, 10, 'لن أنصح', 'أنصح بشدة');
+    [$qReturn, $optReturn] = $addChoice(7, 'هل ستستخدم وصال مرة أخرى؟', '', [
+        ['نعم', 'yes'], ['ربما', 'maybe'], ['لا', 'no'],
     ]);
-    $qMissing = $addLongText(8, 'دوّرت على خدمة أو معلومة وما لقيتها؟', 'اكتبها لنا — هذا اللي يحدّد وش نضيف بعدين.', 'مثلاً: معلومات عن التوظيف، أجهزة مساعدة، دعم مالي…', 500);
-    $qFeedback = $addLongText(9, 'أي شيء ثاني ودّك توصله لنا؟', 'اقتراح أو ملاحظة أو حتى كلمة — كلها توصل للفريق.', 'اكتب هنا…', 1000);
+    $qMissing = $addLongText(8, 'هل بحثت عن خدمة أو معلومة ولم تجدها؟', 'اكتبها لنا، فهذا ما يحدد ما نضيفه لاحقاً.', 'مثلاً: معلومات عن التوظيف، أجهزة مساعدة، دعم مالي…', 500);
+    $qFeedback = $addLongText(9, 'هل لديك أي شيء آخر تود إخبارنا به؟', 'اقتراح أو ملاحظة أو حتى كلمة، وكلها تصل إلى الفريق.', 'اكتب هنا…', 1000);
 
     /* ---------- ترحيل الدعوات القديمة ---------- */
     $invMap = [];   // معرّف الدعوة القديم ← معرّف survey_invitations الجديد
@@ -874,7 +874,7 @@ function smtpSend(string $to, string $subject, string $html): bool {
     $transport = $enc === 'ssl' ? 'ssl://' : 'tcp://';
     $ctx = stream_context_create(['ssl' => ['verify_peer' => true, 'verify_peer_name' => true, 'SNI_enabled' => true]]);
     $fp = @stream_socket_client($transport . $host . ':' . $port, $errno, $errstr, 12, STREAM_CLIENT_CONNECT, $ctx);
-    if (!$fp) { error_log("WESAL_MAIL_FAIL: تعذّر الاتصال بـ $host:$port — $errstr"); return false; }
+    if (!$fp) { error_log("WESAL_MAIL_FAIL: تعذّر الاتصال بـ $host:$port ($errstr)"); return false; }
     stream_set_timeout($fp, 12);
 
     $read = function () use ($fp): string {
@@ -889,7 +889,7 @@ function smtpSend(string $to, string $subject, string $html): bool {
     $ok  = fn(string $data, string ...$codes) => in_array(substr($data, 0, 3), $codes, true);
     $fail = function (string $label, string $data) use ($fp) {
         fclose($fp);
-        error_log("WESAL_MAIL_FAIL: $label — " . trim(mb_substr($data, 0, 200)));
+        error_log("WESAL_MAIL_FAIL: $label: " . trim(mb_substr($data, 0, 200)));
         return false;
     };
 
@@ -918,7 +918,7 @@ function smtpSend(string $to, string $subject, string $html): bool {
     $r = $read(); if (!$ok($r, '334')) return $fail('رفض اسم المستخدم', $r);
     $cmd(base64_encode(SMTP_PASS));
     $r = $read();
-    if (!$ok($r, '235')) return $fail('فشلت المصادقة — تحقّق من كلمة مرور صندوق البريد', $r);
+    if (!$ok($r, '235')) return $fail('فشلت المصادقة. تحقّق من كلمة مرور صندوق البريد', $r);
 
     $cmd('MAIL FROM:<' . MAIL_FROM . '>');
     $r = $read(); if (!$ok($r, '250')) return $fail('رفض المرسل', $r);
@@ -936,7 +936,7 @@ function smtpSend(string $to, string $subject, string $html): bool {
     $cmd($headers . $bodyEscaped . "\r\n.");
     $r = $read();
     fclose($fp);
-    if (!$ok($r, '250')) { error_log('WESAL_MAIL_FAIL: رُفضت الرسالة بعد DATA — ' . trim(mb_substr($r, 0, 200))); return false; }
+    if (!$ok($r, '250')) { error_log('WESAL_MAIL_FAIL: رُفضت الرسالة بعد DATA: ' . trim(mb_substr($r, 0, 200))); return false; }
     return true;
 }
 
@@ -950,9 +950,9 @@ function inviteEmailHtml(string $inviter, string $roleTarget, string $link): str
         . '<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #e4ddf0">'
         . '<div style="background:linear-gradient(135deg,#814fc3,#282692);padding:26px;text-align:center;color:#fff;font-size:22px;font-weight:bold">وصــال</div>'
         . '<div style="padding:28px 26px;color:#3d3558;line-height:1.9;font-size:15px">'
-        . 'السلام عليكم،<br><b>' . $i . '</b> يدعوك ' . $roleTxt . ' — أول منصة ذكاء اصطناعي سعودية مصممة لخدمة الأشخاص ذوي الإعاقة.'
+        . 'السلام عليكم،<br><b>' . $i . '</b> يدعوك ' . $roleTxt . '.<br>وصال منصة سعودية تعمل بالذكاء الاصطناعي، وتجيب الأشخاص ذوي الإعاقة عن حقوقهم والخدمات المتاحة لهم.'
         . '<div style="text-align:center;margin:26px 0"><a href="' . $link . '" style="background:linear-gradient(135deg,#814fc3,#5039a8);color:#fff;text-decoration:none;padding:14px 34px;border-radius:99px;font-weight:bold;display:inline-block">' . $btnTxt . '</a></div>'
-        . '<div style="font-size:12px;color:#8a7fa3">لو الزر ما اشتغل انسخ الرابط:<br><span dir="ltr" style="word-break:break-all">' . $link . '</span></div>'
+        . '<div style="font-size:12px;color:#8a7fa3">إذا لم يعمل الزر فانسخ الرابط التالي:<br><span dir="ltr" style="word-break:break-all">' . $link . '</span></div>'
         . '</div></div></div>';
 }
 
@@ -984,9 +984,9 @@ function markInvitationTried(): void {
 function surveyInviteEmailHtml(string $surveyTitle, string $link, bool $grantsTrial): string {
     $title = htmlspecialchars($surveyTitle, ENT_QUOTES, 'UTF-8');
     $lead = $grantsTrial
-        ? 'تمت دعوتك لتجربة <b>وصال</b> — أول منصة ذكاء اصطناعي سعودية مصممة لخدمة الأشخاص ذوي الإعاقة.'
-          . '<br>الرابط يفتح لك تجربة موسّعة لمدة <b>' . (int)BETA_TRIAL_HOURS . ' ساعة</b> بلا حاجة لإنشاء حساب: اسأل المساعد عن حقوقك والخدمات والتقنيات المساعدة بأي صيغة تريحك، وبعدها ودّنا رأيك في استبانة «' . $title . '» — أقل من دقيقة.'
-        : 'ندعوك تشاركنا رأيك في استبانة «<b>' . $title . '</b>» — بضع دقائق من وقتك تساعدنا نطوّر وصال.';
+        ? 'تمت دعوتك لتجربة <b>وصال</b>، وهي منصة سعودية تعمل بالذكاء الاصطناعي لخدمة الأشخاص ذوي الإعاقة.'
+          . '<br>يفتح لك الرابط تجربة موسّعة لمدة <b>' . (int)BETA_TRIAL_HOURS . ' ساعة</b> دون الحاجة إلى حساب. اسأل المساعد عن حقوقك والخدمات والتقنيات المساعدة بالطريقة التي تناسبك، ثم شاركنا رأيك في استبانة «' . $title . '»، ولن تستغرق أكثر من دقيقة.'
+        : 'ندعوك لمشاركة رأيك في استبانة «<b>' . $title . '</b>». دقائق قليلة من وقتك تساعدنا على تطوير وصال.';
     $btnTxt = $grantsTrial ? 'ابدأ التجربة الآن' : 'فتح الاستبانة';
     return '<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;background:#f4f2fb;padding:32px 16px">'
         . '<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #e4ddf0">'
@@ -994,7 +994,7 @@ function surveyInviteEmailHtml(string $surveyTitle, string $link, bool $grantsTr
         . '<div style="padding:28px 26px;color:#3d3558;line-height:1.9;font-size:15px">'
         . 'السلام عليكم،<br>' . $lead
         . '<div style="text-align:center;margin:26px 0"><a href="' . $link . '" style="background:linear-gradient(135deg,#814fc3,#5039a8);color:#fff;text-decoration:none;padding:14px 34px;border-radius:99px;font-weight:bold;display:inline-block">' . $btnTxt . '</a></div>'
-        . '<div style="font-size:12px;color:#8a7fa3">لو الزر ما اشتغل انسخ الرابط:<br><span dir="ltr" style="word-break:break-all">' . $link . '</span></div>'
+        . '<div style="font-size:12px;color:#8a7fa3">إذا لم يعمل الزر فانسخ الرابط التالي:<br><span dir="ltr" style="word-break:break-all">' . $link . '</span></div>'
         . '</div></div></div>';
 }
 
@@ -1011,8 +1011,8 @@ function resetEmailHtml(string $name, string $link, bool $byAdmin, int $hours): 
         . 'أهلاً <b>' . $n . '</b>،<br>' . $lead
         . '<div style="text-align:center;margin:26px 0"><a href="' . $link . '" style="background:linear-gradient(135deg,#814fc3,#5039a8);color:#fff;text-decoration:none;padding:14px 34px;border-radius:99px;font-weight:bold;display:inline-block">تعيين كلمة مرور جديدة</a></div>'
         . '<div style="font-size:13px;color:#8a7fa3">الرابط صالح لمدة ' . $hours . ' ساعة، ويُستخدم مرة واحدة فقط.<br>'
-        . 'إذا ما طلبت هذا، تجاهل الرسالة — كلمة مرورك ما تغيّرت.</div>'
-        . '<div style="font-size:12px;color:#8a7fa3;margin-top:14px">لو الزر ما اشتغل انسخ الرابط:<br><span dir="ltr" style="word-break:break-all">' . $link . '</span></div>'
+        . 'إذا لم تطلب ذلك فتجاهل هذه الرسالة، ولن تتغير كلمة مرورك.</div>'
+        . '<div style="font-size:12px;color:#8a7fa3;margin-top:14px">إذا لم يعمل الزر فانسخ الرابط التالي:<br><span dir="ltr" style="word-break:break-all">' . $link . '</span></div>'
         . '</div></div></div>';
 }
 
@@ -1031,9 +1031,9 @@ function issueResetToken(int $userId, ?int $issuedBy = null, int $hours = 2): st
 
 /** قواعد كلمة المرور — مكان واحد يستخدمه التسجيل وإعادة التعيين والتغيير */
 function passwordError(string $p): ?string {
-    if (mb_strlen($p) < 8) return 'كلمة المرور لازم تكون 8 أحرف فأكثر.';
+    if (mb_strlen($p) < 8) return 'يجب أن تتكون كلمة المرور من 8 أحرف أو أكثر.';
     if (!preg_match('/\p{L}/u', $p) || !preg_match('/\d/', $p))
-        return 'كلمة المرور لازم تحتوي حرفاً ورقماً على الأقل.';
+        return 'يجب أن تحتوي كلمة المرور على حرف ورقم على الأقل.';
     return null;
 }
 

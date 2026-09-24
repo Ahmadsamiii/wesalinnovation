@@ -42,20 +42,20 @@ try {
             if (!validNameAr($last))                       fail('اكتب اسمك الأخير بالحروف العربية فقط.');
             if (!validNameEn($firstEn))                    fail('اكتب اسمك الأول بالحروف الإنجليزية فقط (First name).');
             if (!validNameEn($lastEn))                     fail('اكتب اسمك الأخير بالحروف الإنجليزية فقط (Last name).');
-            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) fail('البريد الإلكتروني غير صحيح — تأكد من كتابته.');
-            if (!validPhone($phone))                        fail('رقم الجوال إجباري — الصيغة: 05XXXXXXXX أو +9665XXXXXXXX.');
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) fail('البريد الإلكتروني غير صحيح. تأكد من كتابته.');
+            if (!validPhone($phone))                        fail('رقم الجوال مطلوب، واكتبه بالصيغة 05XXXXXXXX أو +9665XXXXXXXX.');
             if (!validDob($dob))                            fail('تاريخ الميلاد غير صحيح.');
-            if (mb_strlen($pass) < 8)                       fail('كلمة المرور لازم تكون 8 أحرف فأكثر.');
+            if (mb_strlen($pass) < 8)                       fail('يجب أن تتكون كلمة المرور من 8 أحرف أو أكثر.');
             if (!preg_match('/\p{L}/u', $pass) || !preg_match('/\d/', $pass))
-                                                            fail('كلمة المرور لازم تحتوي حرفاً ورقماً على الأقل.');
+                                                            fail('يجب أن تحتوي كلمة المرور على حرف ورقم على الأقل.');
 
             $s = db()->prepare('SELECT id FROM users WHERE email=? LIMIT 1');
             $s->execute([$email]);
-            if ($s->fetch()) fail('يوجد حساب مرتبط بنفس البريد الإلكتروني — سجّل دخولك أو استخدم بريداً آخر.');
+            if ($s->fetch()) fail('يوجد حساب مسجّل بهذا البريد الإلكتروني. سجّل دخولك أو استخدم بريداً آخر.');
 
             $s = db()->prepare('SELECT id FROM users WHERE phone=? LIMIT 1');
             $s->execute([$phone]);
-            if ($s->fetch()) fail('يوجد حساب مرتبط بنفس رقم الجوال — سجّل دخولك أو استخدم رقماً آخر.');
+            if ($s->fetch()) fail('يوجد حساب مسجّل برقم الجوال هذا. سجّل دخولك أو استخدم رقماً آخر.');
 
             $inviteRole = null; $inviteId = null;
             $tok = preg_replace('/[^a-f0-9]/', '', (string)($in['invite'] ?? ''));
@@ -64,7 +64,7 @@ try {
                 $s->execute([$tok]);
                 if ($inv = $s->fetch()) {
                     if (mb_strtolower($inv['email']) !== $email)
-                        fail('هذه الدعوة مرسلة لبريد إلكتروني آخر — سجّل بنفس البريد الذي وصلته الدعوة.');
+                        fail('هذه الدعوة مرسلة إلى بريد إلكتروني آخر. سجّل بالبريد الذي وصلته الدعوة.');
                     $inviteRole = $inv['role_target'];
                     $inviteId   = (int)$inv['id'];
                 } else fail('رابط الدعوة غير صالح أو استُخدم من قبل.');
@@ -97,7 +97,7 @@ try {
             if (!$u || !password_verify($pass, $u['pass_hash']))
                 fail('البريد أو كلمة المرور غير صحيحة.', 401);
             if (($u['status'] ?? 'active') === 'suspended')
-                fail('حسابك موقوف حالياً. راسلنا من صفحة «تواصل معنا» ونراجع الموضوع معك.', 403);
+                fail('حسابك موقوف حالياً. راسلنا من صفحة «تواصل معنا» لنراجع الأمر معك.', 403);
 
             $_SESSION['uid'] = (int) $u['id'];
             session_regenerate_id(true);
@@ -122,7 +122,7 @@ try {
                          resetEmailHtml($u['name'], $link, false, 2));
                 audit(null, 'forgot', $email, 'طلب المستخدم إعادة تعيين');
             }
-            out(['ok' => true, 'message' => 'إذا كان البريد مسجّلاً عندنا فبيوصلك رابط إعادة التعيين خلال دقائق. راجع مجلد الرسائل غير المرغوبة لو ما وصل.']);
+            out(['ok' => true, 'message' => 'إذا كان البريد مسجّلاً لدينا فسيصلك رابط إعادة التعيين خلال دقائق. وإن لم يصل فتحقق من مجلد الرسائل غير المرغوب فيها.']);
         }
 
         case 'reset_info': {
@@ -206,7 +206,7 @@ try {
                 fail('اكتب كلمة مرورك الحالية لتأكيد الحذف.', 401);
             if ($u['role'] === 'admin') {
                 $n = (int) db()->query("SELECT COUNT(*) c FROM users WHERE role='admin'")->fetch()['c'];
-                if ($n <= 1) fail('ما نقدر نحذف آخر حساب مدير نظام في المنصة. عيّن مديراً آخر أولاً.');
+                if ($n <= 1) fail('لا يمكن حذف آخر حساب مدير نظام في المنصة. عيّن مديراً آخر أولاً.');
             }
             if (!empty($u['avatar']) && strpos($u['avatar'], 'uploads/avatars/') === 0)
                 @unlink(dirname(__DIR__) . '/uploads/avatars/' . basename($u['avatar']));
@@ -280,13 +280,13 @@ try {
 
             $img = (string)($in['image'] ?? '');
             // الواجهة تصغّر الصورة إلى 512 بكسل قبل الإرسال، فالنص الطويل جداً طلب غير طبيعي
-            if (strlen($img) > 3500000)                    fail('حجم الصورة كبير — الحد الأقصى 2.5 ميجابايت.');
+            if (strlen($img) > 3500000)                    fail('حجم الصورة كبير، والحد الأقصى 2.5 ميجابايت.');
             if (preg_match('#^data:image/(jpeg|png|webp);base64,#', $img, $m)) {
                 $img = substr($img, strpos($img, ',') + 1);
             }
             $bin = base64_decode($img, true);
             if ($bin === false || strlen($bin) < 100)      fail('الصورة غير صالحة.');
-            if (strlen($bin) > 2.5 * 1024 * 1024)          fail('حجم الصورة كبير — الحد الأقصى 2.5 ميجابايت.');
+            if (strlen($bin) > 2.5 * 1024 * 1024)          fail('حجم الصورة كبير، والحد الأقصى 2.5 ميجابايت.');
 
             $info = @getimagesizefromstring($bin);
             $mimes = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
@@ -296,11 +296,11 @@ try {
             $dir = dirname(__DIR__) . '/uploads/avatars';
             if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) {
                 error_log('WESAL_AVATAR_FAIL: cannot create ' . $dir);
-                fail('تعذّر تجهيز مجلد الصور على الخادم — بلّغنا بطلب دعم فني.', 500);
+                fail('تعذّر تجهيز مجلد الصور على الخادم. أبلغنا بطلب دعم فني.', 500);
             }
             if (!is_writable($dir)) {
                 error_log('WESAL_AVATAR_FAIL: not writable ' . $dir);
-                fail('مجلد الصور على الخادم غير قابل للكتابة — بلّغنا بطلب دعم فني.', 500);
+                fail('مجلد الصور على الخادم غير قابل للكتابة. أبلغنا بطلب دعم فني.', 500);
             }
 
             // خط دفاع ثانٍ داخل مجلد المرفوعات نفسه، إضافة إلى قاعدة الجذر في .htaccess
@@ -318,7 +318,7 @@ try {
             $fname = 'u' . (int)$u['id'] . '_' . bin2hex(random_bytes(6)) . '.' . $mimes[$info['mime']];
             if (@file_put_contents($dir . '/' . $fname, $bin) === false) {
                 error_log('WESAL_AVATAR_FAIL: write failed ' . $dir . '/' . $fname);
-                fail('تعذّر حفظ الصورة — حاول مرة أخرى.', 500);
+                fail('تعذّر حفظ الصورة. حاول مرة أخرى.', 500);
             }
 
             // حذف الصورة القديمة إن وُجدت
@@ -360,7 +360,7 @@ try {
         default: fail('طلب غير معروف.');
     }
 } catch (Throwable $e) {
-    fail(APP_DEBUG ? $e->getMessage() : 'صار خطأ غير متوقع. حاول مرة أخرى.', 500);
+    fail(APP_DEBUG ? $e->getMessage() : 'حدث خطأ غير متوقع. حاول مرة أخرى.', 500);
 }
 
 function basename_safe(string $p): string {

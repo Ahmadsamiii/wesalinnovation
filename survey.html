@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="استبانة قصيرة — أسئلتها تحدّدها منصة وصال، تُعبّى في أقل من دقيقة">
+<meta name="description" content="استبانة قصيرة من منصة وصال لمعرفة رأيك في تجربتك.">
 <meta name="robots" content="noindex">
 <title>استبانة وصال</title>
 <meta name="theme-color" content="#282692">
@@ -167,11 +167,11 @@ footer{text-align:center;font-size:var(--f-xs);color:var(--muted);padding:var(--
       <!-- شاشة البداية: تشرح الرحلة وتوجّه من لم يجرّب بعد (لاستبيان يمنح تجربة موسّعة فقط) -->
       <section id="vIntro" hidden>
         <div id="introJourney" hidden>
-          <p style="color:var(--muted);font-size:var(--f-sm)">رأيك يهمنا بعد ما تعيش التجربة — رحلتك ثلاث خطوات:</p>
+          <p style="color:var(--muted);font-size:var(--f-sm)">يهمنا رأيك بعد أن تجرّب وصال، وذلك في ثلاث خطوات:</p>
           <div class="journey">
-            <div class="j-step"><span class="j-num">١</span><div><b>جرّب المساعد الذكي</b><span>اسأل وصال عن حق أو خدمة تهمك — تجربتك الموسّعة مفتوحة</span></div></div>
-            <div class="j-step"><span class="j-num">٢</span><div><b>تجوّل في الموقع</b><span>اطّلع على الخدمات والمصادر الموثوقة</span></div></div>
-            <div class="j-step"><span class="j-num">٣</span><div><b>ارجع كمّل الاستبانة</b><span>من نفس رابط الدعوة في بريدك، بأي وقت يناسبك</span></div></div>
+            <div class="j-step"><span class="j-num">١</span><div><b>جرّب المساعد الذكي</b><span>اسأل وصال عن حق أو خدمة تهمك، فتجربتك الموسّعة مفعّلة</span></div></div>
+            <div class="j-step"><span class="j-num">٢</span><div><b>تصفّح الموقع</b><span>اطّلع على الدليل والمصادر الرسمية</span></div></div>
+            <div class="j-step"><span class="j-num">٣</span><div><b>أكمل الاستبانة</b><span>من رابط الدعوة نفسه في بريدك، في الوقت الذي يناسبك</span></div></div>
           </div>
         </div>
         <p id="introMsg" style="color:var(--muted)"></p>
@@ -181,7 +181,7 @@ footer{text-align:center;font-size:var(--f-xs);color:var(--muted);padding:var(--
         </div>
         <div class="note">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <span id="privacyNote">إجاباتك تُحفظ أولاً بأول، وتقدر ترجع من نفس الرابط وتكمل من حيث وقفت. الإجابات تُستخدم لتطوير وصال فقط، وبلا أي ربط بهويتك الشخصية.</span>
+          <span id="privacyNote">تُحفظ إجاباتك أولاً بأول، ويمكنك العودة من الرابط نفسه لتكمل من حيث توقفت. نستخدم الإجابات لتطوير وصال فقط، دون ربطها بهويتك الشخصية.</span>
         </div>
       </section>
 
@@ -210,8 +210,8 @@ footer{text-align:center;font-size:var(--f-xs);color:var(--muted);padding:var(--
       <section id="vDone" hidden>
         <div class="done">
           <div class="done-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg></div>
-          <h2 id="doneTitle">وصلتنا إجاباتك — شكراً لك</h2>
-          <p id="doneMsg">رأيك يدخل مباشرة في تطوير وصال. ولو تغيّر رأيك أو ودّك تضيف شيئاً، ارجع من نفس الرابط وعدّل إجاباتك في أي وقت.</p>
+          <h2 id="doneTitle">شكراً لك، وصلتنا إجاباتك</h2>
+          <p id="doneMsg">سنعتمد على رأيك في تطوير وصال. وإذا أردت تعديل إجاباتك أو إضافة شيء، فعد إلى الرابط نفسه في أي وقت.</p>
           <div class="row">
             <a class="btn btn-primary" href="/">الرجوع إلى وصال</a>
             <button class="btn btn-surface" type="button" id="btnRedo" onclick="startSurvey()">عدّل إجاباتك</button>
@@ -224,7 +224,7 @@ footer{text-align:center;font-size:var(--f-xs);color:var(--muted);padding:var(--
   </div>
 </main>
 
-<footer>وصال — نفهمك ونسهّل وصولك</footer>
+<footer>نفهمك ونسهّل وصولك</footer>
 
 <!-- إعلان تغيّر الخطوة لقارئ الشاشة -->
 <div class="sr-only" aria-live="polite" id="live"></div>
@@ -295,17 +295,17 @@ function paintIntro(st) {
     $('introJourney').hidden = false;
     $('btnTry').hidden = false;
     $('btnTry').href = '/invite/' + TOKEN;
-    $('btnStart').textContent = 'ودّي أجاوب الآن';
+    $('btnStart').textContent = 'أريد الإجابة الآن';
     $('btnStart').className = 'btn btn-surface';
     $('introMsg').textContent = '';
   } else if (status === 'completed') {
-    $('introMsg').textContent = 'وصلتنا إجاباتك سابقاً — تقدر تراجعها وتعدّلها في أي وقت.';
+    $('introMsg').textContent = 'وصلتنا إجاباتك سابقاً، ويمكنك مراجعتها وتعديلها في أي وقت.';
     $('btnStart').textContent = 'راجع إجاباتك وعدّلها';
   } else {
-    $('introMsg').textContent = 'رأيك يهمنا — إجاباتك تروح مباشرة لمن أنشأ الاستبيان.';
-    $('btnStart').textContent = Object.keys(A).length ? 'كمّل الاستبانة' : 'ابدأ الاستبانة';
+    $('introMsg').textContent = 'يهمنا رأيك، وتصل إجاباتك مباشرة إلى فريق وصال.';
+    $('btnStart').textContent = Object.keys(A).length ? 'أكمل الاستبانة' : 'ابدأ الاستبانة';
   }
-  if (!LINKED) $('privacyNote').textContent = 'إجاباتك لا تُربط بهويتك الشخصية. هذا رابط عام: إرسالك يُسجَّل كرد جديد ولا يمكن الرجوع لتعديله لاحقاً.';
+  if (!LINKED) $('privacyNote').textContent = 'لا تُربط إجاباتك بهويتك الشخصية. ولأن هذا رابط عام، يُسجَّل إرسالك رداً جديداً ولا يمكن تعديله لاحقاً.';
   show('vIntro');
 }
 
@@ -467,7 +467,7 @@ function submit() {
     .filter(a => Object.keys(a).length > 1);
   if (!answers.length) {
     step = 0; render();
-    showAlert('جاوب على سؤال واحد على الأقل قبل الإرسال.');
+    showAlert('أجب عن سؤال واحد على الأقل قبل الإرسال.');
     return;
   }
   $('btnNext').disabled = true;
@@ -477,13 +477,13 @@ function submit() {
   api(payload).then(r => {
     if (!r.ok) throw new Error(r.error || '');
     LS.del(DRAFT);
-    $('doneTitle').textContent = LINKED ? 'وصلتنا إجاباتك — شكراً لك' : 'وصلنا ردّك — شكراً لك';
-    $('doneMsg').textContent = SURVEY.thank_you_message || 'رأيك يدخل مباشرة في التطوير.';
-    $('btnRedo').textContent = LINKED ? 'عدّل إجاباتك' : 'عبّي الاستبانة مرة ثانية';
+    $('doneTitle').textContent = LINKED ? 'شكراً لك، وصلتنا إجاباتك' : 'شكراً لك، وصلنا ردّك';
+    $('doneMsg').textContent = SURVEY.thank_you_message || 'سنعتمد على رأيك في تطوير وصال.';
+    $('btnRedo').textContent = LINKED ? 'عدّل إجاباتك' : 'تعبئة الاستبانة مرة أخرى';
     show('vDone');
     $('live').textContent = 'تم إرسال إجاباتك بنجاح، شكراً لك.';
   }).catch(e => {
-    showAlert((e.message || 'تعذّر الإرسال.') + ' إجاباتك محفوظة هنا — جرّب الإرسال مرة ثانية.');
+    showAlert((e.message || 'تعذّر الإرسال.') + ' إجاباتك محفوظة في هذه الصفحة، فحاول الإرسال مرة أخرى.');
   }).finally(() => { $('btnNext').disabled = false; });
 }
 
@@ -501,7 +501,7 @@ if (!TOKEN && !PUBLIC) {
   api(payload).then(st => {
     if (!st.ok || !st.available) { show('vUnavailable'); return; }
     SURVEY = st.survey; QUESTIONS = st.questions; LINKED = !!st.linked;
-    document.title = SURVEY.title + ' — وصال';
+    document.title = SURVEY.title + ' | وصال';
     $('hTitle').textContent = SURVEY.title;
     $('hDesc').textContent = SURVEY.description || '';
 
