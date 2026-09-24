@@ -4,23 +4,23 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        <meta name="robots" content="noindex, nofollow">
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        <title>{{ isset($title) ? $title.' — ' : '' }}{{ config('app.name') }}</title>
 
-        <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans text-brand-text antialiased">
-        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-brand-bg">
-            <div>
-                <a href="/">
-                    <x-application-logo class="h-16 w-auto" />
-                </a>
-            </div>
+        <div class="min-h-screen flex flex-col sm:justify-center items-center px-4 pt-10 sm:pt-0 bg-brand-bg">
+            <a href="{{ url('/') }}" class="rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600">
+                <x-application-logo class="h-16 w-auto" />
+            </a>
 
-            <div class="w-full sm:max-w-md mt-6 px-6 py-6 bg-white border border-brand-border shadow-sm overflow-hidden sm:rounded-2xl">
+            <main class="w-full sm:max-w-md mt-6 px-6 py-6 bg-white border border-brand-border shadow-sm overflow-hidden rounded-2xl">
                 {{ $slot }}
-            </div>
+            </main>
+
+            <p class="mt-6 text-xs text-brand-muted">{{ config('app.name') }} — نظام داخلي لوصال الابتكار</p>
         </div>
     </body>
 </html>

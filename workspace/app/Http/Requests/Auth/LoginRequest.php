@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -42,15 +43,39 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        $credentials = $this->only('email', 'password');
+
+        $authenticated = Auth::attemptWhen(
+            $credentials,
+            fn (User $user): bool => ! $user->isDeactivated(),
+            $this->boolean('remember'),
+        );
+
+        if (! $authenticated) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'email' => trans($this->isDeactivatedAccount($credentials) ? 'auth.deactivated' : 'auth.failed'),
             ]);
         }
 
         RateLimiter::clear($this->throttleKey());
+    }
+
+    /**
+     * رسالة «الحساب موقوف» تظهر فقط لمن أدخل كلمة المرور الصحيحة، فلا تكشف
+     * لغيره أن البريد مسجَّل.
+     *
+     * @param  array<string, mixed>  $credentials
+     */
+    private function isDeactivatedAccount(array $credentials): bool
+    {
+        $provider = Auth::getProvider();
+        $user = $provider->retrieveByCredentials(['email' => $credentials['email']]);
+
+        return $user instanceof User
+            && $user->isDeactivated()
+            && $provider->validateCredentials($user, $credentials);
     }
 
     /**

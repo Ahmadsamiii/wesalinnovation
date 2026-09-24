@@ -1,58 +1,185 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# مساحة عمل وصال
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+نظام إدارة المشاريع الداخلي لوصال الابتكار: المشاريع والمهام، والعقود والفواتير
+وأوامر الشراء، والشهادات والإفادات، والتقارير. تطبيق Laravel مستقل تماماً عن
+منصة وصال العامة في جذر المستودع: قاعدة بيانات منفصلة وحسابات منفصلة ونطاق
+منفصل (`workspace.wesalinnovation.sa`)، عزلاً للبيانات المالية والعقود.
 
-## About Laravel
+## المتطلبات
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- PHP **8.4.1** فأحدث (تشترطه حزم Symfony 8 المقفلة في `composer.lock`)، مع
+  `pdo_mysql` (أو `pdo_sqlite` محلياً) و`mbstring` و`intl` و`fileinfo`
+- Composer 2
+- Node.js 20.19 أو 22.12 فأحدث — لتجميع الواجهة فقط، لا يلزم وقت التشغيل
+- MySQL 8 أو MariaDB 10.6 فأحدث في الإنتاج، وSQLite للتطوير المحلي
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## التشغيل محلياً
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+cd workspace
+composer install
+cp .env.example .env
+php artisan key:generate
+touch database/database.sqlite
+php artisan migrate --seed
+npm ci && npm run build
+php artisan serve
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+`--seed` ينشئ حساباً تجريبياً لكل دور: `{الدور}@wesalinnovation.sa` بكلمة
+المرور `password`، مثل `pm@wesalinnovation.sa`. للتطوير المحلي فقط — لا تشغّل
+البذرة على قاعدة إنتاج.
 
-## Contributing
+## الأدوار
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+سبعة أدوار معرّفة مع تبويبات لوحة كل منها في مصدر واحد:
+`config/roles.php`. البذرة ولوحة التحكم تقرآن منه، فلا تُضف دوراً في أي مكان
+آخر.
 
-## Code of Conduct
+| المفتاح | الدور |
+|---|---|
+| `executive` | المدير التنفيذي |
+| `pm` | مدير المشاريع |
+| `finance` | المدير المالي |
+| `sysadmin` | مدير النظام |
+| `medical` | المدير الطبي |
+| `team_member` | عضو الفريق |
+| `client` | العميل |
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+لا يوجد تسجيل ذاتي: كل حساب ينشئه مدير النظام من «الأدوار والصلاحيات»، فيصل
+صاحبه بريد برابط موقَّع لتعيين كلمة المرور (صالح ٧ أيام ولاستخدام واحد، وإعادة
+الإرسال تُبطل الرابط السابق). إن تعذّر البريد يظهر الرابط للمدير ليرسله بنفسه.
+لا حذف للحسابات: الإيقاف يمنع الدخول فوراً ويُبقي كل ما نُسب للحساب. ولا يمكن
+إيقاف آخر مدير نظام نشط أو تغيير دوره.
 
-## Security Vulnerabilities
+كل دخول ومحاولة فاشلة وإجراء على الحسابات يُسجَّل في «السجلات والتدقيق».
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## المشاريع والمهام
 
-## License
+- **دورة حياة المشروع**: مسودة ← بانتظار الاعتماد ← معتمَد ← قيد التنفيذ ← منجَز.
+  مدير المشروع يقدّم ويبدأ ويُنجز؛ المدير التنفيذي يعتمد أو يرفض (بتعليل)،
+  ويوقف مؤقتاً ويستأنف ويلغي. كل قرار يبقى في `project_decisions` بتاريخه
+  وتعليله، والرفض يعيد المشروع لمديره ليعدّله ويعيد تقديمه.
+- **الرؤية**: التنفيذي والمالي يريان كل المشاريع، ومدير المشروع ما يديره،
+  والعضو ما هو فيه، والعميل مشاريعه فقط وبلا تفاصيل العمل الداخلي (المهام
+  والفريق والقرارات والملفات). القواعد كلها في `ProjectPolicy`.
+- **المهام**: عرض كانبان بالسحب والإفلات، مع نموذج «نقل إلى» على كل بطاقة
+  لمن يعمل بلوحة المفاتيح أو قارئ الشاشة أو اللمس، وعرض قائمة بتصفية. المهمة
+  تُسند للفريق فقط، ويحرّكها المسند إليه أو الإدارة أو قائد الفريق، ولا تتحرك
+  قبل الاعتماد ولا أثناء الإيقاف.
+- **المرفقات**: على القرص الخاص (`storage/app/private`) بأسماء يولّدها
+  الخادم، وتُحمَّل عبر فحص الصلاحية فقط. الأنواع المقبولة في
+  `Attachment::ALLOWED_EXTENSIONS`.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+`php artisan migrate --seed` يضيف مشاريع تجريبية بكل الحالات (`DemoProjectSeeder`).
+
+## العقود وأوامر الشراء والفواتير
+
+- **العقود**: مدير المشروع أو المالية يصوغ مسودة لعقد مع عميل المشروع؛ المالية
+  تفعّله عند التوقيع فيظهر للعميل مع نسخته الموقّعة، ثم تغلقه منتهياً أو مفسوخاً
+  (بسبب مكتوب).
+- **أوامر الشراء**: مدير المشروع يطلب على مشروع معتمد أو جارٍ، بالبنود والضريبة.
+  المالية تراجع؛ وما يتجاوز `PO_EXECUTIVE_THRESHOLD` (٥٠٬٠٠٠ ر.س افتراضاً شامل
+  الضريبة) ينتقل لاعتماد المدير التنفيذي في «الاعتمادات المالية». لا يعتمد أحد
+  طلبه بنفسه، والرفض بتعليل يعيد الأمر لمقدّمه. صفحة الأمر تعرض ميزانية المشروع
+  وما التُزم به منها.
+- **الفواتير**: للمالية وحدها. المسودة بلا رقم؛ الرقم التسلسلي (`INV-السنة-0001`)
+  يُسند عند الإصدار فلا تترك المسودة المحذوفة فجوة. المصدرة لا تُعدَّل، وتُلغى
+  بسبب ما لم تُسجَّل عليها دفعة. الدفعات الجزئية تُسجَّل حتى السداد. العميل يرى
+  فواتيره المصدرة ويطبعها أو يحفظها PDF من المتصفح.
+- **الحساب**: بالهللات أعداداً صحيحة (`HasLineItems`) لا بكسور عائمة، والمعاينة
+  في المتصفح بنفس الطريقة. بيانات المنشأة في رأس الفاتورة من `config/workspace.php`
+  (`COMPANY_*` في `.env`).
+- الفاتورة المطبوعة مستند للعميل، لا فاتورة إلكترونية مسجّلة لدى هيئة الزكاة
+  والضريبة والجمارك؛ ذلك تكامل مستقل لم يُبنَ.
+
+## الشهادات والبطاقات والإفادات
+
+- **شهادة الإنجاز** لعميل المشروع و**شهادة المشاركة** لأعضاء فريقه، تصدر عن
+  مشروع منجز فقط (يصدرها مديره أو التنفيذي)، وشهادة سارية واحدة لكل مستلم ونوع
+  ومشروع. قائمة الشهادات تذكّر المدير بالمشاريع المنجزة بلا شهادة. التنفيذي
+  وحده يلغي، بسبب مكتوب.
+- **البطاقة الرقمية** لكل منسوب (لا للعملاء): الاسم والمسمى والرقم الوظيفي ورمز
+  تحقق، تُطبع بمقاس بطاقة الهوية وتبطل تلقائياً عند إيقاف الحساب.
+- **الإفادة الوظيفية**: الموظف يطلب، والمدير التنفيذي يعتمد أو يرفض بتعليل. عند
+  الاعتماد تُثبَّت البيانات الوظيفية كما هي، فلا تغيّر ترقية لاحقة نص إفادة صدرت.
+  نصها محايد لغوياً (جدول بيانات، و«صاحب الشأن») لأن النظام لا يخزّن الجنس.
+- **التحقق العام** على `/verify` بلا دخول: أي جهة تُدخل الرمز المطبوع فترى نوع
+  المستند واسم صاحبه وسريانه فقط، بلا بريد ولا جوال. الرمز اثنا عشر حرفاً من
+  أبجدية بلا حروف ملتبسة، والصفحة محدودة بثلاثين طلباً في الدقيقة.
+- الطباعة وحفظ PDF من المتصفح (`x-print-layout`)، بلا مكتبة PDF: العربية
+  تُعرض فيه صحيحة الاتجاه والتشكيل.
+
+## التقارير
+
+لكل دور تقريره على فترة ٣ أو ٦ أو ١٢ شهراً، برسوم تُبنى في Blade بلا مكتبة
+(مؤشرات، أعمدة شهرية، أشرطة، ومعها «عرض كجدول» وتلميح بالمرور والتركيز):
+
+- **التنفيذي**: المحفظة والتسليم والفوترة مقابل التحصيل وأعمار الذمم، ويطّلع على
+  التقرير المالي أيضاً. و«نظرة عامة» لوحته: ما ينتظر قراره، وما يحتاج انتباهه
+  (مشاريع تجاوزت موعدها أو ميزانيتها، فواتير متأخرة)، والمراحل القريبة.
+- **مدير المشاريع**: مشاريعه قيد التسليم ووتيرة الإنجاز وحمل كل عضو.
+- **المالي**: الذمم حسب العميل، وما فُوتر من كل عقد ساري، والميزانيات مقابل
+  التزامات الشراء.
+- **عضو الفريق**: منجزاته ونسبة إنجازه في الموعد.
+- **العميل**: تقرير حالة مشروعه قابل للطباعة، بلا شيء من العمل الداخلي.
+- **مدير النظام** و**المدير الطبي**: في أقسامهما أدناه.
+
+التصدير CSV يفتحه Excel بالعربية سليمة، ومحصَّن من حقن الصيغ.
+
+## طلبات التوظيف
+
+يرفعها مسؤولو الفرق (المشاريع والمالية والنظام والطبي) بمبرراتها وتكلفتها
+التقديرية، ويعتمدها المدير التنفيذي أو يرفضها بتعليل، ثم تُغلق بشغل الوظيفة أو
+بالإلغاء. خدمات ليست تبويباً لدور ما (طلب إفادة، طلبات التوظيف) تظهر في
+القائمة الجانبية تحت «خدمات».
+
+## إدارة النظام
+
+- **صحة النظام**: فحوص حيّة للقاعدة والترحيلات والتخزين والمساحة والبريد وبناء
+  الواجهة وإعدادات الأمان، مع آخر أخطاء السجل.
+- **تكامل البريد**: الإعداد الفعلي بلا أسرار ورسالة اختبار.
+- **تكامل الذكاء الاصطناعي**: أداء مساعد الموقع العام لكل مزوّد من سجل أسئلته،
+  عبر اتصال قراءة فقط اختياري (`PLATFORM_DB_*`). المفاتيح واختيار المزوّد تبقى
+  في إعدادات خادم المنصة.
+- **النطاقات والنشر**: جاهزية الإنتاج والإصدار المنشور.
+- **التقارير التقنية**: الدخول الناجح والفاشل، والحسابات حسب الدور، والخاملة منها.
+
+## المحتوى الصحي والمراجعة الطبية
+
+- مدير النظام يحرّر المحتوى في «إدارة المحتوى» ويقدّمه، ولا يُنشر شيء إلا
+  باعتماد المدير الطبي. المنشور نسخة ثابتة: تعديل المعتمد يبقى مسودة والنسخة
+  المعتمدة منشورة حتى يُعتمد التعديل. الاعتماد صالح ١٢ شهراً ثم يعود للمراجعة
+  الدورية، وكل قرار يحفظ نص ما رُوجع.
+- لكل محتوى معتمد صفحة عامة (`/kb/{رقم}`) يستشهد بها المساعد، و
+  `php artisan content:export-kb <مجلد>` يصدّر المعتمد بصيغة
+  `tools/rag/ingest-kb.php`.
+- **تنبيهات الأسئلة عالية الحساسية**: أسئلة المساعد التي تحوي كلمة من قائمة
+  يعدّلها المدير الطبي، مع جوابها ليحكم على سلامته، بلا هوية السائل (تحتاج
+  ربط قاعدة الموقع العام).
+
+## النشر
+
+`workspace/DEPLOY.md`: متطلبات الخادم، وتجهيزه أول مرة، وإنشاء أول مدير نظام
+(`php artisan workspace:create-sysadmin`)، والتراجع والنسخ الاحتياطية.
+
+## الاختبارات والأسلوب
+
+```bash
+php artisan test
+vendor/bin/pint
+```
+
+الاختبارات لا تحتاج تجميع الواجهة (`withoutVite()` في `tests/TestCase.php`).
+سير `.github/workflows/workspace.yml` في جذر المستودع يشغّل الأسلوب والاختبارات
+على SQLite ثم على MariaDB (قاعدة الإنتاج)، والتجميع، على كل طلب دمج يمس
+`workspace/`. الفروق بين القاعدتين حقيقية: ترتيب `utf8mb4_unicode_ci` يتجاهل
+التشكيل، فكلمتان تختلفان بشدّة فقط متطابقتان في MariaDB لا في SQLite.
+
+## ملاحظات
+
+- اللغة العربية واتجاه RTL وتوقيت الرياض افتراضات في `config/app.php` نفسه،
+  لا في `.env` وحده.
+- `storage/` مرفوع بهيكله فقط؛ ملفات `.gitignore` داخله تستثني محتواه.
+- `deploy.sh` في جذر المستودع لا يرفع هذا المجلد إلى الموقع العام؛ يستدعي
+  `workspace/deploy.sh` بعده متى جُهّز الخادم (`DEPLOY.md`).
