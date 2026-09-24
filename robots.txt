@@ -1,0 +1,16 @@
+# وصال — تعليمات زواحف محركات البحث
+#
+# /api/ مفتوح عمداً: الصفحة الرئيسية تجلب محتواها المنشور من api/content.php،
+# وحجبه يجعل Google يرى الصفحة بنصوصها الافتراضية لا بالمحتوى المنشور فعلاً.
+# ردود الواجهة JSON لا تُفهرس أصلاً، فلا ضرر من فتحها للزواحف.
+#
+# survey.html و ticket.html غير محجوبتين هنا عمداً أيضاً: فيهما noindex،
+# وحجبهما يمنع الزاحف من قراءة noindex فقد يُفهرس الرابط بلا محتوى.
+
+User-agent: *
+Allow: /
+Disallow: /tools/
+Disallow: /uploads/
+Disallow: /invite/
+
+Sitemap: https://wesalinnovation.sa/sitemap.xml

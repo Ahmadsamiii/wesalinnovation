@@ -64,6 +64,21 @@ ServerSignature Off
 # --------------------------------------------------------------------------
 <IfModule mod_rewrite.c>
   RewriteEngine On
+
+  # النطاق المعتمد لمحركات البحث: https وبلا www. بدون هذا يرى Google أربع
+  # نسخ من كل صفحة (http/https × www/بدون) فيوزّع ترتيبها بينها.
+  # %{HTTP_HOST} لا اسم ثابت، حتى تعمل القواعد نفسها على chat. بعد النقل.
+  # لا تعتمد على «فرض HTTPS» في hPanel: يكتب في هذا الملف، وdeploy.sh يستبدله.
+  RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+  RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L]
+
+  # X-Forwarded-Proto: خلف CDN يصل الطلب للخادم عبر http وإن كان الزائر على
+  # https — بدون هذا الشرط تدور إعادة التوجيه بلا نهاية.
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+  RewriteCond %{HTTP_HOST} !^(localhost|127\.0\.0\.1)(:[0-9]+)?$ [NC]
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
   RewriteRule ^uploads/.+\.(php|phtml|phar|php[0-9]|pl|py|cgi|sh|htaccess|htpasswd)$ - [F,L,NC]
 
   # رابط دعوة النسخة التجريبية — /invite/{token} يصل بالمدعو لمستلم الدعوات
