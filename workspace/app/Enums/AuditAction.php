@@ -60,6 +60,8 @@ enum AuditAction: string
     case HiringFilled = 'hiring.filled';
     case HiringCancelled = 'hiring.cancelled';
 
+    case MailTestSent = 'system.mail_test';
+
     public function label(): string
     {
         return match ($this) {
@@ -108,6 +110,7 @@ enum AuditAction: string
             self::HiringRejected => 'رفض طلب توظيف',
             self::HiringFilled => 'شغل وظيفة',
             self::HiringCancelled => 'إلغاء طلب توظيف',
+            self::MailTestSent => 'رسالة بريد تجريبية',
         };
     }
 
@@ -132,5 +135,23 @@ enum AuditAction: string
     public function group(): string
     {
         return strstr($this->value, '.', true);
+    }
+
+    /**
+     * اسم الفئة كما يظهر في تصفية السجل والتقارير.
+     */
+    public static function groupLabel(string $group): string
+    {
+        return match ($group) {
+            'auth' => 'الدخول',
+            'user' => 'الحسابات',
+            'project' => 'المشاريع',
+            'task' => 'المهام',
+            'finance' => 'المالية',
+            'certificate' => 'الشهادات والإفادات',
+            'hiring' => 'التوظيف',
+            'system' => 'النظام',
+            default => $group,
+        };
     }
 }

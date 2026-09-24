@@ -1,6 +1,10 @@
 <?php
 
+use App\Http\Controllers\Admin\AiIntegrationController;
 use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\DeploymentController;
+use App\Http\Controllers\Admin\MailSettingsController;
+use App\Http\Controllers\Admin\SystemHealthController;
 use App\Http\Controllers\Admin\UserActivationController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\UserInvitationController;
@@ -30,6 +34,7 @@ use App\Http\Controllers\Reports\ExecutiveReportController;
 use App\Http\Controllers\Reports\FinanceReportController;
 use App\Http\Controllers\Reports\MyTasksReportController;
 use App\Http\Controllers\Reports\ProjectManagerReportController;
+use App\Http\Controllers\Reports\TechnicalReportController;
 use App\Http\Controllers\SectionController;
 use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
@@ -138,6 +143,7 @@ Route::middleware('auth')->group(function () {
         Route::get('finance', FinanceReportController::class)->middleware('role:finance|executive')->name('finance');
         Route::get('my-tasks', MyTasksReportController::class)->middleware('role:team_member')->name('mine');
         Route::get('project-status', ClientStatusReportController::class)->middleware('role:client')->name('client');
+        Route::get('technical', TechnicalReportController::class)->middleware('role:sysadmin')->name('technical');
     });
 
     /* المدير التنفيذي. */
@@ -156,6 +162,12 @@ Route::middleware('auth')->group(function () {
         Route::post('users/{user}/invitation', [UserInvitationController::class, 'store'])->name('users.invitation');
 
         Route::get('audit-log', [AuditLogController::class, 'index'])->name('audit.index');
+
+        Route::get('system/health', SystemHealthController::class)->name('system.health');
+        Route::get('system/mail', [MailSettingsController::class, 'show'])->name('system.mail');
+        Route::post('system/mail/test', [MailSettingsController::class, 'send'])->middleware('throttle:5,1')->name('system.mail.test');
+        Route::get('system/deployment', DeploymentController::class)->name('system.deployment');
+        Route::get('system/ai', AiIntegrationController::class)->name('system.ai');
     });
 });
 

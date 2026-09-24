@@ -20,7 +20,7 @@ class AuditLogController extends Controller
     public function index(Request $request): View
     {
         $groups = collect(AuditAction::cases())
-            ->mapWithKeys(fn (AuditAction $action): array => [$action->group() => $this->groupLabel($action->group())])
+            ->mapWithKeys(fn (AuditAction $action): array => [$action->group() => AuditAction::groupLabel($action->group())])
             ->all();
 
         $filters = $request->validate([
@@ -49,19 +49,5 @@ class AuditLogController extends Controller
             'actionOptions' => collect(AuditAction::cases())->mapWithKeys(fn (AuditAction $action): array => [$action->value => $action->label()])->all(),
             'userOptions' => User::query()->orderBy('name')->pluck('name', 'id')->all(),
         ]);
-    }
-
-    private function groupLabel(string $group): string
-    {
-        return match ($group) {
-            'auth' => 'الدخول',
-            'user' => 'الحسابات',
-            'project' => 'المشاريع',
-            'task' => 'المهام',
-            'finance' => 'المالية',
-            'certificate' => 'الشهادات والإفادات',
-            'hiring' => 'التوظيف',
-            default => $group,
-        };
     }
 }
