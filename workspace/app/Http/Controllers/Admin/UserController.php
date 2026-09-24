@@ -38,7 +38,7 @@ class UserController extends Controller
                 $pattern = '%'.addcslashes($search, '%_\\').'%';
                 $query->where(fn (Builder $query) => $query->where('name', 'like', $pattern)->orWhere('email', 'like', $pattern));
             })
-            ->when($filters['role'] ?? null, fn (Builder $query, string $role) => $query->role($role))
+            ->when($filters['role'] ?? null, fn (Builder $query, string $role) => $query->withRole($role))
             ->when($filters['status'] ?? null, fn (Builder $query, string $status) => match (AccountStatus::from($status)) {
                 AccountStatus::Deactivated => $query->whereNotNull('deactivated_at'),
                 AccountStatus::Pending => $query->whereNull('deactivated_at')->whereNull('invitation_accepted_at'),

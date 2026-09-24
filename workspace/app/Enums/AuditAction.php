@@ -20,6 +20,20 @@ enum AuditAction: string
     case InvitationSent = 'user.invitation_sent';
     case InvitationAccepted = 'user.invitation_accepted';
 
+    case ProjectCreated = 'project.created';
+    case ProjectUpdated = 'project.updated';
+    case ProjectDeleted = 'project.deleted';
+    case ProjectSubmitted = 'project.submitted';
+    case ProjectDecided = 'project.decided';
+    case ProjectStarted = 'project.started';
+    case ProjectCompleted = 'project.completed';
+    case ProjectMemberAdded = 'project.member_added';
+    case ProjectMemberRemoved = 'project.member_removed';
+    case AttachmentUploaded = 'project.attachment_uploaded';
+    case AttachmentDeleted = 'project.attachment_deleted';
+
+    case TaskDeleted = 'task.deleted';
+
     public function label(): string
     {
         return match ($this) {
@@ -33,15 +47,27 @@ enum AuditAction: string
             self::UserReactivated => 'إعادة تفعيل حساب',
             self::InvitationSent => 'إرسال دعوة',
             self::InvitationAccepted => 'قبول دعوة',
+            self::ProjectCreated => 'إنشاء مشروع',
+            self::ProjectUpdated => 'تعديل مشروع',
+            self::ProjectDeleted => 'حذف مسودة مشروع',
+            self::ProjectSubmitted => 'تقديم مشروع للاعتماد',
+            self::ProjectDecided => 'قرار تنفيذي على مشروع',
+            self::ProjectStarted => 'بدء تنفيذ مشروع',
+            self::ProjectCompleted => 'إنجاز مشروع',
+            self::ProjectMemberAdded => 'إضافة عضو لمشروع',
+            self::ProjectMemberRemoved => 'إزالة عضو من مشروع',
+            self::AttachmentUploaded => 'رفع مرفق',
+            self::AttachmentDeleted => 'حذف مرفق',
+            self::TaskDeleted => 'حذف مهمة',
         };
     }
 
     public function color(): string
     {
         return match ($this) {
-            self::AuthFailed, self::UserDeactivated => 'red',
-            self::UserRoleChanged, self::PasswordReset => 'orange',
-            self::UserCreated, self::InvitationAccepted, self::UserReactivated => 'green',
+            self::AuthFailed, self::UserDeactivated, self::ProjectDeleted, self::TaskDeleted, self::AttachmentDeleted => 'red',
+            self::UserRoleChanged, self::PasswordReset, self::ProjectDecided => 'orange',
+            self::UserCreated, self::InvitationAccepted, self::UserReactivated, self::ProjectCreated, self::ProjectCompleted => 'green',
             self::AuthLogin => 'gray',
             default => 'blue',
         };

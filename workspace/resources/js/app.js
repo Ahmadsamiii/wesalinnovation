@@ -1,6 +1,88 @@
-
-
 import Alpine from 'alpinejs';
+
+/**
+ * لوحة الكانبان. السحب والإفلات تحسين فوق نماذج «نقل إلى» العادية لا بديل
+ * عنها: كل نقل يمر على نفس المسار (tasks.move) وصلاحياته، ومن لا يستطيع
+ * السحب (لوحة مفاتيح، قارئ شاشة، لمس) يستخدم النموذج.
+ */
+Alpine.data('kanban', () => ({
+    dragging: null,
+    over: null,
+    message: '',
+    error: '',
+
+    start(event, id) {
+        this.dragging = id;
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', String(id));
+    },
+
+    drop(event, status) {
+        this.over = null;
+        const card = document.getElementById(`task-${this.dragging ?? event.dataTransfer.getData('text/plain')}`);
+        this.dragging = null;
+        const list = event.currentTarget.querySelector('[data-cards]');
+
+        if (!card || !list) {
+            return;
+        }
+
+        const before = [...list.querySelectorAll('[data-task]')].find(
+            (element) => element !== card && event.clientY < element.getBoundingClientRect().top + element.offsetHeight / 2,
+        );
+
+        this.move(card, list, before ?? null, status);
+    },
+
+    submitMove(event) {
+        const card = event.target.closest('[data-task]');
+        const status = event.target.querySelector('select[name=status]').value;
+        const list = document.querySelector(`[data-column="${status}"] [data-cards]`);
+
+        this.move(card, list, null, status);
+    },
+
+    async move(card, list, before, status) {
+        const origin = { parent: card.parentElement, next: card.nextElementSibling };
+        list.insertBefore(card, before);
+        const position = [...list.querySelectorAll('[data-task]')].indexOf(card);
+        this.error = '';
+
+        try {
+            const response = await fetch(card.dataset.moveUrl, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                },
+                body: JSON.stringify({ status, position }),
+            });
+
+            if (!response.ok) {
+                throw new Error(String(response.status));
+            }
+
+            this.message = (await response.json()).message;
+            const select = card.querySelector('select[name=status]');
+
+            if (select) {
+                select.value = status;
+            }
+        } catch {
+            origin.parent.insertBefore(card, origin.next);
+            this.error = 'تعذّر نقل المهمة. ربما تغيّرت صلاحيتك أو توقف المشروع؛ حدّث الصفحة.';
+        }
+
+        this.recount();
+    },
+
+    recount() {
+        document.querySelectorAll('[data-column]').forEach((column) => {
+            column.querySelector('[data-count]').textContent = column.querySelectorAll('[data-task]').length;
+        });
+    },
+}));
 
 window.Alpine = Alpine;
 

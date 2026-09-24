@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\Project;
+use App\Models\Task;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\ServiceProvider;
@@ -26,6 +28,8 @@ class AppServiceProvider extends ServiceProvider
         // أدوار Spatie) بدل أسماء الأصناف: إعادة تسمية صنف لا تكسر البيانات.
         Relation::enforceMorphMap([
             'user' => User::class,
+            'project' => Project::class,
+            'task' => Task::class,
         ]);
 
         // النظام يحوي عقوداً وبيانات مالية: عشرة أحرف بحروف وأرقام في

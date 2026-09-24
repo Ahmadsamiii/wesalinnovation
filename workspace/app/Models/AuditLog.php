@@ -40,6 +40,12 @@ class AuditLog extends Model
      */
     public static function record(AuditAction $action, ?Model $subject = null, array $properties = [], ?User $actor = null): self
     {
+        // اسم الكيان وقت الإجراء يُحفظ مع السطر، فيبقى السجل مقروءاً حتى لو
+        // حُذف الكيان أو تغيّر اسمه لاحقاً.
+        if ($subject && method_exists($subject, 'auditLabel')) {
+            $properties['subject_label'] ??= $subject->auditLabel();
+        }
+
         return static::create([
             'user_id' => ($actor ?? auth()->user())?->getKey(),
             'action' => $action,
@@ -98,6 +104,9 @@ class AuditLog extends Model
                 ))
                 : null,
             AuditAction::AuthFailed, AuditAction::InvitationSent => $properties['email'] ?? null,
+            AuditAction::ProjectDecided => trim(($properties['decision_label'] ?? '').(isset($properties['note']) ? ': '.$properties['note'] : '')),
+            AuditAction::ProjectMemberAdded, AuditAction::ProjectMemberRemoved => $properties['member'] ?? null,
+            AuditAction::AttachmentUploaded, AuditAction::AttachmentDeleted => $properties['file'] ?? null,
             default => $properties['note'] ?? null,
         };
     }

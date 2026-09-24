@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\URL;
@@ -139,6 +140,14 @@ class User extends Authenticatable
         return true;
     }
 
+    /**
+     * @return HasMany<Task, $this>
+     */
+    public function assignedTasks(): HasMany
+    {
+        return $this->hasMany(Task::class, 'assignee_id');
+    }
+
     public function isDeactivated(): bool
     {
         return $this->deactivated_at !== null;
@@ -162,6 +171,17 @@ class User extends Authenticatable
     }
 
     /**
+     * بديل scope role() من Spatie الذي يرمي استثناءً إن لم يكن للدور صف بعد؛
+     * هذا يعيد نتيجة فارغة فقط.
+     *
+     * @param  Builder<User>  $query
+     */
+    public function scopeWithRole(Builder $query, string $role): void
+    {
+        $query->whereHas('roles', fn (Builder $query) => $query->where('name', $role));
+    }
+
+    /**
      * من يستطيع الدخول فعلاً: غير موقوف وقبِل دعوته.
      *
      * @param  Builder<User>  $query
@@ -178,7 +198,7 @@ class User extends Authenticatable
     public function isLastActiveSysadmin(): bool
     {
         return $this->hasRole('sysadmin')
-            && ! static::role('sysadmin')->canSignIn()->whereKeyNot($this->getKey())->exists();
+            && ! static::withRole('sysadmin')->canSignIn()->whereKeyNot($this->getKey())->exists();
     }
 
     public function auditLabel(): string
