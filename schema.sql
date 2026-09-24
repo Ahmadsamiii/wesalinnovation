@@ -147,15 +147,28 @@ CREATE TABLE IF NOT EXISTS password_resets (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------------------------
---  محتوى الصفحات القابل للتحرير
---  كل مفتاح يقابل عنصراً في index.html يحمل data-cms="المفتاح".
---  غياب الصف يعني أن النص الأصلي المكتوب في الصفحة هو المعروض.
+--  محتوى الصفحات — النظام السابق (مفتاح ← نص عربي). لم يعد يُكتب فيه:
+--  يُرحَّل مرة واحدة إلى landing_content أدناه ويبقى كما هو للرجوع إليه.
 -- --------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS site_content (
   ckey        VARCHAR(80)  NOT NULL PRIMARY KEY,
   cval        TEXT         NOT NULL,
   updated_by  INT          NULL,
   updated_at  DATETIME     NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------------------------
+--  محتوى صفحة الهبوط — صف للمنشور (live) وصف للمسودة المشتركة (draft).
+--  doc يحفظ الفروقات عن النصوص الافتراضية في api/landing-schema.php فقط.
+--  site_content أعلاه من النظام السابق: يُرحَّل منه تلقائياً عند أول طلب.
+-- --------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS landing_content (
+  state        ENUM('draft','live') NOT NULL PRIMARY KEY,
+  doc          MEDIUMTEXT   NOT NULL,
+  etag         CHAR(16)     NOT NULL,
+  updated_by   INT          NULL,
+  updated_name VARCHAR(80)  NULL,
+  updated_at   DATETIME     NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------------------------

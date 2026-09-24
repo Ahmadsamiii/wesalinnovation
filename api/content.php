@@ -1,156 +1,445 @@
 <?php
 /* ==========================================================================
- *  وصال — محتوى الصفحات القابل للتحرير
+ *  وصال — محتوى صفحة الهبوط: مسودة ثم نشر، بلغتين
  *
- *  كل مفتاح هنا يقابل عنصراً في index.html يحمل السمة data-cms.
- *  غياب المفتاح من قاعدة البيانات يعني أن النص الأصلي المكتوب في الصفحة
- *  هو المعروض — أي أن المنصة تعمل كاملة حتى لو كان الجدول فارغاً.
+ *  الحقول والقوائم ونصوصها الافتراضية معرّفة في landing-schema.php.
  *
- *  السجل أدناه هو المرجع الوحيد للحقول: منه تُبنى شاشة التحرير في لوحة
- *  مدير النظام، وبه يُتحقَّق من المدخلات عند الحفظ. إضافة حقل = سطر واحد هنا
- *  + سمة data-cms في الصفحة.
+ *  التخزين: صفّان في landing_content — المنشور (live) والمسودة المشتركة
+ *  (draft). كل صف يحفظ «الفروقات عن الافتراضي» فقط، فأي حقل لم يُعدَّل يتبع
+ *  النص الافتراضي في السجل تلقائياً، و«الإرجاع للأصل» يعني حذف الفرق.
+ *
+ *  الواجهة تتعامل مع المستند «الفعّال» الكامل (الافتراضي + الفروقات)، وهذا
+ *  الملف وحده يحوّل بين الشكلين — لا منطق دمج في المتصفح.
+ *
+ *  لا مسودة = المسودة تطابق المنشور. الحفظ الذي يعيد المسودة مطابقة للمنشور
+ *  يحذف صفها، فعدّاد «تغييرات غير منشورة» صادق دائماً.
  * ========================================================================== */
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/landing-schema.php';
 
-function contentFields(): array {
-    return [
-        ['g' => 'الهوية والتواصل', 'items' => [
-            ['k' => 'social.x',         'l' => 'حساب إكس (X)',            't' => 'url',   'd' => 'https://x.com/Wesalhub'],
-            ['k' => 'social.instagram', 'l' => 'حساب إنستقرام',           't' => 'url',   'd' => 'https://www.instagram.com/wesalhub'],
-            ['k' => 'social.linkedin',  'l' => 'حساب لينكد إن',           't' => 'url',   'd' => 'https://www.linkedin.com/company/wesalksa0'],
-            ['k' => 'contact.email',    'l' => 'البريد الإلكتروني',        't' => 'email', 'd' => 'info@wesalinnovation.sa'],
-            ['k' => 'contact.phone',    'l' => 'رقم الجوال',              't' => 'tel',   'd' => '+966 50 112 0161'],
-            ['k' => 'contact.hours',    'l' => 'ساعات العمل',             't' => 'text',  'd' => 'الأحد - الخميس، 8 ص - 6 م'],
-        ]],
-        ['g' => 'الواجهة الرئيسية', 'items' => [
-            ['k' => 'hero.chip',   'l' => 'الشارة العلوية',       't' => 'text', 'd' => 'منصة ذكاء اصطناعي مُيسّرة للجميع'],
-            ['k' => 'hero.title',  'l' => 'العنوان الرئيسي',      't' => 'text', 'd' => 'وصال — نفهمك ونسهّل وصولك'],
-            ['k' => 'hero.sub',    'l' => 'النص التعريفي',        't' => 'area', 'd' => 'اسأل بلغتك عن حقوقك أو خدماتك أو التقنيات المساعدة، ويجيبك وصال بوضوح من مصادر رسمية سعودية مع ذكر المصدر — قراءةً أو استماعاً. النسخة التجريبية تركّز حالياً على الإعاقة الحركية والبصرية.'],
-            ['k' => 'hero.ph',     'l' => 'نص حقل السؤال',        't' => 'text', 'd' => 'اسأل وصال عن أي شيء...'],
-            ['k' => 'hero.cta1',   'l' => 'زر الإجراء الأول',     't' => 'text', 'd' => 'جرّب الآن مجاناً'],
-            ['k' => 'hero.cta2',   'l' => 'زر الإجراء الثاني',    't' => 'text', 'd' => 'كيف يشتغل وصال'],
-            ['k' => 'hero.t1t',    'l' => 'مؤشر ثقة ١ — العنوان', 't' => 'text', 'd' => 'نسخة تجريبية'],
-            ['k' => 'hero.t1s',    'l' => 'مؤشر ثقة ١ — الوصف',   't' => 'text', 'd' => 'مفتوحة للجميع'],
-            ['k' => 'hero.t2t',    'l' => 'مؤشر ثقة ٢ — العنوان', 't' => 'text', 'd' => 'بمصادر رسمية'],
-            ['k' => 'hero.t2s',    'l' => 'مؤشر ثقة ٢ — الوصف',   't' => 'text', 'd' => 'مع كل إجابة'],
-            ['k' => 'hero.t3t',    'l' => 'مؤشر ثقة ٣ — العنوان', 't' => 'text', 'd' => '24/7'],
-            ['k' => 'hero.t3s',    'l' => 'مؤشر ثقة ٣ — الوصف',   't' => 'text', 'd' => 'متاح'],
-        ]],
-        ['g' => 'قسم المزايا', 'items' => [
-            ['k' => 'feat.label', 'l' => 'عنوان القسم الصغير', 't' => 'text', 'd' => 'المزايا'],
-            ['k' => 'feat.title', 'l' => 'عنوان القسم',        't' => 'text', 'd' => 'تجربة ذكية مصممة لتكون في متناول الجميع'],
-            ['k' => 'feat.sub',   'l' => 'وصف القسم',          't' => 'area', 'd' => 'نجمع بين قوة الذكاء الاصطناعي وأفضل معايير إمكانية الوصول لنقدم تجربة فريدة ومُيسّرة'],
-            ['k' => 'feat.1t', 'l' => 'ميزة ١ — العنوان', 't' => 'text', 'd' => 'إجابات ذكية ومبسّطة'],
-            ['k' => 'feat.1d', 'l' => 'ميزة ١ — الوصف',   't' => 'area', 'd' => 'يفهم وصال أسئلتك ويقدّم إجابات واضحة ومبسّطة تناسب احتياجاتك المعلوماتية'],
-            ['k' => 'feat.2t', 'l' => 'ميزة ٢ — العنوان', 't' => 'text', 'd' => 'تفاعل صوتي طبيعي'],
-            ['k' => 'feat.2d', 'l' => 'ميزة ٢ — الوصف',   't' => 'area', 'd' => 'تحدّث مع وصال بصوتك واستمع للإجابات — مصمم لسهولة الاستخدام لجميع القدرات'],
-            ['k' => 'feat.3t', 'l' => 'ميزة ٣ — العنوان', 't' => 'text', 'd' => 'واجهة مُيسّرة بالكامل'],
-            ['k' => 'feat.3d', 'l' => 'ميزة ٣ — الوصف',   't' => 'area', 'd' => 'تحكم بحجم الخط والتباين والألوان والحركة لتجربة تناسبك تماماً'],
-            ['k' => 'feat.4t', 'l' => 'ميزة ٤ — العنوان', 't' => 'text', 'd' => 'معلومات موثوقة وآمنة'],
-            ['k' => 'feat.4d', 'l' => 'ميزة ٤ — الوصف',   't' => 'area', 'd' => 'إجاباتنا من الجهات الرسمية السعودية، ومع كل إجابة اسم مصدرها — وزر إبلاغ فوري عن أي معلومة غير دقيقة'],
-            ['k' => 'feat.5t', 'l' => 'ميزة ٥ — العنوان', 't' => 'text', 'd' => 'مكتبة معرفية شاملة'],
-            ['k' => 'feat.5d', 'l' => 'ميزة ٥ — الوصف',   't' => 'area', 'd' => 'آلاف الموارد والأدلة الإرشادية المصنّفة والمُيسّرة لسهولة الوصول'],
-            ['k' => 'feat.6t', 'l' => 'ميزة ٦ — العنوان', 't' => 'text', 'd' => 'خصوصية في صميم التصميم'],
-            ['k' => 'feat.6d', 'l' => 'ميزة ٦ — الوصف',   't' => 'area', 'd' => 'بياناتك لك وحدك: بلا إعلانات، بلا مشاركة مع أي طرف، وتقدر تصدّرها أو تحذفها في أي وقت من حسابك'],
-        ]],
-        ['g' => 'التذييل', 'items' => [
-            ['k' => 'footer.about', 'l' => 'نبذة التذييل', 't' => 'area', 'd' => 'منصة ذكاء اصطناعي سعودية مُيسّرة تجيب الأشخاص ذوي الإعاقة من مصادر رسمية موثوقة، مع ذكر المصدر في كل إجابة'],
-        ]],
-    ];
+/* ---------------------------------------------------------------- التنظيف */
+
+/** نص نظيف: بلا وسوم ولا محارف تحكم، وسطر واحد إلا في النص الطويل */
+function lpClean($v, bool $multiline): string {
+    $v = strip_tags((string)$v);
+    $v = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $v) ?? '';
+    $v = $multiline ? preg_replace("/\r\n?/", "\n", $v) : preg_replace('/\s+/u', ' ', $v);
+    return trim((string)$v);
 }
 
-/** خريطة المفتاح ← تعريفه، لاستخدامها في التحقق */
-function contentIndex(): array {
-    static $ix = null;
-    if ($ix !== null) return $ix;
-    $ix = [];
-    foreach (contentFields() as $g) foreach ($g['items'] as $it) $ix[$it['k']] = $it;
-    return $ix;
+/** قيمة حقل واحد منظّفة ومتحقَّق منها — {ar,en} أو {v}. غير الصارم (للترحيل) يقصّ بدل الرفض */
+function lpCleanValue(array $fd, $raw, string $where, bool $strict): array {
+    $raw = is_array($raw) ? $raw : [];
+    $max = (int)$fd['max'];
+    if (lpIsMono($fd['t'])) {
+        $v = lpClean($raw['v'] ?? '', false);
+        if (mb_strlen($v) > $max) {
+            if ($strict) fail('القيمة أطول من الحد المسموح (' . $max . ' حرفاً) في: ' . $where);
+            $v = '';
+        }
+        if ($v !== '' && ($e = lpMonoError($fd['t'], $v)) !== null) {
+            if ($strict) fail($e . ' في: ' . $where);
+            $v = '';
+        }
+        return ['v' => $v];
+    }
+    $out = [];
+    foreach (['ar' => 'العربية', 'en' => 'English'] as $l => $ln) {
+        $v = lpClean($raw[$l] ?? '', $fd['t'] === 'area');
+        if (mb_strlen($v) > $max) {
+            if ($strict) fail('النص أطول من الحد المسموح (' . $max . ' حرفاً) في: ' . $where . ' (' . $ln . ')');
+            $v = mb_substr($v, 0, $max);
+        }
+        $out[$l] = $v;
+    }
+    return $out;
 }
 
-/** تحقّق حسب نوع الحقل — يعيد رسالة الخطأ أو null إذا كانت القيمة سليمة */
-function contentError(array $field, string $v): ?string {
-    $max = $field['t'] === 'area' ? 900 : 200;
-    if (mb_strlen($v) > $max) return 'النص أطول من الحد المسموح (' . $max . ' حرفاً) في: ' . $field['l'];
-    if ($v === '') return null;   // الفراغ يعني الرجوع للنص الأصلي
-    switch ($field['t']) {
+function lpMonoError(string $type, string $v): ?string {
+    switch ($type) {
         case 'url':
-            // http/https فقط — لمنع روابط javascript: التي تتحول إلى ثغرة عند النقر
-            if (!preg_match('#^https?://#i', $v) || !filter_var($v, FILTER_VALIDATE_URL))
-                return 'الرابط لازم يبدأ بـ https:// ويكون صحيحاً في: ' . $field['l'];
-            break;
+            // https فقط — javascript: وأخواتها تصير ثغرة عند النقر
+            if (!preg_match('#^https://#i', $v) || !filter_var($v, FILTER_VALIDATE_URL))
+                return 'الرابط لازم يبدأ بـ https:// ويكون صحيحاً';
+            return null;
         case 'email':
-            if (!filter_var($v, FILTER_VALIDATE_EMAIL)) return 'بريد إلكتروني غير صحيح في: ' . $field['l'];
-            break;
+            return filter_var($v, FILTER_VALIDATE_EMAIL) ? null : 'بريد إلكتروني غير صحيح';
         case 'tel':
-            if (!preg_match('/^[0-9+\-\s()]{6,24}$/u', $v)) return 'رقم جوال غير صحيح في: ' . $field['l'];
-            break;
+            return preg_match('/^\+?[0-9][0-9\s\-()]{5,22}$/', $v) ? null : 'رقم غير صحيح — أرقام ومسافات و+ فقط';
+        case 'domain':
+            return preg_match('/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+(\/[^\s]*)?$/i', $v)
+                ? null : 'النطاق غير صحيح — مثال: moh.gov.sa';
     }
     return null;
 }
 
+/** الفرق بين قيمة وافتراضيها — الفارغ يعني «الافتراضي» فلا يُخزَّن */
+function lpOverride(array $fd, array $val, array $def): array {
+    if (lpIsMono($fd['t'])) {
+        return ($val['v'] !== '' && $val['v'] !== (string)($def['v'] ?? '')) ? ['v' => $val['v']] : [];
+    }
+    $o = [];
+    foreach (['ar', 'en'] as $l) {
+        if ($val[$l] !== '' && $val[$l] !== (string)($def[$l] ?? '')) $o[$l] = $val[$l];
+    }
+    return $o;
+}
+
+/* ------------------------------------------------- فعّال ← فروقات (حفظ) */
+
+/** قسم فعّال كامل من الواجهة ← فروقاته عن الافتراضي، مع التحقق من كل قيمة */
+function lpSparseSection(array $sec, $eff, bool $strict): array {
+    if (!is_array($eff)) {
+        if ($strict) fail('بيانات غير صالحة في قسم: ' . $sec['label']);
+        return [];
+    }
+    $o = [];
+    if ($sec['hideable'] && !empty($eff['hidden'])) $o['h'] = 1;
+    $fo = [];
+    foreach ($sec['fields'] as $fd) {
+        $val = lpCleanValue($fd, $eff['f'][$fd['k']] ?? null, $sec['label'] . ' ← ' . $fd['l'], $strict);
+        if ($ov = lpOverride($fd, $val, $fd['d'])) $fo[$fd['k']] = $ov;
+    }
+    if ($fo) $o['f'] = $fo;
+    foreach ($sec['lists'] as $ld) {
+        $lo = lpSparseList($sec, $ld, $eff['l'][$ld['k']] ?? null, $strict);
+        if ($lo !== null) $o['l'][$ld['k']] = $lo;
+    }
+    return $o;
+}
+
+/** قائمة بطاقات ← null إن طابقت الافتراضي تماماً، وإلا ترتيبها الكامل بفروق كل بطاقة */
+function lpSparseList(array $sec, array $ld, $items, bool $strict): ?array {
+    if (!is_array($items)) return null;
+    $items = array_values($items);
+    if (count($items) > $ld['max']) {
+        if ($strict) fail('الحد الأقصى ' . $ld['max'] . ' في: ' . $sec['label'] . ' ← ' . $ld['l']);
+        $items = array_slice($items, 0, $ld['max']);
+    }
+    $defs = [];
+    foreach ($ld['items'] as $pos => $d) $defs[$d['id']] = [$pos, $d];
+    $icons = landingIcons();
+    $same = count($items) === count($ld['items']);
+    $out = [];
+    $seen = [];
+    foreach ($items as $pos => $it) {
+        if (!is_array($it)) {
+            if ($strict) fail('بطاقة غير صالحة في: ' . $sec['label']);
+            continue;
+        }
+        $id = (string)($it['id'] ?? '');
+        $isDef = isset($defs[$id]) && empty($it['custom']);
+        if ($isDef && isset($seen[$id])) continue;   // بطاقة افتراضية مكررة: الأولى تكفي
+        if (!$isDef && (!preg_match('/^c[a-z0-9]{5,15}$/', $id) || isset($defs[$id]) || isset($seen[$id]))) {
+            $id = 'c' . bin2hex(random_bytes(5));
+        }
+        $seen[$id] = 1;
+        $where = $sec['label'] . ' ← ' . $ld['item'] . ' ' . ($pos + 1);
+        $icon = null;
+        if ($ld['icon']) {
+            $icon = (string)($it['icon'] ?? '');
+            if (!isset($icons[$icon])) $icon = $isDef ? (string)($defs[$id][1]['i'] ?? 'star') : 'star';
+        }
+        $e = ['id' => $id];
+        if ($isDef) {
+            [$dpos, $d] = $defs[$id];
+            if ($dpos !== $pos) $same = false;
+            if (!empty($it['hidden'])) { $e['h'] = 1; $same = false; }
+            if ($ld['icon'] && $icon !== ($d['i'] ?? null)) { $e['i'] = $icon; $same = false; }
+            $fo = [];
+            foreach ($ld['fields'] as $fd) {
+                $val = lpCleanValue($fd, $it['f'][$fd['k']] ?? null, $where . ' ← ' . $fd['l'], $strict);
+                if ($ov = lpOverride($fd, $val, $d['f'][$fd['k']] ?? [])) $fo[$fd['k']] = $ov;
+            }
+            if ($fo) { $e['f'] = $fo; $same = false; }
+        } else {
+            $same = false;
+            $e['c'] = 1;
+            if (!empty($it['hidden'])) $e['h'] = 1;
+            if ($ld['icon']) $e['i'] = $icon;
+            $fo = [];
+            foreach ($ld['fields'] as $fd) {
+                $val = lpCleanValue($fd, $it['f'][$fd['k']] ?? null, $where . ' ← ' . $fd['l'], $strict);
+                if ($ov = lpOverride($fd, $val, [])) $fo[$fd['k']] = $ov;
+            }
+            if ($fo) $e['f'] = $fo;
+        }
+        $out[] = $e;
+    }
+    return $same ? null : $out;
+}
+
+/* ----------------------------------------------- فروقات ← فعّال (عرض) */
+
+function lpMerge(array $fd, array $def, $ov): array {
+    $ov = is_array($ov) ? $ov : [];
+    if (lpIsMono($fd['t'])) {
+        $v = (string)($ov['v'] ?? '');
+        return ['v' => $v !== '' ? $v : (string)($def['v'] ?? '')];
+    }
+    $r = [];
+    foreach (['ar', 'en'] as $l) {
+        $v = (string)($ov[$l] ?? '');
+        $r[$l] = $v !== '' ? $v : (string)($def[$l] ?? '');
+    }
+    return $r;
+}
+
+function lpEffList(array $ld, $sparse): array {
+    $defs = [];
+    foreach ($ld['items'] as $d) $defs[$d['id']] = $d;
+    $icons = landingIcons();
+    $src = is_array($sparse) ? $sparse : array_map(fn($d) => ['id' => $d['id']], $ld['items']);
+    $out = [];
+    foreach ($src as $it) {
+        $id = (string)($it['id'] ?? '');
+        $custom = !empty($it['c']);
+        if (!$custom && !isset($defs[$id])) continue;   // بطاقة افتراضية أُزيلت من السجل لاحقاً
+        $d = $custom ? ['f' => []] : $defs[$id];
+        $f = [];
+        foreach ($ld['fields'] as $fd) $f[$fd['k']] = lpMerge($fd, $d['f'][$fd['k']] ?? [], $it['f'][$fd['k']] ?? []);
+        $icon = null;
+        if ($ld['icon']) {
+            $icon = (string)($it['i'] ?? ($d['i'] ?? 'star'));
+            if (!isset($icons[$icon])) $icon = (string)($d['i'] ?? 'star');
+        }
+        $out[] = ['id' => $id, 'custom' => $custom, 'hidden' => !empty($it['h']), 'icon' => $icon, 'f' => $f];
+    }
+    return $out;
+}
+
+/** المستند الفعّال الكامل: كل قسم بكل حقوله وقوائمه */
+function lpEffective(array $doc): array {
+    $out = [];
+    foreach (landingSchema() as $sec) {
+        $so = $doc['s'][$sec['id']] ?? [];
+        $e = ['hidden' => $sec['hideable'] && !empty($so['h']), 'f' => [], 'l' => []];
+        foreach ($sec['fields'] as $fd) $e['f'][$fd['k']] = lpMerge($fd, $fd['d'], $so['f'][$fd['k']] ?? []);
+        foreach ($sec['lists'] as $ld) $e['l'][$ld['k']] = lpEffList($ld, $so['l'][$ld['k']] ?? null);
+        if (!$e['l']) $e['l'] = new stdClass();   // كائن JSON لا مصفوفة فارغة
+        $out[$sec['id']] = $e;
+    }
+    return $out;
+}
+
+/** صيغة موحّدة للمقارنة: الأقسام بترتيب السجل، بلا الفارغ منها */
+function lpCanon(array $doc): array {
+    $c = [];
+    foreach (landingSchema() as $sec) {
+        if (!empty($doc['s'][$sec['id']])) $c[$sec['id']] = $doc['s'][$sec['id']];
+    }
+    return $c;
+}
+
+/* ---------------------------------------------------------------- التخزين */
+
+function lpRow(string $state, bool $lock = false): ?array {
+    $s = db()->prepare('SELECT doc, etag, updated_by, updated_name, updated_at FROM landing_content WHERE state=?'
+                       . ($lock ? ' FOR UPDATE' : ''));
+    $s->execute([$state]);
+    $r = $s->fetch();
+    if (!$r) return null;
+    $doc = json_decode((string)$r['doc'], true);
+    return [
+        'doc'  => is_array($doc) ? $doc : ['s' => []],
+        'etag' => (string)$r['etag'],
+        'uid'  => $r['updated_by'] !== null ? (int)$r['updated_by'] : null,
+        'by'   => $r['updated_name'],
+        'at'   => strtotime((string)$r['updated_at']) * 1000,
+    ];
+}
+
+function lpWrite(string $state, array $doc, ?array $user): string {
+    $etag = bin2hex(random_bytes(8));
+    db()->prepare('INSERT INTO landing_content (state, doc, etag, updated_by, updated_name, updated_at)
+                   VALUES (?,?,?,?,?,NOW())
+                   ON DUPLICATE KEY UPDATE doc=VALUES(doc), etag=VALUES(etag), updated_by=VALUES(updated_by),
+                                           updated_name=VALUES(updated_name), updated_at=NOW()')
+        ->execute([$state, json_encode(['v' => 1, 's' => lpCanon($doc)], JSON_UNESCAPED_UNICODE),
+                   $etag, $user['id'] ?? null, $user['name'] ?? null]);
+    return $etag;
+}
+
+/** المنشور — وفي أول تشغيل يُبنى من محتوى النظام القديم (site_content) إن وُجد */
+function lpLive(): array {
+    $r = lpRow('live');
+    if ($r) return $r;
+    $doc = lpMigrateLegacy();
+    db()->prepare('INSERT IGNORE INTO landing_content (state, doc, etag, updated_by, updated_name, updated_at)
+                   VALUES (\'live\',?,?,NULL,NULL,NOW())')
+        ->execute([json_encode(['v' => 1, 's' => lpCanon($doc)], JSON_UNESCAPED_UNICODE), bin2hex(random_bytes(8))]);
+    return lpRow('live') ?? ['doc' => $doc, 'etag' => '', 'uid' => null, 'by' => null, 'at' => 0];
+}
+
+/** مفاتيح النظام القديم (نص عربي فقط) ← مكانها في المستند الجديد */
+function lpMigrateLegacy(): array {
+    $old = contentMap();
+    $eff = lpEffective(['s' => []]);
+    if (!$old) return ['s' => []];
+    $fields = [
+        'social.x' => ['footer', 'x', 'v'], 'social.instagram' => ['footer', 'instagram', 'v'],
+        'social.linkedin' => ['footer', 'linkedin', 'v'], 'contact.email' => ['footer', 'email', 'v'],
+        'contact.phone' => ['footer', 'phone', 'v'], 'contact.hours' => ['footer', 'hours', 'ar'],
+        'footer.about' => ['footer', 'about', 'ar'],
+        'hero.chip' => ['hero', 'chip', 'ar'], 'hero.title' => ['hero', 'title', 'ar'], 'hero.sub' => ['hero', 'sub', 'ar'],
+        'hero.ph' => ['hero', 'ph', 'ar'], 'hero.cta1' => ['hero', 'cta1', 'ar'], 'hero.cta2' => ['hero', 'cta2', 'ar'],
+        'feat.label' => ['features', 'label', 'ar'], 'feat.title' => ['features', 'title', 'ar'], 'feat.sub' => ['features', 'sub', 'ar'],
+    ];
+    $items = [
+        'hero.t1t' => ['hero', 'trust', 'beta', 't'], 'hero.t1s' => ['hero', 'trust', 'beta', 's'],
+        'hero.t2t' => ['hero', 'trust', 'sources', 't'], 'hero.t2s' => ['hero', 'trust', 'sources', 's'],
+        'hero.t3t' => ['hero', 'trust', 'always', 't'], 'hero.t3s' => ['hero', 'trust', 'always', 's'],
+    ];
+    foreach (['smart', 'voice', 'accessible', 'trusted', 'library', 'privacy'] as $i => $id) {
+        $items['feat.' . ($i + 1) . 't'] = ['features', 'items', $id, 'title'];
+        $items['feat.' . ($i + 1) . 'd'] = ['features', 'items', $id, 'desc'];
+    }
+    foreach ($old as $k => $v) {
+        if (isset($fields[$k])) {
+            [$s, $f, $l] = $fields[$k];
+            $eff[$s]['f'][$f][$l] = $v;
+        } elseif (isset($items[$k])) {
+            [$s, $list, $id, $f] = $items[$k];
+            foreach ($eff[$s]['l'][$list] as &$it) if ($it['id'] === $id) $it['f'][$f]['ar'] = $v;
+            unset($it);
+        }
+    }
+    $doc = ['s' => []];
+    foreach (landingSchema() as $sec) {
+        $sec_eff = json_decode(json_encode($eff[$sec['id']]), true);   // stdClass ← مصفوفة
+        if ($sp = lpSparseSection($sec, $sec_eff, false)) $doc['s'][$sec['id']] = $sp;
+    }
+    return $doc;
+}
+
+/** بيانات شاشة التحرير كاملة */
+function lpEditorPayload(bool $withSchema): array {
+    $live = lpLive();
+    $draft = lpRow('draft');
+    $p = [
+        'ok'        => true,
+        'live'      => lpEffective($live['doc']),
+        'liveEtag'  => $live['etag'],
+        'liveBy'    => $live['by'],
+        'liveAt'    => $live['at'],
+        'draft'     => lpEffective(($draft ?? $live)['doc']),
+        'hasDraft'  => $draft !== null,
+        'draftEtag' => $draft['etag'] ?? '',
+        'draftBy'   => $draft['by'] ?? null,
+        'draftAt'   => $draft['at'] ?? 0,
+    ];
+    if ($withSchema) {
+        $p['schema'] = landingSchema();
+        $p['icons'] = landingIcons();
+    }
+    return $p;
+}
+
+function lpLabels(array $ids): string {
+    $n = [];
+    foreach ($ids as $id) if ($s = lpSection($id)) $n[] = $s['label'];
+    return implode('، ', $n);
+}
+
+/* ---------------------------------------------------------------- العمليات */
+
+ensureSchema();
 $in = body();
-switch ($in['action'] ?? 'get') {
+try {
+    switch ($in['action'] ?? 'get') {
 
-    /* عام — تناديه الصفحة عند كل تحميل */
-    case 'get': {
-        out(['ok' => true, 'content' => (object)contentMap()]);
-    }
-
-    /* سجل الحقول لبناء شاشة التحرير — لمدير النظام فقط */
-    case 'schema': {
-        requireAdmin();
-        out(['ok' => true, 'groups' => contentFields(), 'content' => (object)contentMap()]);
-    }
-
-    case 'save': {
-        $admin = requireAdmin();
-        rateLimit('content', 30);
-        $items = is_array($in['items'] ?? null) ? $in['items'] : [];
-        if (!$items) fail('ما فيه تغييرات للحفظ.');
-
-        $ix = contentIndex();
-        $clean = [];
-        foreach ($items as $k => $v) {
-            $k = (string)$k;
-            if (!isset($ix[$k])) fail('حقل غير معروف: ' . clean($k, 80));
-            $v = trim(strip_tags((string)$v));
-            if ($e = contentError($ix[$k], $v)) fail($e);
-            $clean[$k] = $v;
+        /* عام — تناديه الصفحة عند كل تحميل */
+        case 'get': {
+            $live = lpLive();
+            out(['ok' => true, 'doc' => lpEffective($live['doc']), 'etag' => $live['etag']]);
         }
 
-        $set = db()->prepare('INSERT INTO site_content (ckey,cval,updated_by,updated_at) VALUES (?,?,?,NOW())
-                              ON DUPLICATE KEY UPDATE cval=VALUES(cval), updated_by=VALUES(updated_by), updated_at=NOW()');
-        $del = db()->prepare('DELETE FROM site_content WHERE ckey=?');
-        db()->beginTransaction();
-        try {
-            foreach ($clean as $k => $v) {
-                // القيمة الفارغة تحذف الصف فيعود النص الأصلي المكتوب في الصفحة
-                if ($v === '') $del->execute([$k]);
-                else           $set->execute([$k, $v, $admin['id']]);
+        /* المسودة كما ستظهر — للمعاينة في اللوحة أو في تبويب مستقل */
+        case 'preview': {
+            requireAdmin();
+            $d = lpRow('draft') ?? lpLive();
+            out(['ok' => true, 'doc' => lpEffective($d['doc']), 'draft' => true]);
+        }
+
+        case 'editor': {
+            requireAdmin();
+            out(lpEditorPayload(true));
+        }
+
+        /* حفظ تلقائي: الأقسام المعدّلة فقط، فمديران يحرّران قسمين مختلفين لا
+           يمسح أحدهما عمل الآخر. etag الأساس يكشف أن غيرك حفظ بعد آخر مزامنة. */
+        case 'save_draft': {
+            $admin = requireAdmin();
+            rateLimit('landing', 240);
+            $secs = $in['sections'] ?? null;
+            if (!is_array($secs) || !$secs) fail('ما فيه تغييرات للحفظ.');
+            $base = (string)($in['etag'] ?? '');
+
+            db()->beginTransaction();
+            $row = lpRow('draft', true);
+            $live = lpLive();
+            $doc = $row ? $row['doc'] : $live['doc'];
+            $conflict = ($row['etag'] ?? '') !== $base;
+            foreach ($secs as $id => $eff) {
+                $sec = lpSection((string)$id);
+                if (!$sec) fail('قسم غير معروف: ' . clean((string)$id, 40));
+                $sp = lpSparseSection($sec, $eff, true);
+                if ($sp) $doc['s'][$sec['id']] = $sp;
+                else unset($doc['s'][$sec['id']]);
+            }
+            if (lpCanon($doc) === lpCanon($live['doc'])) {
+                db()->exec("DELETE FROM landing_content WHERE state='draft'");
+                $etag = '';
+            } else {
+                $etag = lpWrite('draft', $doc, $admin);
             }
             db()->commit();
-        } catch (Throwable $e) {
-            db()->rollBack();
-            fail(APP_DEBUG ? $e->getMessage() : 'تعذّر حفظ المحتوى. حاول مرة أخرى.', 500);
+            out([
+                'ok' => true, 'etag' => $etag, 'hasDraft' => $etag !== '',
+                'conflict' => $conflict && $row !== null, 'by' => $row['by'] ?? null,
+                'draft' => lpEffective($doc), 'draftBy' => $etag !== '' ? $admin['name'] : null,
+                'liveEtag' => $live['etag'],
+            ]);
         }
 
-        audit($admin, 'content', implode('، ', array_keys($clean)), count($clean) . ' حقلاً');
-        out(['ok' => true, 'content' => (object)contentMap(), 'saved' => count($clean)]);
-    }
+        case 'discard': {
+            $admin = requireAdmin();
+            $had = lpRow('draft') !== null;
+            db()->exec("DELETE FROM landing_content WHERE state='draft'");
+            if ($had) audit($admin, 'landing_discard', 'صفحة الهبوط');
+            out(lpEditorPayload(false));
+        }
 
-    /* إرجاع مجموعة كاملة لنصوصها الأصلية */
-    case 'reset_group': {
-        $admin = requireAdmin();
-        $g = clean($in['group'] ?? '', 60);
-        $keys = [];
-        foreach (contentFields() as $grp) if ($grp['g'] === $g) foreach ($grp['items'] as $it) $keys[] = $it['k'];
-        if (!$keys) fail('مجموعة غير معروفة.');
-        $ph = implode(',', array_fill(0, count($keys), '?'));
-        db()->prepare("DELETE FROM site_content WHERE ckey IN ($ph)")->execute($keys);
-        audit($admin, 'content_reset', $g, count($keys) . ' حقلاً');
-        out(['ok' => true, 'content' => (object)contentMap()]);
-    }
+        case 'publish': {
+            $admin = requireAdmin();
+            rateLimit('landing_pub', 20);
+            $base = (string)($in['etag'] ?? '');
 
-    default: fail('طلب غير معروف.');
+            db()->beginTransaction();
+            $row = lpRow('draft', true);
+            if (!$row) fail('ما فيه تغييرات غير منشورة.', 409);
+            if ($row['etag'] !== $base) {
+                fail('تغيّرت المسودة للتو' . ($row['by'] ? ' (آخر تعديل: ' . $row['by'] . ')' : '')
+                     . ' — راجع آخر نسخة ثم انشر.', 409);
+            }
+            $live = lpLive();
+            $a = lpCanon($live['doc']);
+            $b = lpCanon($row['doc']);
+            $changed = [];
+            foreach (landingSchema() as $sec) {
+                if (($a[$sec['id']] ?? null) !== ($b[$sec['id']] ?? null)) $changed[] = $sec['id'];
+            }
+            lpWrite('live', $row['doc'], $admin);
+            db()->exec("DELETE FROM landing_content WHERE state='draft'");
+            db()->commit();
+
+            audit($admin, 'landing_publish', lpLabels($changed), count($changed) . ' قسم');
+            out(lpEditorPayload(false) + ['published' => count($changed)]);
+        }
+
+        default: fail('طلب غير معروف.');
+    }
+} catch (Throwable $e) {
+    if (db()->inTransaction()) db()->rollBack();
+    fail(APP_DEBUG ? $e->getMessage() : 'صار خطأ غير متوقع. حاول مرة أخرى.', 500);
 }
