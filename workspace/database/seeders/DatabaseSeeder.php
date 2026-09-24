@@ -20,12 +20,14 @@ class DatabaseSeeder extends Seeder
         $this->call(RoleSeeder::class);
 
         foreach (config('roles') as $role => $meta) {
-            User::factory()->create([
+            User::factory()->role($role)->create([
                 'name' => $meta['label'],
                 'email' => $role.'@wesalinnovation.sa',
                 'department' => null,
+                'job_title' => $meta['label'],
+                'joined_at' => now()->subYear()->startOfMonth(),
                 'password' => bcrypt('password'),
-            ])->assignRole($role);
+            ]);
         }
     }
 }

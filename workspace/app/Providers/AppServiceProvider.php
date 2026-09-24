@@ -2,7 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\User;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +22,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // أسماء قصيرة ثابتة في أعمدة الربط المتعدد (المرفقات، سجل التدقيق،
+        // أدوار Spatie) بدل أسماء الأصناف: إعادة تسمية صنف لا تكسر البيانات.
+        Relation::enforceMorphMap([
+            'user' => User::class,
+        ]);
+
+        // النظام يحوي عقوداً وبيانات مالية: عشرة أحرف بحروف وأرقام في
+        // الإنتاج، وثمانية بلا شروط محلياً لتبقى الاختبارات والبذرة بسيطة.
+        Password::defaults(fn (): Password => $this->app->isProduction()
+            ? Password::min(10)->letters()->numbers()
+            : Password::min(8));
     }
 }

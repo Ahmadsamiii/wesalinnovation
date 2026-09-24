@@ -32,32 +32,32 @@ class DashboardRoleAccessTest extends TestCase
     {
         $this->get('/')->assertRedirect('/login');
 
-        $user = User::factory()->create()->assignRole('client');
+        $user = User::factory()->role('client')->create();
         $this->actingAs($user)->get('/')->assertRedirect('/dashboard');
     }
 
     public function test_executive_sees_all_seven_of_their_own_tabs(): void
     {
-        $user = User::factory()->create()->assignRole('executive');
+        $user = User::factory()->role('executive')->create();
 
         $response = $this->actingAs($user)->get('/dashboard');
 
         $response->assertOk();
         $response->assertSee('المدير التنفيذي');
-        foreach (config('roles.executive.tabs') as $label) {
-            $response->assertSee($label);
+        foreach (config('roles.executive.tabs') as $tab) {
+            $response->assertSee($tab['label']);
         }
     }
 
     public function test_each_role_only_sees_its_own_tabs_not_another_roles(): void
     {
-        $client = User::factory()->create()->assignRole('client');
+        $client = User::factory()->role('client')->create();
 
-        $response = $this->actingAs($client)->get('/dashboard');
+        $response = $this->actingAs($client)->followingRedirects()->get('/dashboard');
 
         $response->assertOk();
-        foreach (config('roles.client.tabs') as $label) {
-            $response->assertSee($label);
+        foreach (config('roles.client.tabs') as $tab) {
+            $response->assertSee($tab['label']);
         }
         // تبويبات مالية/تنفيذية حصرية لأدوار أخرى يجب ألا تظهر إطلاقاً لعميل
         $response->assertDontSee('الاعتمادات المالية');
@@ -85,5 +85,13 @@ class DashboardRoleAccessTest extends TestCase
         foreach ($expected as $role) {
             $this->assertDatabaseHas('roles', ['name' => $role]);
         }
+    }
+
+    public function test_dashboard_sends_each_role_to_its_first_built_tab(): void
+    {
+        // «إدارة المحتوى» أول تبويبات مدير النظام ولم تُبنَ؛ الثاني مبني.
+        $sysadmin = User::factory()->role('sysadmin')->create();
+
+        $this->actingAs($sysadmin)->get('/dashboard')->assertRedirect(route('users.index'));
     }
 }
