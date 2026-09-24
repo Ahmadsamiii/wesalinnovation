@@ -1,5 +1,5 @@
 .env
 api/config.php
-storage/
+/storage/
 uploads/
 tools/output/
