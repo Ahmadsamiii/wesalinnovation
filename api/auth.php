@@ -279,6 +279,8 @@ try {
             if (!$u) fail('سجّل دخولك أولاً.', 401);
 
             $img = (string)($in['image'] ?? '');
+            // الواجهة تصغّر الصورة إلى 512 بكسل قبل الإرسال، فالنص الطويل جداً طلب غير طبيعي
+            if (strlen($img) > 3500000)                    fail('حجم الصورة كبير — الحد الأقصى 2.5 ميجابايت.');
             if (preg_match('#^data:image/(jpeg|png|webp);base64,#', $img, $m)) {
                 $img = substr($img, strpos($img, ',') + 1);
             }
@@ -290,8 +292,16 @@ try {
             $mimes = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
             if (!$info || !isset($mimes[$info['mime']]))   fail('نقبل صور JPG أو PNG أو WebP فقط.');
 
+            // فشل المجلد كان يظهر للمستخدم كفشل عام بلا أثر في السجل — الآن السبب يُسجَّل
             $dir = dirname(__DIR__) . '/uploads/avatars';
-            if (!is_dir($dir)) @mkdir($dir, 0755, true);
+            if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) {
+                error_log('WESAL_AVATAR_FAIL: cannot create ' . $dir);
+                fail('تعذّر تجهيز مجلد الصور على الخادم — بلّغنا بطلب دعم فني.', 500);
+            }
+            if (!is_writable($dir)) {
+                error_log('WESAL_AVATAR_FAIL: not writable ' . $dir);
+                fail('مجلد الصور على الخادم غير قابل للكتابة — بلّغنا بطلب دعم فني.', 500);
+            }
 
             // خط دفاع ثانٍ داخل مجلد المرفوعات نفسه، إضافة إلى قاعدة الجذر في .htaccess
             $guard = dirname(__DIR__) . '/uploads/.htaccess';
@@ -306,8 +316,10 @@ try {
                   . "</FilesMatch>\n");
             }
             $fname = 'u' . (int)$u['id'] . '_' . bin2hex(random_bytes(6)) . '.' . $mimes[$info['mime']];
-            if (@file_put_contents($dir . '/' . $fname, $bin) === false)
+            if (@file_put_contents($dir . '/' . $fname, $bin) === false) {
+                error_log('WESAL_AVATAR_FAIL: write failed ' . $dir . '/' . $fname);
                 fail('تعذّر حفظ الصورة — حاول مرة أخرى.', 500);
+            }
 
             // حذف الصورة القديمة إن وُجدت
             if (!empty($u['avatar']) && strpos($u['avatar'], 'uploads/avatars/') === 0) {
@@ -317,6 +329,16 @@ try {
             $path = 'uploads/avatars/' . $fname;
             db()->prepare('UPDATE users SET avatar=? WHERE id=?')->execute([$path, $u['id']]);
             out(['ok' => true, 'avatar' => $path]);
+        }
+
+        case 'avatar_remove': {
+            $u = currentUser();
+            if (!$u) fail('سجّل دخولك أولاً.', 401);
+            if (!empty($u['avatar']) && strpos($u['avatar'], 'uploads/avatars/') === 0) {
+                @unlink(dirname(__DIR__) . '/' . basename_safe($u['avatar']));
+            }
+            db()->prepare('UPDATE users SET avatar=NULL WHERE id=?')->execute([$u['id']]);
+            out(['ok' => true]);
         }
 
         case 'logout': {
