@@ -16,7 +16,7 @@
         <x-stat label="الإنجاز في الموعد" :value="$kpis['onTimeRate'] === null ? '—' : $kpis['onTimeRate'].'٪'" hint="من المنجزات التي لها موعد استحقاق" />
     </section>
 
-    <div class="mb-6 grid gap-6 lg:grid-cols-2">
+    <div class="mb-6 grid [&>*]:min-w-0 gap-6 lg:grid-cols-2">
         <x-chart.columns title="منجزاتي شهرياً" :labels="$period['labels']" :titles="$period['titles']"
                          :series="[['name' => 'مهام منجزة', 'values' => $completedSeries]]" />
         <x-chart.bars title="منجزات الفترة حسب المشروع" :rows="$byProject" empty="لم تُنجز مهام في هذه الفترة." />

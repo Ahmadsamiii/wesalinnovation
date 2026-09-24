@@ -11,7 +11,7 @@
         </x-slot:actions>
     </x-page-header>
 
-    <div class="grid gap-6 lg:grid-cols-3">
+    <div class="grid [&>*]:min-w-0 gap-6 lg:grid-cols-3">
         <div class="space-y-6 lg:col-span-2">
             <x-card title="الوظيفة">
                 <dl class="grid gap-4 text-sm sm:grid-cols-2">

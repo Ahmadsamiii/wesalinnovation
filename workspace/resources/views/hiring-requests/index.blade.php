@@ -10,14 +10,14 @@
     </x-page-header>
 
     <nav aria-label="تصفية حسب الحالة" class="mb-6 flex flex-wrap gap-2 text-sm">
-        <a href="{{ route('hiring-requests.index') }}" @if (! ($filters['status'] ?? null)) aria-current="page" @endif
+        <a href="{{ route('hiring-requests.index') }}" @if (! ($filters['status'] ?? null)) aria-current="true" @endif
            @class(['rounded-full border px-3 py-1.5 font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600',
                    'border-brand-800 bg-brand-800 text-white' => ! ($filters['status'] ?? null), 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50' => (bool) ($filters['status'] ?? null)])>
             الكل <span class="tabular-nums">({{ $counts->sum() }})</span>
         </a>
         @foreach (\App\Enums\HiringRequestStatus::cases() as $status)
             @php($active = ($filters['status'] ?? null) === $status->value)
-            <a href="{{ route('hiring-requests.index', ['status' => $status->value]) }}" @if ($active) aria-current="page" @endif
+            <a href="{{ route('hiring-requests.index', ['status' => $status->value]) }}" @if ($active) aria-current="true" @endif
                @class(['rounded-full border px-3 py-1.5 font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600',
                        'border-brand-800 bg-brand-800 text-white' => $active, 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50' => ! $active])>
                 {{ $status->label() }} <span class="tabular-nums">({{ $counts[$status->value] ?? 0 }})</span>

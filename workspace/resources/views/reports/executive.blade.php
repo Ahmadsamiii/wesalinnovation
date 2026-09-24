@@ -21,14 +21,14 @@
         <x-stat label="منها متأخرة السداد" :value="$kpis['overdueReceivables']" money :href="route('invoices.index', ['status' => 'overdue'])" />
     </section>
 
-    <div class="mb-6 grid gap-6 lg:grid-cols-2">
+    <div class="mb-6 grid [&>*]:min-w-0 gap-6 lg:grid-cols-2">
         <x-chart.columns title="المهام المنجزة شهرياً" description="كل المشاريع" :labels="$period['labels']" :titles="$period['titles']"
                          :series="[['name' => 'مهام منجزة', 'values' => $completedTasks]]" />
         <x-chart.columns title="الفوترة والتحصيل شهرياً" description="بالريال: الفواتير بتاريخ إصدارها، والتحصيل بتاريخ الدفع" :labels="$period['labels']" :titles="$period['titles']" money
                          :series="[['name' => 'المفوتر', 'values' => $invoicedSeries], ['name' => 'المحصّل', 'values' => $collectedSeries]]" />
     </div>
 
-    <div class="mb-6 grid gap-6 lg:grid-cols-2">
+    <div class="mb-6 grid [&>*]:min-w-0 gap-6 lg:grid-cols-2">
         <x-chart.bars title="المشاريع حسب الحالة" :rows="$statusRows" />
         <x-chart.bars title="أعمار الذمم" description="المتبقي على الفواتير المصدرة حسب التأخر عن الاستحقاق" :rows="$aging" money />
     </div>

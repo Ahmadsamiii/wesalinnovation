@@ -14,7 +14,7 @@
         <x-stat label="مراجعة دورية خلال ٣٠ يوماً" :value="$kpis['dueSoon']" :href="route('medical.review')" />
     </section>
 
-    <div class="mb-6 grid gap-6 lg:grid-cols-2">
+    <div class="mb-6 grid [&>*]:min-w-0 gap-6 lg:grid-cols-2">
         <x-chart.columns title="القرارات شهرياً" :labels="$period['labels']" :titles="$period['titles']"
                          :series="[['name' => 'اعتماد', 'values' => $approvedSeries], ['name' => 'إعادة للتعديل', 'values' => $rejectedSeries]]" />
         <x-chart.bars title="المنشور حسب الفئة" :rows="$byCategory" empty="لا محتوى منشور بعد." />

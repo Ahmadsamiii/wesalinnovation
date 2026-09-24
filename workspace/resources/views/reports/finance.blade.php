@@ -18,13 +18,13 @@
         <x-stat label="منها متأخرة السداد" :value="$kpis['overdue']" money :href="route('invoices.index', ['status' => 'overdue'])" />
     </section>
 
-    <div class="mb-6 grid gap-6 lg:grid-cols-2">
+    <div class="mb-6 grid [&>*]:min-w-0 gap-6 lg:grid-cols-2">
         <x-chart.columns title="الفوترة والتحصيل شهرياً" description="بالريال: الفواتير بتاريخ إصدارها، والتحصيل بتاريخ الدفع" :labels="$period['labels']" :titles="$period['titles']" money
                          :series="[['name' => 'المفوتر', 'values' => $invoicedSeries], ['name' => 'المحصّل', 'values' => $collectedSeries]]" />
         <x-chart.bars title="أعمار الذمم" description="المتبقي على الفواتير المصدرة حسب التأخر عن الاستحقاق" :rows="$aging" money />
     </div>
 
-    <div class="mb-6 grid gap-6 lg:grid-cols-2">
+    <div class="mb-6 grid [&>*]:min-w-0 gap-6 lg:grid-cols-2">
         <x-chart.bars title="الذمم حسب العميل" description="المتبقي على كل عميل من فواتيره المصدرة" :rows="$byClient" money empty="لا ذمم قائمة." />
 
         <x-card title="تغطية العقود السارية" :padding="false">

@@ -28,7 +28,7 @@ PLATFORM_DB_PASSWORD=…</pre>
             <p class="mb-6 text-sm text-gray-600">آخر جواب من <strong dir="ltr">{{ $latest->provider ?? '—' }}</strong> @if ($latest->model)(<span dir="ltr">{{ $latest->model }}</span>)@endif — <x-date :value="$latest->created_at" relative />.</p>
         @endif
 
-        <div class="mb-6 grid gap-6 lg:grid-cols-2">
+        <div class="mb-6 grid [&>*]:min-w-0 gap-6 lg:grid-cols-2">
             <x-chart.columns title="الأسئلة يومياً" description="آخر ٣٠ يوماً" :labels="$dayLabels" :titles="$dayTitles"
                              :series="[['name' => 'أسئلة', 'values' => $daySeries]]" />
 

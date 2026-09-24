@@ -1,13 +1,25 @@
 <x-app-layout>
     <x-slot:title>نظرة عامة</x-slot:title>
 
-    <x-page-header title="نظرة عامة" :description="'مرحباً '.auth()->user()->name.'.'">
-        @isset($queues)
-            <x-slot:actions>
-                <x-button variant="ghost" :href="route('reports.executive')">التقارير الشاملة ←</x-button>
-            </x-slot:actions>
-        @endisset
-    </x-page-header>
+    {{-- بطاقة الترحيب بهوية وصال --}}
+    <section class="relative isolate mb-8 overflow-hidden rounded-3xl bg-brand-hero px-6 py-7 text-white shadow-xl shadow-brand-primary/20 sm:px-8">
+        <div class="pointer-events-none absolute -end-16 -top-24 -z-10 size-64 rounded-full border-[36px] border-white/5" aria-hidden="true"></div>
+        <div class="pointer-events-none absolute -bottom-24 start-1/3 -z-10 size-72 rounded-full bg-brand-secondary/40 blur-3xl" aria-hidden="true"></div>
+
+        <div class="flex flex-wrap items-center justify-between gap-6">
+            <div class="min-w-0">
+                <h1 class="text-2xl font-extrabold leading-snug sm:text-3xl">مرحباً {{ Str::before(auth()->user()->name, ' ') ?: auth()->user()->name }}</h1>
+                <p class="mt-1.5 text-sm text-white/80">ما ينتظر قرارك، ولمحة المحفظة والمال، وما يحتاج انتباهك.</p>
+                <div class="mt-4 flex flex-wrap items-center gap-3 text-xs text-white/75">
+                    <span class="rounded-full border border-white/25 bg-white/15 px-3 py-1 font-bold text-white">{{ auth()->user()->roleLabel() }}</span>
+                    <span>{{ now()->translatedFormat('l j F Y') }}</span>
+                </div>
+            </div>
+            @isset($queues)
+                <a href="{{ route('reports.executive') }}" class="rounded-xl border border-white/25 bg-white/10 px-4 py-2 text-sm font-bold text-white backdrop-blur transition hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white">التقارير الشاملة ←</a>
+            @endisset
+        </div>
+    </section>
 
     @isset($queues)
         <section aria-labelledby="queues-title" class="mb-8">
@@ -34,7 +46,7 @@
             <x-stat label="ذمم متأخرة السداد" :value="$kpis['overdueReceivables']" money :href="route('invoices.index', ['status' => 'overdue'])" />
         </section>
 
-        <div class="grid gap-6 lg:grid-cols-2">
+        <div class="grid [&>*]:min-w-0 gap-6 lg:grid-cols-2">
             <x-card title="يحتاج انتباهك" :padding="false">
                 @if ($overdueProjects->isEmpty() && $overBudget->isEmpty() && $overdueInvoices->isEmpty())
                     <p class="p-5 text-sm text-gray-500">لا مشاريع متأخرة ولا تجاوز للميزانيات ولا فواتير متأخرة.</p>

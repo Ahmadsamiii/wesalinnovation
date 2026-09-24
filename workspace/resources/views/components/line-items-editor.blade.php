@@ -15,7 +15,7 @@ $itemErrors = collect($errors->getMessages())->filter(fn ($messages, $key) => st
         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
     @enderror
 
-    <div class="mt-2 overflow-x-auto">
+    <div class="relative mt-2 overflow-x-auto">
         <table class="min-w-full text-sm">
             <thead class="text-xs text-gray-500">
                 <tr>

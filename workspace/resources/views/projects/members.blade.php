@@ -3,7 +3,7 @@
 
     <x-project-header :project="$project" active="members" />
 
-    <div class="grid gap-6 lg:grid-cols-3">
+    <div class="grid [&>*]:min-w-0 gap-6 lg:grid-cols-3">
         <x-card title="الفريق" :padding="false" class="lg:col-span-2">
             <x-table caption="أعضاء الفريق">
                 <thead class="bg-gray-50 text-xs font-semibold text-gray-600">

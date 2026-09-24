@@ -5,7 +5,7 @@
         <x-slot:breadcrumb><a href="{{ route('reference-letters.index') }}" class="hover:underline">طلب إفادة</a></x-slot:breadcrumb>
     </x-page-header>
 
-    <div class="grid gap-6 lg:grid-cols-3">
+    <div class="grid [&>*]:min-w-0 gap-6 lg:grid-cols-3">
         <x-card class="lg:col-span-2">
             <form method="POST" action="{{ route('reference-letters.store') }}" class="space-y-4">
                 @csrf

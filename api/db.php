@@ -666,6 +666,16 @@ function ensureSchema(): void {
             updated_at DATETIME NOT NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
+        // محتوى صفحة الهبوط: صف للمنشور وصف للمسودة المشتركة — انظر api/content.php
+        db()->exec("CREATE TABLE IF NOT EXISTS landing_content (
+            state ENUM('draft','live') NOT NULL PRIMARY KEY,
+            doc MEDIUMTEXT NOT NULL,
+            etag CHAR(16) NOT NULL,
+            updated_by INT NULL,
+            updated_name VARCHAR(80) NULL,
+            updated_at DATETIME NOT NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
         db()->exec("CREATE TABLE IF NOT EXISTS audit_log (
             id INT AUTO_INCREMENT PRIMARY KEY,
             actor_id INT NULL,
@@ -820,7 +830,7 @@ function audit(?array $actor, string $action, string $target = '', string $detai
 }
 
 /* ---------- محتوى الصفحات ---------- */
-/** كل المحتوى المحرَّر كخريطة مفتاح ← نص */
+/** محتوى النظام القديم (مفتاح ← نص عربي) — يُقرأ مرة واحدة لترحيله إلى landing_content */
 function contentMap(): array {
     ensureSchema();
     $out = [];

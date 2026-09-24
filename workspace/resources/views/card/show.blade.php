@@ -3,7 +3,7 @@
 
     <x-page-header title="بطاقتي الرقمية وشهاداتي" description="بطاقتك تثبت انتسابك لوصال الابتكار برمز يتحقق منه أي طرف؛ تبطل تلقائياً إن أُوقف حسابك." />
 
-    <div class="grid gap-6 lg:grid-cols-2">
+    <div class="grid [&>*]:min-w-0 gap-6 lg:grid-cols-2">
         <section aria-labelledby="card-heading">
             <h2 id="card-heading" class="sr-only">البطاقة الرقمية</h2>
             {{-- مقاس بطاقة الهوية (٨٥٫٦ × ٥٤ ملم) نسبةً، لتُطبع بحجمها. --}}

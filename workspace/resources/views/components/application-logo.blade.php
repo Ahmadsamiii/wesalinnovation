@@ -1,1 +1,1 @@
-<img src="{{ asset('images/logo-color.png') }}" alt="وصال" width="395" height="160" {{ $attributes }}>
+<img src="{{ asset('images/wesal-logo.png') }}" alt="{{ config('app.name', 'Wesal') }}" {{ $attributes->merge(['class' => 'object-contain']) }}>

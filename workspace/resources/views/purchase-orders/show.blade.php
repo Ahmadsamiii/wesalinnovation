@@ -20,7 +20,7 @@
         </x-slot:actions>
     </x-page-header>
 
-    <div class="grid gap-6 lg:grid-cols-3">
+    <div class="grid [&>*]:min-w-0 gap-6 lg:grid-cols-3">
         <div class="space-y-6 lg:col-span-2">
             @php($lastRejection = $order->approvals->firstWhere('decision', \App\Enums\ApprovalDecision::Rejected))
             @if ($order->status === \App\Enums\PurchaseOrderStatus::Rejected && $lastRejection)

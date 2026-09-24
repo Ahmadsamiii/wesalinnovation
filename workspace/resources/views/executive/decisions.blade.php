@@ -5,7 +5,7 @@
 
     <nav aria-label="نوع القرارات" class="mb-6 inline-flex rounded-lg border border-gray-200 bg-white p-1 text-sm">
         @foreach (['projects' => 'قرارات المشاريع', 'finance' => 'القرارات المالية'] as $key => $label)
-            <a href="{{ route('decisions.index', ['kind' => $key]) }}" @if ($kind === $key) aria-current="page" @endif
+            <a href="{{ route('decisions.index', ['kind' => $key]) }}" @if ($kind === $key) aria-current="true" @endif
                @class(['rounded-md px-3 py-1.5 font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600',
                        'bg-brand-800 text-white' => $kind === $key, 'text-gray-600 hover:bg-gray-50' => $kind !== $key])>{{ $label }}</a>
         @endforeach

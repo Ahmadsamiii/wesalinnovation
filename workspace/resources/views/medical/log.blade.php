@@ -6,7 +6,7 @@
     <nav aria-label="تصفية حسب القرار" class="mb-6 flex flex-wrap gap-2 text-sm">
         @foreach (['' => 'الكل', 'approved' => 'المعتمد', 'rejected' => 'المُعاد للتعديل'] as $value => $label)
             @php($active = ($filters['decision'] ?? '') === $value)
-            <a href="{{ route('medical.log', array_filter(['decision' => $value])) }}" @if ($active) aria-current="page" @endif
+            <a href="{{ route('medical.log', array_filter(['decision' => $value])) }}" @if ($active) aria-current="true" @endif
                @class(['rounded-full border px-3 py-1.5 font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600',
                        'border-brand-800 bg-brand-800 text-white' => $active, 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50' => ! $active])>{{ $label }}</a>
         @endforeach

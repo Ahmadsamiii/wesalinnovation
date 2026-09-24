@@ -13,7 +13,7 @@ $variants = match ($variant) {
     'danger' => 'bg-red-600 text-white shadow-sm hover:bg-red-500 focus-visible:ring-red-600',
     'success' => 'bg-green-600 text-white shadow-sm hover:bg-green-500 focus-visible:ring-green-600',
     'ghost' => 'text-brand-800 hover:bg-brand-50 focus-visible:ring-brand-600',
-    default => 'bg-brand-800 text-white shadow-sm hover:bg-brand-700 focus-visible:ring-brand-600',
+    default => 'bg-brand-gradient text-white shadow-sm shadow-brand-tertiary/25 hover:brightness-110 active:brightness-95 focus-visible:ring-brand-600',
 };
 
 $classes = "{$base} {$sizes} {$variants}";

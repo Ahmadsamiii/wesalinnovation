@@ -3,7 +3,7 @@
 
     <x-page-header title="تنبيهات الأسئلة عالية الحساسية" description="أسئلة مساعد المنصة في آخر ٣٠ يوماً التي تحوي كلمة تنبيه، مع جوابها لتحكم على سلامته. هوية السائل لا تظهر." />
 
-    <div class="grid gap-6 lg:grid-cols-3">
+    <div class="grid [&>*]:min-w-0 gap-6 lg:grid-cols-3">
         <div class="min-w-0 space-y-4 lg:col-span-2">
             @if (! $connected)
                 <x-card title="قاعدة المنصة العامة غير مربوطة">
@@ -19,7 +19,7 @@
                         @php
                             $active = ($showAll ? 'all' : 'pending') === $value;
                         @endphp
-                        <a href="{{ route('medical.alerts', ['show' => $value]) }}" @if ($active) aria-current="page" @endif
+                        <a href="{{ route('medical.alerts', ['show' => $value]) }}" @if ($active) aria-current="true" @endif
                            @class(['rounded-full border px-3 py-1.5 font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600',
                                    'border-brand-800 bg-brand-800 text-white' => $active, 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50' => ! $active])>{{ $label }}</a>
                     @endforeach

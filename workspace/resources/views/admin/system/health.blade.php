@@ -43,7 +43,7 @@
         </ul>
     </x-card>
 
-    <div class="grid gap-6 lg:grid-cols-3">
+    <div class="grid [&>*]:min-w-0 gap-6 lg:grid-cols-3">
         <x-card title="البيئة" class="min-w-0">
             <dl class="space-y-2 text-sm">
                 @foreach ($environment as $label => $value)

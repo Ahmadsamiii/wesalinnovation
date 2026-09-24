@@ -11,7 +11,7 @@
         <nav aria-label="طريقة العرض" class="inline-flex rounded-lg border border-gray-200 bg-white p-1 text-sm">
             @foreach (['board' => 'كانبان', 'list' => 'قائمة'] as $key => $label)
                 <a href="{{ route('projects.tasks.index', [$project, ...array_filter([...$filters, 'view' => $key])]) }}"
-                   @if ($view === $key) aria-current="page" @endif
+                   @if ($view === $key) aria-current="true" @endif
                    @class(['rounded-md px-3 py-1.5 font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600',
                            'bg-brand-800 text-white' => $view === $key, 'text-gray-600 hover:bg-gray-50' => $view !== $key])>{{ $label }}</a>
             @endforeach
@@ -34,7 +34,7 @@
             <p class="sr-only" role="status" aria-live="polite" x-text="message"></p>
             <p x-show="error" x-cloak x-text="error" role="alert" class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-800"></p>
 
-            <div class="flex gap-4 overflow-x-auto pb-4">
+            <div class="relative flex gap-4 overflow-x-auto pb-4">
                 @foreach (\App\Enums\TaskStatus::cases() as $status)
                     @php($columnTasks = $columns[$status->value] ?? collect())
                     <section class="flex min-w-56 flex-1 shrink-0 flex-col rounded-xl bg-gray-100/80" aria-labelledby="column-{{ $status->value }}"

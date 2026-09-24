@@ -3,7 +3,7 @@
 
     <x-page-header title="النطاقات والنشر" description="أين تعمل مساحة العمل، وأي إصدار منشور، وما يحتاجه الإنتاج." />
 
-    <div class="grid gap-6 lg:grid-cols-3">
+    <div class="grid [&>*]:min-w-0 gap-6 lg:grid-cols-3">
         <div class="space-y-6 lg:col-span-2">
             <x-card title="قائمة جاهزية الإنتاج" :padding="false">
                 <ul class="divide-y divide-gray-100 text-sm" role="list">

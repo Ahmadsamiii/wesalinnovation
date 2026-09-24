@@ -10,7 +10,7 @@
         </p>
     @endunless
 
-    <div class="grid gap-6 lg:grid-cols-3">
+    <div class="grid [&>*]:min-w-0 gap-6 lg:grid-cols-3">
         <div class="space-y-6 lg:col-span-2">
             <x-card title="الإعداد الحالي">
                 <dl class="grid gap-4 text-sm sm:grid-cols-2">

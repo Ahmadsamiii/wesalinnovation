@@ -1,58 +1,33 @@
-@php
-    $user = Auth::user();
+{{-- الشريط العلوي: زر القائمة (جوال) · القسم الحالي · حساب المستخدم --}}
+<header class="no-print sticky top-0 z-20 flex h-16 shrink-0 items-center gap-3 border-b border-brand-border bg-white/90 px-4 backdrop-blur sm:px-6 lg:px-8">
+    <button type="button" x-ref="menuButton" @click="openMobile()" aria-controls="app-sidebar" :aria-expanded="mobileOpen.toString()" aria-expanded="false" aria-label="فتح القائمة"
+        class="inline-flex size-10 shrink-0 items-center justify-center rounded-xl border border-brand-border bg-white text-brand-ink transition hover:bg-brand-surface hover:text-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-sky lg:hidden">
+        <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
 
-    // خدمات يصل إليها الدور خارج تبويباته (إفادة، طلب توظيف): في قائمة الحساب ما لم تكن تبويباً.
-    $tabRoutes = collect($user->roleTabs())->pluck('route');
-    $menuLinks = collect([
-        ['label' => $user->hasRole('executive') ? 'طلبات الإفادة' : 'طلب إفادة', 'route' => 'reference-letters.index', 'allowed' => $user->can('viewAny', \App\Models\ReferenceLetter::class)],
-        ['label' => 'طلبات التوظيف', 'route' => 'hiring-requests.index', 'allowed' => $user->can('viewAny', \App\Models\HiringRequest::class)],
-    ])->filter(fn (array $link): bool => $link['allowed'] && ! $tabRoutes->contains($link['route']));
-@endphp
+    <p class="min-w-0 flex-1 truncate text-base font-bold text-brand-ink sm:text-lg">{{ $section }}</p>
 
-<nav class="no-print bg-white border-b border-gray-200" aria-label="التنقل الرئيسي">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between gap-4 h-16">
-            <a href="{{ route('dashboard') }}" class="flex items-center gap-3 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600">
-                <x-application-logo class="h-9 w-auto" />
-                <span class="hidden sm:inline text-sm font-semibold text-gray-500 border-s border-gray-200 ps-3">مساحة العمل</span>
-            </a>
+    <div class="relative" x-data="{ open: false }" @keydown.escape.window="open = false" @click.outside="open = false">
+        <button type="button" @click="open = ! open" :aria-expanded="open.toString()" aria-expanded="false" aria-haspopup="true" aria-controls="user-menu"
+            class="flex items-center gap-2 rounded-full py-1 pe-2 ps-1 transition hover:bg-brand-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-sky">
+            <span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-gradient text-sm font-bold text-white" aria-hidden="true">{{ mb_substr(Auth::user()->name, 0, 1) }}</span>
+            <span class="hidden min-w-0 flex-col items-start leading-tight sm:flex">
+                <span class="max-w-[10rem] truncate text-sm font-bold text-brand-ink">{{ Auth::user()->name }}</span>
+                <span class="mt-0.5 rounded-full bg-brand-secondary/10 px-2 py-0.5 text-[10.5px] font-bold text-brand-tertiary">{{ Auth::user()->roleLabel() ?? 'بلا دور' }}</span>
+            </span>
+            <svg class="size-4 text-brand-muted" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+        </button>
 
-            <div class="relative" x-data="{ open: false }" @keydown.escape.window="open = false" @click.outside="open = false">
-                <button type="button"
-                        class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
-                        @click="open = ! open"
-                        :aria-expanded="open.toString()"
-                        aria-haspopup="true"
-                        aria-controls="user-menu">
-                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-brand-800 font-bold" aria-hidden="true">{{ mb_substr($user->name, 0, 1) }}</span>
-                    <span class="text-start leading-tight">
-                        <span class="block font-semibold">{{ $user->name }}</span>
-                        <span class="block text-xs text-gray-500">{{ $user->roleLabel() ?? 'بلا دور' }}</span>
-                    </span>
-                    <svg class="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                    </svg>
-                </button>
-
-                <div id="user-menu" x-show="open" x-cloak x-transition.opacity
-                     class="absolute end-0 z-40 mt-2 w-56 rounded-xl border border-gray-200 bg-white py-1 shadow-lg">
-                    <p class="px-4 py-2 text-xs text-gray-500 border-b border-gray-100" dir="ltr">{{ $user->email }}</p>
-                    <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none">
-                        {{ __('Profile') }}
-                    </a>
-                    @foreach ($menuLinks as $link)
-                        <a href="{{ route($link['route']) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none">{{ $link['label'] }}</a>
-                    @endforeach
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="block w-full px-4 py-2 text-start text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none">
-                            {{ __('Log Out') }}
-                        </button>
-                    </form>
-                </div>
+        <div id="user-menu" x-show="open" x-cloak x-transition.opacity class="absolute end-0 z-40 mt-2 w-60 rounded-2xl border border-brand-border bg-white py-1.5 shadow-lg">
+            <div class="border-b border-brand-border px-4 pb-2.5 pt-1.5">
+                <p class="truncate text-sm font-bold text-brand-ink">{{ Auth::user()->name }}</p>
+                <p class="truncate text-xs text-brand-muted" dir="ltr">{{ Auth::user()->email }}</p>
             </div>
+            <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-brand-text hover:bg-brand-surface focus:bg-brand-surface focus:outline-none">الملف الشخصي</a>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="block w-full px-4 py-2 text-start text-sm text-red-700 hover:bg-red-50 focus:bg-red-50 focus:outline-none">تسجيل الخروج</button>
+            </form>
         </div>
     </div>
-
-    <x-role-tabs />
-</nav>
+</header>

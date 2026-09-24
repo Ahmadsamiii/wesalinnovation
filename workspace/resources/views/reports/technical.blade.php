@@ -13,13 +13,13 @@
         <x-stat label="حسابات موقوفة" :value="$kpis['deactivated']" :href="route('users.index', ['status' => 'deactivated'])" />
     </section>
 
-    <div class="mb-6 grid gap-6 lg:grid-cols-2">
+    <div class="mb-6 grid [&>*]:min-w-0 gap-6 lg:grid-cols-2">
         <x-chart.columns title="الدخول شهرياً" description="الناجح والفاشل" :labels="$period['labels']" :titles="$period['titles']"
                          :series="[['name' => 'دخول ناجح', 'values' => $loginSeries], ['name' => 'محاولة فاشلة', 'values' => $failedSeries]]" />
         <x-chart.bars title="الحسابات حسب الدور" description="القادرة على الدخول" :rows="$byRole" />
     </div>
 
-    <div class="mb-6 grid gap-6 lg:grid-cols-2">
+    <div class="mb-6 grid [&>*]:min-w-0 gap-6 lg:grid-cols-2">
         <x-chart.bars title="النشاط حسب الفئة" description="أحداث سجل التدقيق في الفترة" :rows="$activity" empty="لا نشاط في الفترة." />
 
         <x-card :title="'حسابات خاملة (لا دخول منذ '.$dormantDays.' يوماً)'" :padding="false">

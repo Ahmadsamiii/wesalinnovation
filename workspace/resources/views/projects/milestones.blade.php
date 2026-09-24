@@ -3,7 +3,7 @@
 
     <x-project-header :project="$project" active="milestones" />
 
-    <div class="grid gap-6 lg:grid-cols-3">
+    <div class="grid [&>*]:min-w-0 gap-6 lg:grid-cols-3">
         <div class="space-y-4 lg:col-span-2">
             @forelse ($milestones as $milestone)
                 <x-card>

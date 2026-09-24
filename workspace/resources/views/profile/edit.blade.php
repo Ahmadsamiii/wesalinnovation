@@ -3,7 +3,7 @@
 
     <x-page-header :title="__('Profile')" description="بريدك ودورك وقسمك يعدّلها مدير النظام؛ تواصل معه إن احتاجت تغييراً." />
 
-    <div class="grid gap-6 lg:grid-cols-2">
+    <div class="grid [&>*]:min-w-0 gap-6 lg:grid-cols-2">
         <x-card title="بيانات الحساب">
             <dl class="mb-6 grid gap-3 text-sm sm:grid-cols-2">
                 <div>

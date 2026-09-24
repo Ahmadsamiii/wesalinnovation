@@ -27,7 +27,7 @@
         </p>
     @endif
 
-    <div class="grid gap-6 lg:grid-cols-3">
+    <div class="grid [&>*]:min-w-0 gap-6 lg:grid-cols-3">
         <x-card title="النص قيد التحرير" class="min-w-0 lg:col-span-2">
             @if ($content->summary)
                 <p class="mb-4 text-sm font-medium text-gray-700">{{ $content->summary }}</p>

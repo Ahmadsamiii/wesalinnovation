@@ -16,7 +16,7 @@
         <x-stat label="معالم تستحق خلال ٣٠ يوماً" :value="$kpis['milestonesDue']" />
     </section>
 
-    <div class="mb-6 grid gap-6 lg:grid-cols-2">
+    <div class="mb-6 grid [&>*]:min-w-0 gap-6 lg:grid-cols-2">
         <x-chart.columns title="المهام المنجزة شهرياً" description="في كل مشاريعك" :labels="$period['labels']" :titles="$period['titles']"
                          :series="[['name' => 'مهام منجزة', 'values' => $completedTasks]]" />
         <x-chart.bars title="حمل الفريق" description="المهام المفتوحة المسندة لكل عضو في مشاريعك قيد التسليم" :rows="$workloadRows" empty="لا مهام مفتوحة مسندة." />
