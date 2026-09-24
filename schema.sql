@@ -68,9 +68,16 @@ CREATE TABLE IF NOT EXISTS chat_logs (
   answer      MEDIUMTEXT   NULL,
   mode        VARCHAR(20)  NOT NULL DEFAULT 'simple', -- simple | detailed | small
   cost        TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  model       VARCHAR(40)  NULL,       -- اسم النموذج الفعلي — داخلي/إداري فقط
+  provider    VARCHAR(20)  NULL,       -- gemini | openai | claude | kimi
+  stream      TINYINT(1)   NOT NULL DEFAULT 0,
+  ttfb_ms     INT UNSIGNED NULL,       -- زمن أول كلمة (بث فقط)
+  total_ms    INT UNSIGNED NULL,
+  aborted     TINYINT(1)   NOT NULL DEFAULT 0,
   created_at  DATETIME     NOT NULL,
   KEY ix_user (user_id),
   KEY ix_created (created_at),
+  KEY ix_provider (provider, created_at),
   CONSTRAINT fk_chat_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
