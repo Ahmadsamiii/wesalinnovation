@@ -116,6 +116,10 @@ main{padding:var(--s10) 0 var(--s16)}
 .form-input{width:100%;padding:var(--s3) var(--s4);border:1px solid var(--border);border-radius:var(--r-md);font-family:inherit;font-size:var(--f-sm);color:var(--ink);background:var(--surface);outline:none;transition:border-color var(--dur) var(--ease),box-shadow var(--dur) var(--ease)}
 .form-input:focus{border-color:var(--secondary);box-shadow:0 0 0 3px rgba(129,79,195,.1)}
 textarea.form-input{min-height:100px;resize:vertical;line-height:1.7}
+/* نقاط الياء وذيول الحروف تنزل أعمق مما يصرّح به خط ثمانية، والمتصفح يقصّ نص الحقل عند
+   حدود سطره («في» تصير «فى»): سطر 2em، وحشوة رأسية أقل بالفرق فلا يتغيّر ارتفاع الحقل */
+input.form-input,select.form-input{line-height:2;padding-block:calc(var(--s3) - .375em)}
+input.form-input::placeholder{overflow:visible}   /* صندوق النص البديل في كروم بسطر مفروض يقصّ ما تحته */
 .field-hint{font-size:var(--f-xs);color:var(--muted);margin-top:6px}
 .form-error{background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.25);color:#b91c1c;padding:var(--s3) var(--s4);border-radius:var(--r-md);font-size:var(--f-sm);margin-bottom:var(--s5);display:none}
 .form-error.on{display:block}

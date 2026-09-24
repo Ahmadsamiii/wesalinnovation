@@ -213,7 +213,8 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 .hero-search{max-width:600px;margin:0 auto var(--s6);position:relative;}
 .hero-search-inner{display:flex;align-items:center;gap:var(--s2);background:rgba(255,255,255,.12);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.2);border-radius:var(--r-2xl);padding:var(--s2) var(--s3);transition:all var(--dur-md) var(--ease);}
 .hero-search-inner:focus-within{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.4);box-shadow:var(--sh-glow);}
-.hero-search input{flex:1;min-width:0;background:none;border:none;color:#fff;font-family:inherit;font-size:var(--f-body);padding:var(--s3) var(--s4);outline:none;}
+/* سطر 2em وحشوة أقل بالفرق حتى لا تُقصّ نقاط الياء — التفصيل عند input.form-input */
+.hero-search input{flex:1;min-width:0;background:none;border:none;color:#fff;font-family:inherit;font-size:var(--f-body);padding:calc(var(--s3) - .375em) var(--s4);line-height:2;outline:none;}
 .hero-search input::placeholder{color:rgba(255,255,255,.5);transition:color .3s var(--ease);}
 .hero-search-btn{width:44px;height:44px;border-radius:var(--r-xl);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--dur) var(--ease);flex-shrink:0;}
 .hero-search-btn.mic{background:rgba(255,255,255,.15);color:#fff;}
@@ -400,7 +401,7 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 /* RESOURCES */
 .res-wrap{padding-top:100px;padding-bottom:var(--s24);}
 .res-search{max-width:500px;margin-bottom:var(--s6);position:relative;}
-.res-search input{width:100%;padding:var(--s3) var(--s5) var(--s3) var(--s12);border:1px solid var(--border);border-radius:var(--r-full);font-family:inherit;font-size:var(--f-sm);background:var(--surface);color:var(--ink);outline:none;transition:border-color var(--dur) var(--ease);}
+.res-search input{width:100%;padding:calc(var(--s3) - .375em) var(--s5) calc(var(--s3) - .375em) var(--s12);line-height:2;border:1px solid var(--border);border-radius:var(--r-full);font-family:inherit;font-size:var(--f-sm);background:var(--surface);color:var(--ink);outline:none;transition:border-color var(--dur) var(--ease);}
 .res-search input:focus{border-color:var(--secondary);}
 .res-search .ico{position:absolute;right:var(--s4);top:50%;transform:translateY(-50%);color:var(--muted);}
 .res-filters{display:flex;gap:var(--s2);margin-bottom:var(--s8);flex-wrap:wrap;}
@@ -451,6 +452,14 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 .form-input{width:100%;padding:var(--s3) var(--s4);border:1px solid var(--border);border-radius:var(--r-md);font-family:inherit;font-size:var(--f-sm);color:var(--ink);background:var(--surface);outline:none;transition:border-color var(--dur) var(--ease);}
 .form-input:focus{border-color:var(--secondary);box-shadow:0 0 0 3px rgba(129,79,195,.1);}
 textarea.form-input{min-height:140px;resize:vertical;line-height:1.7;}
+/* خط ثمانية يصرّح بنزول 0.25em تحت السطر، بينما نقطتا الياء وذيول الحروف العربية تنزل
+   حتى 0.55em تقريباً، والمتصفح يقصّ نص الحقل عند حدود سطره — فتظهر «في» كأنها «فى» في
+   النص البديل وفيما يكتبه الزائر. سطر 2em يتسع لها، وتنقص الحشوة الرأسية بالفرق نفسه
+   (.375em من كل جهة: 2em − 1.25em ÷ 2) فيبقى ارتفاع الحقل كما كان تماماً. */
+input.form-input,select.form-input{line-height:2;padding-block:calc(var(--s3) - .375em);}
+/* والنص البديل صندوقه في كروم بسطر عادي مفروض لا يتغيّر (line-height:initial) ويقصّ ما تحته،
+   فيُترك بلا قصّ — الحقل نفسه ما زال يقصّ أي نص يتجاوز حدوده */
+input.form-input::placeholder,.hero-search input::placeholder,.res-search input::placeholder{overflow:visible;}
 select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9' fill='none' stroke='%238a7fa3' stroke-width='2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:left 12px center;}
 .contact-info{display:flex;flex-direction:column;gap:var(--s4);}
 .contact-card{display:flex;align-items:center;gap:var(--s4);padding:var(--s4);}
