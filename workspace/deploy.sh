@@ -78,11 +78,14 @@ version_at_least() {
     [ "$(printf '%s\n%s\n' "$2" "$1" | sort -V | head -n 1)" = "$2" ]
 }
 
-# قيمة من shared/.env بلا علامات التنصيص المحيطة. لا تفشل أبداً (مفتاح أو ملف
-# غائب يعني قيمة فارغة) كي لا يخرج set -e بصمت بلا رسالة.
+# قيمة من shared/.env كما يقرؤها Laravel: بلا علامات التنصيص المحيطة، ولا المسافات
+# حولها، ولا \r من محررات Windows، فكلمة مرور منسوخة بمسافة بعدها لا تفشل هنا وهي
+# تعمل في التطبيق. لا تفشل أبداً (مفتاح أو ملف غائب يعني قيمة فارغة) كي لا يخرج
+# set -e بصمت بلا رسالة.
 env_value() {
     [ -f "$SHARED/.env" ] || return 0
-    { grep -E "^$1=" "$SHARED/.env" || true; } | tail -1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'\$//"
+    { grep -E "^$1[[:space:]]*=" "$SHARED/.env" || true; } | tail -1 | cut -d= -f2- | tr -d '\r' \
+        | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'\$//"
 }
 
 # إعداد نشر: متغير البيئة أولاً، ثم shared/.env، ثم القيمة الافتراضية.
@@ -220,13 +223,33 @@ chmod 600 "$db_conf"
     printf 'password="%s"\n' "$(env_value DB_PASSWORD | sed 's/\\/\\\\/g')"
 } > "$db_conf"
 
+# سبب رفض القاعدة من رمز خطأ MySQL، فيعرف من يقرأ سجل النشر ما يصلحه في hPanel.
+# كلمة المرور لا تظهر في رسائل MySQL أصلاً.
+db_error_hint() {
+    local user host
+    user="$(env_value DB_USERNAME)"
+    host="$(env_value DB_HOST)"
+    case "$1" in
+      *"ERROR 1045"*) printf 'رفضت القاعدة المستخدم %s أو كلمة مروره. انسخ اسم المستخدم من hPanel كاملاً ببادئته، وإن لم تتأكد من كلمة المرور فغيّرها له هناك وضع الجديدة في DB_PASSWORD.' "$user" ;;
+      *"ERROR 1044"*) printf 'المستخدم %s لا يملك صلاحية على هذه القاعدة. استعمل المستخدم الذي أُنشئ معها في hPanel، أو امنحه صلاحية عليها.' "$user" ;;
+      *"ERROR 1049"*) printf 'لا قاعدة بهذا الاسم. انسخ DB_DATABASE من hPanel كاملاً ببادئته.' ;;
+      *"ERROR 2002"*|*"ERROR 2003"*|*"ERROR 2005"*)
+        if [ -z "$host" ] || [ "$host" = localhost ]; then
+            printf 'لم يصل إلى خادم القاعدة على المضيف localhost. جرّب DB_HOST=127.0.0.1 في .env.'
+        else
+            printf 'لم يصل إلى خادم القاعدة على المضيف %s. اجعل DB_HOST في .env القيمة localhost.' "$host"
+        fi ;;
+      *) printf 'رد القاعدة: %s' "$(printf '%s\n' "$1" | head -n 1 | cut -c1-200)" ;;
+    esac
+}
+
 # الاتصال بالقاعدة قبل البناء: كلمة مرور خاطئة تُكتشف الآن لا بعد دقائق.
 mysql_client="$(command -v mysql || command -v mariadb || true)"
 if [ -f "$SHARED/.env" ] && [ -n "$mysql_client" ]; then
-    if "$mysql_client" --defaults-extra-file="$db_conf" -e 'SELECT 1' "$(env_value DB_DATABASE)" >/dev/null 2>&1; then
+    if db_error="$("$mysql_client" --defaults-extra-file="$db_conf" -e 'SELECT 1' "$(env_value DB_DATABASE)" 2>&1 >/dev/null)"; then
         ok "قاعدة البيانات $(env_value DB_DATABASE) تقبل الاتصال"
     else
-        problem "تعذّر الاتصال بقاعدة البيانات $(env_value DB_DATABASE) بإعدادات .env (المضيف والمستخدم وكلمة المرور)."
+        problem "تعذّر الاتصال بقاعدة البيانات $(env_value DB_DATABASE) بإعدادات $SHARED/.env. $(db_error_hint "$db_error")"
     fi
 fi
 
