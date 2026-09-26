@@ -27,9 +27,9 @@ let passed = 0, failed = 0;
 const check = (name, ok, extra = '') => { ok ? passed++ : failed++; console.log(`  ${ok ? '✓' : '✗'} ${name}${extra && !ok ? '  | ' + extra : ''}`); };
 
 /* خادم وهمي داخل الصفحة. window.__mock يضبطه كل سيناريو:
-   stream: 'sse' (افتراضي) أو 'fail' (انقطاع قبل الترويسات)
+   stream: 'sse' (افتراضي) أو 'fail' (انقطاع قبل الترويسات) أو 'json' (رد json كما هو)
    headerDelay: انتظار قبل الترويسات، frames: [[event, data, waitMs], ...]
-   classicDelay/classicReply: للمسار البديل chat.php */
+   classicDelay/classicReply/classicSources: للمسار البديل chat.php */
 function fakeServer() {
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const abortErr = () => new DOMException('The user aborted a request.', 'AbortError');
@@ -48,6 +48,7 @@ function fakeServer() {
       window.__calls.push({ ep: 'stream', body });
       if (m.stream === 'fail') throw new TypeError('Failed to fetch');
       await wait(m.headerDelay || 0, signal);
+      if (m.stream === 'json') return json(m.json);
       const enc = new TextEncoder();
       const rs = new ReadableStream({
         async start(ctrl) {
@@ -65,7 +66,7 @@ function fakeServer() {
     if (u.includes('chat.php')) {
       window.__calls.push({ ep: 'classic', body });
       await wait(m.classicDelay || 0, signal);
-      return json({ ok: true, reply: m.classicReply || 'رد المسار البديل' });
+      return json({ ok: true, reply: m.classicReply || 'رد المسار البديل', sources: m.classicSources || [] });
     }
     return json({ ok: false });
   };
@@ -288,6 +289,107 @@ const state = page => page.evaluate(() => ({
     await page.waitForTimeout(1000);
     const s = await state(page);
     check('لا رد يتيم ولا مؤشر كتابة', s.input === 'مرحبا' && s.ais.length === 0 && !s.typing, JSON.stringify(s));
+  });
+
+  const cardsOf = page => page.evaluate(() => {
+    const m = document.querySelector('#chatBody .msg-ai:last-child');
+    const box = m.querySelector('.msg-srcs');
+    return {
+      heading: box ? box.querySelector('.msg-srcs-h').textContent.trim() : null,
+      cards: [...m.querySelectorAll('.msg-srccard')].map(c => ({
+        name: c.querySelector('b').textContent, host: c.querySelector('bdi').textContent,
+        href: c.getAttribute('href'), target: c.getAttribute('target'),
+        logo: c.querySelector('img') ? c.querySelector('img').getAttribute('src') : 'رمز عام' })),
+      order: [...m.children[1].children].map(e => e.className),
+      text: m.textContent,
+      raw: m.dataset.raw,
+    };
+  });
+
+  await scenario('مصدر الإجابة تحت الرد المتدفق', async () => {
+    const page = await open();
+    const items = [
+      { url: 'https://apd.gov.sa/services', host: 'apd.gov.sa', title: 'خدمات الهيئة' },
+      { url: 'https://www.hrsd.gov.sa/ar/x', host: 'portal.hrsd.gov.sa', title: 'صفحة الوزارة' },
+      { url: 'https://example.org/p', host: 'example.org', title: 'جهة أخرى | الرئيسية' },
+      { url: 'https://moe.gov.sa/p', host: 'moe.gov.sa', title: 'رابعة' },
+    ];
+    await mock(page, { frames: [['delta', { text: 'نص الإجابة.\n\n' }, 0], ['suggestions', { items: ['سؤال متابعة؟'] }, 0], ['sources', { items }, 0], ['done', {}, 0]] });
+    await ask(page, 'سؤال'); await idle(page);
+    await page.waitForFunction(() => [...document.querySelectorAll('.msg-srclogo img')].every(i => i.complete && i.naturalWidth));
+    const r = await cardsOf(page);
+    check('العنوان بعدد الجهات', r.heading === 'مصادر هذه الإجابة', r.heading);
+    check('ثلاث جهات على الأكثر', r.cards.length === 3, JSON.stringify(r.cards));
+    check('الاسم والشعار من «مصادر البيانات» بالنطاق', r.cards[0].name === 'هيئة رعاية الأشخاص ذوي الإعاقة' && r.cards[0].logo.includes('apd.gov.sa.webp'), JSON.stringify(r.cards[0]));
+    check('النطاق الفرعي يأخذ جهة نطاقه وشعارها', r.cards[1].name === 'وزارة الموارد البشرية والتنمية الاجتماعية' && r.cards[1].logo.includes('hrsd.gov.sa.webp'), JSON.stringify(r.cards[1]));
+    check('جهة خارج القائمة: اسمها من عنوان صفحتها ورمز عام', r.cards[2].name === 'جهة أخرى' && r.cards[2].logo === 'رمز عام', JSON.stringify(r.cards[2]));
+    check('كل بطاقة تفتح صفحتها المحددة في نافذة جديدة', r.cards.every((c, i) => c.href === items[i].url && c.target === '_blank'), JSON.stringify(r.cards));
+    check('تحت الإجابة وفوق أسئلة المتابعة', r.order.join(' ') === 'msg-bubble msg-srcs msg-suggestions msg-actions', r.order.join(' '));
+    check('لا سطر فارغ في آخر الإجابة', r.raw === 'نص الإجابة.', JSON.stringify(r.raw));
+    check('قارئ الشاشة يقرأ الاسم ثم النطاق ثم أن الرابط يفتح نافذة جديدة',
+      await page.getByRole('link', { name: /^هيئة رعاية الأشخاص ذوي الإعاقة\s*،\s*apd\.gov\.sa\s*،\s*يفتح في نافذة جديدة$/ }).count() === 1,
+      await page.locator('.msg-srcs').first().ariaSnapshot());
+    check('قائمة بعنوانها لقارئ الشاشة', await page.getByRole('list', { name: 'مصادر هذه الإجابة' }).count() === 1);
+
+    // الاسم يتبع ما نشره المدير في «مصادر البيانات»
+    await page.evaluate(() => { LP = { sources: { l: { items: [{ id: 'x', f: { name: { ar: 'اسم عدّله المدير', en: 'Edited' }, domain: { v: 'www.apd.gov.sa' } } }] } } }; });
+    await mock(page, { frames: [['delta', { text: 'نص.' }, 0], ['sources', { items: items.slice(0, 1) }, 0], ['done', {}, 0]] });
+    await ask(page, 'سؤال آخر'); await idle(page);
+    const r2 = await cardsOf(page);
+    check('جهة واحدة: العنوان بالمفرد والاسم المنشور', r2.heading === 'مصدر هذه الإجابة' && r2.cards[0].name === 'اسم عدّله المدير', JSON.stringify(r2));
+  });
+
+  await scenario('مصدر الإجابة في المسار البديل وبدون مصدر', async () => {
+    const page = await open();
+    await mock(page, { stream: 'fail', classicReply: 'رد البديل', classicSources: [{ url: 'https://sdb.gov.sa/ar/kanaf', host: 'sdb.gov.sa', title: 'منتج كنف' }] });
+    await ask(page, 'سؤال'); await idle(page);
+    let r = await cardsOf(page);
+    check('بطاقة المصدر في المسار البديل، باسم الجهة المعروف', r.cards.length === 1 && r.cards[0].name === 'بنك التنمية الاجتماعية', JSON.stringify(r.cards));
+    check('لا عبارة «مبنية على مصادر رسمية»', !r.text.includes('مبنية على مصادر'), r.text);
+    await mock(page, { stream: 'fail', classicReply: 'رد بلا مصدر' });
+    await ask(page, 'سؤال ثانٍ'); await idle(page);
+    r = await cardsOf(page);
+    check('إجابة بلا مصدر: لا شيء تحتها', r.heading === null && !r.text.includes('مبنية على مصادر') && !r.text.includes('المصدر'), r.text);
+    await mock(page, { frames: [['delta', { text: 'رد متدفق بلا مصدر.' }, 0], ['done', {}, 0]] });
+    await ask(page, 'سؤال ثالث'); await idle(page);
+    r = await cardsOf(page);
+    check('رد متدفق بلا مصدر: لا شيء تحته', r.heading === null, JSON.stringify(r));
+    await mock(page, { stream: 'json', json: { ok: false, fallback: true } });
+    await ask(page, 'كيف أطلع بطاقة اثبات الاعاقة'); await idle(page);
+    r = await cardsOf(page);
+    check('إجابة قاعدة المعرفة المحلية ببطاقة جهتها', r.cards.length === 1 && r.cards[0].name === 'وزارة الموارد البشرية والتنمية الاجتماعية' && r.cards[0].href === 'https://hrsd.gov.sa', JSON.stringify(r.cards));
+  });
+
+  await scenario('مصدر الإجابة: أمان ونسخ وبلاغ ولغة', async () => {
+    const page = await open();
+    await page.evaluate(() => { window.__xss = 0; navigator.clipboard.writeText = t => { window.__copied = t; return Promise.resolve(); }; });
+    await mock(page, { frames: [['delta', { text: 'نص.' }, 0], ['sources', { items: [
+      { url: 'javascript:window.__xss=1', host: 'evil.test', title: '<img src=x onerror="window.__xss=1">' },
+      { url: 'https://apd.gov.sa/services" onmouseover="window.__xss=1', host: 'apd.gov.sa', title: 'x' },
+    ] }, 0], ['done', {}, 0]] });
+    await ask(page, 'سؤال'); await idle(page);
+    const r = await cardsOf(page);
+    await page.hover('#chatBody .msg-ai:last-child .msg-srccard >> nth=1').catch(() => {});
+    check('رابط غير https لا يصير رابطاً، والعنوان نص لا HTML', r.cards[0].href === null && r.cards[0].name.startsWith('<img') && !(await page.evaluate(() => document.querySelector('.msg-srcs img[src="x"]'))), JSON.stringify(r.cards[0]));
+    check('رابط فيه علامات تنصيص يُرفض', r.cards[1].href === null, JSON.stringify(r.cards[1]));
+    check('لم يُنفَّذ أي سكربت', await page.evaluate(() => window.__xss === 0));
+
+    await mock(page, { frames: [['delta', { text: 'نص الإجابة.' }, 0], ['sources', { items: [{ url: 'https://apd.gov.sa/services', host: 'apd.gov.sa', title: '' }] }, 0], ['done', {}, 0]] });
+    await ask(page, 'سؤال آخر'); await idle(page);
+    await page.click('#chatBody .msg-ai:last-child [onclick^="copyMsg"]');
+    const copied = await page.evaluate(() => window.__copied);
+    check('النسخ يضم المصدر ورابطه', copied === 'نص الإجابة.\n\nمصدر هذه الإجابة:\n• هيئة رعاية الأشخاص ذوي الإعاقة: https://apd.gov.sa/services', JSON.stringify(copied));
+    await page.click('#chatBody .msg-ai:last-child [onclick^="reportMsg"]');
+    await page.waitForFunction(() => (document.getElementById('cMsg') || {}).value);
+    const report = await page.inputValue('#cMsg');
+    check('البلاغ عن خطأ يضم المصدر ليعرف المراجع الصفحة', report.includes('• هيئة رعاية الأشخاص ذوي الإعاقة: https://apd.gov.sa/services'), report);
+
+    const en = await open({ lang: 'en' });
+    await en.evaluate(() => { LP = { sources: { l: { items: [{ id: 'apd', f: { name: { ar: 'هيئة رعاية الأشخاص ذوي الإعاقة', en: 'Authority for the Care of Persons with Disabilities' }, domain: { v: 'apd.gov.sa' } } }] } } }; });
+    await mock(en, { frames: [['delta', { text: 'Text.' }, 0], ['sources', { items: [{ url: 'https://apd.gov.sa/services', host: 'apd.gov.sa', title: '' }] }, 0], ['done', {}, 0]] });
+    await ask(en, 'question'); await idle(en);
+    const e = await cardsOf(en);
+    check('بالإنجليزية: العنوان والاسم بالإنجليزية', e.heading === 'Source for this answer' && e.cards[0].name === 'Authority for the Care of Persons with Disabilities', JSON.stringify(e));
   });
 
   await scenario('زر الإرسال والإيقاف لا يغطيه زر إعدادات الوصول العائم', async () => {

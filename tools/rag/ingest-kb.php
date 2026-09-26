@@ -9,6 +9,8 @@
  *  tools/rag/collect-disability-sources.ipynb). لكل ملف: يقطّع النص، يحسب
  *  متجه تضمين لكل مقطع عبر Gemini، ويخزّنها في kb_chunks. إعادة تشغيله على
  *  نفس الرابط يستبدل مقاطعه القديمة بدل تكرارها.
+ *  ref اختياري: المرجع الرسمي الذي يُنسب إليه النص إن كان غير url (يصدّره أمر
+ *  content:export-kb في مساحة العمل)، فتظهر جهته تحت الإجابة لا جهة url.
  * ========================================================================== */
 
 if (PHP_SAPI !== 'cli') {
@@ -67,14 +69,15 @@ foreach ($files as $file) {
         continue;
     }
     $url = (string) $data['url'];
+    $ref = preg_match('#^https?://\S+$#i', (string) ($data['ref'] ?? '')) ? (string) $data['ref'] : null;
     $title = $data['title'] ?? null;
     $chunks = chunkText((string) $data['text']);
     if (!$chunks) continue;
 
     db()->prepare('DELETE FROM kb_chunks WHERE source_url = ?')->execute([$url]);
 
-    $ins = db()->prepare('INSERT INTO kb_chunks (source_url, source_title, chunk_index, chunk_text, embedding, created_at)
-                           VALUES (?,?,?,?,?,NOW())');
+    $ins = db()->prepare('INSERT INTO kb_chunks (source_url, ref_url, source_title, chunk_index, chunk_text, embedding, created_at)
+                           VALUES (?,?,?,?,?,?,NOW())');
     $ok = 0;
     foreach ($chunks as $i => $chunk) {
         $vec = ragEmbed($chunk, 'RETRIEVAL_DOCUMENT');
@@ -82,7 +85,7 @@ foreach ($files as $file) {
             echo "    ✗ فشل تضمين مقطع " . ($i + 1) . " من $url\n";
             continue;
         }
-        $ins->execute([$url, $title, $i, $chunk, json_encode($vec)]);
+        $ins->execute([$url, $ref, $title, $i, $chunk, json_encode($vec)]);
         $ok++;
     }
     echo "✓ $url — $ok/" . count($chunks) . " مقطعاً\n";

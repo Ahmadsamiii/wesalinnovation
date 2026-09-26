@@ -89,6 +89,17 @@ if (defined('OPENAI_KEY') && OPENAI_KEY !== '') {
         ['Authorization: Bearer ' . OPENAI_KEY]);
 } else { $out['openai'] = ['status' => 'غير مفعّل (اختياري)']; }
 
+/* قاعدة المعرفة (منها تأتي مصادر الإجابات) وصحة الرد المباشر آخر ٧ أيام */
+require_once __DIR__ . '/chat-shared.php';
+try {
+    $kb = ragKbStats();
+    $out['قاعدة_المعرفة'] = $kb['pages']
+        ? ['الصفحات' => $kb['pages'], 'المقاطع' => $kb['chunks'], 'الجهات' => $kb['hosts']]
+        : 'فارغة ❌. لا تظهر مصادر تحت الإجابات حتى تُعبَّأ بـ tools/rag/ingest-kb.php';
+} catch (Throwable $e) { $out['قاعدة_المعرفة'] = 'تعذّرت قراءتها: ' . $e->getMessage(); }
+try { $out['الرد_المباشر_٧_أيام'] = chatStreamStats(7); }
+catch (Throwable $e) { $out['الرد_المباشر_٧_أيام'] = 'تعذّرت قراءته: ' . $e->getMessage(); }
+
 /* فحص ملفات الشعار والأيقونات */
 $out['ملفات_الشعار'] = [];
 foreach (['logo-color.png','logo-white.png','logo.png','favicon-32.png','favicon-192.png','favicon.ico','og-cover.png',
