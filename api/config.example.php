@@ -92,6 +92,38 @@ define('KIMI_KEY',      '');
 define('KIMI_MODEL',    'kimi-k2-turbo-preview');
 define('KIMI_BASE_URL', 'https://api.moonshot.ai/v1');
 
+/* ---------- الصوت السعودي: قراءة الإجابات والإدخال الصوتي (api/voice.php) ----------
+ * كل ما في هذا القسم اختياري: بلا مفاتيح تبقى الواجهة على صوت المتصفح كما كانت.
+ * القراءة بطبقات حسب VOICE_TTS_ORDER، وكل طبقة مجانية بحصة تتجدد:
+ *   groq   ستة أصوات سعودية (abdullah، fahad، sultan، lulwa، noura، aisha)، حصة
+ *          يومية صغيرة، والنموذج نسخة معاينة قد يتغير اسمها أو حدودها.
+ *   azure  صوتان سعوديان (ar-SA-HamedNeural و ar-SA-ZariyahNeural)، حصة شهرية
+ *          في الفئة المجانية F0 و20 طلباً في الدقيقة.
+ * حين تنفد حصة طبقة تبدأ الردود التالية من الطبقة بعدها حتى تتجدد، ثم صوت
+ * المتصفح. الفئتان المجانيتان لا تحاسبان على التجاوز: المزوّد يرفض الطلب فقط.
+ * الحصص وشروطها تتغير، فراجعها في لوحة كل مزوّد قبل التفعيل. للفحص بعد
+ * الضبط افتح api/diag.php بحساب المشرف. */
+
+// Groq: المفتاح من https://console.groq.com/keys (يبدأ عادة بـ gsk_)، ويشغّل القراءة
+// والتفريغ معاً. التفريغ يُستخدم فقط في المتصفحات التي لا تحوّل الكلام إلى نص بنفسها.
+define('GROQ_KEY',              '');
+define('GROQ_TTS_MODEL',        'canopylabs/orpheus-arabic-saudi');
+define('GROQ_TTS_VOICE_MALE',   'abdullah');          // أو fahad أو sultan
+define('GROQ_TTS_VOICE_FEMALE', 'noura');             // أو lulwa أو aisha
+define('GROQ_STT_MODEL',        'whisper-large-v3');  // whisper-large-v3-turbo أسرع وأقل دقة
+
+// Azure Speech: أنشئ مورد Speech بالفئة Free F0 من https://portal.azure.com ثم خذ
+// المفتاح والمنطقة من صفحة «Keys and Endpoint».
+define('AZURE_SPEECH_KEY',       '');
+define('AZURE_SPEECH_REGION',    'uaenorth');         // منطقة المورد كما في البوابة، أو رابط نقطة مخصصة كاملاً
+define('AZURE_TTS_VOICE_MALE',   'ar-SA-HamedNeural');
+define('AZURE_TTS_VOICE_FEMALE', 'ar-SA-ZariyahNeural');
+
+define('VOICE_TTS_ORDER',      'groq,azure');  // ترتيب الطبقات، واحذف ما لا تريده
+define('VOICE_DAILY_IP_CHARS', 15000);         // أقصى حروف يولّدها المزوّد لعنوان IP واحد في اليوم، 0 يلغي السقف
+define('VOICE_DAILY_IP_STT',   60);            // أقصى تسجيلات تُفرَّغ لعنوان IP واحد في اليوم، 0 يلغي السقف
+define('VOICE_CACHE_MB',       100);           // سقف الأصوات المحفوظة في STORAGE_DIR/voice بالميجابايت، 0 يلغي الحفظ
+
 /* ---------- البريد ----------
  * بلا SMTP_PASS: يُرسَل عبر mail() المحلي في الاستضافة كما كان دائماً —
  * يعمل غالباً لكن الخوادم المستقبِلة تثق برسالة مصادَق عليها عبر SMTP أكثر.

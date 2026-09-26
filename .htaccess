@@ -41,12 +41,14 @@ ServerSignature Off
   Header always set X-Frame-Options "SAMEORIGIN"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
 
-  # الميكروفون مسموح للنطاق نفسه لأن البحث الصوتي يعتمد على SpeechRecognition
+  # الميكروفون مسموح للنطاق نفسه لأن البحث الصوتي يعتمد على SpeechRecognition،
+  # وعلى التسجيل عبر api/voice.php في المتصفحات التي لا تدعمه
   Header always set Permissions-Policy "microphone=(self), geolocation=(), camera=(), payment=(), usb=()"
 
   # 'unsafe-inline' مطلوب مؤقتاً: السكربت والأنماط ومعالجات onclick مضمّنة في
   # index.html. تشديد هذه السياسة يتطلّب إخراجها إلى ملفات منفصلة أولاً.
-  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'self'; frame-ancestors 'self'; object-src 'none'"
+  # media-src blob: لأن الصوت السعودي يصل من api/voice.php فتشغّله الواجهة من blob:
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; media-src 'self' blob:; form-action 'self'; base-uri 'self'; frame-ancestors 'self'; object-src 'none'"
 
   # HSTS — يُرسل على اتصالات HTTPS فقط
   Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" env=HTTPS

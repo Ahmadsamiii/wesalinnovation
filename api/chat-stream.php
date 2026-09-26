@@ -33,6 +33,11 @@ $bal  = chatCheckBalance($u, $ip, $cost);
 $u    = $bal['u'];
 $left = $bal['left'];
 
+/* لا كتابة في الجلسة بعد هذا السطر. تحرير قفلها يسمح لطلبات api/voice.php
+   (قراءة الجمل الأولى بالصوت السعودي أثناء الكتابة) بالمرور، بدل أن تنتظر
+   انتهاء البث كله خلف قفل ملف الجلسة. */
+session_write_close();
+
 $SYSTEM = chatSystemPrompt($mode);
 [$SYSTEM, ] = chatAugmentWithRag($SYSTEM, $message);
 
