@@ -12,6 +12,9 @@
  *    - النص المكتوب في الصفحة يطابق الافتراضي العربي حرفياً
  *    - كل قائمة لها حاوية بقالب، وبطاقاتها الثابتة بنفس المعرّفات والترتيب
  *      والنصوص والأيقونات
+ *    - شعارات «مصادر البيانات»: لكل نطاق في SRC_LOGOS ملف بمقاس
+ *      tools/source-logo.php ولا ملف بلا نطاق، وكل بطاقة ثابتة تعرض شعار نطاقها
+ *      أو الرمز العام
  *  لا يحتاج قاعدة بيانات ولا إعدادات.
  * ========================================================================== */
 
@@ -108,6 +111,62 @@ foreach (landingSchema() as $sec) {
 }
 foreach (live($xp, '//*[@data-lp-list]') as $n) {
     if (!isset($lists[$n->getAttribute('data-lp-list')])) bad('data-lp-list="' . $n->getAttribute('data-lp-list') . '" بلا قائمة في السجل');
+}
+
+echo "الشعارات:\n";
+$logos = [];
+if (!preg_match('/const SRC_LOGOS=\{([^}]*)\};/', $html, $m)) bad('SRC_LOGOS غير موجودة في index.html');
+else {
+    preg_match_all("/'([a-z0-9.-]+)':([1-9][0-9]*)/", $m[1], $mm, PREG_SET_ORDER);
+    foreach ($mm as [, $d, $v]) $logos[$d] = (int)$v;
+}
+$logoDir = __DIR__ . '/../assets/sources';
+foreach ($logos as $d => $v) {
+    $f = "$logoDir/$d.webp";
+    $info = is_file($f) ? @getimagesize($f) : false;
+    if (!$info) bad("SRC_LOGOS: الملف assets/sources/$d.webp غير موجود");
+    elseif ($info[2] !== IMAGETYPE_WEBP || $info[0] !== 800 || $info[1] !== 320) {
+        bad("assets/sources/$d.webp ليس WebP بمقاس 800×320، جهّزه بـ php tools/source-logo.php");
+    }
+}
+foreach (glob("$logoDir/*") ?: [] as $f) {
+    if (!isset($logos[preg_replace('/\.webp$/', '', basename($f))])) bad('assets/sources/' . basename($f) . ' بلا نطاق في SRC_LOGOS');
+}
+if (strpos($html, '<symbol id="ic-landmark"') === false) bad('رمز الجهة بلا شعار ic-landmark غير معرّف في الصفحة');
+/** نفس تطبيع srcLogo() في الصفحة: بلا www. ولا مسار */
+function logoDomain(string $v): string { return explode('/', preg_replace('/^www\./', '', strtolower(trim($v))))[0]; }
+foreach (landingSchema() as $sec) {
+    foreach ($sec['lists'] as $ld) {
+        $key = $sec['id'] . '.' . $ld['k'];
+        $box = live($xp, "//*[@data-lp-list='$key']");
+        $tpl = count($box) === 1 ? $xp->query('./template', $box[0]) : null;
+        $slot = $tpl && $tpl->length ? $xp->query('.//*[@data-lpl]', $tpl->item(0)) : null;
+        if (!$slot || !$slot->length) continue;
+        $fk = $slot->item(0)->getAttribute('data-lpl');
+        if (!array_filter($ld['fields'], fn($fd) => $fd['k'] === $fk && $fd['t'] === 'domain')) {
+            bad("$key: data-lpl=\"$fk\" ليس حقل نطاق في السجل");
+            continue;
+        }
+        $items = $xp->query('./*[@data-lp-id]', $box[0]);
+        if ($items->length !== count($ld['items'])) continue;   // الترتيب أُبلغ عنه أعلاه
+        foreach ($ld['items'] as $i => $d) {
+            $s = $xp->query('.//*[@data-lpl]', $items->item($i));
+            if ($s->length !== 1) { bad("$key.{$d['id']}: لا يوجد data-lpl للشعار"); continue; }
+            $dom = logoDomain($d['f'][$fk]['v'] ?? '');
+            $img = $xp->query('.//img', $s->item(0));
+            if (isset($logos[$dom])) {
+                $want = "assets/sources/$dom.webp?v={$logos[$dom]}";
+                $el = $img->length === 1 ? $img->item(0) : null;
+                if (!$el || $el->getAttribute('src') !== $want) bad("$key.{$d['id']}: الشعار ليس «{$want}»");
+                elseif (!$el->hasAttribute('alt') || $el->getAttribute('alt') !== '' || $el->getAttribute('width') !== '200' || $el->getAttribute('height') !== '80') {
+                    bad("$key.{$d['id']}: الشعار يحتاج alt=\"\" width=\"200\" height=\"80\" كما في srcLogo()");
+                }
+            } elseif ($img->length || !preg_match('/\bis-empty\b/', $s->item(0)->getAttribute('class'))
+                      || !$xp->query('.//*[local-name()="use"][@href="#ic-landmark"]', $s->item(0))->length) {
+                bad("$key.{$d['id']}: «{$dom}» بلا ملف شعار، فيجب أن تعرض البطاقة الرمز العام");
+            }
+        }
+    }
 }
 
 echo "الأقسام:\n";
