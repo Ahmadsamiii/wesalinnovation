@@ -7,7 +7,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <title>{{ $title }} — {{ config('workspace.company.name') }}</title>
-    @vite(['resources/css/app.css'])
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    {{-- السكربت لعدّاد الخروج التلقائي وحده: صفحة الطباعة تعرض بيانات مالية كغيرها --}}
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         @page { size: A4 {{ $landscape ? 'landscape' : 'portrait' }}; margin: 14mm; }
         @media print { body { background: #fff; } }
@@ -26,5 +28,9 @@
     </div>
 
     {{ $slot }}
+
+    @auth
+        <x-idle-timeout />
+    @endauth
 </body>
 </html>

@@ -105,8 +105,9 @@ class TaskManagementTest extends TestCase
         $this->actingAs($this->member)->patch(route('tasks.move', $task), ['status' => 'done']);
         $this->assertNotNull($task->fresh()->completed_at);
 
-        // إعادة الفتح تمحو الإنجاز ولا تمسّ تاريخ البدء الأول.
-        $this->travel(1)->hour();
+        // إعادة الفتح تمحو الإنجاز ولا تمسّ تاريخ البدء الأول. القفزة أقل من مهلة
+        // الخمول (15 دقيقة) وإلا سُجّل خروج العضو قبل الطلب.
+        $this->travel(10)->minutes();
         $this->actingAs($this->member)->patch(route('tasks.move', $task), ['status' => 'review']);
         $task->refresh();
         $this->assertNull($task->completed_at);

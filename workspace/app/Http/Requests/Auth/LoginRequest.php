@@ -45,10 +45,11 @@ class LoginRequest extends FormRequest
 
         $credentials = $this->only('email', 'password');
 
+        // بلا «تذكرني»: كوكيه كان يعيد الدخول بصمت بعد انتهاء الجلسة فيُبطل
+        // الخروج التلقائي (EnforceSessionTimeouts).
         $authenticated = Auth::attemptWhen(
             $credentials,
             fn (User $user): bool => ! $user->isDeactivated(),
-            $this->boolean('remember'),
         );
 
         if (! $authenticated) {

@@ -93,6 +93,12 @@ Alpine.data('kanban', () => ({
                 body: JSON.stringify({ status, position }),
             });
 
+            if (response.status === 401 || response.status === 419) {
+                // انتهت الجلسة (الخروج التلقائي): idleTimeout يحوّل إلى صفحة الدخول بسببها
+                window.dispatchEvent(new CustomEvent('session-expired'));
+                return;
+            }
+
             if (!response.ok) {
                 throw new Error(String(response.status));
             }
@@ -159,6 +165,191 @@ Alpine.data('lineItems', (initial, vatRate, errors) => ({
 
     format(halalas) {
         return `${money.format(halalas / 100)} ر.س`;
+    },
+}));
+
+const IDLE_ACTIVITY_KEY = 'wesal_ws_idle_at';
+const SIGNED_OUT_KEY = 'wesal_ws_signed_out';
+
+/**
+ * الخروج التلقائي بعد الخمول. أي حركة (الفأرة، اللمس، لوحة المفاتيح، الكتابة)
+ * نشاط يُشارَك بين التبويبات، ويصل الخادم نبضةً مرة في الدقيقة على الأكثر فلا
+ * تنتهي جلسة من يكتب نصاً طويلاً دون أن يرسل شيئاً. قبل الخروج بدقيقتين تنبيه
+ * «هل ما زلت هنا؟» (WCAG 2.2.1: تنبيه وتمديد بفعل بسيط). الخادم يفرض المهلة
+ * نفسها (EnforceSessionTimeouts)، والحساب هنا بالوقت الفعلي لا بعدّ الثواني:
+ * المتصفح يبطئ مؤقتات التبويب الخلفي ويوقفها أثناء نوم الجهاز.
+ */
+Alpine.data('idleTimeout', (config) => ({
+    open: false,
+    remaining: '',
+    announcement: '',
+    last: 0,
+    beatAt: 0,
+    ending: false,
+    returnFocus: null,
+
+    init() {
+        // تحميل الصفحة طلب جدّد الجلسة على الخادم، فهو نشاط ونبضة معاً
+        this.touch();
+        this.beatAt = Date.now();
+
+        const options = { capture: true, passive: true };
+        ['pointermove', 'pointerdown', 'keydown', 'wheel', 'touchstart', 'touchmove', 'input', 'focusin'].forEach((type) =>
+            document.addEventListener(type, (event) => this.activity(event), options),
+        );
+
+        // الخروج اليدوي من تبويب يُخرج البقية
+        const logoutPath = new URL(config.logoutUrl, window.location.href).pathname;
+        document.addEventListener('submit', (event) => {
+            if (new URL(event.target.action, window.location.href).pathname === logoutPath) {
+                this.signal();
+            }
+        }, true);
+
+        window.addEventListener('storage', (event) => {
+            if (event.key === SIGNED_OUT_KEY && event.newValue && !this.ending) {
+                // مهلة قصيرة حتى يسبق طلبُ الخروج في التبويب الآخر فتحَ صفحة الدخول هنا
+                this.ending = true;
+                setTimeout(() => window.location.replace(config.loginUrl), 1000);
+            } else if (event.key === IDLE_ACTIVITY_KEY) {
+                this.tick();
+            }
+        });
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                this.tick();
+            }
+        });
+        window.addEventListener('session-expired', () => this.leave());
+
+        setInterval(() => this.tick(), 1000);
+    },
+
+    lastActivity() {
+        try {
+            return Math.max(this.last, Number(localStorage.getItem(IDLE_ACTIVITY_KEY)) || 0);
+        } catch (e) {
+            // التخزين قد يكون محجوباً (تصفح خاص) — العدّ يبقى لهذا التبويب وحده
+            return this.last;
+        }
+    },
+
+    touch() {
+        this.last = Date.now();
+        try {
+            localStorage.setItem(IDLE_ACTIVITY_KEY, String(this.last));
+        } catch (e) {
+            // كما في lastActivity()
+        }
+    },
+
+    activity(event) {
+        if (this.ending) {
+            return;
+        }
+        if (this.open) {
+            // التركيز ينتقل برمجياً إلى زر البقاء حين يظهر التنبيه، فلا يُعدّ حضوراً
+            if (event.type !== 'focusin') {
+                this.stay();
+            }
+            return;
+        }
+        if (Date.now() - this.last < 5000) {
+            return;
+        }
+        this.touch();
+        if (Date.now() - this.beatAt >= 60000) {
+            this.heartbeat();
+        }
+    },
+
+    tick() {
+        if (this.ending) {
+            return;
+        }
+        const left = config.minutes * 60000 - (Date.now() - this.lastActivity());
+        if (left <= 0) {
+            this.expire();
+        } else if (left <= 120000) {
+            this.warn(left);
+        } else if (this.open) {
+            this.close();
+        }
+    },
+
+    warn(left) {
+        const seconds = Math.max(0, Math.ceil(left / 1000));
+        this.remaining = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+        if (this.open) {
+            if (seconds <= 30 && !this.announcement) {
+                this.announcement = 'بقيت 30 ثانية على تسجيل خروجك.';
+            }
+            return;
+        }
+        this.open = true;
+        this.announcement = '';
+        this.returnFocus = document.activeElement;
+        // x-show يُظهر العنصر في إطار الرسم التالي لا فوراً، والتركيز على عنصر مخفي لا يحدث
+        this.$nextTick(() => requestAnimationFrame(() => this.$refs.stay?.focus({ preventScroll: true })));
+    },
+
+    close() {
+        this.open = false;
+        this.announcement = '';
+        const target = this.returnFocus;
+        this.returnFocus = null;
+        if (target?.focus && document.contains(target)) {
+            target.focus({ preventScroll: true });
+        }
+    },
+
+    stay() {
+        this.touch();
+        this.close();
+        this.heartbeat();
+    },
+
+    async heartbeat() {
+        this.beatAt = Date.now();
+        try {
+            const response = await fetch(config.heartbeatUrl, { method: 'POST', headers: this.headers() });
+            if (response.status === 401 || response.status === 419) {
+                this.leave();
+            }
+        } catch {
+            // انقطاع مؤقت: الخادم يحكم عند الطلب التالي
+        }
+    },
+
+    async expire() {
+        this.ending = true;
+        // ننتظر الخادم قبل فتح صفحة الدخول، وإلا ردّتنا إلى اللوحة والجلسة قائمة
+        await Promise.race([
+            fetch(config.timeoutUrl, { method: 'POST', headers: this.headers(), keepalive: true }).catch(() => null),
+            new Promise((resolve) => setTimeout(resolve, 3000)),
+        ]);
+        this.leave();
+    },
+
+    leave() {
+        this.ending = true;
+        this.signal();
+        window.location.replace(`${config.loginUrl}?timeout=1`);
+    },
+
+    signal() {
+        try {
+            localStorage.setItem(SIGNED_OUT_KEY, String(Date.now()));
+        } catch (e) {
+            // بلا تخزين تكتشف التبويبات الأخرى الخروج عند طلبها التالي
+        }
+    },
+
+    headers() {
+        return {
+            Accept: 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+        };
     },
 }));
 

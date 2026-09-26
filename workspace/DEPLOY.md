@@ -53,6 +53,7 @@ php -r 'echo "base64:".base64_encode(random_bytes(32)), PHP_EOL;'   # قيمة A
 | `APP_URL` | `https://workspace.wesalinnovation.sa` |
 | `DB_CONNECTION` | `mysql`، ومعه `DB_HOST` و`DB_PORT` و`DB_DATABASE` و`DB_USERNAME` و`DB_PASSWORD` (بلا علامة `"` في كلمة المرور) |
 | `SESSION_SECURE_COOKIE` | `true` |
+| `SESSION_IDLE_TIMEOUT` و`SESSION_ABSOLUTE_TIMEOUT` و`SESSION_LIFETIME` | كما في النموذج: 15 و720 و20 دقيقة. الخروج التلقائي يفرضه `EnforceSessionTimeouts`، وعمر الجلسة المخزّنة لا يقل عن مهلة الخمول بدقيقتين |
 | `LOG_LEVEL` | `warning` |
 | `MAIL_MAILER` | `smtp`، ومعه `MAIL_HOST` و`MAIL_PORT` و`MAIL_USERNAME` و`MAIL_PASSWORD` و`MAIL_FROM_ADDRESS`. بلا بريد لا تصل الدعوات ولا استعادة كلمة المرور |
 | `COMPANY_*` | بيانات المنشأة في رأس الفاتورة: الاسم والرقم الضريبي والسجل التجاري والعنوان |
@@ -126,6 +127,11 @@ php ~/domains/workspace.wesalinnovation.sa/current/artisan workspace:create-sysa
   والتخزين والمساحة والبريد وإعدادات الأمان، وتعرض آخر الأخطاء. «النطاقات
   والنشر» تعرض الإصدار المنشور.
 - **الجدولة**: لا يحتاج التطبيق cron ولا عاملاً للمهام الخلفية.
+- **الخروج التلقائي على خادم قائم**: ملف `shared/.env` الأقدم فيه
+  `SESSION_LIFETIME=120`؛ غيّره إلى 20. المهلة تعمل بدونه لأن الوسيط يفرضها،
+  لكن الجلسات الخاملة تبقى مخزّنة ساعتين بلا حاجة. وترحيل
+  `forget_remember_me_tokens` يُبطل مع أول نشر كل كوكيات «تذكرني» الصادرة قبل
+  إزالة الخيار.
 - **التراجع**: السكربت يطبع أمر التراجع بعد كل نشر:
   `ln -sfn <الإصدار السابق> ~/domains/workspace.wesalinnovation.sa/current`.
   الترحيلات لا تُعكس تلقائياً. إن لزم استعادة القاعدة:

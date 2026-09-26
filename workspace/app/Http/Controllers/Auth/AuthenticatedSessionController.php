@@ -14,8 +14,16 @@ class AuthenticatedSessionController extends Controller
     /**
      * Display the login view.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
+        // عدّاد الخمول في الواجهة يحوّل إلى هنا بـ ?timeout=1. إن سبقه انتهاء الجلسة
+        // المخزّنة (نوم الجهاز أطول من عمرها) فلا رسالة محفوظة، فيُكتب السبب هنا.
+        if ($request->boolean('timeout') && ! $request->session()->has('status')) {
+            $request->session()->now('status', __('auth.timeout_idle', [
+                'minutes' => trans_choice('auth.minutes', config('session.idle_timeout')),
+            ]));
+        }
+
         return view('auth.login');
     }
 
