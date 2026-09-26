@@ -124,6 +124,34 @@ class HealthContentTest extends TestCase
         }
     }
 
+    public function test_export_names_the_official_reference_so_answers_credit_its_entity(): void
+    {
+        $cited = HealthContent::factory()->inReview()->create([
+            'title' => 'التأهيل الطبي', 'summary' => null, 'body' => 'نص', 'source_url' => 'https://www.moh.gov.sa/HealthAwareness/rehab',
+        ]);
+        $cited->approve($this->medical);
+        $uncited = HealthContent::factory()->inReview()->create(['title' => 'بلا مرجع', 'summary' => null, 'body' => 'نص']);
+        $uncited->approve($this->medical);
+
+        $directory = storage_path('framework/testing/kb-'.uniqid());
+
+        try {
+            $this->artisan('content:export-kb', ['directory' => $directory])->assertSuccessful();
+
+            $read = fn (HealthContent $content): array => json_decode(File::get("{$directory}/wesal-content-{$content->id}.json"), true);
+            $this->assertSame([
+                'url' => route('kb.show', $cited),
+                'ref' => 'https://www.moh.gov.sa/HealthAwareness/rehab',
+                'title' => 'التأهيل الطبي',
+                'text' => 'نص',
+                'ok' => true,
+            ], $read($cited));
+            $this->assertArrayNotHasKey('ref', $read($uncited));
+        } finally {
+            File::deleteDirectory($directory);
+        }
+    }
+
     public function test_periodic_review_renews_published_content(): void
     {
         $content = HealthContent::factory()->inReview()->create();

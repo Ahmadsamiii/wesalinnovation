@@ -183,12 +183,15 @@ TXT;
 
 /* ---------- استرجاع من قاعدة المعرفة (RAG) ----------
    فشل هذا كاملاً (لا مفتاح، شبكة، قاعدة معرفة فارغة) يجب ألا يوقف الدردشة —
-   ragRetrieve() نفسها تبتلع كل خطأ وترجّع مصفوفة فارغة، فلا حارس إضافي لازم هنا. */
+   ragRetrieve() نفسها تبتلع كل خطأ وترجّع مصفوفة فارغة، فلا حارس إضافي لازم هنا.
+   المصادر مرقّمة في ragContextBlock، والنموذج يذكر أرقام ما استخدمه منها بعد
+   ===SRC=== قبل ذيل الأسئلة، فتُعرض جهاتها للمستخدم تحت الإجابة (chatSources). */
 function chatAugmentWithRag(string $system, string $message): array {
     $ragChunks = ragRetrieve($message);
     if ($ragChunks) {
         $system .= ragContextBlock($ragChunks);
-        $system .= "\n- استخدم المعلومات المسترجَعة أعلاه حصراً لأي رقم أو شرط أو إجراء رسمي، واذكر رابط مصدرها بصيغة [الاسم](الرابط). لا تنسبها لغيرها ولا تكمّلها بمعرفة عامة.";
+        $system .= "\n- استخدم المعلومات المسترجَعة أعلاه حصراً لأي رقم أو شرط أو إجراء رسمي، ولا تنسبها لغيرها ولا تكمّلها بمعرفة عامة. اذكر اسم الجهة في النص إن احتجت، لكن لا تكتب روابط ولا أرقام المصادر فيه، فالمصادر تُعرض للمستخدم تحت إجابتك.";
+        $system .= "\n- بعد إجابتك مباشرة وقبل العلامة ===ASK3===، اكتب سطراً وحده فيه العلامة ===SRC=== ثم أرقام المصادر المرقّمة أعلاه التي أخذت منها معلومة فعلاً في إجابتك، مفصولة بفواصل، مثل: ===SRC=== 1,3. وإن لم تأخذ من أيٍّ منها فاكتب: ===SRC=== 0.";
     } else {
         $system .= "\n- لا يوجد مصدر رسمي مسترجَع لهذا السؤال تحديداً. إن كان يحتاج رقماً أو شرطاً رسمياً دقيقاً، صرّح أنك غير متأكد ووجّه للجهة المختصة بدل التخمين، فهذا أهم من اكتمال شكل الإجابة.";
     }
@@ -362,16 +365,83 @@ function chatScrubReply(string $reply): string {
         'وصال', $reply);
 }
 
-/* ---------- فصل ذيل الأسئلة المقترحة عن نص الإجابة ---------- */
-function chatExtractSuggestions(string $text): array {
-    $marker = '===ASK3===';
-    $pos = strpos($text, $marker);
-    if ($pos === false) return ['reply' => trim($text), 'suggestions' => []];
+/* ---------- فصل ذيل الرد عن نص الإجابة ----------
+   بعد الإجابة يكتب النموذج ذيلاً لا يراه المستخدم: ===SRC=== وأرقام المصادر
+   التي استخدمها، ثم ===ASK3=== وتحتها ثلاثة أسئلة متابعة. الذيل يبدأ من أول
+   علامة منهما أياً كانت، فلو قدّم النموذج إحداهما أو أسقطها بقيت الإجابة نظيفة. */
+const CHAT_TAIL_MARKERS = ['===SRC===', '===ASK3==='];
+
+function chatTailStart(string $text): ?int {
+    $pos = null;
+    foreach (CHAT_TAIL_MARKERS as $m) {
+        $p = strpos($text, $m);
+        if ($p !== false && ($pos === null || $p < $pos)) $pos = $p;
+    }
+    return $pos;
+}
+
+/** طول أطول لاحقة من $s تطابق بداية إحدى علامات الذيل. أثناء البث تُحجز هذه
+ *  اللاحقة حتى يتبيّن أنها ليست بداية علامة وصلت مقسومة بين دفعتين. */
+function chatTrailingPartialMarker(string $s): int {
+    $best = 0;
+    foreach (CHAT_TAIL_MARKERS as $marker) {
+        for ($k = min(strlen($marker) - 1, strlen($s)); $k > $best; $k--) {
+            if (substr($s, -$k) === substr($marker, 0, $k)) { $best = $k; break; }
+        }
+    }
+    return $best;
+}
+
+/** @return array{reply:string, suggestions:string[], cited:int[]} */
+function chatSplitReply(string $text): array {
+    $pos = chatTailStart($text);
+    if ($pos === null) return ['reply' => trim($text), 'suggestions' => [], 'cited' => []];
     $reply = trim(substr($text, 0, $pos));
-    $tail  = trim(substr($text, $pos + strlen($marker)));
-    $lines = array_values(array_filter(array_map('trim', explode("\n", $tail)), fn($l) => $l !== ''));
-    $suggestions = array_map('chatScrubReply', array_slice($lines, 0, 3));
-    return ['reply' => $reply, 'suggestions' => $suggestions];
+    $tail  = substr($text, $pos);
+
+    $cited = [];
+    if (preg_match('/===SRC===[ \t]*\n?[ \t]*([0-9\x{0660}-\x{0669}][0-9\x{0660}-\x{0669} \t,،و]*)?/u', $tail, $m)) {
+        $digits = strtr($m[1] ?? '', ['٠'=>'0','١'=>'1','٢'=>'2','٣'=>'3','٤'=>'4','٥'=>'5','٦'=>'6','٧'=>'7','٨'=>'8','٩'=>'9']);
+        preg_match_all('/\d+/', $digits, $nm);
+        $cited = array_values(array_unique(array_map('intval', $nm[0])));
+        $tail = str_replace($m[0], '', $tail);
+    }
+
+    $suggestions = [];
+    $a = strpos($tail, '===ASK3===');
+    if ($a !== false) {
+        $lines = array_filter(array_map('trim', explode("\n", substr($tail, $a + strlen('===ASK3===')))),
+                              fn($l) => $l !== '' && strpos($l, '===') === false);
+        $suggestions = array_map('chatScrubReply', array_slice(array_values($lines), 0, 3));
+    }
+    return ['reply' => $reply, 'suggestions' => $suggestions, 'cited' => $cited];
+}
+
+/* ---------- مصادر الإجابة ----------
+   الأرقام التي ذكرها النموذج تُقبل فقط إن كانت لمقطع جلبه الاسترجاع لهذا السؤال،
+   فلا تظهر جهة لم نأخذ منها شيئاً مهما كتب النموذج. الجهة نطاقها: رابط المرجع
+   الرسمي إن وُجد (ref_url، كمحتوى مساحة العمل الصحي) وإلا رابط الصفحة نفسها.
+   جهة واحدة لكل نطاق بترتيب ذكر النموذج لها، وثلاث جهات على الأكثر. الاسم
+   والشعار تحددهما الواجهة من النطاق (قائمة «مصادر البيانات»). */
+const CHAT_MAX_SOURCES = 3;
+
+/** @return array<int, array{url:?string, host:string, title:string}> */
+function chatSources(array $chunks, array $cited): array {
+    $out = [];
+    foreach ($cited as $n) {
+        $c = $chunks[$n - 1] ?? null;
+        if (!$c) continue;
+        $url  = trim((string) (($c['ref'] ?? '') ?: $c['url']));
+        $host = ragHost($url);
+        if ($host === '' || isset($out[$host])) continue;
+        $out[$host] = [
+            'url'   => preg_match('#^https://[^\s"<>]+$#i', $url) ? $url : null,
+            'host'  => $host,
+            'title' => mb_substr(trim((string) ($c['title'] ?? '')), 0, 120),
+        ];
+        if (count($out) >= CHAT_MAX_SOURCES) break;
+    }
+    return array_values($out);
 }
 
 /* ---------- تسجيل ----------
@@ -379,14 +449,17 @@ function chatExtractSuggestions(string $text): array {
      بموافقة   → يُحفظ نص السؤال والجواب، وبلا هوية (user_id فارغ دائماً)
      بلا موافقة → يبقى الصف عدّاداً للإحصاءات بلا أي محتوى
    الزائر بلا حساب مجهول أصلاً فلا هوية تُحفظ له، والتحيات الفورية لا تحمل
-   معلومة شخصية أصلاً فتُحفظ دائماً بلا حاجة لموافقة. */
+   معلومة شخصية أصلاً فتُحفظ دائماً بلا حاجة لموافقة.
+   fallback/fallback_ms: سؤال وصل chat.php لأن البث تعطّل في المتصفح قبل أول
+   كلمة، بسبب التعطل ومدة الانتظار قبله (chatFallbackInfo). بلا محتوى، فيُحفظ دائماً. */
 function chatLogInteraction(?array $u, string $message, ?string $reply, string $mode, int $cost, array $extra = []): void {
     ensureSchema();
     $consent = $mode === 'small' || !$u || ((int)($u['improve'] ?? 0) === 1);
     try {
         db()->prepare('INSERT INTO chat_logs
-            (user_id, question, answer, mode, cost, model, provider, stream, ttfb_ms, total_ms, aborted, created_at)
-            VALUES (NULL,?,?,?,?,?,?,?,?,?,?,NOW())')
+            (user_id, question, answer, mode, cost, model, provider, stream, ttfb_ms, total_ms, aborted,
+             fallback, fallback_ms, created_at)
+            VALUES (NULL,?,?,?,?,?,?,?,?,?,?,?,?,NOW())')
             ->execute([
                 $consent ? $message : '',
                 $consent ? mb_substr((string)$reply, 0, 4000) : null,
@@ -398,6 +471,37 @@ function chatLogInteraction(?array $u, string $message, ?string $reply, string $
                 $extra['ttfb_ms'] ?? null,
                 $extra['total_ms'] ?? null,
                 !empty($extra['aborted']) ? 1 : 0,
+                $extra['fallback'] ?? null,
+                $extra['fallback_ms'] ?? null,
             ]);
     } catch (Throwable $e) { /* التسجيل لا يوقف الرد */ }
+}
+
+/* ---------- صحة البث آخر $days أيام، للوحة الإدارة وصفحة التشخيص ----------
+   ok: بث التزم بمزوّد. fallbacks: أسئلة وصلت chat.php لأن البث تعطّل في المتصفح،
+   وأكثر أسبابها ومتوسط الانتظار قبلها. noProvider: بث لم يرد فيه أي مزوّد، فأجابت
+   الواجهة من قاعدة معرفتها المحلية. */
+function chatStreamStats(int $days = 7): array {
+    $d = db();
+    $since = "created_at >= (NOW() - INTERVAL $days DAY)";
+    $ok = (int) $d->query("SELECT COUNT(*) c FROM chat_logs WHERE stream=1 AND provider IS NOT NULL AND $since")->fetch()['c'];
+    $noProvider = (int) $d->query("SELECT COUNT(*) c FROM chat_logs WHERE stream=1 AND provider IS NULL AND mode<>'small' AND $since")->fetch()['c'];
+    $fb = $d->query("SELECT COUNT(*) c, ROUND(AVG(fallback_ms)) ms FROM chat_logs WHERE fallback IS NOT NULL AND $since")->fetch();
+    $top = $d->query("SELECT SUBSTRING_INDEX(fallback, ':', 1) r, COUNT(*) c FROM chat_logs
+                      WHERE fallback IS NOT NULL AND $since GROUP BY r ORDER BY c DESC LIMIT 1")->fetch();
+    return ['ok' => $ok, 'noProvider' => $noProvider, 'fallbacks' => (int) $fb['c'],
+            'fallbackMs' => (int) $fb['ms'], 'fallbackTop' => $top ? $top['r'] : null];
+}
+
+/* ---------- سبب وصول السؤال إلى chat.php بدل البث ----------
+   ترسله الواجهة حين يتعطل البث قبل أول كلمة: network (انقطع الاتصال قبل أي رد)،
+   read (انقطع أثناء قراءة الرد)، badjson (ردّ الخادم بما لا يُفهم، ومعه رمز الحالة).
+   قيم معروفة فقط، والمدة بحد أعلى، لأنها من المتصفح. */
+function chatFallbackInfo($f): array {
+    if (!is_array($f)) return [];
+    $reason = in_array($f['reason'] ?? '', ['network', 'read', 'badjson'], true) ? $f['reason'] : null;
+    if ($reason === null) return [];
+    $status = (int) ($f['status'] ?? 0);
+    if ($status >= 100 && $status <= 599) $reason .= ':' . $status;
+    return ['fallback' => $reason, 'fallback_ms' => max(0, min(600000, (int) ($f['ms'] ?? 0)))];
 }

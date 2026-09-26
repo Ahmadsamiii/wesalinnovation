@@ -30,7 +30,7 @@ $left = $bal['left'];
 session_write_close();   // كما في chat-stream.php: لا يقفل الجلسة طوال انتظار المزوّد
 
 $SYSTEM = chatSystemPrompt($mode);
-[$SYSTEM, ] = chatAugmentWithRag($SYSTEM, $message);
+[$SYSTEM, $ragChunks] = chatAugmentWithRag($SYSTEM, $message);
 
 $reply = null;
 $providerUsed = null;
@@ -40,11 +40,13 @@ foreach (chatProviderOrder() as $p) {
 }
 
 $suggestions = [];
+$sources = [];
 if ($reply) {
     $reply = chatScrubReply($reply);
-    $ex = chatExtractSuggestions($reply);
+    $ex = chatSplitReply($reply);
     $reply = $ex['reply'];
     $suggestions = $ex['suggestions'];
+    $sources = chatSources($ragChunks, $ex['cited']);
 }
 
 chatLogInteraction($u, $message, $reply, $mode, $cost, [
@@ -52,8 +54,9 @@ chatLogInteraction($u, $message, $reply, $mode, $cost, [
     'provider' => $providerUsed,
     'stream'   => false,
     'total_ms' => (int) round((microtime(true) - $reqT0) * 1000),
-]);
+] + chatFallbackInfo($in['fallback'] ?? null));
 
 if (!$reply) out(['ok' => false, 'fallback' => true]);   // الواجهة ترد من قاعدة المعرفة المحلية
 
-out(['ok' => true, 'reply' => trim($reply), 'tokens' => $left, 'cost' => $cost, 'suggestions' => $suggestions]);
+out(['ok' => true, 'reply' => trim($reply), 'tokens' => $left, 'cost' => $cost,
+     'suggestions' => $suggestions, 'sources' => $sources]);
