@@ -59,6 +59,17 @@ function chatStreamCurl(string $url, string $body, array $headers, callable $ext
         return strlen($data);
     };
 
+    /* مهلة أول محتوى تُفحص في writeFn، وwriteFn لا تُستدعى إلا إذا وصلت بيانات.
+       فالمزوّد الصامت كان يُنتظر حتى AI_TOTAL_TIMEOUT كاملة لكل محاولة قبل الانتقال
+       لغيره. دالة التقدّم يستدعيها cURL دورياً ولو لم يصل شيء. */
+    $progressFn = function () use (&$committed, &$deliberateAbort, $t0): int {
+        if (!$committed && (microtime(true) - $t0) > AI_FIRST_CONTENT_BUDGET) {
+            $deliberateAbort = true;
+            return 1;
+        }
+        return 0;
+    };
+
     $ch = curl_init($url);
     curl_setopt_array($ch, [
         CURLOPT_POST => true,
@@ -66,9 +77,13 @@ function chatStreamCurl(string $url, string $body, array $headers, callable $ext
         CURLOPT_HTTPHEADER => array_merge(['Content-Type: application/json'], $headers),
         CURLOPT_HEADERFUNCTION => $headerFn,
         CURLOPT_WRITEFUNCTION => $writeFn,
+        CURLOPT_NOPROGRESS => false,
+        CURLOPT_XFERINFOFUNCTION => $progressFn,
         CURLOPT_CONNECTTIMEOUT => AI_CONNECT_TIMEOUT,
         CURLOPT_TIMEOUT => AI_TOTAL_TIMEOUT,
-        CURLOPT_RETURNTRANSFER => false,
+        /* لا CURLOPT_RETURNTRANSFER هنا: ضبطه بعد CURLOPT_WRITEFUNCTION يلغيها في PHP
+           (آخر الخيارين يغلب)، فكان رد المزوّد يُطبع مباشرة في رد الخادم بترويسة
+           JSON بدل أن يمر بـ writeFn، فلا يلتزم البث أبداً ويسقط كل سؤال إلى chat.php. */
     ]);
     curl_exec($ch);
     $cerr = curl_error($ch);

@@ -56,9 +56,11 @@
 <meta property="og:type" content="website">
 <link rel="preload" href="fonts/thmanyahsans-Regular.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/thmanyahsans-Bold.woff2" as="font" type="font/woff2" crossorigin>
-<!-- «تقليل الحركة» قبل أول رسم حتى لا تومض حركة قبل تحميل السكربت: اختيار الزائر
-     الصريح في وصال أولاً، وإلا إعداد نظامه — نفس منطق motionReduced() أسفل الصفحة -->
-<script>(function(){try{var s=/[?&]lp-preview/.test(location.search)?{}:JSON.parse(localStorage.getItem('wesal_a11y')||'{}');document.documentElement.setAttribute('data-reduce-motion',s.motion===true||(!s.motionSet&&matchMedia('(prefers-reduced-motion: reduce)').matches));}catch(e){}})();</script>
+<!-- «تقليل الحركة» ووضع العرض وحجم الخط قبل أول رسم حتى لا تومض حركة أو ألوان أو يقفز
+     النص قبل تحميل السكربت: اختيار الزائر الصريح في وصال أولاً، وإلا إعداد نظامه، بنفس
+     منطق motionReduced() وapplyC() وsetFS() أسفل الصفحة -->
+<script>function deviceContrast(){try{return matchMedia('(prefers-color-scheme: dark)').matches?'dark':matchMedia('(prefers-contrast: more)').matches?'high':'';}catch(e){return '';}}
+(function(){try{var p=/[?&]lp-preview/.test(location.search),g=function(k,d){var v=p?null:localStorage.getItem('wesal_'+k);return v?JSON.parse(v):d;},d=document.documentElement,s=g('a11y',{}),c=g('contrast',null),f=g('fs',100);d.setAttribute('data-reduce-motion',s.motion===true||(!s.motionSet&&matchMedia('(prefers-reduced-motion: reduce)').matches));if(!p)d.setAttribute('data-contrast',c===null?deviceContrast():c);if(f>=80&&f<=150)d.style.setProperty('--f-scale',f);}catch(e){}})();</script>
 <style>
 /* ===== خط ثمانية Thmanyah Sans — الخط الرسمي للهوية ===== */
 @font-face{font-family:'Thmanyah Sans';src:url('fonts/thmanyahsans-Light.woff2') format('woff2'),url('fonts/thmanyahsans-Light.otf') format('opentype');font-weight:300;font-style:normal;font-display:swap;}
@@ -127,15 +129,13 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 .nav-cta{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;font-family:inherit;font-size:var(--f-sm);font-weight:600;padding:var(--s2) var(--s5);border-radius:var(--r-full);cursor:pointer;transition:all var(--dur) var(--ease);}
 .nav-cta:hover{background:rgba(255,255,255,.25);}
 .nav.scrolled .nav-cta{background:var(--g-brand);border-color:transparent;color:#fff;}
-.nav-a11y-btn{background:none;border:1px solid rgba(255,255,255,.3);color:#fff;width:36px;height:36px;border-radius:var(--r-full);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--dur) var(--ease);}
-.nav.scrolled .nav-a11y-btn{border-color:var(--border);color:var(--text);}
 .burger{display:none;background:none;border:none;width:36px;height:36px;cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:6px;}
 .burger span{display:block;width:22px;height:2px;background:#fff;border-radius:1px;transition:all var(--dur-md) var(--ease);}
 .nav.scrolled .burger span{background:var(--ink);}
 .burger.active span:nth-child(1){transform:translateY(7px) rotate(45deg);}
 .burger.active span:nth-child(2){opacity:0;}
 .burger.active span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
-@media(max-width:768px){.nav-links,.nav-cta,.nav-a11y-btn{display:none;}.burger{display:flex;}.nav-inner{padding:0 var(--s4);}}
+@media(max-width:768px){.nav-links,.nav-cta{display:none;}.burger{display:flex;}.nav-inner{padding:0 var(--s4);}}
 
 /* MOBILE MENU */
 .mob-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1001;opacity:0;pointer-events:none;transition:opacity var(--dur-md) var(--ease);}
@@ -189,6 +189,7 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 .toggle-track::after{content:'';position:absolute;top:3px;right:3px;width:20px;height:20px;background:#fff;border-radius:50%;box-shadow:var(--sh-xs);transition:transform var(--dur-md) var(--ease-spring);}
 .toggle input:checked+.toggle-track{background:var(--g-brand);}
 .toggle input:checked+.toggle-track::after{transform:translateX(-22px);}
+.toggle input:focus-visible+.toggle-track{outline:3px solid var(--sky);outline-offset:2px;}
 
 /* TAG/CHIP */
 .tag{display:inline-flex;align-items:center;gap:var(--s1);padding:var(--s1) var(--s3);border-radius:var(--r-full);font-size:var(--f-xs);font-weight:600;line-height:1.5;}
@@ -343,6 +344,12 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 .typing span:nth-child(2){animation-delay:.2s;}
 .typing span:nth-child(3){animation-delay:.4s;}
 .chat-input-area{padding:var(--s4) var(--s5);border-top:1px solid var(--border);background:var(--surface);}
+/* زر إعدادات الوصول العائم (#fab) ثابت أسفل يسار الشاشة، وخانة السؤال تلاصق يسارها
+   في العربية (وفي الإنجليزية حين تختفي القائمة الجانبية)، فكان يغطي زر الإرسال
+   والإيقاف. عمود الزاوية محجوز له بعرضه وهامشه ما دام في الصفحة، فإن أُزيل الزر
+   سقط الحجز وحده بلا فراغ. */
+:root:has(#fab) .chat-input-area{padding-left:calc(var(--s6) + 52px + var(--s2));}
+@media(min-width:769px){:root[dir="ltr"]:has(#fab) .chat-input-area{padding-left:var(--s5);}}
 .chat-chips{display:flex;gap:var(--s2);margin-bottom:var(--s3);flex-wrap:wrap;}
 .chat-chip{padding:var(--s1) var(--s3);border-radius:var(--r-full);font-family:inherit;font-size:var(--f-xs);background:var(--surface-alt);border:1px solid var(--border);color:var(--text);cursor:pointer;transition:all var(--dur) var(--ease);}
 /* على أجهزة اللمس فقط: أهداف لمس أوسع للعناصر الصغيرة، بلا أي تغيير على
@@ -492,21 +499,6 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 @media(max-width:1024px){.footer-grid{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:600px){.footer-grid{grid-template-columns:1fr;}}
 
-/* A11Y FAB */
-.fab{position:fixed;bottom:var(--s6);left:var(--s6);z-index:1000;}
-.fab-btn{width:52px;height:52px;border-radius:50%;background:var(--g-brand);color:#fff;border:none;box-shadow:var(--sh-lg);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--dur-md) var(--ease);}
-.fab-btn:hover{transform:scale(1.08);box-shadow:var(--sh-glow),var(--sh-lg);}
-.fab-btn .ico{width:24px;height:24px;}
-.fab-popup{position:absolute;bottom:calc(100% + var(--s3));left:0;width:280px;padding:var(--s5);border-radius:var(--r-xl);opacity:0;transform:translateY(8px) scale(.95);pointer-events:none;transition:all var(--dur-md) var(--ease-spring);}
-.fab-popup.open{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}
-.fab-popup h3{font-size:var(--f-sm);font-weight:700;color:var(--ink);margin-bottom:var(--s4);}
-.fab-row{display:flex;align-items:center;justify-content:space-between;padding:var(--s2) 0;}
-.fab-row span{font-size:var(--f-sm);color:var(--text);}
-.fab-fs{display:flex;align-items:center;gap:var(--s2);}
-.fab-fs-btn{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--surface);font-family:inherit;font-size:var(--f-sm);font-weight:700;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--dur) var(--ease);}
-.fab-fs-btn:hover{border-color:var(--primary);color:var(--primary);}
-.fab-link{display:block;width:100%;margin-top:var(--s3);padding:var(--s3);border-radius:var(--r-md);background:var(--surface-alt);border:none;font-family:inherit;font-size:var(--f-xs);font-weight:600;color:var(--primary);text-align:center;cursor:pointer;transition:background var(--dur) var(--ease);}
-.fab-link:hover{background:rgba(40,38,146,.08);}
 @media(max-width:480px){
 .hero h1{font-size:clamp(1.75rem,6vw,2.5rem);}
 .hero-btns{flex-direction:column;width:100%;}
@@ -531,6 +523,32 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 .nav-icon-btn:hover{background:rgba(255,255,255,.24);}
 .nav.scrolled .nav-icon-btn{background:transparent;border-color:var(--border);color:var(--text);}
 .nav.scrolled .nav-icon-btn:hover{background:var(--surface-alt);color:var(--primary);}
+.nav-icon-btn[aria-expanded="true"]{background:rgba(255,255,255,.24);}
+.nav.scrolled .nav-icon-btn[aria-expanded="true"]{background:var(--surface-alt);}
+/* إعدادات الوصول السريعة: زر واحد في الشريط تنسدل لوحته تحته وتليه في ترتيب التنقل
+   (نمط الإفصاح). لا زر عائم: كان يفتح اللوحة نفسها في زاوية الشاشة بعيداً عن زر الشريط،
+   ويغطي المحتوى وزر الإرسال، ويأتي آخر الصفحة لمن يتنقل بلوحة المفاتيح أو قارئ الشاشة.
+   واللوحة داخل الشريط الثابت فلا تتمرر مع الصفحة، لذا تتمرر وحدها إن طالت عند التكبير. */
+.a11y-wrap{position:relative;}
+.a11y-panel{position:absolute;top:calc(100% + var(--s3));inset-inline-end:0;z-index:1100;width:280px;max-width:calc(100vw - 2 * var(--s4));max-height:calc(100vh - 80px);max-height:calc(100dvh - 80px);overflow-y:auto;overscroll-behavior:contain;padding:var(--s5);background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-lg);text-align:start;animation:fadeUp .18s var(--ease);}
+.a11y-panel[hidden]{display:none;}
+.a11y-title{font-size:var(--f-sm);font-weight:700;color:var(--ink);margin-bottom:var(--s3);}
+.a11y-row{display:flex;align-items:center;justify-content:space-between;gap:var(--s3);padding:var(--s2) 0;}
+.a11y-lbl{font-size:var(--f-sm);color:var(--text);}
+label.a11y-lbl{cursor:pointer;}
+.a11y-fs{display:flex;align-items:center;gap:var(--s2);}
+.a11y-fs-btn{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--surface);font-family:inherit;font-size:var(--f-sm);font-weight:700;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--dur) var(--ease);}
+.a11y-fs-btn:hover{border-color:var(--primary);color:var(--primary);}
+.a11y-link{display:block;width:100%;margin-top:var(--s3);padding:var(--s3);border-radius:var(--r-md);background:var(--surface-alt);border:none;font-family:inherit;font-size:var(--f-xs);font-weight:600;color:var(--primary);text-align:center;cursor:pointer;transition:background var(--dur) var(--ease);}
+.a11y-link:hover{background:rgba(40,38,146,.08);}
+[data-contrast="dark"] .a11y-link,[data-contrast="dark"] .a11y-fs-btn:hover{color:var(--sky);border-color:var(--sky);}
+/* على الجوال تنزل اللوحة تحت الشريط كله عند طرفه القريب من الزر، فلا تطفح خارج الشاشة */
+@media(max-width:900px){.a11y-wrap{position:static;}.a11y-panel{top:100%;inset-inline-end:var(--s4);max-width:calc(100% - 2 * var(--s4));}}
+/* الجوال: زر اللغة يكتفي بـ«EN» أو «ع». ولصاحب الحساب في أضيق الشاشات يظهر رمز الشعار وحده
+   (الرمز في الطرف الأيمن من صورة الشعار) وتضيق المسافات، ليتسع الشريط لزر الوصول وزر القائمة. */
+@media(max-width:480px){.nav-lang .ico{display:none;}}
+@media(max-width:389.98px){#nav.nav-signed .nav-logo img{width:56px;object-fit:cover;object-position:right center;}
+#nav.nav-signed .nav-inner{gap:var(--s3);}#nav.nav-signed .nav-tools,#nav.nav-signed .nav-user{gap:var(--s1);}}
 .nav-user{display:none;align-items:center;gap:var(--s2);}
 .nav-user.on{display:inline-flex;}
 .nav-guest.off{display:none!important;}
@@ -560,7 +578,7 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 .nav-link{white-space:nowrap;}
 @media(max-width:1023px){.nav-link{padding-inline:var(--s2);}}
 @media(min-width:901px) and (max-width:960px){.nav-id-text.hide-sm{display:none;}}
-@media(max-width:900px){.nav-cta,.nav-a11y-btn,.nav-tools .nav-icon-btn.hide-sm,.nav-id-text.hide-sm{display:none;}
+@media(max-width:900px){.nav-cta,.nav-tools .nav-icon-btn.hide-sm,.nav-id-text.hide-sm{display:none;}
 .nav-id-chevron{display:none;}.nav-id{padding:0;gap:0;}}
 .mob-menu{width:320px;padding:0;gap:0;overflow-y:auto;overscroll-behavior:contain;}
 .mob-head{display:flex;align-items:center;justify-content:space-between;padding:var(--s5) var(--s5) var(--s4);border-bottom:1px solid var(--border);position:sticky;top:0;background:inherit;backdrop-filter:blur(24px);z-index:2;}
@@ -1081,8 +1099,21 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <button class="nav-link" onclick="go('contact')" data-pg="contact" data-lp="nav.contact">تواصل معنا</button>
 </div>
 <div class="nav-tools">
-<button class="nav-icon-btn" onclick="toggleLang()" aria-label="تغيير اللغة / Change language"><svg class="ico" style="width:16px;height:16px"><use href="#ic-globe"/></svg><span class="lang-label">EN</span></button>
-<button class="nav-icon-btn hide-sm" onclick="toggleA11y()" aria-label="إعدادات إمكانية الوصول"><svg class="ico" style="width:16px;height:16px"><use href="#ic-a11y"/></svg></button>
+<button class="nav-icon-btn nav-lang" onclick="toggleLang()" aria-label="تغيير اللغة / Change language"><svg class="ico" style="width:16px;height:16px"><use href="#ic-globe"/></svg><span class="lang-label">EN</span></button>
+<div class="a11y-wrap">
+<button type="button" class="nav-icon-btn" id="a11yBtn" onclick="toggleA11y()" aria-expanded="false" aria-controls="a11yPanel"><svg class="ico" style="width:16px;height:16px" aria-hidden="true"><use href="#ic-a11y"/></svg><span class="sr-only">إعدادات إمكانية الوصول</span></button>
+<div class="a11y-panel" id="a11yPanel" role="group" aria-labelledby="a11yTitle" hidden>
+<p class="a11y-title" id="a11yTitle">إعدادات سريعة</p>
+<div class="a11y-row" role="group" aria-labelledby="a11yFsLbl"><span class="a11y-lbl" id="a11yFsLbl">حجم الخط</span>
+<div class="a11y-fs"><button type="button" class="a11y-fs-btn" onclick="setFS(_fs-10)"><span aria-hidden="true">أ-</span><span class="sr-only">تصغير الخط</span></button><button type="button" class="a11y-fs-btn" onclick="setFS(100)"><span aria-hidden="true">أ</span><span class="sr-only">الحجم الافتراضي</span></button><button type="button" class="a11y-fs-btn" onclick="setFS(_fs+10)"><span aria-hidden="true">أ+</span><span class="sr-only">تكبير الخط</span></button></div>
+</div>
+<div class="a11y-row"><label class="a11y-lbl" for="a11yHigh">تباين عالٍ</label><label class="toggle"><input type="checkbox" id="a11yHigh" onchange="setC(this.checked?'high':'')"><span class="toggle-track"></span></label></div>
+<div class="a11y-row"><label class="a11y-lbl" for="a11yDark">الوضع الداكن</label><label class="toggle"><input type="checkbox" id="a11yDark" onchange="setC(this.checked?'dark':'')"><span class="toggle-track"></span></label></div>
+<div class="a11y-row"><label class="a11y-lbl" for="a11yMotion">تقليل الحركة</label><label class="toggle"><input type="checkbox" id="a11yMotion" onchange="setMotionPref(this.checked)"><span class="toggle-track"></span></label></div>
+<button type="button" class="a11y-link" onclick="closeA11y();go('settings')">جميع إعدادات الوصول</button>
+</div>
+<span class="sr-only" id="a11yLive" role="status"></span>
+</div>
 <button class="nav-icon-btn nav-guest hide-sm" onclick="go('login')" data-lp="nav.login">تسجيل الدخول</button>
 <button class="nav-cta nav-guest" onclick="startTrial()" data-lp="nav.cta">جرّب الآن</button>
 <div class="nav-user" id="navUser">
@@ -2208,19 +2239,6 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 </div>
 </div>
 </footer>
-<div class="fab" id="fab">
-<div class="fab-popup glass" id="fabPopup">
-<h3>إعدادات سريعة</h3>
-<div class="fab-row"><span>حجم الخط</span>
-<div class="fab-fs"><button class="fab-fs-btn" onclick="setFS(_fs-10)">أ-</button><button class="fab-fs-btn" onclick="setFS(100)">أ</button><button class="fab-fs-btn" onclick="setFS(_fs+10)">أ+</button></div>
-</div>
-<div class="fab-row"><span>تباين عالٍ</span><label class="toggle"><input type="checkbox" id="fabHigh" onchange="setC(this.checked?'high':'')"><span class="toggle-track"></span></label></div>
-<div class="fab-row"><span>الوضع الداكن</span><label class="toggle"><input type="checkbox" id="fabDark" onchange="setC(this.checked?'dark':'')"><span class="toggle-track"></span></label></div>
-<div class="fab-row"><span>تقليل الحركة</span><label class="toggle"><input type="checkbox" id="fabMotion" onchange="setMotionPref(this.checked)" aria-label="تقليل الحركة"><span class="toggle-track"></span></label></div>
-<button class="fab-link" onclick="go('settings');toggleA11y()">جميع إعدادات الوصول</button>
-</div>
-<button class="fab-btn" onclick="toggleA11y()" aria-label="إعدادات إمكانية الوصول"><svg class="ico"><use href="#ic-a11y"/></svg></button>
-</div>
 <!-- تنبيه الخروج التلقائي: الوصف والعدّ يُكتبان من idleOpen() بالمدة الفعلية ولغة الواجهة -->
 <div class="idle-warn" id="idleWarn" role="alertdialog" aria-modal="true" aria-labelledby="idleTitle" aria-describedby="idleDesc" hidden>
 <div class="idle-card">
@@ -2277,31 +2295,42 @@ nav.classList.toggle('scrolled',window.scrollY>40);
 }
 },{passive:true});
 
-// Font size
-function setFS(v){
+// Font size: يُحفظ ويُطبَّق قبل أول رسم (السكربت الصغير أعلى الصفحة)، ويُعلَن لقارئ الشاشة عند تغييره
+function setFS(v,quiet){
 _fs=Math.max(80,Math.min(150,v));
 document.documentElement.style.setProperty('--f-scale',_fs);
+if(!quiet)LS.set('fs',_fs);
 const d=document.getElementById('fsVal');
 if(d)d.textContent=String(_fs).replace(/\d/g,d=>'0123456789'[d])+'%';
+const live=document.getElementById('a11yLive');
+if(live&&!quiet)live.textContent=(LANG==='en'?'Font size ':'حجم الخط ')+_fs+'%';
 }
 
-// Contrast
+// Contrast: وضع العرض يتبع إعداد الجهاز (داكن أو تباين عالٍ، deviceContrast في السكربت الصغير
+// أعلى الصفحة) حتى يختار الزائر وضعاً في وصال، فيُحفظ ويتقدّم عليه مثل «تقليل الحركة».
 function setC(mode){
 try{LS.set('contrast',mode||'');}catch(e){}
+applyC(mode);
+}
+function applyC(mode){
 document.documentElement.setAttribute('data-contrast',mode||'');
 document.querySelectorAll('#contrastBtns .setting-btn').forEach((b,i)=>{
-b.classList.toggle('on',(mode===''&&i===0)||(mode==='high'&&i===1)||(mode==='dark'&&i===2));
+b.classList.toggle('on',(!mode&&i===0)||(mode==='high'&&i===1)||(mode==='dark'&&i===2));
 });
-const fh=document.getElementById('fabHigh'),fd=document.getElementById('fabDark');
-if(fh)fh.checked=mode==='high';
-if(fd)fd.checked=mode==='dark';
+const qh=document.getElementById('a11yHigh'),qd=document.getElementById('a11yDark');
+if(qh)qh.checked=mode==='high';
+if(qd)qd.checked=mode==='dark';
 const ml=document.getElementById('mobDarkLbl');
 if(ml)ml.textContent=mode==='dark'?'الوضع الفاتح':'الوضع الداكن';
 }
 function toggleDark(){setC(document.documentElement.getAttribute('data-contrast')==='dark'?'':'dark');}
 
 // Chat
-let _streaming=false, _streamAbort=null;
+/* رد واحد قيد الوصول في كل مرة (_streaming)، من إرسال السؤال حتى اكتمال رده
+   بأي مسار: البث أو chat.php البديل. _streamAbort متحكّمه، يلغيه زر الإيقاف
+   وEsc وتعديل السؤال. كل سؤال له رقم دورة (data-turn) على فقاعته وعلى كل رد
+   له، فالتعديل يعرف ما يسحبه معه، ولا يظهر رد بعد سحب سؤاله. */
+let _streaming=false, _streamAbort=null, _turnSeq=0;
 async function send(){
 if(_streaming){stopStreaming();return;}
 const inp=document.getElementById('chatInput');
@@ -2312,8 +2341,8 @@ const stReply=smallTalk(txt);
 if(stReply){
   inp.value='';inp.style.height='auto';
   const chips0=document.getElementById('chatChips');if(chips0)chips0.style.display='none';
-  addMsg('user',txt);showTyping();
-  setTimeout(()=>{hideTyping();addMsg('ai',stReply);},450+Math.random()*350);
+  const q=addMsg('user',txt);showTyping();
+  setTimeout(()=>{hideTyping();if(q.isConnected)addMsg('ai',stReply,{turn:q.dataset.turn});},450+Math.random()*350);
   return;
 }
 const st=tokenState(),cost=costOf(txt);
@@ -2326,10 +2355,10 @@ inp.value='';
 inp.style.height='auto';
 const chips=document.getElementById('chatChips');
 if(chips)chips.style.display='none';
-addMsg('user',txt);
+const q=addMsg('user',txt);
 spendTokens(cost);
-await streamReply(txt);
-maybeSurveyNudge();
+await streamReply(txt,q);
+if(q.isConnected)maybeSurveyNudge();
 }
 function startTrial(){go('chat');setTimeout(()=>{const i=document.getElementById('chatInput');if(i)i.focus();},400);}
 function submitRating(){
@@ -2346,6 +2375,7 @@ d.className='msg msg-'+(role==='user'?'user':'ai');
 if(role==='user'){
 d.innerHTML='<div class="msg-avatar">'+(USER?esc((USER.name||'أ').charAt(0)):'أ')+'</div><div><div class="msg-bubble">'+esc(text).replace(/\n/g,'<br>')+'</div><div class="msg-actions"><button class="msg-act-btn msg-edit-btn" onclick="editLastQuestion(this)" aria-label="تعديل السؤال" title="تعديل"><svg class="ico" style="width:14px;height:14px"><use href="#ic-edit"/></svg></button></div></div>';
 d.dataset.raw=text;
+d.dataset.turn=++_turnSeq;
 body.querySelectorAll('.msg-user.msg-editable').forEach(m=>m.classList.remove('msg-editable'));
 d.classList.add('msg-editable');
 }else if(opts.streaming){
@@ -2354,6 +2384,7 @@ d.innerHTML='<div class="msg-avatar">و</div><div><div class="msg-bubble" aria-l
 d.innerHTML='<div class="msg-avatar">و</div><div><div class="msg-bubble">'+mdLite(esc(text))+'</div>'+srcHtml(opts.src)+'<div class="msg-actions">'+aiActionsHtml(opts)+'</div></div>';
 d.dataset.raw=text;
 }
+if(opts.turn)d.dataset.turn=opts.turn;
 body.appendChild(d);
 if(!opts.streaming)body.scrollTop=body.scrollHeight;
 if(role!=='user'&&!opts.streaming&&replyReadMode())speakText(text);
@@ -2424,7 +2455,8 @@ function toggleMode(btn){
 btn.parentElement.querySelectorAll('.chat-mode-btn').forEach(b=>b.classList.remove('on'));
 btn.classList.add('on');
 }
-/* اسمها مستقل عن chatKey() (مفتاح المحادثات المحفوظة أسفل الملف)، فتلك كانت تحل محلها فلا يرسل Enter ولا يوقف Escape */
+/* Enter يرسل، وEsc يوقف الرد أو قراءته الصوتية. كان اسمها chatKey فحجبتها chatKey()
+   مفتاح المحفوظات المعرَّفة بعدها بالاسم نفسه، فتوقف الإرسال بلوحة المفاتيح. */
 function chatInputKey(e){
 if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}
 else if(e.key==='Escape'&&_streaming){e.preventDefault();stopStreaming();}
@@ -2506,8 +2538,18 @@ btn.classList.add('recording');
 setStreamStatus('نسجّل سؤالك الآن. اضغط الميكروفون مرة أخرى حين تنتهي.');
 }
 
-// A11y FAB
-function toggleA11y(){document.getElementById('fabPopup').classList.toggle('open');}
+// إعدادات الوصول السريعة (زر الشريط): اللوحة تلي الزر فيدخلها أول Tab بعده، ويغلقها Escape
+// (ويعود التركيز إلى الزر) أو النقر أو انتقال التركيز خارجها.
+function toggleA11y(){if(document.getElementById('a11yPanel').hidden)openA11y();else closeA11y();}
+function openA11y(){document.getElementById('a11yPanel').hidden=false;document.getElementById('a11yBtn').setAttribute('aria-expanded','true');}
+function closeA11y(back){
+const p=document.getElementById('a11yPanel'),b=document.getElementById('a11yBtn');
+if(!p||p.hidden)return;
+p.hidden=true;b.setAttribute('aria-expanded','false');
+if(back)b.focus();
+}
+document.addEventListener('click',e=>{if(!e.target.closest('.a11y-wrap'))closeA11y();},true);
+document.addEventListener('focusin',e=>{if(!e.target.closest('.a11y-wrap'))closeA11y();});
 
 // Star rating
 function rate(n){
@@ -2533,7 +2575,7 @@ document.querySelectorAll('.anim:not(.in):not(.hero-seq)').forEach(el=>obs.obser
 // Escape key
 document.addEventListener('keydown',e=>{
 if(e.key==='Escape'){
-document.getElementById('fabPopup').classList.remove('open');
+closeA11y(true);
 if(document.getElementById('mobMenu').classList.contains('open'))toggleMob();
 }
 });
@@ -2569,6 +2611,11 @@ if(MOTION_MQ){
   const f=()=>{applyA11y();if(motionReduced())heroFxStop();};
   if(MOTION_MQ.addEventListener)MOTION_MQ.addEventListener('change',f);else if(MOTION_MQ.addListener)MOTION_MQ.addListener(f);
 }
+/* وضع العرض يتبع تغيّر إعداد الجهاز أثناء الزيارة ما دام الزائر لم يختر وضعاً في وصال */
+if(window.matchMedia&&!LP_PREVIEW)['(prefers-color-scheme: dark)','(prefers-contrast: more)'].forEach(q=>{
+  const m=matchMedia(q),f=()=>{if(LS.get('contrast',null)===null)applyC(deviceContrast());};
+  if(m.addEventListener)m.addEventListener('change',f);else if(m.addListener)m.addListener(f);
+});
 function applyA11y(){
   const d=document.documentElement;
   d.setAttribute('data-bigtouch',A11Y.touch);
@@ -2578,7 +2625,7 @@ function applyA11y(){
   const g=id=>document.getElementById(id);
   if(g('setAuto'))g('setAuto').checked=A11Y.auto;
   if(g('setMotion'))g('setMotion').checked=motionReduced();
-  if(g('fabMotion'))g('fabMotion').checked=motionReduced();
+  if(g('a11yMotion'))g('a11yMotion').checked=motionReduced();
   if(g('setTouch'))g('setTouch').checked=A11Y.touch;
   if(g('setLinks'))g('setLinks').checked=A11Y.links;
   if(g('setKbd'))g('setKbd').checked=A11Y.kbd;
@@ -2737,12 +2784,12 @@ function idleInit(){
 }
 
 /* ---------- نداء الخادم ---------- */
-async function api(path,body,hdr){
+async function api(path,body,hdr,signal){
   let status=0;
   try{
     // بهوية الحساب الظاهر في الصفحة يعرف الخادم أن جلسته انتهت فيردّ X-Session-Ended
     const h=Object.assign({'Content-Type':'application/json'},USER?{'X-Wesal-User':String(USER.id)}:{},hdr||{});
-    const r=await fetch(API+path,{method:'POST',headers:h,credentials:'same-origin',body:JSON.stringify(body||{})});
+    const r=await fetch(API+path,{method:'POST',headers:h,credentials:'same-origin',body:JSON.stringify(body||{}),signal});
     status=r.status;
     const ended=r.headers.get('X-Session-Ended');
     if(ended){if(USER)sessionEnded(ended,true);else IDLE.bootEnded=ended;}
@@ -2863,6 +2910,7 @@ function doLogout(){sessionEnded('manual');}
 function syncAuthUI(){
   const guest=document.querySelectorAll('.nav-guest'),user=document.getElementById('navUser');
   guest.forEach(e=>e.classList.toggle('off',!!USER));
+  document.getElementById('nav')?.classList.toggle('nav-signed',!!USER);   // أضيق الشاشات: رمز الشعار وحده
   if(user){user.classList.toggle('on',!!USER);
     if(USER){
       paintAvatars();
@@ -3037,9 +3085,9 @@ function requireAuth(target){
 }
 
 /* ================= المحادثة ================= */
-async function sendToModel(q){
+async function sendToModel(q,signal){
   const hist=(LS.get('hist',[])||[]).slice(-6);
-  const res=await api('chat.php',{message:q,history:hist,mode:currentMode(),user:USER?USER.id:0});
+  const res=await api('chat.php',{message:q,history:hist,mode:currentMode(),user:USER?USER.id:0},null,signal);
   if(res.ok&&res.reply)return {a:res.reply,src:'server'};
   return localAnswer(q);
 }
@@ -3050,19 +3098,20 @@ function askQuestion(t){const i=document.getElementById('chatInput');if(i)i.valu
 /* ---------- الرد الفوري المتدفق (chat-stream.php) ----------
    fetch+getReader لا EventSource: نحتاج إرسال جسم POST (السؤال + آخر ٦ أدوار
    من السجل) لا معامِلات رابط — EventSource لا يرسل جسماً أصلاً. */
-async function streamReply(txt){
+async function streamReply(txt,qEl){
+  const ctl=_streamAbort=new AbortController();
   setStreamingUI(true);
   setStreamStatus('وصال يكتب…');
   resetReadQueue();
-  const bubble=addMsg('ai','',{streaming:true});
+  const turn=qEl.dataset.turn;
+  const bubble=addMsg('ai','',{streaming:true,turn});
   const hist=(LS.get('hist',[])||[]).slice(-6);
-  _streamAbort=new AbortController();
   let streamText='', gotAnyDelta=false, sawJson=null, sawBroken=false, committedClient=false;
   try{
     const res=await fetch(API+'chat-stream.php',{
       method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
       body:JSON.stringify({message:txt,history:hist,mode:currentMode(),user:USER?USER.id:0}),
-      signal:_streamAbort.signal
+      signal:ctl.signal
     });
     const ctype=res.headers.get('Content-Type')||'';
     if(ctype.indexOf('application/json')===0){
@@ -3101,60 +3150,66 @@ async function streamReply(txt){
       }
     }
   }catch(e){
-    if(e&&e.name==='AbortError'){
-      setStreamingUI(false);
-      finalizeStreamBubble(bubble,streamText,{report:gotAnyDelta,canRegenerate:gotAnyDelta});
-      setStreamStatus('توقف الرد.');
-      cancelReadQueue();
-      return;
+    // الإلغاء يُعالَج بعد الكتلة: قد يقع أثناء res.json() فيُبتلَع بلا استثناء
+    if(!ctl.signal.aborted){
+      if(!committedClient&&sawJson===null){
+        await streamFallbackToClassic(bubble,txt,ctl,qEl);
+        return;
+      }
+      sawBroken=true;   // التزم الخادم لكن انقطع الاتصال هنا — لا سقوط لـchat.php، فقط إنهاء بالجزء المتوفر
     }
-    if(!committedClient&&sawJson===null){
-      await streamFallbackToClassic(bubble,txt);
-      return;
-    }
-    sawBroken=true;   // التزم الخادم لكن انقطع الاتصال هنا — لا سقوط لـchat.php، فقط إنهاء بالجزء المتوفر
+  }
+  if(ctl.signal.aborted){endStoppedReply(bubble,streamText,gotAnyDelta,qEl);return;}
+
+  if(!sawJson&&!gotAnyDelta&&!committedClient){
+    await streamFallbackToClassic(bubble,txt,ctl,qEl);
+    return;
   }
   setStreamingUI(false);
 
   if(sawJson){
     bubble.remove();
     if(sawJson.ok&&sawJson.reply){
-      addMsg('ai',sawJson.reply,{src:sawJson.small?null:'server',report:!sawJson.small,canRegenerate:!sawJson.small});
-      if(!sawJson.small)saveChatEntry(txt,sawJson.reply);
+      addMsg('ai',sawJson.reply,{src:sawJson.small?null:'server',report:!sawJson.small,canRegenerate:!sawJson.small,turn});
+      if(!sawJson.small)saveChatEntry(txt,sawJson.reply,qEl);
       setStreamStatus(sawJson.small?'':'انتهى الرد.');
       return;
     }
     const reply=localAnswer(txt);
-    addMsg('ai',reply.a,{src:reply.src,report:true});
-    saveChatEntry(txt,reply.a);
+    addMsg('ai',reply.a,{src:reply.src,report:true,turn});
+    saveChatEntry(txt,reply.a,qEl);
     setStreamStatus('');
     return;
   }
 
-  if(!gotAnyDelta&&!committedClient){
-    await streamFallbackToClassic(bubble,txt);
-    return;
-  }
-
   finalizeStreamBubble(bubble,streamText,{report:true,canRegenerate:true});
-  if(!sawBroken)saveChatEntry(txt,streamText);
+  if(!sawBroken)saveChatEntry(txt,streamText,qEl);
   setStreamStatus(sawBroken?'انقطع الاتصال قبل اكتمال الرد.':'انتهى الرد.');
   if(replyReadMode()==='after')speakText(streamText);
   else flushReadQueue(streamText);
 }
 /* لا محتوى وصل إطلاقاً ولا رد JSON — يعني chat-stream.php لم يخصم رصيداً بعد
-   (الالتزام بالبث لم يحدث)، فالسقوط لـchat.php آمن ولا يخصم مرتين. */
-async function streamFallbackToClassic(bubble,txt){
-  bubble.remove();
+   (الالتزام بالبث لم يحدث)، فالسقوط لـchat.php آمن ولا يخصم مرتين. الرد يبقى
+   قيد الوصول بفقاعته وزر إيقافه حتى يكتمل، كما في البث. */
+async function streamFallbackToClassic(bubble,txt,ctl,qEl){
+  let reply;
+  try{reply=await sendToModel(txt,ctl.signal);}catch(e){reply=localAnswer(txt);}
+  if(ctl.signal.aborted){endStoppedReply(bubble,'',false,qEl);return;}
+  if(typeof reply==='string')reply={a:reply,src:null};
   setStreamingUI(false);
   setStreamStatus('');
-  showTyping();
-  let reply;
-  try{reply=await sendToModel(txt);}catch(e){reply=localAnswer(txt);}
-  if(typeof reply==='string')reply={a:reply,src:null};
-  hideTyping();
-  addMsg('ai',reply.a,{src:reply.src,report:true});
-  saveChatEntry(txt,reply.a);
+  bubble.remove();
+  addMsg('ai',reply.a,{src:reply.src,report:true,turn:qEl.dataset.turn});
+  saveChatEntry(txt,reply.a,qEl);
+}
+/* أُلغي الرد: بزر الإيقاف أو Esc يبقى ما وصل منه في فقاعته، وبتعديل سؤاله
+   أزالت editLastQuestion السؤال وردوده فلا يبقى ما يُعرض. */
+function endStoppedReply(bubble,text,partial,qEl){
+  setStreamingUI(false);
+  cancelReadQueue();
+  if(!qEl.isConnected)return;
+  finalizeStreamBubble(bubble,text,{report:partial,canRegenerate:partial});
+  setStreamStatus('توقف الرد.');
 }
 function updateStreamingBubble(el,text){
   const b=el.querySelector('.msg-bubble');
@@ -3220,26 +3275,32 @@ async function regenerateMsg(btn){
   if(_streaming)return;
   const msgEl=btn.closest('.msg');
   if(!msgEl)return;
-  let prev=msgEl.previousElementSibling;
-  while(prev&&!prev.classList.contains('msg-user'))prev=prev.previousElementSibling;
+  // السؤال برقم دورته لا بموضعه: الرد المعاد توليده يُضاف آخر السجل ولو كان سؤاله أقدم
+  const prev=document.querySelector('#chatBody .msg-user[data-turn="'+msgEl.dataset.turn+'"]');
   const q=prev?prev.dataset.raw:null;
   if(!q)return;
   const st=tokenState(),cost=costOf(q);
   if(st.left<cost){if(st.guest){requireAuth('chat');return;}toast('انتهى رصيد أسئلتك لهذه الفترة.','err');return;}
   spendTokens(cost);
-  await streamReply(q);
-  maybeSurveyNudge();
+  await streamReply(q,prev);
+  if(prev.isConnected)maybeSurveyNudge();
 }
+/* تعديل آخر سؤال يسحبه بكل ما يخصه ويعيده لخانة الكتابة، ويعمل ورده قيد الوصول
+   أيضاً فيوقفه. يزيل السؤال وكل رد له من السجل، ويسحبهما من سياق النموذج (hist)
+   ومن المحفوظات، وإلا أجاب وصال عن السؤال المعدّل وهو يرى القديم وجوابه.
+   الرصيد لا يُسترد، كما مع زر الإيقاف: الخادم خصمه حين بدأ يجهّز الرد. */
 function editLastQuestion(btn){
-  if(_streaming)return;
   const msgEl=btn.closest('.msg');
   if(!msgEl||!msgEl.classList.contains('msg-editable'))return;
   const raw=msgEl.dataset.raw||'';
-  const next=msgEl.nextElementSibling;
-  if(next&&next.classList.contains('msg-ai'))next.remove();
   msgEl.remove();
+  document.querySelectorAll('#chatBody .msg-ai[data-turn="'+msgEl.dataset.turn+'"]').forEach(m=>m.remove());
+  hideTyping();
+  if(_streaming)stopStreaming();
+  retractChatEntries(raw,+msgEl.dataset.saved||0);
   const inp=document.getElementById('chatInput');
   if(inp){inp.value=raw;autoResize(inp);inp.focus();}
+  setStreamStatus('عدّل سؤالك ثم أرسله.');
 }
 /* ---------- القراءة الصوتية ----------
    طابور واحد لكل قراءة: رد كامل يُقسَّم جملاً (speakText)، أو جمل تُضاف أثناء
@@ -3475,7 +3536,8 @@ function adoptLegacyChats(){
   if(Array.isArray(old)&&old.length&&!LS.get(chatKey(),null))LS.set(chatKey(),old);
   LS.del('chats');
 }
-function saveChatEntry(q,a){
+/* qEl فقاعة السؤال: تعدّ ما حُفظ له (data-saved) ليسحبه التعديل بالعدد نفسه */
+function saveChatEntry(q,a,qEl){
   if(USER){
     const list=LS.get(chatKey(),[]);
     list.unshift({q,a:a.slice(0,160),t:Date.now()});
@@ -3483,6 +3545,23 @@ function saveChatEntry(q,a){
   }
   const h=LS.get('hist',[]);h.push({role:'user',text:q},{role:'ai',text:a.slice(0,400)});
   LS.set('hist',h.slice(-12));
+  if(qEl)qEl.dataset.saved=(+qEl.dataset.saved||0)+1;
+}
+/* عكس saveChatEntry عند تعديل السؤال: أحدث n مدخلات له في المحفوظات وفي السياق */
+function retractChatEntries(q,n){
+  if(!n)return;
+  const list=USER?LS.get(chatKey(),[]):null;
+  if(Array.isArray(list)){
+    let k=n;
+    LS.set(chatKey(),list.filter(c=>{if(k&&c&&c.q===q){k--;return false;}return true;}));
+  }
+  const h=LS.get('hist',[]);
+  if(!Array.isArray(h))return;
+  for(let i=h.length-2,k=n;i>=0&&k;i--){
+    const u=h[i],a=h[i+1];
+    if(u&&a&&u.role==='user'&&u.text===q&&a.role==='ai'){h.splice(i,2);k--;}
+  }
+  LS.set('hist',h);
 }
 function renderChats(){
   const box=document.getElementById('chatsList');if(!box)return;
@@ -4312,6 +4391,7 @@ const TXT={
 'مصدر الصوت':'Voice source','صوت سعودي':'Saudi voice','صوت الجهاز':'Device voice',
 'تكبير مساحة اللمس':'Larger touch targets','تمييز الروابط':'Highlight links','تسهيل التنقل بلوحة المفاتيح':'Easier keyboard navigation',
 'إعدادات سريعة':'Quick settings','جميع إعدادات الوصول':'All accessibility settings',
+'تصغير الخط':'Decrease text size','الحجم الافتراضي':'Default text size','تكبير الخط':'Increase text size',
 /* لوحة التحكم */
 'لوحة المعلومات':'Dashboard','محادثاتي':'My chats','حسابي':'My account','المستخدمون':'Users','رسائل التواصل':'Messages','طلبات الدعم':'Support tickets',
 'محادثة':'Chats','سؤال':'Questions','محفوظ':'Saved','مستخدم مسجّل':'Registered users',
@@ -5293,7 +5373,7 @@ async function lpPreviewBoot(){
    ملف مستقل يُحمَّل لمدير النظام وحده عند فتح التبويب، فلا يثقل الصفحة على
    الزوار. رقم الإصدار يتغير مع كل تعديل على الملفين حتى لا تُقدَّم نسخة قديمة
    من ذاكرة المتصفح بجانب index.html الجديد. */
-const LPE_VER='7';
+const LPE_VER='8';
 function loadContentAdmin(){
   const root=document.getElementById('lpEditor');if(!root)return;
   if(window.LPE){window.LPE.open(root);return;}
@@ -5450,7 +5530,8 @@ Object.assign(TXT,{
 document.addEventListener('DOMContentLoaded',async()=>{
 initAnims();
 if(LP_PREVIEW){heroIntro();return lpPreviewBoot();}
-setC(LS.get('contrast',''));
+applyC(LS.get('contrast',null)??deviceContrast());
+setFS(LS.get('fs',100),true);
 initSidebar();
 const _lpc=LS.get('lp',null);if(_lpc&&_lpc.doc){LP=_lpc.doc;applyLanding();}
 const l=LS.get('lang','ar');if(l==='en')setLang('en');
