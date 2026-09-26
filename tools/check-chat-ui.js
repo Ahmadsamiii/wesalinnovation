@@ -305,6 +305,18 @@ const state = page => page.evaluate(() => ({
       await page.close();
       open_pages.delete(page);
     }
+    // حجز الزاوية مشروط بوجود الزر: إن أُزيل لا يبقى فراغ يسار خانة السؤال
+    const page = await open({ viewport: { width: 1280, height: 720 } });
+    const pad = () => page.evaluate(() => getComputedStyle(document.querySelector('.chat-input-area')).paddingLeft);
+    if (await page.evaluate(() => !!document.getElementById('fab'))) {
+      const withFab = await pad();
+      await page.evaluate(() => document.getElementById('fab').remove());
+      const withoutFab = await pad();
+      check('بلا الزر العائم يعود هامش خانة السؤال كما كان', parseFloat(withFab) > 60 && parseFloat(withoutFab) < 30, withFab + ' ثم ' + withoutFab);
+    } else {
+      const p = await pad();
+      check('لا زر عائم ولا فراغ يسار خانة السؤال', parseFloat(p) < 30, p);
+    }
   });
 
   await browser.close();

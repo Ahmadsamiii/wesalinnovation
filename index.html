@@ -343,11 +343,12 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 .typing span:nth-child(2){animation-delay:.2s;}
 .typing span:nth-child(3){animation-delay:.4s;}
 .chat-input-area{padding:var(--s4) var(--s5);border-top:1px solid var(--border);background:var(--surface);}
-/* زر إعدادات الوصول العائم (.fab) ثابت أسفل يسار الشاشة، وخانة السؤال تلاصق يسارها
+/* زر إعدادات الوصول العائم (#fab) ثابت أسفل يسار الشاشة، وخانة السؤال تلاصق يسارها
    في العربية (وفي الإنجليزية حين تختفي القائمة الجانبية)، فكان يغطي زر الإرسال
-   والإيقاف. عمود الزاوية محجوز له بعرضه وهامشه. */
-.chat-input-area{padding-left:calc(var(--s6) + 52px + var(--s2));}
-@media(min-width:769px){[dir="ltr"] .chat-input-area{padding-left:var(--s5);}}
+   والإيقاف. عمود الزاوية محجوز له بعرضه وهامشه ما دام في الصفحة، فإن أُزيل الزر
+   سقط الحجز وحده بلا فراغ. */
+:root:has(#fab) .chat-input-area{padding-left:calc(var(--s6) + 52px + var(--s2));}
+@media(min-width:769px){:root[dir="ltr"]:has(#fab) .chat-input-area{padding-left:var(--s5);}}
 .chat-chips{display:flex;gap:var(--s2);margin-bottom:var(--s3);flex-wrap:wrap;}
 .chat-chip{padding:var(--s1) var(--s3);border-radius:var(--r-full);font-family:inherit;font-size:var(--f-xs);background:var(--surface-alt);border:1px solid var(--border);color:var(--text);cursor:pointer;transition:all var(--dur) var(--ease);}
 /* على أجهزة اللمس فقط: أهداف لمس أوسع للعناصر الصغيرة، بلا أي تغيير على
