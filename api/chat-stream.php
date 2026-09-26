@@ -33,6 +33,11 @@ $bal  = chatCheckBalance($u, $ip, $cost);
 $u    = $bal['u'];
 $left = $bal['left'];
 
+/* آخر ما يُكتب في الجلسة قبل هذا السطر. PHP يقفل ملف الجلسة طوال الطلب، والبث
+   قد ينتظر المزوّد عشرات الثواني، فكان كل طلب آخر من المتصفح نفسه ينتظره: استطلاع
+   الإشعارات، وطلب chat.php البديل إن انقطع الاتصال، فيطول الانتظار أضعافاً. */
+session_write_close();
+
 $SYSTEM = chatSystemPrompt($mode);
 [$SYSTEM, ] = chatAugmentWithRag($SYSTEM, $message);
 
