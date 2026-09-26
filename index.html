@@ -950,8 +950,9 @@ table.tbl tr:hover td{background:var(--surface-alt);}
 .how-steps{flex-wrap:wrap;}
 .how-step{min-width:180px;}
 .lp-preview .anim{opacity:1!important;transform:none!important;transition:none!important;}
-.lp-embedded [data-lp],.lp-embedded [data-lpf],.lp-embedded [data-lp-ph],.lp-embedded [data-lp-href]{cursor:pointer;}
+.lp-embedded [data-lp],.lp-embedded [data-lpf],.lp-embedded [data-lp-ph],.lp-embedded [data-lp-href],.lp-embedded [data-lpl]{cursor:pointer;}
 .lp-embedded [data-lp]:hover,.lp-embedded [data-lpf]:hover,.lp-embedded [data-lp-ph]:hover,.lp-embedded [data-lp-href]:hover{outline:2px dashed rgba(129,79,195,.75);outline-offset:3px;border-radius:4px;}
+.lp-embedded [data-lpl]:hover{outline:2px dashed rgba(129,79,195,.75);outline-offset:3px;}
 .lp-flash{outline:3px solid #814fc3!important;outline-offset:4px;border-radius:6px;animation:lpFlash 1.6s ease-out;}
 @keyframes lpFlash{0%{box-shadow:0 0 0 0 rgba(129,79,195,.55);}100%{box-shadow:0 0 0 16px rgba(129,79,195,0);}}
 .lp-preview-badge{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:3000;background:#20134f;color:#fff;padding:10px 18px;border-radius:999px;font-size:.8125rem;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:calc(100% - 32px);text-align:center;}
@@ -975,12 +976,28 @@ table.tbl tr:hover td{background:var(--surface-alt);}
 .legal-wrap ul{padding-right:var(--s6);margin:var(--s3) 0;}
 
 
-/* sources + misc v2 */
-.sources-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));gap:var(--s4)}
-.src-card{padding:var(--s5) var(--s4)}
-.src-name{font-weight:700;margin-bottom:4px}
+/* مصادر البيانات: شعار الجهة في لوحة ثابتة المقاس أعلى بطاقتها، والبطاقات بعرض
+   واحد والصف الناقص في المنتصف. ملفات الشعارات بمقاس موحّد (tools/source-logo.php)
+   فتظهر متوازنة، وفي الوضع الداكن بيضاء كما تفعل الجهات على الخلفيات الداكنة. */
+.sources-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--s4)}
+.sources-grid>.src-card{flex:0 1 calc((100% - 3 * var(--s4)) / 4)}
+.src-card{display:flex;flex-direction:column;text-align:center;padding:var(--s4) var(--s4) var(--s5)}
+.src-logo{height:104px;display:flex;align-items:center;justify-content:center;padding:0 var(--s2);border-radius:var(--r-md);background:var(--bg);margin-bottom:var(--s4);transition:background var(--dur-md) var(--ease)}
+.src-card:hover .src-logo{background:var(--surface-alt)}
+.src-logo img{display:block;width:100%;max-width:220px;height:auto}
+.src-ph{width:40px;height:40px;color:var(--muted);opacity:.55}
+.src-name{font-weight:700;color:var(--ink);line-height:1.5;margin-bottom:4px;text-wrap:balance}
 .src-dom{color:var(--secondary);font-size:var(--f-sm);font-weight:600;margin-bottom:6px}
-.src-note{color:var(--muted);font-size:var(--f-xs)}
+.src-note{color:var(--muted);font-size:var(--f-xs);line-height:1.7}
+.src-foot{margin-top:var(--s6);text-align:center;color:var(--muted);font-size:var(--f-xs)}
+[data-contrast="dark"] .src-logo{background:rgba(255,255,255,.04)}
+[data-contrast="dark"] .src-card:hover .src-logo{background:rgba(255,255,255,.07)}
+[data-contrast="dark"] .src-logo img{filter:brightness(0) invert(1);opacity:.9}
+[data-contrast="high"] .src-logo,[data-contrast="high"] .src-card:hover .src-logo{background:#fff;box-shadow:inset 0 0 0 1px var(--border)}
+@media(max-width:1024px){.sources-grid>.src-card{flex-basis:calc((100% - 2 * var(--s4)) / 3)}}
+@media(max-width:768px){.sources-grid>.src-card{flex-basis:calc((100% - var(--s4)) / 2)}}
+/* الجوال: بطاقة واحدة في الصف بنفس التصميم، فيبقى الشعار بحجمه الكامل واضحاً */
+@media(max-width:560px){.sources-grid{gap:var(--s3)}.sources-grid>.src-card{flex-basis:100%;max-width:420px}}
 .sec-sub{max-width:720px;margin:10px auto 0;color:var(--muted);font-size:var(--f-sm);line-height:1.9}
 .msg-src{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:3px 10px;border-radius:99px;background:var(--surface-2,rgba(80,57,168,.08));color:var(--primary);font-size:var(--f-xs);font-weight:600}
 [data-contrast="dark"] .msg-src{background:rgba(82,189,249,.14);color:var(--sky)}
@@ -1038,6 +1055,7 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <symbol id="ic-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
 <symbol id="ic-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="14 3 14 9 20 9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></symbol>
 <symbol id="ic-clipboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 11l2 2 4-4"/><line x1="9" y1="17" x2="15" y2="17"/></symbol>
+<symbol id="ic-landmark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 21 7 3 7"/><line x1="3" y1="21" x2="21" y2="21"/><line x1="6" y1="10" x2="6" y2="17"/><line x1="10" y1="10" x2="10" y2="17"/><line x1="14" y1="10" x2="14" y2="17"/><line x1="18" y1="10" x2="18" y2="17"/></symbol>
 </svg>
 <nav class="nav" id="nav" role="navigation" aria-label="التنقل الرئيسي" data-lp-sec="nav">
 <div class="nav-inner">
@@ -1207,16 +1225,17 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <section class="sec sources-sec" aria-label="مصادرنا الرسمية" data-lp-sec="sources">
 <div class="container">
 <div class="sec-header"><div class="sec-label anim" data-lp="sources.label">مصادر البيانات</div><h2 class="sec-title anim" data-lp="sources.title">من أين يجيب وصال؟</h2><p class="sec-sub anim" data-lp="sources.sub">بُنيت قاعدة وصال المعرفية من الأنظمة والخدمات المنشورة لدى الجهات الرسمية السعودية. إجابات وصال إرشادية، والمرجع النهائي هو الجهة الرسمية نفسها.</p></div>
-<div class="sources-grid" data-lp-list="sources.items">
-<template><div class="card src-card anim"><div class="src-name" data-lpf="name"></div><div class="src-dom" dir="ltr" data-lpf="domain"></div><div class="src-note" data-lpf="note"></div></div></template>
-<div class="card src-card anim" style="transition-delay:.1s" data-lp-id="hrsd"><div class="src-name" data-lpf="name">وزارة الموارد البشرية والتنمية الاجتماعية</div><div class="src-dom" dir="ltr" data-lpf="domain">hrsd.gov.sa</div><div class="src-note" data-lpf="note">بطاقة إثبات الإعاقة والإعانات والتأهيل</div></div>
-<div class="card src-card anim" style="transition-delay:.2s" data-lp-id="apd"><div class="src-name" data-lpf="name">هيئة رعاية الأشخاص ذوي الإعاقة</div><div class="src-dom" dir="ltr" data-lpf="domain">apd.gov.sa</div><div class="src-note" data-lpf="note">التمكين والسياسات والمبادرات</div></div>
-<div class="card src-card anim" style="transition-delay:.3s" data-lp-id="kscdr"><div class="src-name" data-lpf="name">مركز الملك سلمان لأبحاث الإعاقة</div><div class="src-dom" dir="ltr" data-lpf="domain">kscdr.org.sa</div><div class="src-note" data-lpf="note">الأبحاث والمكتبة العلمية</div></div>
-<div class="card src-card anim" style="transition-delay:.4s" data-lp-id="moh"><div class="src-name" data-lpf="name">وزارة الصحة</div><div class="src-dom" dir="ltr" data-lpf="domain">moh.gov.sa</div><div class="src-note" data-lpf="note">الخدمات الصحية والتأهيلية</div></div>
-<div class="card src-card anim" style="transition-delay:.5s" data-lp-id="moe"><div class="src-name" data-lpf="name">وزارة التعليم</div><div class="src-dom" dir="ltr" data-lpf="domain">moe.gov.sa</div><div class="src-note" data-lpf="note">التعليم الشامل والدمج</div></div>
-<div class="card src-card anim" style="transition-delay:.6s" data-lp-id="hrdf"><div class="src-name" data-lpf="name">صندوق تنمية الموارد البشرية (هدف)</div><div class="src-dom" dir="ltr" data-lpf="domain">hrdf.org.sa</div><div class="src-note" data-lpf="note">التوظيف والتمكين المهني</div></div>
-<div class="card src-card anim" style="transition-delay:.7s" data-lp-id="mygov"><div class="src-name" data-lpf="name">المنصة الوطنية الموحدة</div><div class="src-dom" dir="ltr" data-lpf="domain">my.gov.sa</div><div class="src-note" data-lpf="note">الخدمات الحكومية الإلكترونية</div></div>
+<div class="sources-grid" data-lp-list="sources.items" role="list">
+<template><div class="card src-card anim" role="listitem"><div class="src-logo" data-lpl="domain"></div><div class="src-name" data-lpf="name"></div><div class="src-dom" dir="ltr" data-lpf="domain"></div><div class="src-note" data-lpf="note"></div></div></template>
+<div class="card src-card anim" role="listitem" style="transition-delay:.1s" data-lp-id="hrsd"><div class="src-logo" data-lpl="domain"><img src="assets/sources/hrsd.gov.sa.webp?v=1" alt="" width="200" height="80" loading="lazy" decoding="async"></div><div class="src-name" data-lpf="name">وزارة الموارد البشرية والتنمية الاجتماعية</div><div class="src-dom" dir="ltr" data-lpf="domain">hrsd.gov.sa</div><div class="src-note" data-lpf="note">بطاقة إثبات الإعاقة والإعانات والتأهيل</div></div>
+<div class="card src-card anim" role="listitem" style="transition-delay:.2s" data-lp-id="apd"><div class="src-logo" data-lpl="domain"><img src="assets/sources/apd.gov.sa.webp?v=1" alt="" width="200" height="80" loading="lazy" decoding="async"></div><div class="src-name" data-lpf="name">هيئة رعاية الأشخاص ذوي الإعاقة</div><div class="src-dom" dir="ltr" data-lpf="domain">apd.gov.sa</div><div class="src-note" data-lpf="note">التمكين والسياسات والمبادرات</div></div>
+<div class="card src-card anim" role="listitem" style="transition-delay:.3s" data-lp-id="kscdr"><div class="src-logo" data-lpl="domain"><img src="assets/sources/kscdr.org.sa.webp?v=1" alt="" width="200" height="80" loading="lazy" decoding="async"></div><div class="src-name" data-lpf="name">مركز الملك سلمان لأبحاث الإعاقة</div><div class="src-dom" dir="ltr" data-lpf="domain">kscdr.org.sa</div><div class="src-note" data-lpf="note">الأبحاث والمكتبة العلمية</div></div>
+<div class="card src-card anim" role="listitem" style="transition-delay:.4s" data-lp-id="moh"><div class="src-logo" data-lpl="domain"><img src="assets/sources/moh.gov.sa.webp?v=1" alt="" width="200" height="80" loading="lazy" decoding="async"></div><div class="src-name" data-lpf="name">وزارة الصحة</div><div class="src-dom" dir="ltr" data-lpf="domain">moh.gov.sa</div><div class="src-note" data-lpf="note">الخدمات الصحية والتأهيلية</div></div>
+<div class="card src-card anim" role="listitem" style="transition-delay:.5s" data-lp-id="moe"><div class="src-logo" data-lpl="domain"><img src="assets/sources/moe.gov.sa.webp?v=1" alt="" width="200" height="80" loading="lazy" decoding="async"></div><div class="src-name" data-lpf="name">وزارة التعليم</div><div class="src-dom" dir="ltr" data-lpf="domain">moe.gov.sa</div><div class="src-note" data-lpf="note">التعليم الشامل والدمج</div></div>
+<div class="card src-card anim" role="listitem" style="transition-delay:.6s" data-lp-id="hrdf"><div class="src-logo" data-lpl="domain"><img src="assets/sources/hrdf.org.sa.webp?v=1" alt="" width="200" height="80" loading="lazy" decoding="async"></div><div class="src-name" data-lpf="name">صندوق تنمية الموارد البشرية (هدف)</div><div class="src-dom" dir="ltr" data-lpf="domain">hrdf.org.sa</div><div class="src-note" data-lpf="note">التوظيف والتمكين المهني</div></div>
+<div class="card src-card anim" role="listitem" style="transition-delay:.7s" data-lp-id="mygov"><div class="src-logo" data-lpl="domain"><img src="assets/sources/my.gov.sa.webp?v=1" alt="" width="200" height="80" loading="lazy" decoding="async"></div><div class="src-name" data-lpf="name">المنصة الوطنية الموحدة</div><div class="src-dom" dir="ltr" data-lpf="domain">my.gov.sa</div><div class="src-note" data-lpf="note">الخدمات الحكومية الإلكترونية</div></div>
 </div>
+<p class="src-foot anim" data-lp="sources.logos">الشعارات ملك لجهاتها، ونعرضها هنا للتعريف بمصادر المعلومات فقط.</p>
 </div>
 </section>
 
@@ -4695,6 +4714,20 @@ function lpText(v,lang){
   return (v[lang]||'').trim()||(v[lang==='en'?'ar':'en']||'');
 }
 function lpGet(doc,path){const [s,k]=path.split('.');return doc[s]&&doc[s].f?doc[s].f[k]:null;}
+/* شعارات «مصادر البيانات»: شعار الجهة يتبع نطاقها (data-lpl="domain")، فبطاقة
+   يضيفها المدير بنطاق معروف يظهر شعارها وحدها. لكل نطاق هنا ملف
+   assets/sources/<النطاق>.webp يجهّزه tools/source-logo.php، والرقم إصداره:
+   ارفعه عند استبدال الملف حتى لا تبقى النسخة القديمة في ذاكرة المتصفح.
+   النطاق بلا ملف يظهر برمز عام بنفس المقاس. */
+const SRC_LOGOS={'apd.gov.sa':1,'hrdf.org.sa':1,'hrsd.gov.sa':1,'kscdr.org.sa':1,'moe.gov.sa':1,'moh.gov.sa':1,'my.gov.sa':1};
+function srcLogo(box,domain){
+  const d=String(domain||'').trim().toLowerCase().replace(/^www\./,'').split('/')[0];
+  const v=Object.prototype.hasOwnProperty.call(SRC_LOGOS,d)&&SRC_LOGOS[d];
+  box.classList.toggle('is-empty',!v);
+  box.innerHTML=v?'<img alt="" width="200" height="80" loading="lazy" decoding="async">'
+                 :'<svg class="src-ph" aria-hidden="true" focusable="false"><use href="#ic-landmark"/></svg>';
+  if(v)box.firstChild.src='assets/sources/'+d+'.webp?v='+v;
+}
 function lpRenderList(box,items,lang){
   const tpl=box.querySelector('template');if(!tpl)return;
   const wasIn=!!box.querySelector('.anim.in');
@@ -4706,6 +4739,7 @@ function lpRenderList(box,items,lang){
     const el=tpl.content.firstElementChild.cloneNode(true);
     el.dataset.lpId=it.id;
     el.querySelectorAll('[data-lpf]').forEach(f=>{f.textContent=lpText(it.f&&it.f[f.dataset.lpf],lang);});
+    el.querySelectorAll('[data-lpl]').forEach(x=>srcLogo(x,lpText(it.f&&it.f[x.dataset.lpl],lang)));
     el.querySelectorAll('[data-lpi]').forEach(u=>u.setAttribute('href','#ic-'+(it.icon||'star')));
     el.querySelectorAll('[data-lpn]').forEach(x=>{x.textContent=String(n+1).padStart(2,'0');});
     el.querySelectorAll('[data-lpc]').forEach(x=>x.classList.add(['purple','blue','green'][n%3]));
@@ -5032,9 +5066,10 @@ function lpPreviewInit(){
   document.addEventListener('click',e=>{
     e.preventDefault();e.stopPropagation();
     if(!embedded)return;
-    const t=e.target.closest('[data-lpf],[data-lp],[data-lp-ph],[data-lp-href]');if(!t)return;
+    const t=e.target.closest('[data-lpf],[data-lp],[data-lp-ph],[data-lp-href],[data-lpl]');if(!t)return;
     const item=t.closest('[data-lp-id]'),list=t.closest('[data-lp-list]');
-    const path=(t.dataset.lpf&&item&&list)?list.dataset.lpList+'.'+item.dataset.lpId+'.'+t.dataset.lpf:(t.dataset.lp||t.dataset.lpPh||t.dataset.lpHref);
+    const f=t.dataset.lpf||t.dataset.lpl;   // الشعار يفتح الحقل الذي يأتي منه (النطاق)
+    const path=(f&&item&&list)?list.dataset.lpList+'.'+item.dataset.lpId+'.'+f:(t.dataset.lp||t.dataset.lpPh||t.dataset.lpHref);
     parent.postMessage({src:'wesal-lp',type:'pick',path},location.origin);
   },true);
   ['keydown','submit'].forEach(ev=>document.addEventListener(ev,e=>{

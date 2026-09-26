@@ -164,12 +164,14 @@ function landingSchema(): array {
         ],
         [
             'id' => 'sources', 'label' => 'مصادر البيانات', 'hideable' => true,
-            'desc' => 'الجهات الرسمية التي يستند إليها وصال، ولكل جهة اسم ونطاق ووصف قصير.',
+            'desc' => 'الجهات الرسمية التي يستند إليها وصال، ولكل جهة اسم ونطاق ووصف قصير. يظهر شعار الجهة تلقائياً من نطاقها متى توفّر ملفه في الموقع، وإلا ظهر مكانه رمز عام.',
             'fields' => [
                 lpT('label', 'العنوان الصغير', 'مصادر البيانات', 'Data sources', 40),
                 lpT('title', 'عنوان القسم', 'من أين يجيب وصال؟', 'Where do Wesal answers come from?', 100),
                 lpA('sub', 'وصف القسم', 'بُنيت قاعدة وصال المعرفية من الأنظمة والخدمات المنشورة لدى الجهات الرسمية السعودية. إجابات وصال إرشادية، والمرجع النهائي هو الجهة الرسمية نفسها.',
                     "Wesal's knowledge base is built from the published regulations and services of official Saudi bodies. Wesal's answers are for guidance, and the official body itself is always the final reference.", 360),
+                lpT('logos', 'ملاحظة أسفل الشعارات', 'الشعارات ملك لجهاتها، ونعرضها هنا للتعريف بمصادر المعلومات فقط.',
+                    'Logos belong to their respective bodies and appear here only to identify the sources of information.', 160),
             ],
             'lists' => [
                 ['k' => 'items', 'l' => 'الجهات', 'item' => 'جهة', 'min' => 0, 'max' => 16, 'icon' => false,
