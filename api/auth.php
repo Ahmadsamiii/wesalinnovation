@@ -80,9 +80,8 @@ try {
                 password_hash($pass, PASSWORD_DEFAULT),
                 $isFirst ? 'admin' : ($inviteRole ?: 'user'), USER_TOKENS]);
 
-            $_SESSION['uid'] = (int) db()->lastInsertId();
+            startAuthSession((int) db()->lastInsertId(), $isFirst ? 'admin' : ($inviteRole ?: 'user'));
             if ($inviteId) db()->prepare("UPDATE invites SET status='accepted', accepted_at=NOW() WHERE id=?")->execute([$inviteId]);
-            session_regenerate_id(true);
             out(['ok' => true, 'user' => publicUser(currentUser())]);
         }
 
@@ -99,8 +98,7 @@ try {
             if (($u['status'] ?? 'active') === 'suspended')
                 fail('حسابك موقوف حالياً. راسلنا من صفحة «تواصل معنا» لنراجع الأمر معك.', 403);
 
-            $_SESSION['uid'] = (int) $u['id'];
-            session_regenerate_id(true);
+            startAuthSession((int) $u['id'], (string) $u['role']);
             db()->prepare('UPDATE users SET last_login=NOW() WHERE id=?')->execute([$u['id']]);
             out(['ok' => true, 'user' => publicUser(refreshTokens($u))]);
         }
@@ -342,8 +340,14 @@ try {
         }
 
         case 'logout': {
-            $_SESSION = [];
-            session_destroy();
+            /* why=idle: الواجهة أنهت عدّها التنازلي، فيُسجَّل خروجاً تلقائياً لا يدوياً.
+               إن سبقها الخادم وأنهى الجلسة فقد سجّله هو، ولا تبقى جلسة هنا. */
+            if (($in['why'] ?? '') === 'idle' && !empty($_SESSION['uid'])) {
+                endAuthSession('idle');
+            } else {
+                $_SESSION = [];
+                session_destroy();
+            }
             out(['ok' => true]);
         }
 

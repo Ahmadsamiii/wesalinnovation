@@ -870,6 +870,14 @@ table.tbl tr:hover td{background:var(--surface-alt);}
 .toast svg{width:18px;height:18px;flex-shrink:0;margin-top:2px;}
 .toast.ok{border-inline-start-color:#10b981;}.toast.ok svg{color:#10b981;}
 .toast.err{border-inline-start-color:#dc2626;}.toast.err svg{color:#dc2626;}
+/* تنبيه الخروج التلقائي: فوق كل شيء إلا التنبيهات العابرة، وبلا حركة */
+.idle-warn{position:fixed;inset:0;z-index:11000;display:flex;align-items:center;justify-content:center;padding:var(--s4);background:rgba(15,13,26,.55);}
+.idle-warn[hidden]{display:none;}
+.idle-card{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--r-xl);width:100%;max-width:440px;padding:var(--s8) var(--s6);box-shadow:var(--sh-lg);}
+.idle-card h2{color:var(--ink);font-size:var(--f-h3);margin:0 0 var(--s3);}
+.idle-card p{margin:0 0 var(--s3);line-height:1.8;}
+.idle-count{font-size:1.0625rem;color:var(--ink);}
+.idle-count b{font-variant-numeric:tabular-nums;}
 .toast.info svg{color:var(--secondary);}
 
 /* ============ الفوتر — الشعارات ============ */
@@ -1919,8 +1927,7 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <div class="form-group"><label for="liPass" data-i18n="f.pass">كلمة المرور</label>
 <div class="pw-wrap"><input type="password" id="liPass" class="form-input ltr-input" placeholder="••••••••" autocomplete="current-password" maxlength="72" required onkeydown="if(event.key==='Enter')doLogin()">
 <button type="button" class="pw-toggle" onclick="togglePw('liPass',this)" aria-label="إظهار كلمة المرور"><svg class="ico"><use href="#ic-eye"/></svg></button></div></div>
-<label class="check-row" style="margin-bottom:var(--s6)"><input type="checkbox" id="liRemember" checked><span data-i18n="auth.remember">أبقني مسجّلاً على هذا الجهاز</span></label>
-<button class="btn btn-lg btn-primary" id="liBtn" onclick="doLogin()" style="width:100%;justify-content:center"><svg class="ico"><use href="#ic-check"/></svg> <span data-i18n="auth.login.btn">دخول</span></button>
+<button class="btn btn-lg btn-primary" id="liBtn" onclick="doLogin()" style="width:100%;justify-content:center;margin-top:var(--s2)"><svg class="ico"><use href="#ic-check"/></svg> <span data-i18n="auth.login.btn">دخول</span></button>
 <div style="text-align:center;margin-top:var(--s3)"><button class="footer-link" style="color:var(--primary);font-weight:600" onclick="go('forgot')">نسيت كلمة المرور؟</button></div>
 <div class="auth-alt"><span data-i18n="auth.login.alt">ليس لديك حساب؟</span> <button onclick="go('register')" data-i18n="auth.login.altBtn">أنشئ حساباً مجاناً</button></div>
 </div>
@@ -1991,13 +1998,13 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <div class="page" id="pg-privacy">
 <div class="legal-wrap">
 <h1>سياسة الخصوصية</h1>
-<p class="legal-date">آخر تحديث: 24 سبتمبر 2026</p>
+<p class="legal-date">آخر تحديث: 26 سبتمبر 2026</p>
 <p>توضّح هذه السياسة البيانات التي نجمعها في منصة وصال، وسبب جمعها، وطريقة حمايتها، وحقوقك فيها.</p>
 <h2>البيانات التي نجمعها</h2>
 <ul>
 <li><b>بيانات الحساب:</b> الاسم بالعربية والإنجليزية، والبريد الإلكتروني، ورقم الجوال، وتاريخ الميلاد. نحتاجها لإنشاء حسابك والتواصل معك.</li>
 <li><b>بيانات اختيارية تضيفها بنفسك:</b> المدينة، ونوع الإعاقة، والاهتمامات، والنبذة، والصورة الشخصية. نستخدمها لتخصيص الإجابات لك فقط.</li>
-<li><b>المحادثات:</b> أسئلتك وإجابات وصال. نحفظ نصها دون ربطه بحسابك لنحسّن دقة المساعد، ويمكنك إيقاف ذلك من صفحة حسابك. أما قائمة محادثاتك المحفوظة فتبقى في متصفحك على جهازك.</li>
+<li><b>المحادثات:</b> أسئلتك وإجابات وصال. نحفظ نصها دون ربطه بحسابك لنحسّن دقة المساعد، ويمكنك إيقاف ذلك من صفحة حسابك. أما قائمة محادثاتك المحفوظة فتبقى في متصفحك على جهازك، ولا تظهر لمن يدخل بحساب آخر على الجهاز نفسه.</li>
 <li><b>بيانات تقنية:</b> عنوان IP الذي تتصل منه، ونستخدمه لحماية المنصة من إساءة الاستخدام، وتطبيق حدود الأسئلة، وتوثيق عمليات الدخول.</li>
 </ul>
 <h2>كيف نستخدم بياناتك</h2>
@@ -2021,6 +2028,7 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <li><b>صلاحيات حسب الدور:</b> في المنصة أربعة أدوار (مستفيد، ومراجع محتوى، ومشرف، ومدير النظام)، ولا يرى كل دور إلا ما يحتاجه لعمله.</li>
 <li><b>سجل العمليات:</b> نوثّق عمليات الدخول وتغيير الصلاحيات وتصدير البيانات في سجل يراجعه مدير النظام.</li>
 <li><b>الحد الأدنى من البيانات:</b> لا نجمع إلا ما تحتاجه الخدمة.</li>
+<li><b>الخروج التلقائي:</b> إذا مرّت 30 دقيقة دون أي نشاط منك سجّلنا خروجك تلقائياً، وننبّهك قبل ذلك بدقيقتين لتبقى متصلاً إن أردت. والمدة لحسابات فريق المنصة 15 دقيقة.</li>
 </ul>
 <h2>مدة الاحتفاظ</h2>
 <p>نحتفظ ببياناتك ما دام حسابك قائماً. وعند حذف حسابك نحذف بياناتك الشخصية من أنظمتنا التشغيلية خلال 30 يوماً على الأكثر، وتبقى المحادثات في الإحصاءات دون ما يدل على هويتك.</p>
@@ -2176,6 +2184,17 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <button class="fab-link" onclick="go('settings');toggleA11y()">جميع إعدادات الوصول</button>
 </div>
 <button class="fab-btn" onclick="toggleA11y()" aria-label="إعدادات إمكانية الوصول"><svg class="ico"><use href="#ic-a11y"/></svg></button>
+</div>
+<!-- تنبيه الخروج التلقائي: الوصف والعدّ يُكتبان من idleOpen() بالمدة الفعلية ولغة الواجهة -->
+<div class="idle-warn" id="idleWarn" role="alertdialog" aria-modal="true" aria-labelledby="idleTitle" aria-describedby="idleDesc" hidden>
+<div class="idle-card">
+<h2 id="idleTitle" data-i18n="idle.h">هل ما زلت هنا؟</h2>
+<p id="idleDesc"></p>
+<p class="idle-count" id="idleCount" aria-hidden="true"></p>
+<p data-i18n="idle.hint">أي حركة أو ضغطة زر تُبقيك متصلاً.</p>
+<button type="button" class="btn btn-md btn-primary" id="idleStay" onclick="idleExtend()" data-i18n="idle.stay">أبقني متصلاً</button>
+<div class="sr-only" id="idleLive" role="status" aria-live="polite"></div>
+</div>
 </div>
 <script>
 let _fs=100,_rec=null,_curPage='home';
@@ -2535,12 +2554,108 @@ function toast(msg,type='info',ms=4200){
   setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),320);},ms);
 }
 
+/* ---------- الخروج التلقائي بعد الخمول ----------
+   أي حركة من المستخدم نشاط: الفأرة، واللمس، ولوحة المفاتيح، والكتابة، وكذلك
+   الاستماع لإجابة تُقرأ صوتياً أو الإملاء بالصوت. آخر نشاط مشترك بين تبويبات
+   الموقع عبر localStorage، فمن يعمل في تبويب لا يخرج من الآخر، والخروج من
+   تبويب يُخرج الجميع. قبل الخروج بدقيقتين تظهر «هل ما زلت هنا؟» (WCAG 2.2.1:
+   تنبيه وتمديد بفعل بسيط). المدة من رد الخادم (USER.idle_min) والخادم يفرضها
+   أيضاً في api/db.php، فلا يعتمد الأمان على هذا الكود. الحساب بالوقت الفعلي
+   لا بعدّ الثواني: المتصفح يبطئ مؤقتات التبويب الخلفي ويوقفها أثناء نوم الجهاز. */
+const IDLE={warnMs:120000,key:'wesal_idle_at',outKey:'wesal_signed_out',
+  last:Date.now(),polled:Date.now(),open:false,ending:false,said30:false,back:null,checking:false,bootEnded:''};
+function idleLimitMs(){return ((USER&&USER.idle_min)||30)*60000;}
+function idleLast(){let t=IDLE.last;try{const v=+localStorage.getItem(IDLE.key);if(v>t)t=v;}catch(e){}return t;}
+function idleMark(e){
+  if(!USER||IDLE.ending)return;
+  // التركيز ينتقل برمجياً إلى زر البقاء حين يظهر التنبيه، فلا يُعدّ ذلك حضوراً
+  if(IDLE.open){if(!e||e.type!=='focusin')idleExtend();return;}
+  const now=Date.now();if(now-IDLE.last<5000)return;
+  IDLE.last=now;try{localStorage.setItem(IDLE.key,String(now));}catch(x){}
+}
+function idleTouch(){IDLE.last=Date.now();try{localStorage.setItem(IDLE.key,String(IDLE.last));}catch(e){}}
+function idleTick(){
+  if(!USER||IDLE.ending)return;
+  if(_rec||_speaking||(window.speechSynthesis&&speechSynthesis.speaking))idleMark();
+  const left=idleLimitMs()-(Date.now()-idleLast());
+  if(left<=0)return sessionEnded('idle');
+  if(left<=IDLE.warnMs)idleOpen(left);else if(IDLE.open)idleClose();
+}
+function arMinutes(m){return m===1?'دقيقة واحدة':m===2?'دقيقتين':m>=3&&m<=10?m+' دقائق':m+' دقيقة';}
+function idleOpen(left){
+  const s=Math.max(0,Math.ceil(left/1000)),en=LANG==='en',clock=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+  document.getElementById('idleCount').textContent=(en?'Signing you out in ':'يُسجَّل خروجك خلال ')+clock;
+  if(IDLE.open){
+    if(s<=30&&!IDLE.said30){IDLE.said30=true;document.getElementById('idleLive').textContent=en?'30 seconds left before you are signed out.':'بقيت 30 ثانية على تسجيل خروجك.';}
+    return;
+  }
+  const m=Math.round(idleLimitMs()/60000);
+  document.getElementById('idleDesc').textContent=en
+    ?'We have not seen any activity for a while. To protect your account, we sign you out after '+m+' minutes without activity.'
+    :'لم نلحظ أي نشاط منذ مدة. حفاظاً على خصوصية حسابك نسجّل خروجك بعد '+arMinutes(m)+' دون نشاط.';
+  IDLE.open=true;IDLE.said30=false;IDLE.back=document.activeElement;
+  document.getElementById('idleWarn').hidden=false;
+  document.getElementById('idleStay').focus({preventScroll:true});
+}
+function idleClose(){
+  const d=document.getElementById('idleWarn');if(!d||d.hidden)return;
+  d.hidden=true;IDLE.open=false;document.getElementById('idleLive').textContent='';
+  const b=IDLE.back;IDLE.back=null;
+  if(b&&b.focus&&document.contains(b))try{b.focus({preventScroll:true});}catch(e){}
+}
+async function idleExtend(){
+  idleTouch();idleClose();
+  if(IDLE.checking)return;IDLE.checking=true;
+  const res=await api('auth.php',{action:'me'});   // يجدّد الجلسة على الخادم ويتأكد أنها ما زالت قائمة
+  IDLE.checking=false;
+  if(!res.offline&&!(res.ok&&res.user))sessionEnded('gone',true);
+}
+/* كل خروج يمر من هنا (يدوي، أو خمول، أو أنهاه الخادم): يُمسح ما يخص الحساب من
+   المتصفح وتُعاد الصفحة من أولها، فلا يبقى على الشاشة شيء من بياناته (جداول
+   المشرف، والمحادثة المفتوحة) لمن يجلس بعده على الجهاز نفسه. */
+async function sessionEnded(why,fromServer){
+  if(IDLE.ending)return;IDLE.ending=true;
+  const m=Math.round(idleLimitMs()/60000);
+  if(why!=='manual'&&_curPage!=='home'&&_curPage!=='login')LS.set('afterLogin',_curPage);   // يعود إلى حيث كان بعد الدخول
+  LS.del('session');LS.del('hist');
+  // ننتظر الخادم قبل إعادة التحميل، وإلا سبق طلبُ me في الصفحة الجديدة طلبَ الخروج
+  if(!fromServer)await Promise.race([api('auth.php',{action:'logout',why}),new Promise(r=>setTimeout(r,3000))]);
+  try{localStorage.setItem(IDLE.outKey,JSON.stringify({why,m,t:Date.now()}));}catch(e){}
+  location.replace('/?signedout='+encodeURIComponent(why)+(why==='idle'?'&m='+m:''));
+}
+function signedOutNotice(why,m){
+  const en=LANG==='en';
+  if(why==='manual'){toast(en?'You have been signed out.':'تم تسجيل خروجك.','info');return;}
+  const msg=why==='idle'?(en?'We signed you out after '+(m?m+' minutes':'a while')+' without activity, to protect your account. Sign in to continue.'
+                             :'سجّلنا خروجك تلقائياً بعد '+(m?arMinutes(m):'مدة')+' دون نشاط، حفاظاً على خصوصية حسابك. سجّل دخولك للمتابعة.')
+           :why==='max'?(en?'Your session reached its maximum length. Sign in to continue.':'انتهت جلستك لأنها بلغت أقصى مدة مسموحة. سجّل دخولك للمتابعة.')
+           :(en?'Your session has ended. Sign in to continue.':'انتهت جلستك. سجّل دخولك للمتابعة.');
+  go('login');showMsg('loginOk',msg);
+}
+function idleInit(){
+  const opt={capture:true,passive:true};
+  ['pointermove','pointerdown','keydown','wheel','touchstart','touchmove','input','focusin'].forEach(ev=>document.addEventListener(ev,idleMark,opt));
+  window.addEventListener('storage',e=>{
+    if(e.key===IDLE.outKey&&e.newValue&&USER&&!IDLE.ending){
+      IDLE.ending=true;let o={};try{o=JSON.parse(e.newValue)||{};}catch(x){}
+      const why=o.why||'manual';
+      location.replace('/?signedout='+encodeURIComponent(why)+(why==='idle'&&o.m?'&m='+o.m:''));
+    }else if(e.key===IDLE.key&&IDLE.open)idleTick();
+  });
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)idleTick();});
+  setInterval(idleTick,1000);
+}
+
 /* ---------- نداء الخادم ---------- */
-async function api(path,body){
+async function api(path,body,hdr){
   let status=0;
   try{
-    const r=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(body||{})});
+    // بهوية الحساب الظاهر في الصفحة يعرف الخادم أن جلسته انتهت فيردّ X-Session-Ended
+    const h=Object.assign({'Content-Type':'application/json'},USER?{'X-Wesal-User':String(USER.id)}:{},hdr||{});
+    const r=await fetch(API+path,{method:'POST',headers:h,credentials:'same-origin',body:JSON.stringify(body||{})});
     status=r.status;
+    const ended=r.headers.get('X-Session-Ended');
+    if(ended){if(USER)sessionEnded(ended,true);else IDLE.bootEnded=ended;}
     const j=await r.json().catch(()=>null);
     if(j&&typeof j==='object'){_online=true;return j;}   // حتى أخطاء 4xx برسائل الخادم تُعرض كما هي
     throw new Error('http '+r.status);
@@ -2647,17 +2762,14 @@ function afterAuth(msg){
 
 function setUser(u){
   USER=u;LS.set('session',u);
+  idleTouch();   // الدخول نفسه نشاط، ولا يُحسب خمول ما قبله على الجلسة الجديدة
+  adoptLegacyChats();
   document.body.setAttribute('data-role',u.role||'user');
   syncAuthUI();
   pollNotifDot();
   if(!NOTIF_TIMER)NOTIF_TIMER=setInterval(pollNotifDot,60000);
 }
-function doLogout(){
-  api('auth.php',{action:'logout'});
-  USER=null;LS.del('session');document.body.removeAttribute('data-role');
-  if(NOTIF_TIMER){clearInterval(NOTIF_TIMER);NOTIF_TIMER=null;}
-  syncAuthUI();toast('تم تسجيل خروجك.','info');go('home');
-}
+function doLogout(){sessionEnded('manual');}
 function syncAuthUI(){
   const guest=document.querySelectorAll('.nav-guest'),user=document.getElementById('navUser');
   guest.forEach(e=>e.classList.toggle('off',!!USER));
@@ -3149,17 +3261,29 @@ function localAnswer(q){
   return {a:(short?'وصلني سؤالك، بس ':'فهمت سؤالك بشكل عام، لكن ')+'ودي أدقّق قبل ما أجاوبك عشان تكون الإجابة مفيدة لك.\n\nسؤالك يخص أي جانب؟\n• حقوقك والأنظمة\n• الخدمات والإجراءات: بطاقة الإعاقة، الدعم المالي، التعليم، الصحة\n• التقنيات المساعدة\n• التوظيف والعمل\n\nأعد صياغة سؤالك بجملة واحدة واضحة، مثل: «كيف أطلع بطاقة إثبات الإعاقة؟»، وأعطيك الجواب كاملاً.',src:null};
 }
 
-/* ================= المحادثات المحفوظة ================= */
+/* ================= المحادثات المحفوظة =================
+   لكل حساب قائمته (chats_{id})، فلا يرى من يدخل بعده على الجهاز نفسه أسئلته.
+   الزائر لا تُحفظ له قائمة: لا حساب يربطها، وكانت تظهر لأول من يدخل بعده.
+   سياق المحادثة (hist) يُرسل مع كل سؤال ويُمسح مع كل خروج في sessionEnded(). */
+function chatKey(){return 'chats_'+(USER?USER.id:0);}
+/* قبل هذا الفصل كانت القائمة مشتركة (chats): يرثها أول حساب يدخل بعده، مرة واحدة */
+function adoptLegacyChats(){
+  const old=LS.get('chats',null);if(old===null)return;
+  if(Array.isArray(old)&&old.length&&!LS.get(chatKey(),null))LS.set(chatKey(),old);
+  LS.del('chats');
+}
 function saveChatEntry(q,a){
-  const list=LS.get('chats',[]);
-  list.unshift({q,a:a.slice(0,160),t:Date.now()});
-  LS.set('chats',list.slice(0,60));
+  if(USER){
+    const list=LS.get(chatKey(),[]);
+    list.unshift({q,a:a.slice(0,160),t:Date.now()});
+    LS.set(chatKey(),list.slice(0,60));
+  }
   const h=LS.get('hist',[]);h.push({role:'user',text:q},{role:'ai',text:a.slice(0,400)});
   LS.set('hist',h.slice(-12));
 }
 function renderChats(){
   const box=document.getElementById('chatsList');if(!box)return;
-  const list=LS.get('chats',[]);
+  const list=LS.get(chatKey(),[]);
   if(!list.length){box.innerHTML='<div class="empty-state"><svg><use href="#ic-chat"/></svg><p>لا توجد محادثات محفوظة بعد. اطرح سؤالك الأول وسنحفظه لك هنا.</p></div>';return;}
   box.innerHTML='<div class="saved-list" style="padding:var(--s5)">'+list.map((c,i)=>
     '<div class="saved-item" onclick="askText('+JSON.stringify(c.q).replace(/"/g,'&quot;')+')">'+
@@ -3882,8 +4006,11 @@ async function tkSubmitEscalate(id){
 /* ================= الإشعارات ================= */
 let NOTIF_TIMER=null;
 async function pollNotifDot(){
-  if(!USER)return;
-  const res=await api('notifications.php',{action:'unread_count'});
+  if(!USER||IDLE.ending)return;
+  /* استطلاع آلي كل دقيقة: إن لم يتحرك المستخدم منذ الاستطلاع السابق فالخادم لا
+     يعدّه نشاطاً، وإلا لأبقى التبويب المفتوح الجلسة حيّة إلى الأبد */
+  const idle=idleLast()<=IDLE.polled;IDLE.polled=Date.now();
+  const res=await api('notifications.php',{action:'unread_count'},idle?{'X-Wesal-Idle':'1'}:null);
   const dot=document.getElementById('notifDot');
   if(dot)dot.hidden=!(res.ok&&res.count>0);
 }
@@ -4046,7 +4173,8 @@ const I18N={
  'auth.login.btn':'Sign in','auth.login.alt':'No account yet?','auth.login.altBtn':'Create a free account',
  'auth.reg.h':'Create your account','auth.reg.lead':'Registration is free. Fill in the details below to create your account.',
  'auth.reg.btn':'Create account','auth.reg.alt':'Already have an account?','auth.reg.altBtn':'Sign in',
- 'auth.remember':'Keep me signed in on this device','auth.terms':'I agree to the Terms of Use and Privacy Policy.',
+ 'auth.terms':'I agree to the Terms of Use and Privacy Policy.',
+ 'idle.h':'Are you still there?','idle.hint':'Any movement or key press keeps you signed in.','idle.stay':'Keep me signed in',
  'auth.pw.hint':'Use 8+ characters; mixing letters and numbers is stronger.',
  'auth.aside.h':'Welcome back to Wesal','auth.aside.h2':'Create your account in a minute',
  'auth.aside.p':'Sign in to continue your conversations, save answers, and get a question balance that renews every 6 hours.',
@@ -4110,7 +4238,7 @@ function applyRoleUI(){document.querySelectorAll('[data-perm]').forEach(el=>{el.
 
 /* ================= سجل العمليات ================= */
 /* السجل يُكتب على الخادم في audit_log — لا في متصفح المشرف، وإلا فهو ليس سجلاً */
-const AUDIT_LABELS={login:'تسجيل دخول',logout:'تسجيل خروج',role:'تغيير صلاحية',
+const AUDIT_LABELS={login:'تسجيل دخول',logout:'تسجيل خروج',auto_logout:'خروج تلقائي',role:'تغيير صلاحية',
   status:'تغيير حالة حساب',invite:'دعوة',invite_revoked:'إلغاء دعوة',
   reset_pw:'إعادة تعيين كلمة مرور',change_pw:'تغيير كلمة مرور',
   forgot:'طلب إعادة تعيين',reset_done:'تعيين كلمة مرور',tokens:'تعديل رصيد',
@@ -4547,7 +4675,7 @@ async function paintStats(){
       return;
     }
   }
-  set('stChats',ar(LS.get('chats',[]).length)); lab('stChats','محادثة محفوظة');
+  set('stChats',ar(LS.get(chatKey(),[]).length)); lab('stChats','محادثة محفوظة');
   set('stQs',ar(USER?(USER.qs||0):0));          lab('stQs','سؤال طرحته');
   set('stSaved',ar(tokenState().left));         lab('stSaved','رصيد متبقٍ');
   set('stUsers','0');                            lab('stUsers','مستخدم مسجّل');
@@ -4923,6 +5051,10 @@ function lpPreviewInit(){
 }
 async function lpPreviewBoot(){
   lpPreviewInit();
+  /* الحركة داخل إطار المعاينة لا تصل الصفحة الأم، فتُمرَّر لعدّاد الخمول فيها
+     حتى لا يُسجَّل خروج مدير النظام وهو يعمل على المعاينة */
+  if(window.parent!==window)['pointermove','pointerdown','keydown','wheel','touchstart'].forEach(ev=>
+    document.addEventListener(ev,()=>{try{window.parent.idleMark();}catch(e){}},{capture:true,passive:true}));
   const q=new URLSearchParams(location.search);
   if(q.get('lang')==='en')setLang('en');
   syncAuthUI();
@@ -5035,7 +5167,7 @@ async function exportMyData(){
      وهمية لم تصلنا أصلاً، وتصديرها يعطي المستخدم صورة غير صحيحة عن بياناته. */
   const res=await api('auth.php',{action:'my_tickets'});
   if(!res.ok)return toast('تعذّر تجهيز نسخة بياناتك الآن. حاول بعد قليل.','err');
-  const data={profile:USER,chats:LS.get('chats',[]),saved:LS.get('saved',[]),tickets:res.tickets||[],exported_at:new Date().toISOString()};
+  const data={profile:USER,chats:LS.get(chatKey(),[]),saved:LS.get('saved',[]),tickets:res.tickets||[],exported_at:new Date().toISOString()};
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
   a.download='wesal-my-data.json';a.click();
@@ -5043,7 +5175,7 @@ async function exportMyData(){
 }
 function clearMyChats(){
   if(!confirm('هل تريد مسح كل محادثاتك؟ لا يمكن استرجاعها بعد المسح.'))return;
-  LS.set('chats',[]);LS.set('hist',[]);
+  LS.del(chatKey());LS.set('hist',[]);
   renderChats();paintDash();
   toast('مُسحت محادثاتك كلها.','ok');
 }
@@ -5055,7 +5187,7 @@ async function deleteMyAccount(){
   if(!pass)return toast('اكتب كلمة المرور لتأكيد الحذف.','err');
   const r=await api('auth.php',{action:'delete_account',password:pass});
   if(!r.ok)return toast(r.error||'تعذّر حذف الحساب.','err',7000);
-  LS.set('chats',[]);LS.set('hist',[]);LS.del('session');
+  LS.del(chatKey());LS.set('hist',[]);LS.del('session');
   USER=null;document.body.removeAttribute('data-role');
   syncAuthUI();go('home');
   toast(r.message||'حُذف حسابك وبياناتك الشخصية نهائياً من أنظمتنا.','ok',8000);
@@ -5107,6 +5239,7 @@ heroIntro();   // بعد المحتوى المحفوظ واللغة: العنو�
    في متصفح الزائر. نمسحها هنا حتى لا تبقى على أجهزة من زار الموقع قبل الإصلاح. */
 LS.del('users');
 await restoreSession();
+idleInit();
 applyRoleUI();
 paintTrial();
 setInterval(paintTrial,60000);
@@ -5147,6 +5280,14 @@ if(_invTok){
   const h=(location.hash||'').replace('#','');
   if(h&&pages.includes(h)&&h!=='home')go(h);
 }
+/* بعد خروج آلي أو يدوي: السبب يُعرض بعد توجيه الصفحات (go يمسح رسائل صفحة الدخول).
+   bootEnded: أغلق المستخدم الجهاز وعاد بعد انتهاء المهلة، فأنهى الخادم جلسته مع أول طلب */
+{const why=qp.get('signedout')||IDLE.bootEnded;
+ if(why){
+   if(qp.get('signedout'))try{history.replaceState(null,'','/');}catch(e){}
+   else LS.del('hist');
+   signedOutNotice(why,parseInt(qp.get('m')||'0',10));
+ }}
 });
 document.addEventListener('click',e=>{const m=document.getElementById('userMenu');if(m&&m.classList.contains('open')&&!e.target.closest('.nav-user'))closeUserMenu();});
 document.addEventListener('click',e=>{const p=document.getElementById('notifPanel');if(p&&p.classList.contains('open')&&!e.target.closest('.notif-wrap'))closeNotifPanel();});

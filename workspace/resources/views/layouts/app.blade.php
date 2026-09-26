@@ -33,5 +33,7 @@
                 </main>
             </div>
         </div>
+
+        <x-idle-timeout />
     </body>
 </html>
