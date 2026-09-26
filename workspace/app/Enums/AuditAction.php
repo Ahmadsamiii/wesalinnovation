@@ -10,6 +10,7 @@ enum AuditAction: string
 {
     case AuthLogin = 'auth.login';
     case AuthFailed = 'auth.failed';
+    case AuthTimedOut = 'auth.timed_out';
     case PasswordReset = 'auth.password_reset';
 
     case UserCreated = 'user.created';
@@ -77,6 +78,7 @@ enum AuditAction: string
         return match ($this) {
             self::AuthLogin => 'تسجيل دخول',
             self::AuthFailed => 'محاولة دخول فاشلة',
+            self::AuthTimedOut => 'خروج تلقائي بانتهاء المهلة',
             self::PasswordReset => 'تعيين كلمة المرور من رابط الاستعادة',
             self::UserCreated => 'إنشاء حساب',
             self::UserUpdated => 'تعديل بيانات حساب',
@@ -143,7 +145,7 @@ enum AuditAction: string
             self::UserCreated, self::InvitationAccepted, self::UserReactivated, self::ProjectCreated, self::ProjectCompleted,
             self::ContractActivated, self::InvoiceIssued, self::PaymentRecorded, self::CertificateIssued, self::ReferenceLetterApproved,
             self::HiringApproved, self::HiringFilled, self::ContentApproved => 'green',
-            self::AuthLogin => 'gray',
+            self::AuthLogin, self::AuthTimedOut => 'gray',
             default => 'blue',
         };
     }

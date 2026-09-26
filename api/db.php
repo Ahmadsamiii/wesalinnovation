@@ -77,6 +77,10 @@ foreach ([
     'SMTP_ENCRYPTION'        => 'ssl',
     'SMTP_USER'              => '',
     'SMTP_PASS'              => '',
+    'IDLE_MINUTES_USER'       => 30,
+    'IDLE_MINUTES_STAFF'      => 15,
+    'SESSION_MAX_HOURS_USER'  => 24,
+    'SESSION_MAX_HOURS_STAFF' => 12,
 ] as $k => $v) { if (!defined($k)) define($k, $v); }
 
 if (!APP_DEBUG) { ini_set('display_errors', '0'); error_reporting(0); }
@@ -93,6 +97,78 @@ session_set_cookie_params([
     'secure'   => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
 ]);
 session_start();
+
+/* ---------- الخروج التلقائي: مهلة الخمول والحد الأقصى للجلسة ----------
+   الخادم هو الحكم. الواجهة ترصد حركة المستخدم وتنبّهه قبل الخروج، لكن الجلسة
+   تنتهي هنا مهما فعل المتصفح أو لم يفعل: تبويب مغلق، أو جهاز نائم، أو كوكي
+   مسروق.
+   - seen_at: آخر طلب من فعل المستخدم. استطلاع الإشعارات الآلي كل دقيقة يرسل
+     X-Wesal-Idle: 1 إذا لم يتحرك المستخدم منذ الاستطلاع السابق فلا يجدّد
+     الجلسة، وإلا لبقي التبويب المفتوح متصلاً إلى الأبد.
+   - auth_at: لحظة الدخول، ومنها يُحسب الحد الأقصى مهما كان النشاط.
+   IDLE_GRACE_SEC هامش فوق مهلة الواجهة: إشارة النشاط تصل مع الاستطلاع، أي
+   متأخرة حتى دقيقة عن الحركة نفسها، فلا يسبق الخادمُ تنبيهَ الواجهة. */
+const STAFF_ROLES    = ['admin', 'mod', 'reviewer'];
+const IDLE_GRACE_SEC = 120;
+
+/** مهلة الخمول والحد الأقصى بالثواني. فريق المنصة يرى بيانات كل المستخدمين فمهلته أقصر. */
+function sessionLimits(string $role): array {
+    $staff = in_array($role, STAFF_ROLES, true);
+    return [
+        'idle' => ($staff ? IDLE_MINUTES_STAFF : IDLE_MINUTES_USER) * 60,
+        'max'  => ($staff ? SESSION_MAX_HOURS_STAFF : SESSION_MAX_HOURS_USER) * 3600,
+    ];
+}
+
+/** بداية جلسة حساب: معرّف جديد (ضد تثبيت الجلسة) وبداية العدّ للمهلتين */
+function startAuthSession(int $uid, string $role): void {
+    session_regenerate_id(true);
+    $_SESSION['uid']     = $uid;
+    $_SESSION['role']    = $role;
+    $_SESSION['auth_at'] = $_SESSION['seen_at'] = time();
+}
+
+/** إنهاء جلسة الحساب آلياً ($why: idle أو max). خروج حسابات الفريق يُسجَّل في سجل العمليات. */
+function endAuthSession(string $why): void {
+    $uid  = (int)($_SESSION['uid'] ?? 0);
+    $role = (string)($_SESSION['role'] ?? 'user');
+    if ($uid && in_array($role, STAFF_ROLES, true)) {
+        try {
+            $s = db()->prepare('SELECT id,name,email FROM users WHERE id=? LIMIT 1');
+            $s->execute([$uid]);
+            if ($u = $s->fetch())
+                audit($u, 'auto_logout', $u['email'], $why === 'idle' ? 'بعد مدة دون نشاط' : 'بلغت الجلسة أقصى مدة لها');
+        } catch (Throwable $e) { /* السجل لا يوقف الخروج */ }
+    }
+    $_SESSION = [];
+    session_regenerate_id(true);
+}
+
+/** يعيد سبب إنهاء الجلسة في هذا الطلب (idle أو max أو gone)، أو '' إن بقيت. يفحصه tools/check-session.php. */
+function enforceSessionTimeouts(): string {
+    if (empty($_SESSION['uid'])) {
+        // صفحة ما زالت تعرض حساباً لم تعد له جلسة هنا: انتهت، أو خرج صاحبها من مكان آخر
+        if (empty($_SERVER['HTTP_X_WESAL_USER'])) return '';
+        header('X-Session-Ended: gone');
+        return 'gone';
+    }
+    $now  = time();
+    $lim  = sessionLimits((string)($_SESSION['role'] ?? 'user'));
+    // جلسة فُتحت قبل هذه الميزة: يبدأ عدّها من الآن
+    $seen = (int)($_SESSION['seen_at'] ?? $now);
+    $auth = (int)($_SESSION['auth_at'] ?? $now);
+    $why  = $now - $seen > $lim['idle'] + IDLE_GRACE_SEC ? 'idle'
+          : ($now - $auth > $lim['max'] ? 'max' : '');
+    if ($why !== '') {
+        endAuthSession($why);
+        header('X-Session-Ended: ' . $why);   // الواجهة تُخرج المستخدم وتعرض السبب
+        return $why;
+    }
+    $_SESSION['auth_at'] = $auth;
+    if (($_SERVER['HTTP_X_WESAL_IDLE'] ?? '') !== '1' || !isset($_SESSION['seen_at'])) $_SESSION['seen_at'] = $now;
+    return '';
+}
+enforceSessionTimeouts();
 
 function db(): PDO {
     static $pdo = null;
@@ -795,6 +871,7 @@ function currentUser(): ?array {
     if (!$u) return null;
     // حساب أوقفه مدير النظام: تُنهى جلسته فوراً في أول طلب بعد الإيقاف
     if (($u['status'] ?? 'active') === 'suspended') { $_SESSION = []; return null; }
+    $_SESSION['role'] = $u['role'];   // تغيّر الدور يغيّر مهلة الخمول من الطلب التالي
     return $u;
 }
 
@@ -1162,5 +1239,8 @@ function publicUser(array $u): array {
         /* مستقل عن role تماماً — الواجهة تستخدمه لإظهار تبويب تذاكر الدعم
            لأي حساب مُنح صلاحية معالجة، بصرف النظر عن دوره في المنصة. */
         'support_level' => $u['support_level'] ?? 'none',
+        /* مهلة الخمول بالدقائق: الواجهة تنبّه وتُخرج على هذه القيمة نفسها،
+           فلا نسخة ثانية منها في index.html تختلف عمّا يطبّقه الخادم. */
+        'idle_min' => intdiv(sessionLimits((string)$u['role'])['idle'], 60),
     ];
 }
