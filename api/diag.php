@@ -100,6 +100,36 @@ try {
 try { $out['الرد_المباشر_٧_أيام'] = chatStreamStats(7); }
 catch (Throwable $e) { $out['الرد_المباشر_٧_أيام'] = 'تعذّرت قراءته: ' . $e->getMessage(); }
 
+/* الصوت السعودي: قراءة كلمة واحدة فعلاً من كل طبقة مضبوطة، فتستهلك طلباً واحداً من حصتها */
+require_once __DIR__ . '/voice-lib.php';
+$tiers = voiceTiers();
+if (!$tiers) {
+    $out['voice'] = ['status' => 'غير مفعّل (اختياري): الواجهة تقرأ بصوت المتصفح. اضبط GROQ_KEY أو AZURE_SPEECH_KEY في config.php'];
+} else {
+    $state = voiceState();
+    $out['voice'] = ['order' => implode(' ثم ', $tiers) . ' ثم صوت المتصفح',
+                     'cache' => voiceDir() !== '' ? 'مجلد الحفظ قابل للكتابة ✅' : 'تعذّر إنشاء مجلد الحفظ، فيعمل الصوت بلا حفظ ⚠️',
+                     'stt'   => GROQ_KEY !== '' ? 'مضبوط: يعمل في المتصفحات التي لا تحوّل الكلام إلى نص بنفسها' : 'غير مفعّل: يحتاج GROQ_KEY'];
+    foreach ($tiers as $t) {
+        $name = voiceName($t, 'male');
+        $r = $t === 'groq' ? voiceGroqTts('أهلاً', $name) : voiceAzureTts('أهلاً', $name);
+        $c = $r['code'];
+        $out['voice'][$t] = [
+            'voice'  => $name,
+            'http'   => $c,
+            'status' => voiceLooksLikeAudio($r) ? 'يعمل بنجاح ✅ (' . round(strlen($r['body']) / 1024) . 'KB)'
+                      : ($c === 0 ? 'فشل الاتصال من الخادم: ' . $r['err']
+                      : ($c === 401 || $c === 403 ? 'المفتاح مرفوض، أو حصة الشهر انتهت ❌'
+                      : ($c === 429 ? 'بلغت حد الاستخدام، وتتجدد الحصة لاحقاً'
+                      : ($c === 400 || $c === 404 ? 'طلب مرفوض: راجع اسم النموذج أو الصوت، أو اقبل شروط النموذج في لوحة المزوّد'
+                      : 'رد غير متوقع (HTTP ' . $c . ')')))),
+            'sample' => voiceLooksLikeAudio($r) ? '' : mb_substr($r['body'], 0, 300),
+        ];
+        if ((int)($state[$t]['until'] ?? 0) > time())
+            $out['voice'][$t]['paused_until'] = date('Y-m-d H:i', (int)$state[$t]['until']) . ' (' . ($state[$t]['why'] ?? '') . ')';
+    }
+}
+
 /* فحص ملفات الشعار والأيقونات */
 $out['ملفات_الشعار'] = [];
 foreach (['logo-color.png','logo-white.png','logo.png','favicon-32.png','favicon-192.png','favicon.ico','og-cover.png',

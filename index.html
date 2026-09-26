@@ -386,6 +386,7 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 .settings-group h3{font-size:var(--f-h3);font-weight:700;color:var(--ink);margin-bottom:var(--s5);display:flex;align-items:center;gap:var(--s3);}
 .setting-row{display:flex;align-items:center;justify-content:space-between;padding:var(--s4) 0;border-bottom:1px solid var(--border);}
 .setting-row:last-child{border-bottom:none;}
+.setting-row[hidden]{display:none;}
 .setting-label{font-size:var(--f-sm);font-weight:500;color:var(--text);}
 .setting-btns{display:flex;gap:var(--s1);background:var(--surface-alt);border-radius:var(--r-full);overflow:hidden;border:1px solid var(--border);}
 .setting-btn{padding:var(--s2) var(--s4);font-family:inherit;font-size:var(--f-xs);border:none;background:none;cursor:pointer;color:var(--muted);font-weight:500;transition:all var(--dur) var(--ease);}
@@ -1432,6 +1433,10 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <div class="setting-row"><span class="setting-label">صوت القراءة</span>
 <div class="setting-btns" id="voiceBtns"><button class="setting-btn on" onclick="setVoice('male',this)">ذكر</button><button class="setting-btn" onclick="setVoice('female',this)">أنثى</button></div>
 </div>
+<!-- يظهر حين يكون الصوت السعودي مضبوطاً على الخادم (api/voice.php)، وإلا يبقى صوت الجهاز وحده -->
+<div class="setting-row" id="voiceSrcRow" hidden><span class="setting-label">مصدر الصوت</span>
+<div class="setting-btns" id="voiceSrcBtns"><button class="setting-btn on" onclick="setVoiceSrc('saudi')">صوت سعودي</button><button class="setting-btn" onclick="setVoiceSrc('device')">صوت الجهاز</button></div>
+</div>
 <div class="setting-row"><span class="setting-label">توقيت القراءة الصوتية</span>
 <div class="setting-btns" id="readModeBtns"><button class="setting-btn on" onclick="setReadMode('after',this)">بعد الاكتمال</button><button class="setting-btn" onclick="setReadMode('while',this)">أثناء الكتابة</button></div>
 </div>
@@ -2112,6 +2117,9 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 </ul>
 <h2>معالجة الأسئلة بالذكاء الاصطناعي</h2>
 <p>لنولّد إجابة سؤالك، نرسل نص السؤال وآخر رسائل المحادثة إلى مزوّد تقني متخصص في معالجة اللغة، ولا نرسل معه اسمك أو بريدك أو بيانات ملفك الشخصي.</p>
+<h2>القراءة الصوتية والأسئلة بالصوت</h2>
+<p>إذا اخترت «صوت سعودي» في إعدادات الوصول، نرسل نص الإجابة التي تستمع إليها إلى مزوّد تقني يحوّله إلى كلام، ولا نرسل معه اسمك أو بريدك أو بيانات ملفك الشخصي. ونحفظ الصوت الناتج على خوادمنا دون ربطه بك، لنعيد استخدامه إذا تكررت العبارة نفسها. وإذا اخترت «صوت الجهاز» يقرأ متصفحك الإجابة بالأصوات المتوفرة فيه، ولا نرسل نصها إلى مزوّد الصوت.</p>
+<p>وحين تسأل بصوتك، يحوّل متصفحك كلامك إلى نص بخدمة التعرّف على الكلام التي يوفّرها، ولا يمر تسجيلك بخوادمنا. وفي المتصفحات التي لا توفّر هذه الخدمة، نرسل تسجيل سؤالك إلى مزوّد تقني يحوّله إلى نص، ولا نحفظ التسجيل على خوادمنا. وفي الحالتين يظهر لك النص في خانة الرسالة لتراجعه قبل إرساله.</p>
 <h2>ما لا نفعله</h2>
 <ul>
 <li>لا نبيع بياناتك ولا نشاركها مع معلنين.</li>
@@ -2306,6 +2314,7 @@ setTimeout(initAnims,100);
 if(LANG==='en')setTimeout(()=>translateAll('en'),120);
 if(p==='dashboard')paintDash();
 if(p==='chat')paintTrial();
+if(p==='settings')voiceStatus();   // يُظهر «مصدر الصوت» إن كان الصوت السعودي مضبوطاً
 if(p==='login'||p==='register'){clearMsgs();document.getElementById('nav').classList.add('scrolled');}
 try{history.replaceState(null,'','#'+p);}catch(e){}
 }
@@ -2368,6 +2377,7 @@ if(_streaming){stopStreaming();return;}
 const inp=document.getElementById('chatInput');
 const txt=inp.value.trim();
 if(!txt)return;
+_voiceTurn=_dictated;_dictated=false;
 closeInlineEdit();   // سؤال جديد: السؤال المفتوح للتعديل لم يعد آخر سؤال
 if(!smallTalk(txt)&&!canAfford(txt))return;
 inp.value='';
@@ -2425,7 +2435,7 @@ renderSources(d,opts.src);
 if(opts.turn)d.dataset.turn=opts.turn;
 body.appendChild(d);
 if(!opts.streaming)body.scrollTop=body.scrollHeight;
-if(role!=='user'&&!opts.streaming&&A11Y.auto)speakText(text);
+if(role!=='user'&&!opts.streaming&&replyReadMode())speakText(text);
 return d;
 }
 /* ---------- مصادر الإجابة ----------
@@ -2540,22 +2550,22 @@ const msg=btn.closest('.msg'),bubble=msg.querySelector('.msg-bubble');
 if(bubble)navigator.clipboard.writeText(bubble.textContent+srcText(msg)).then(()=>{btn.style.color='var(--primary)';setTimeout(()=>btn.style.color='',1500);});
 }
 function speakMsg(btn){
-if('speechSynthesis' in window){
-window.speechSynthesis.cancel();
 const bubble=btn?btn.closest('.msg')?.querySelector('.msg-bubble'):null;
 if(!bubble)return;
+if(_speakBtn===btn){cancelReadQueue();return;}   // الضغطة الثانية على زر الرسالة نفسها توقف قراءتها
 speakText(bubble.textContent);
-}
+_speakBtn=btn;btn.style.color='var(--primary)';btn.setAttribute('aria-label','إيقاف القراءة');
 }
 function toggleMode(btn){
 btn.parentElement.querySelectorAll('.chat-mode-btn').forEach(b=>b.classList.remove('on'));
 btn.classList.add('on');
 }
-/* Enter يرسل وEsc يوقف الرد. كان اسمها chatKey فحجبتها chatKey() مفتاح المحفوظات
-   المعرَّفة بعدها بالاسم نفسه، فتوقف الإرسال بلوحة المفاتيح. */
+/* Enter يرسل، وEsc يوقف الرد أو قراءته الصوتية. كان اسمها chatKey فحجبتها chatKey()
+   مفتاح المحفوظات المعرَّفة بعدها بالاسم نفسه، فتوقف الإرسال بلوحة المفاتيح. */
 function chatInputKey(e){
 if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}
 else if(e.key==='Escape'&&_streaming){e.preventDefault();stopStreaming();}
+else if(e.key==='Escape'&&(_speaking||_speechQueue.length)){e.preventDefault();cancelReadQueue();}
 }
 function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px';}
 
@@ -2569,16 +2579,68 @@ setTimeout(()=>{document.getElementById('chatInput').value=txt;inp.value='';send
 }
 
 // Voice
+/* الإملاء: التعرّف في المتصفح أولاً (مجاني ولا يمر بخادمنا)، وإلا يُسجَّل السؤال
+   ويحوّله api/voice.php إلى نص: Firefox لا يدعم التعرّف، وبعض المتصفحات تعلنه
+   ثم تعجز عنه. النص يُكتب في خانة الرسالة ليراجعه صاحبه ثم يرسله بنفسه، وسؤال
+   أُرسل بالصوت يُقرأ رده بالصوت (_voiceTurn) لتكون المحادثة بالدور. */
+let _dictated=false,_voiceTurn=false;
 function toggleVoice(){
 const btn=document.getElementById('voiceBtn');
-if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){alert('متصفحك لا يدعم الإدخال الصوتي، ويمكنك كتابة سؤالك بدلاً من ذلك.');return;}
-if(_rec){_rec.stop();_rec=null;btn.classList.remove('recording');return;}
+if(_rec){_rec.stop();return;}
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(SR&&!VOICE.srFail)return dictateBrowser(SR,btn);
+voiceStatus().then(v=>{
+  if(v.stt&&window.MediaRecorder&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)dictateServer(btn);
+  else alert('متصفحك لا يدعم الإدخال الصوتي، ويمكنك كتابة سؤالك بدلاً من ذلك.');
+});
+}
+function dictated(text){
+const inp=document.getElementById('chatInput');
+inp.value=text;autoResize(inp);_dictated=true;
+setStreamStatus('كتبنا سؤالك في خانة الرسالة. راجعه ثم أرسله.');
+}
+function dictateBrowser(SR,btn){
 _rec=new SR();_rec.lang='ar-SA';_rec.continuous=false;_rec.interimResults=false;
-_rec.onresult=e=>{document.getElementById('chatInput').value=e.results[0][0].transcript;_rec=null;btn.classList.remove('recording');};
-_rec.onerror=()=>{_rec=null;btn.classList.remove('recording');};
+_rec.onresult=e=>dictated(e.results[0][0].transcript);
+_rec.onerror=e=>{
+  if(e.error==='not-allowed')toast('اسمح للموقع باستخدام الميكروفون من إعدادات المتصفح، ثم حاول مرة أخرى.','err');
+  // المتصفح يعلن التعرّف ولا يستطيعه: الضغطة التالية تسجّل عبر الخادم إن كان مضبوطاً
+  else if(['network','service-not-allowed','language-not-supported'].includes(e.error)){
+    VOICE.srFail=true;
+    voiceStatus().then(v=>toast(v.stt?'لم يتمكن متصفحك من تحويل صوتك إلى نص. اضغط الميكروفون مرة أخرى وتكلّم.':'لم يتمكن متصفحك من تحويل صوتك إلى نص، ويمكنك كتابة سؤالك.','err'));
+  }
+};
 _rec.onend=()=>{_rec=null;btn.classList.remove('recording');};
 _rec.start();btn.classList.add('recording');
+}
+async function dictateServer(btn){
+if(dictateServer.busy)return;   // ضغطة ثانية أثناء طلب إذن الميكروفون لا تفتح تسجيلاً ثانياً
+dictateServer.busy=true;
+let stream,mr;
+try{stream=await navigator.mediaDevices.getUserMedia({audio:true});}
+catch(e){dictateServer.busy=false;toast('اسمح للموقع باستخدام الميكروفون من إعدادات المتصفح، ثم حاول مرة أخرى.','err');return;}
+const type=['audio/webm;codecs=opus','audio/ogg;codecs=opus','audio/mp4','audio/webm'].find(t=>MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(t));
+try{mr=new MediaRecorder(stream,Object.assign({audioBitsPerSecond:32000},type?{mimeType:type}:{}));}
+catch(e){dictateServer.busy=false;stream.getTracks().forEach(t=>t.stop());toast('تعذّر التسجيل في متصفحك، ويمكنك كتابة سؤالك.','err');return;}
+const parts=[],limit=setTimeout(()=>{if(mr.state!=='inactive')mr.stop();},60000);   // دقيقة للسؤال الواحد
+mr.ondataavailable=e=>{if(e.data&&e.data.size)parts.push(e.data);};
+mr.onstop=async()=>{
+  clearTimeout(limit);stream.getTracks().forEach(t=>t.stop());
+  _rec=null;btn.classList.remove('recording');
+  const blob=new Blob(parts,{type:mr.mimeType||type||'audio/webm'});
+  if(blob.size<1000){setStreamStatus('');return;}
+  setStreamStatus('نحوّل صوتك إلى نص…');
+  const fd=new FormData();fd.append('action','stt');fd.append('audio',blob,'voice');
+  const r=await fetch(API+'voice.php',{method:'POST',headers:USER?{'X-Wesal-User':String(USER.id)}:{},credentials:'same-origin',body:fd})
+    .then(x=>x.json()).catch(()=>null);
+  if(r&&r.ok&&r.text)dictated(r.text);
+  else{setStreamStatus('');toast((r&&r.error)||'تعذّر تحويل صوتك إلى نص. حاول مرة أخرى، أو اكتب سؤالك.','err');}
+};
+mr.start();
+dictateServer.busy=false;
+_rec={stop:()=>{if(mr.state!=='inactive')mr.stop();}};
+btn.classList.add('recording');
+setStreamStatus('نسجّل سؤالك الآن. اضغط الميكروفون مرة أخرى حين تنتهي.');
 }
 
 // إعدادات الوصول السريعة (زر الشريط): اللوحة تلي الزر فيدخلها أول Tab بعده، ويغلقها Escape
@@ -2638,7 +2700,11 @@ const LS={
   set(k,v){try{localStorage.setItem('wesal_'+k,JSON.stringify(v));}catch(e){}},
   del(k){try{localStorage.removeItem('wesal_'+k);}catch(e){}}
 };
-let A11Y=Object.assign({auto:false,rate:1,voice:'male',touch:false,links:false,kbd:false,motion:false,readMode:'after'},LP_PREVIEW?{}:LS.get('a11y',{}));
+let A11Y=Object.assign({auto:false,rate:1,voice:'male',voiceSrc:'saudi',touch:false,links:false,kbd:false,motion:false,readMode:'after'},LP_PREVIEW?{}:LS.get('a11y',{}));
+/* الصوت السعودي (api/voice.php): srv وstt يعرفهما الخادم، ونسأله عند أول حاجة (null: لم نسأل بعد).
+   reply وtier مصدر الرد الجاري وطبقته فلا يتبدل صوته في منتصفه، وoff مهلة بعد فشل نقرأ فيها بصوت الجهاز.
+   chunk أطول جملة في الطلب الواحد: حد مزوّد الصوت 200 حرف. */
+const VOICE={srv:null,stt:null,reply:'',tier:'',off:0,said:false,srFail:false,chunk:190};
 function saveA11y(){LS.set('a11y',A11Y);applyA11y();}
 /* «تقليل الحركة»: اختيار الزائر الصريح في وصال أولاً (motionSet)، وإلا إعداد نظامه
    prefers-reduced-motion — ونفس المنطق في السكربت الصغير أعلى الصفحة قبل أول رسم.
@@ -2673,8 +2739,11 @@ function applyA11y(){
   if(vb)[...vb.children].forEach((b,i)=>b.classList.toggle('on',(A11Y.voice==='male')===(i===0)));
   const rb=g('readModeBtns');
   if(rb)[...rb.children].forEach((b,i)=>b.classList.toggle('on',(A11Y.readMode==='after')===(i===0)));
+  const sr=g('voiceSrcRow');
+  if(sr){sr.hidden=!VOICE.srv;[...g('voiceSrcBtns').children].forEach((b,i)=>b.classList.toggle('on',(A11Y.voiceSrc!=='device')===(i===0)));}
 }
-function setVoice(v,btn){A11Y.voice=v;saveA11y();speakText(v==='male'?'مرحباً، أنا صوت وصال':'مرحباً، أنا صوت وصال');}
+function setVoice(v,btn){A11Y.voice=v;saveA11y();speakText('مرحباً، أنا صوت وصال');}
+function setVoiceSrc(v){A11Y.voiceSrc=v;saveA11y();speakText('مرحباً، أنا صوت وصال');}
 function setReadMode(v,btn){A11Y.readMode=v;saveA11y();}
 function pickVoice(){
   try{const vs=speechSynthesis.getVoices().filter(v=>/^ar/i.test(v.lang));
@@ -2682,14 +2751,6 @@ function pickVoice(){
   const f=vs.find(v=>/female|zariyah|salma|hoda|laila|amira|farah/i.test(v.name));
   const m=vs.find(v=>/male|naayf|hamed|majed|tarik|fahad/i.test(v.name));
   return A11Y.voice==='female'?(f||vs[0]):(m||f?m||vs[0]:vs[0]);}catch(e){return null;}
-}
-function speakText(t){
-  if(!('speechSynthesis' in window)||!t)return;
-  window.speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(t);
-  u.lang='ar-SA';u.rate=A11Y.rate||1;
-  const v=pickVoice();if(v)u.voice=v;
-  window.speechSynthesis.speak(u);
 }
 /* ─── الدليل: بحث + فلترة + سؤال وصال ─── */
 let _resCat='';
@@ -3238,7 +3299,7 @@ async function streamReplyRun(txt,qEl){
   finalizeStreamBubble(bubble,streamText,{report:true,canRegenerate:true,src:sources});
   if(!sawBroken)saveChatEntry(txt,streamText,qEl);
   setStreamStatus(sawBroken?'انقطع الاتصال قبل اكتمال الرد.':'انتهى الرد.');
-  if(A11Y.auto&&A11Y.readMode==='after')speakText(streamText);
+  if(replyReadMode()==='after')speakText(streamText);
   else flushReadQueue(streamText);
 }
 /* لا محتوى وصل إطلاقاً ولا رد JSON — يعني chat-stream.php لم يخصم رصيداً بعد
@@ -3392,55 +3453,168 @@ async function confirmInlineEdit(q){
   retractChatEntries(oldRaw,saved);
   await answer(q,txt);
 }
-/* ---------- القراءة أثناء الكتابة (A11Y.readMode==='while') ----------
-   تبدأ قراءة أول جملة تكتمل بدل انتظار الرد كاملاً، وتُشغَّل الجمل تباعاً عبر
-   onend فلا تتقاطع ولا تُقاطَع منتصف جملة — speakText() العادية لا تصلح هنا
-   لأنها تُلغي أي نطق جارٍ فوراً بلا طابور. */
-let _speechConsumedLen=0, _speechQueue=[], _speaking=false;
-function resetReadQueue(){_speechConsumedLen=0;_speechQueue=[];_speaking=false;}
+/* ---------- القراءة الصوتية ----------
+   طابور واحد لكل قراءة: رد كامل يُقسَّم جملاً (speakText)، أو جمل تُضاف أثناء
+   الكتابة فتبدأ القراءة قبل اكتمال الرد. الجمل تُشغَّل تباعاً فلا تتقاطع ولا
+   تُقاطَع منتصف جملة، ولا تتجاوز الواحدة VOICE.chunk حرفاً: حد الطلب عند مزوّد
+   الصوت، ويتجنب أيضاً توقف صوت Chrome في العبارات الطويلة.
+   الصوت السعودي من api/voice.php، والجملة التالية تُجهَّز أثناء قراءة الحالية فلا
+   يطول الصمت بينهما. مصدر الرد وطبقته يُحدَّدان عند جملته الأولى ويبقيان له كله،
+   وأي فشل يُكمل الرد بصوت الجهاز كما كانت الواجهة تقرأ دائماً. */
+let _speechConsumedLen=0,_speechQueue=[],_speaking=false,_speakGen=0,_speakBtn=null,_nextAudio=null,_ttsAudio=null,_ttsUrl='';
+/* متى يُقرأ الرد: القراءة التلقائية بتوقيتها المختار، أو سؤال أُرسل بالصوت فيُقرأ رده أثناء كتابته */
+function replyReadMode(){return A11Y.auto?A11Y.readMode:(_voiceTurn?'while':'');}
+function resetReadQueue(){cancelReadQueue();}
 function handleReadWhileTyping(streamText){
-  if(!A11Y.auto||A11Y.readMode!=='while')return;
+  if(replyReadMode()!=='while')return;
   queueNewSentences(streamText,false);
 }
 function flushReadQueue(streamText){
-  if(!A11Y.auto||A11Y.readMode!=='while')return;
+  if(replyReadMode()!=='while')return;
   queueNewSentences(streamText||'',true);
 }
+function speakText(t){
+  cancelReadQueue();
+  if(t)queueNewSentences(String(t),true);
+}
 function cancelReadQueue(){
-  _speechQueue=[];
-  _speechConsumedLen=0;
+  _speakGen++;   // ما يصل بعد الإلغاء من طلبات سابقة يُهمل
+  _speechQueue=[];_speechConsumedLen=0;_speaking=false;
+  VOICE.reply='';VOICE.tier='';
+  if(_nextAudio){_nextAudio.p.then(u=>{if(u)URL.revokeObjectURL(u);});_nextAudio=null;}
+  if(_ttsAudio){_ttsAudio.onended=_ttsAudio.onerror=null;_ttsAudio.pause();}
+  if(_ttsUrl){URL.revokeObjectURL(_ttsUrl);_ttsUrl='';}
   if('speechSynthesis' in window)window.speechSynthesis.cancel();
-  _speaking=false;
+  if(_speakBtn){_speakBtn.style.color='';_speakBtn.setAttribute('aria-label','قراءة صوتية');_speakBtn=null;}
+}
+/* ما يُنطق فقط: اسم المصدر بلا رابطه، وبلا رموز تنسيق أو رموز تعبيرية */
+function speechClean(s){
+  return String(s||'').replace(/\[([^\]]*)\]\([^)]*\)/g,'$1')
+    .replace(/https?:\/\/\S+|www\.\S+/g,' ')
+    .replace(/[*_#`>|~[\]{}•▪●◦]+/g,' ')
+    .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\uFE0F\u200D]/gu,'')
+    .replace(/\s+/g,' ').trim();
+}
+function pushSpeech(raw){
+  let s=speechClean(raw);
+  const q=_speechQueue,n=VOICE.chunk,last=q.length-1;
+  // الجملة القصيرة تلحق بما قبلها ما لم يبدأ تجهيزه، فتقل الطلبات والوقفات
+  if(s&&last>=0&&!(last===0&&_nextAudio)&&q[last].length+s.length<n){q[last]+=' '+s;return;}
+  while(s.length>n){
+    let cut=Math.max(s.lastIndexOf('،',n-1),s.lastIndexOf(',',n-1),s.lastIndexOf('؛',n-1));
+    if(cut<n/3)cut=s.lastIndexOf(' ',n-1);
+    if(cut<1)cut=n-1;
+    q.push(s.slice(0,cut+1).trim());
+    s=s.slice(cut+1).trim();
+  }
+  if(s)q.push(s);
 }
 function queueNewSentences(fullText,isFinal){
   const fresh=fullText.slice(_speechConsumedLen);
-  if(!fresh){ if(isFinal)playReadQueue(); return; }
-  const re=/[^.!؟?\n]*[.!؟?\n]/g;
-  let m, lastEnd=0;
-  while((m=re.exec(fresh))){
-    const s=m[0].trim();
-    if(s)_speechQueue.push(s);
-    lastEnd=re.lastIndex;
-  }
-  const rest=fresh.slice(lastEnd);
+  // نهاية الجملة علامة بعدها مسافة أو سطر جديد، فنقاط الروابط والأرقام العشرية لا تقطعها
+  const re=/[\s\S]*?(?:[.!؟?؛](?=\s)|\n)/g;
+  let m,lastEnd=0;
+  while((m=re.exec(fresh))){pushSpeech(m[0]);lastEnd=re.lastIndex;}
   _speechConsumedLen+=lastEnd;
-  if(isFinal&&rest.trim()){
-    _speechQueue.push(rest.trim());
-    _speechConsumedLen=fullText.length;
-  }
+  if(isFinal){pushSpeech(fresh.slice(lastEnd));_speechConsumedLen=fullText.length;}
   playReadQueue();
+  prefetchNext();
 }
+function useSaudiVoice(){return A11Y.voiceSrc!=='device'&&VOICE.srv!==false&&Date.now()>VOICE.off;}
 function playReadQueue(){
   if(_speaking||!_speechQueue.length)return;
-  if(!('speechSynthesis' in window))return;
-  const s=_speechQueue.shift();
+  if(!VOICE.reply&&useSaudiVoice()&&VOICE.srv===null){voiceStatus().then(()=>playReadQueue());return;}
+  if(!VOICE.reply)VOICE.reply=useSaudiVoice()?'saudi':'device';
+  const s=_speechQueue.shift(),gen=_speakGen;
+  _speaking=true;
+  const next=()=>{
+    if(gen!==_speakGen)return;
+    _speaking=false;
+    if(!_speechQueue.length&&_speakBtn){_speakBtn.style.color='';_speakBtn.setAttribute('aria-label','قراءة صوتية');_speakBtn=null;}
+    playReadQueue();
+  };
+  if(VOICE.reply==='device'){speakDevice(s,next);return;}
+  let p;
+  if(_nextAudio&&_nextAudio.text===s)p=_nextAudio.p;
+  else{if(_nextAudio)_nextAudio.p.then(u=>{if(u)URL.revokeObjectURL(u);});p=ttsFetch(s);}
+  _nextAudio=null;
+  p.then(url=>{
+    if(gen!==_speakGen){if(url)URL.revokeObjectURL(url);return;}
+    if(!url){VOICE.reply='device';speakDevice(s,next);return;}
+    playAudio(url,s,next);
+    prefetchNext();
+  });
+}
+/* تجهيز الجملة التالية بعد أن عرفنا طبقة الرد من جملته الأولى، فتُطلب بالصوت نفسه */
+function prefetchNext(){
+  const s=_speechQueue[0];
+  if(!s||VOICE.reply!=='saudi'||!VOICE.tier||_nextAudio)return;
+  _nextAudio={text:s,p:ttsFetch(s)};
+}
+function ttsFetch(text){
+  const gen=_speakGen,h={'Content-Type':'application/json'};
+  if(USER)h['X-Wesal-User']=String(USER.id);
+  return fetch(API+'voice.php',{method:'POST',headers:h,credentials:'same-origin',
+      body:JSON.stringify({action:'tts',text,gender:A11Y.voice==='female'?'female':'male',tier:VOICE.tier})})
+    .then(async r=>{
+      const ended=r.headers.get('X-Session-Ended');
+      if(ended&&USER)sessionEnded(ended,true);
+      if(!r.ok||!/^audio\//.test(r.headers.get('Content-Type')||''))throw new Error('tts '+r.status);
+      if(gen===_speakGen&&!VOICE.tier)VOICE.tier=r.headers.get('X-Voice-Tier')||'';
+      return URL.createObjectURL(await r.blob());
+    })
+    .catch(()=>{VOICE.off=Date.now()+6e5;voiceFellBack();return null;});
+}
+function voiceFellBack(){
+  if(VOICE.said)return;
+  VOICE.said=true;
+  toast('الصوت السعودي غير متاح الآن، فنكمل القراءة بصوت جهازك.');
+}
+function speakDevice(s,next){
+  if(!('speechSynthesis' in window)){next();return;}
   const u=new SpeechSynthesisUtterance(s);
   u.lang='ar-SA';u.rate=A11Y.rate||1;
   const v=pickVoice();if(v)u.voice=v;
-  _speaking=true;
-  u.onend=()=>{_speaking=false;playReadQueue();};
-  u.onerror=()=>{_speaking=false;playReadQueue();};
+  u.onend=u.onerror=next;
   window.speechSynthesis.speak(u);
+}
+function ttsEl(){
+  if(!_ttsAudio){_ttsAudio=new Audio();_ttsAudio.preload='auto';}
+  return _ttsAudio;
+}
+function playAudio(url,s,next){
+  const a=ttsEl(),gen=_speakGen;
+  _ttsUrl=url;a.src=url;
+  a.defaultPlaybackRate=a.playbackRate=A11Y.rate||1;   // السرعة بعد تغيير المصدر، فتحميله يعيدها للافتراضية
+  const done=()=>{a.onended=a.onerror=null;if(_ttsUrl===url){URL.revokeObjectURL(url);_ttsUrl='';}};
+  const fail=()=>{done();if(gen!==_speakGen)return;VOICE.reply='device';speakDevice(s,next);};
+  a.onended=()=>{done();next();};
+  a.onerror=fail;
+  const p=a.play();
+  if(p&&p.catch)p.catch(e=>{if(!e||e.name!=='AbortError')fail();});
+}
+/* Safari على الجوال لا يشغّل صوتاً لاحقاً إلا من عنصر شغّله المستخدم بنفسه مرة،
+   فأول ضغطة في الصفحة تشغّل فيه لحظة صمت، ويبقى جاهزاً لقراءة الردود بعدها. */
+function ttsUnlock(){
+  const a=ttsEl();
+  if(a.dataset.ready||a.src)return;
+  a.dataset.ready='1';
+  const b=new ArrayBuffer(46),v=new DataView(b),w=(o,t)=>{for(let i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i));};
+  w(0,'RIFF');v.setUint32(4,38,true);w(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+  v.setUint32(24,8000,true);v.setUint32(28,16000,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,2,true);
+  a.src=URL.createObjectURL(new Blob([b],{type:'audio/wav'}));
+  const p=a.play();if(p&&p.catch)p.catch(()=>{});
+}
+['click','keydown','touchend'].forEach(ev=>document.addEventListener(ev,ttsUnlock,{once:true,capture:true}));
+let _voiceStatusP=null;
+function voiceStatus(){
+  if(!_voiceStatusP)_voiceStatusP=api('voice.php',{action:'status'}).then(r=>{
+    if(r&&r.offline)_voiceStatusP=null;   // بلا اتصال: نسأل مرة أخرى عند الحاجة التالية
+    VOICE.srv=!!(r&&r.ok&&r.tts);VOICE.stt=!!(r&&r.ok&&r.stt);
+    applyA11y();
+    return VOICE;
+  });
+  return _voiceStatusP;
 }
 
 /* ---------- تطبيع عربي + ردود التحيات الفورية ---------- */
@@ -4365,6 +4539,7 @@ const TXT={
 'العرض والمظهر':'Display & appearance','وضع العرض':'Display mode','عادي':'Normal','تباين عالٍ':'High contrast','داكن':'Dark',
 'حجم الخط':'Font size','تقليل الحركة':'Reduce motion','القراءة والصوت':'Reading & voice','القراءة الصوتية التلقائية':'Auto read aloud',
 'سرعة القراءة':'Reading speed','صوت القراءة':'Voice','ذكر':'Male','أنثى':'Female','التنقل والتفاعل':'Navigation & interaction',
+'مصدر الصوت':'Voice source','صوت سعودي':'Saudi voice','صوت الجهاز':'Device voice',
 'تكبير مساحة اللمس':'Larger touch targets','تمييز الروابط':'Highlight links','تسهيل التنقل بلوحة المفاتيح':'Easier keyboard navigation',
 'إعدادات سريعة':'Quick settings','جميع إعدادات الوصول':'All accessibility settings',
 'تصغير الخط':'Decrease text size','الحجم الافتراضي':'Default text size','تكبير الخط':'Increase text size',
