@@ -4975,7 +4975,7 @@ function lpGet(doc,path){const [s,k]=path.split('.');return doc[s]&&doc[s].f?doc
    assets/sources/<النطاق>.webp يجهّزه tools/source-logo.php، والرقم إصداره:
    ارفعه عند استبدال الملف حتى لا تبقى النسخة القديمة في ذاكرة المتصفح.
    النطاق بلا ملف يظهر برمز عام بنفس المقاس. */
-const SRC_LOGOS={'apd.gov.sa':1,'hrdf.org.sa':1,'hrsd.gov.sa':1,'kscdr.org.sa':1,'moe.gov.sa':1,'moh.gov.sa':1,'my.gov.sa':1};
+const SRC_LOGOS={'apd.gov.sa':1,'hrc.gov.sa':1,'hrdf.org.sa':1,'hrsd.gov.sa':1,'kscdr.org.sa':1,'moe.gov.sa':1,'moh.gov.sa':1,'my.gov.sa':1,'sdb.gov.sa':1};
 function srcLogo(box,domain){
   const d=String(domain||'').trim().toLowerCase().replace(/^www\./,'').split('/')[0];
   const v=Object.prototype.hasOwnProperty.call(SRC_LOGOS,d)&&SRC_LOGOS[d];

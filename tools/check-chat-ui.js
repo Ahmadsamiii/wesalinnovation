@@ -423,7 +423,7 @@ const texts = h => JSON.stringify(h.map(x => x.text));
     await mock(page, { stream: 'fail', classicReply: 'رد البديل', classicSources: [{ url: 'https://sdb.gov.sa/ar/kanaf', host: 'sdb.gov.sa', title: 'منتج كنف' }] });
     await ask(page, 'سؤال'); await idle(page);
     let r = await cardsOf(page);
-    check('بطاقة المصدر في المسار البديل، باسم الجهة المعروف', r.cards.length === 1 && r.cards[0].name === 'بنك التنمية الاجتماعية', JSON.stringify(r.cards));
+    check('بطاقة المصدر في المسار البديل، باسم الجهة وشعارها وهي خارج القائمة', r.cards.length === 1 && r.cards[0].name === 'بنك التنمية الاجتماعية' && r.cards[0].logo.includes('sdb.gov.sa.webp'), JSON.stringify(r.cards));
     check('لا عبارة «مبنية على مصادر رسمية»', !r.text.includes('مبنية على مصادر'), r.text);
     await mock(page, { stream: 'fail', classicReply: 'رد بلا مصدر' });
     await ask(page, 'سؤال ثانٍ'); await idle(page);
