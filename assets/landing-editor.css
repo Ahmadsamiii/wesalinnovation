@@ -174,9 +174,6 @@
 
 /* ---------- شريط النشر ---------- */
 .lpe-bar{position:sticky;bottom:12px;z-index:40;display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s5);padding:12px 16px;box-shadow:var(--sh-lg);}
-/* زر إمكانية الوصول العائم ثابت أسفل يسار الشاشة — الشريط يفسح له مكاناً حتى لا يغطي «نشر» */
-.lpe-bar{margin-left:76px;}
-@media(max-width:600px){.lpe-bar{margin-left:64px;}}
 .lpe-bar-status{flex:1;min-width:220px;display:flex;align-items:center;gap:12px;}
 .lpe-dot{width:10px;height:10px;border-radius:50%;background:#10b981;flex-shrink:0;box-shadow:0 0 0 4px rgba(16,185,129,.15);}
 .lpe-dot.pending{background:var(--lpe-amber);box-shadow:0 0 0 4px rgba(245,158,11,.18);}
