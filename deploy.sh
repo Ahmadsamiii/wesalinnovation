@@ -144,11 +144,11 @@ printf 'للتراجع:\n  tar -xzf %s -C %s\n\n' "$archive" "$TARGET"
 
 # ------------------------------------------- مساحة العمل (بعد نجاح الموقع)
 # تطبيق Laravel مستقل في workspace/ بسكربت نشره الخاص، لا يُنشر إلا إذا جُهّز
-# له الخادم (وُجد ملف .env المشترك — workspace/DEPLOY.md). يأتي بعد نشر
-# الموقع العام والتحقق منه، ففشله لا يمس الموقع المنشور للتو؛ لكنه يُفشل
+# له الخادم (وُجد ملف .env المشترك، انظر workspace/DEPLOY.md). يأتي بعد نشر
+# الموقع العام والتحقق منه، ففشله لا يمس الموقع المنشور للتو، لكنه يُفشل
 # التشغيل كله كي لا يمر دون أن يلاحظه أحد.
-WORKSPACE_BASE="${WORKSPACE_BASE:-$HOME/domains/workspace.wesalinnovation.sa}"
+WORKSPACE_BASE="${WORKSPACE_BASE:-$HOME/wesal-workspace}"
 if [ -f "$WORKSPACE_BASE/shared/.env" ]; then
     WORKSPACE_BASE="$WORKSPACE_BASE" bash "$REPO_DIR/workspace/deploy.sh" \
-      || die "الموقع العام منشور وسليم، لكن نشر مساحة العمل فشل — رسالته أعلاه تذكر حالتها وطريقة التراجع."
+      || die "الموقع العام منشور وسليم، لكن نشر مساحة العمل فشل. رسالته أعلاه تذكر حالتها وطريقة التراجع."
 fi

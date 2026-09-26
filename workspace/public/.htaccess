@@ -1,9 +1,25 @@
+# جذر مساحة العمل قد يكون مجلداً داخل جذر الموقع العام (هكذا ينشئ Hostinger
+# النطاقات الفرعية)، فيرث ترويساته، ومنها سياسة محتوى تمنع 'unsafe-eval' الذي
+# تحتاجه Alpine. هذه سياسة مساحة العمل نفسها، وتحل محل الموروثة.
+<IfModule mod_headers.c>
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'self'; frame-ancestors 'self'; object-src 'none'"
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
     </IfModule>
 
     RewriteEngine On
+
+    # HTTPS دائماً: كوكي الجلسة آمنة، فلا يعمل الدخول عبر http. قواعد الموقع العام
+    # التي تحوّل إلى https لا تصل هنا، لأن هذا الملف يشغّل محرك التحويل من جديد.
+    # X-Forwarded-Proto لأن الطلب خلف CDN يصل عبر http وإن كان الزائر على https.
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+    RewriteCond %{HTTP_HOST} !^(localhost|127\.0\.0\.1)(:[0-9]+)?$ [NC]
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
