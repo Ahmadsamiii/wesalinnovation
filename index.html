@@ -344,12 +344,6 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 .typing span:nth-child(2){animation-delay:.2s;}
 .typing span:nth-child(3){animation-delay:.4s;}
 .chat-input-area{padding:var(--s4) var(--s5);border-top:1px solid var(--border);background:var(--surface);}
-/* زر إعدادات الوصول العائم (#fab) ثابت أسفل يسار الشاشة، وخانة السؤال تلاصق يسارها
-   في العربية (وفي الإنجليزية حين تختفي القائمة الجانبية)، فكان يغطي زر الإرسال
-   والإيقاف. عمود الزاوية محجوز له بعرضه وهامشه ما دام في الصفحة، فإن أُزيل الزر
-   سقط الحجز وحده بلا فراغ. */
-:root:has(#fab) .chat-input-area{padding-left:calc(var(--s6) + 52px + var(--s2));}
-@media(min-width:769px){:root[dir="ltr"]:has(#fab) .chat-input-area{padding-left:var(--s5);}}
 .chat-chips{display:flex;gap:var(--s2);margin-bottom:var(--s3);flex-wrap:wrap;}
 .chat-chip{padding:var(--s1) var(--s3);border-radius:var(--r-full);font-family:inherit;font-size:var(--f-xs);background:var(--surface-alt);border:1px solid var(--border);color:var(--text);cursor:pointer;transition:all var(--dur) var(--ease);}
 /* على أجهزة اللمس فقط: أهداف لمس أوسع للعناصر الصغيرة، بلا أي تغيير على
@@ -360,6 +354,18 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 .msg-user .msg-actions{justify-content:flex-end;}
 .msg-user .msg-edit-btn{display:none;}
 .msg-user.msg-editable .msg-edit-btn{display:inline-flex;}
+/* تعديل السؤال في مكانه (editLastQuestion): خانة مكان الفقاعة وتحتها ✓ و✗ */
+.msg-user.editing .msg-bubble,.msg-user.msg-editable.editing .msg-edit-btn{display:none;}
+.msg-editbox{display:flex;flex-direction:column;gap:var(--s2);width:min(460px,70vw);}
+.msg-edit-input{width:100%;min-height:48px;padding:var(--s3) var(--s4);border:2px solid var(--secondary);border-radius:var(--r-lg);background:var(--surface);color:var(--ink);font-family:inherit;font-size:var(--f-sm);line-height:1.8;resize:none;outline:none;}
+.msg-edit-input:focus-visible{box-shadow:0 0 0 3px rgba(129,79,195,.18);}
+.msg-editacts{display:flex;gap:var(--s2);justify-content:flex-end;}
+.msg-editbtn{width:36px;height:36px;border-radius:50%;border:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:transform var(--dur) var(--ease);}
+.msg-editbtn .ico{width:18px;height:18px;}
+.msg-editbtn:hover{transform:scale(1.06);}
+.msg-editbtn:focus-visible{outline:2px solid var(--secondary);outline-offset:2px;}
+.msg-edityes{background:var(--g-brand);color:#fff;}
+.msg-editno{background:var(--surface-alt);color:var(--text);border:1px solid var(--border);}
 .chat-input-row{display:flex;align-items:flex-end;gap:var(--s2);background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--r-xl);padding:var(--s2);transition:border-color var(--dur) var(--ease);}
 .chat-input-row:focus-within{border-color:var(--secondary);box-shadow:0 0 0 3px rgba(129,79,195,.1);}
 .chat-input-row textarea{flex:1;border:none;background:none;font-family:inherit;font-size:var(--f-sm);color:var(--ink);resize:none;outline:none;padding:var(--s2) var(--s3);min-height:40px;max-height:120px;line-height:1.6;}
@@ -781,6 +787,11 @@ body[data-role="admin"] .super-only.blk{display:block;}
 /* بطاقات المؤشرات — تأتي بعد قواعد admin-only عمداً حتى تتغلّب على display:block
    لبطاقات المدير دون أن تُظهرها لغيره */
 .dash-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s4);margin-bottom:var(--s6);}
+/* تشخيص المحادثة لمدير النظام (paintChatDiag) */
+.diag-card{padding:var(--s5) var(--s6);margin-bottom:var(--s6);}
+.diag-card h3{font-size:var(--f-sm);font-weight:700;color:var(--ink);margin-bottom:var(--s3);}
+.diag-list{margin:0;padding-inline-start:1.2em;display:grid;gap:6px;font-size:var(--f-sm);color:var(--text);line-height:1.8;}
+.diag-list li:empty{display:none;}
 @media(max-width:1180px){.dash-stats{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:380px){.dash-stats{grid-template-columns:1fr;}}
 .dash-stat:not(.admin-only),body[data-role="admin"] .dash-stat.admin-only,body[data-role="mod"] .dash-stat.admin-only{display:grid;}
@@ -1020,8 +1031,28 @@ table.tbl tr:hover td{background:var(--surface-alt);}
 /* الجوال: بطاقة واحدة في الصف بنفس التصميم، فيبقى الشعار بحجمه الكامل واضحاً */
 @media(max-width:560px){.sources-grid{gap:var(--s3)}.sources-grid>.src-card{flex-basis:100%;max-width:420px}}
 .sec-sub{max-width:720px;margin:10px auto 0;color:var(--muted);font-size:var(--f-sm);line-height:1.9}
-.msg-src{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:3px 10px;border-radius:99px;background:var(--surface-2,rgba(80,57,168,.08));color:var(--primary);font-size:var(--f-xs);font-weight:600}
-[data-contrast="dark"] .msg-src{background:rgba(82,189,249,.14);color:var(--sky)}
+/* مصادر الإجابة (renderSources): بطاقة لكل جهة بشعارها واسمها ونطاقها، والشعار
+   بمعالجة «مصادر البيانات» نفسها في الوضع الداكن والتباين العالي */
+.msg-srcs{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.msg-srcs-h{display:flex;align-items:center;gap:6px;font-size:var(--f-xs);font-weight:700;color:var(--muted)}
+.msg-srcs-h .ico{width:13px;height:13px}
+.msg-srcs-list{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.msg-srcs-list li{max-width:100%}
+.msg-srccard{display:flex;align-items:center;gap:10px;padding:6px 12px 6px 8px;border:1px solid var(--border);border-radius:14px;background:var(--surface);color:var(--text);text-decoration:none;transition:border-color var(--dur) var(--ease)}
+a.msg-srccard:hover{border-color:var(--secondary)}
+a.msg-srccard:focus-visible{outline:2px solid var(--secondary);outline-offset:2px}
+.msg-srclogo{flex-shrink:0;width:96px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:9px;background:var(--bg)}
+.msg-srclogo img{display:block;width:100%;height:auto}
+.msg-srclogo .src-ph{width:20px;height:20px;color:var(--muted)}
+.msg-srctxt{display:flex;flex-direction:column;min-width:0;line-height:1.45}
+.msg-srctxt b{font-size:var(--f-xs);color:var(--ink);font-weight:700}
+.msg-srctxt small{font-size:11px;color:var(--muted)}
+.msg-srcgo{width:14px;height:14px;color:var(--muted);flex-shrink:0;transform:rotate(45deg)}
+[dir="ltr"] .msg-srcgo{transform:rotate(135deg)}
+[data-contrast="dark"] .msg-srclogo{background:rgba(255,255,255,.06)}
+[data-contrast="dark"] .msg-srclogo img{filter:brightness(0) invert(1);opacity:.9}
+[data-contrast="high"] .msg-srclogo{background:#fff;box-shadow:inset 0 0 0 1px var(--border)}
+[data-contrast="high"] .msg-srccard{border-color:currentColor}
 .audit-row{display:flex;gap:10px;align-items:baseline;padding:8px 10px;border-radius:10px;background:var(--surface-2,rgba(0,0,0,.03));font-size:var(--f-sm)}
 .audit-row time{color:var(--muted);font-size:var(--f-xs);white-space:nowrap}
 code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
@@ -1513,6 +1544,15 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <div class="dash-stat-icon" style="background:rgba(129,79,195,.1);color:var(--secondary)"><svg class="ico ico-lg"><use href="#ic-zap"/></svg></div>
 <div><div class="dash-stat-num" id="stTotal">0</div><div class="dash-stat-label">مللي‌ثانية لاكتمال الرد (٧ أيام)</div></div>
 </div>
+</div>
+<div class="card glass anim super-only blk diag-card" id="chatDiag">
+<h3>تشخيص المحادثة</h3>
+<ul class="diag-list">
+<li id="diagKb"></li>
+<li id="diagHosts"></li>
+<li id="diagStream"></li>
+<li id="diagProv"></li>
+</ul>
 </div>
 <div class="card glass anim comp-card" id="compCard" style="margin-bottom:var(--s6)">
 <div class="comp-ring"><svg width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="27" fill="none" stroke="var(--surface-alt)" stroke-width="7"/><circle id="compArc" cx="32" cy="32" r="27" fill="none" stroke="url(#compGrad)" stroke-width="7" stroke-linecap="round" stroke-dasharray="169.6" stroke-dashoffset="169.6"/><defs><linearGradient id="compGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#814fc3"/><stop offset="1" stop-color="#3e9eed"/></linearGradient></defs></svg><b id="compPct">0%</b></div>
@@ -2328,35 +2368,42 @@ function toggleDark(){setC(document.documentElement.getAttribute('data-contrast'
 // Chat
 /* رد واحد قيد الوصول في كل مرة (_streaming)، من إرسال السؤال حتى اكتمال رده
    بأي مسار: البث أو chat.php البديل. _streamAbort متحكّمه، يلغيه زر الإيقاف
-   وEsc وتعديل السؤال. كل سؤال له رقم دورة (data-turn) على فقاعته وعلى كل رد
-   له، فالتعديل يعرف ما يسحبه معه، ولا يظهر رد بعد سحب سؤاله. */
-let _streaming=false, _streamAbort=null, _turnSeq=0;
+   وEsc وإرسال تعديل السؤال، و_replyDone يكتمل حين ينتهي الرد الجاري كله.
+   كل سؤال له رقم دورة (data-turn) على فقاعته وعلى كل رد له، ويتجدد الرقم حين
+   يُرسل تعديله، فأي رد يصل بعدها لرقمه القديم يُهمل: لا يظهر ولا يُحفظ. */
+let _streaming=false, _streamAbort=null, _turnSeq=0, _replyDone=Promise.resolve();
 async function send(){
 if(_streaming){stopStreaming();return;}
 const inp=document.getElementById('chatInput');
 const txt=inp.value.trim();
 if(!txt)return;
 _voiceTurn=_dictated;_dictated=false;
-const stReply=smallTalk(txt);
-if(stReply){
-  inp.value='';inp.style.height='auto';
-  const chips0=document.getElementById('chatChips');if(chips0)chips0.style.display='none';
-  const q=addMsg('user',txt);showTyping();
-  setTimeout(()=>{hideTyping();if(q.isConnected)addMsg('ai',stReply,{turn:q.dataset.turn});},450+Math.random()*350);
-  return;
-}
-const st=tokenState(),cost=costOf(txt);
-if(st.left<cost){
-  if(st.guest){requireAuth('chat');return;}
-  addMsg('ai','انتهى رصيد أسئلتك لهذه الفترة، ويتجدّد تلقائياً '+renewIn(st.next)+'.\n\nإذا احتجت رصيداً أكبر لغرض بحثي أو مؤسسي، فراسلنا من صفحة «تواصل معنا».');
-  return;
-}
+closeInlineEdit();   // سؤال جديد: السؤال المفتوح للتعديل لم يعد آخر سؤال
+if(!smallTalk(txt)&&!canAfford(txt))return;
 inp.value='';
 inp.style.height='auto';
 const chips=document.getElementById('chatChips');
 if(chips)chips.style.display='none';
-const q=addMsg('user',txt);
-spendTokens(cost);
+await answer(addMsg('user',txt),txt);
+}
+/* الرصيد قبل السؤال: الزائر يُحوَّل لإنشاء حساب، والمستخدم يعرف متى يتجدد */
+function canAfford(txt){
+const st=tokenState();
+if(st.left>=costOf(txt))return true;
+if(st.guest){requireAuth('chat');return false;}
+addMsg('ai','انتهى رصيد أسئلتك لهذه الفترة، ويتجدّد تلقائياً '+renewIn(st.next)+'.\n\nإذا احتجت رصيداً أكبر لغرض بحثي أو مؤسسي، فراسلنا من صفحة «تواصل معنا».');
+return false;
+}
+/* يجيب عن السؤال في فقاعته q: رد التحية الجاهز، أو يخصم الرصيد ويبث الرد.
+   يناديه الإرسال وإرسال التعديل معاً، فيبقى السلوك واحداً. */
+async function answer(q,txt){
+const stReply=smallTalk(txt);
+if(stReply){
+  const turn=q.dataset.turn;showTyping();
+  setTimeout(()=>{hideTyping();if(q.isConnected&&q.dataset.turn===turn)addMsg('ai',stReply,{turn});},450+Math.random()*350);
+  return;
+}
+spendTokens(costOf(txt));
 await streamReply(txt,q);
 if(q.isConnected)maybeSurveyNudge();
 }
@@ -2381,8 +2428,9 @@ d.classList.add('msg-editable');
 }else if(opts.streaming){
 d.innerHTML='<div class="msg-avatar">و</div><div><div class="msg-bubble" aria-live="off"><div class="typing"><span></span><span></span><span></span></div></div></div>';
 }else{
-d.innerHTML='<div class="msg-avatar">و</div><div><div class="msg-bubble">'+mdLite(esc(text))+'</div>'+srcHtml(opts.src)+'<div class="msg-actions">'+aiActionsHtml(opts)+'</div></div>';
+d.innerHTML='<div class="msg-avatar">و</div><div><div class="msg-bubble">'+mdLite(esc(text))+'</div><div class="msg-actions">'+aiActionsHtml(opts)+'</div></div>';
 d.dataset.raw=text;
+renderSources(d,opts.src);
 }
 if(opts.turn)d.dataset.turn=opts.turn;
 body.appendChild(d);
@@ -2390,10 +2438,67 @@ if(!opts.streaming)body.scrollTop=body.scrollHeight;
 if(role!=='user'&&!opts.streaming&&replyReadMode())speakText(text);
 return d;
 }
-function srcHtml(src){
-if(src==='server')return '<div class="msg-src"><svg class="ico" style="width:12px;height:12px"><use href="#ic-book"/></svg> مبنية على مصادر رسمية في قاعدة وصال. تأكّد من الجهة المختصة قبل أي إجراء.</div>';
-if(src&&src.n)return '<div class="msg-src"><svg class="ico" style="width:12px;height:12px"><use href="#ic-book"/></svg> المصدر: '+esc(src.n)+(src.u?' (<a href="https://'+esc(src.u)+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">'+esc(src.u)+'</a>)':'')+'</div>';
-return '';
+/* ---------- مصادر الإجابة ----------
+   تحت الإجابة المبنية على صفحات رسمية بطاقة لكل جهة، ثلاث على الأكثر: شعارها
+   واسمها ونطاقها، وتفتح الصفحة التي أُخذت منها المعلومة. الخادم يرسل
+   [{url,host,title}] لما ذكر النموذج أنه استخدمه فعلاً (chatSources في
+   api/chat-shared.php)، والإجابة من قاعدة المعرفة المحلية مصدرها {n,u}. الاسم
+   والشعار من قائمة «مصادر البيانات» بالنطاق، فالجهة التي يضيفها المدير هناك تظهر
+   هنا باسمها، ونطاق فرعي يأخذ جهة نطاقه. والإجابة بلا مصدر لا يظهر تحتها شيء. */
+const SRC_NAMES={'hrc.gov.sa':['هيئة حقوق الإنسان','Human Rights Commission'],
+  'sdb.gov.sa':['بنك التنمية الاجتماعية','Social Development Bank'],
+  'wesalinnovation.sa':['فريق وصال','Wesal team']};
+function srcKey(d){return String(d||'').trim().toLowerCase().replace(/^https?:\/\//,'').replace(/^www\./,'').split(/[/?#]/)[0];}
+function srcEntity(host){
+  const h=srcKey(host),hit=d=>d&&(h===d||h.endsWith('.'+d));
+  const items=LP&&LP.sources&&LP.sources.l&&LP.sources.l.items;
+  if(Array.isArray(items)){
+    for(const it of items){const d=srcKey(lpText(it.f&&it.f.domain,'ar'));if(hit(d))return {domain:d,name:lpText(it.f&&it.f.name,LANG)};}
+  }else{   // قبل تحميل المحتوى المنشور: البطاقات الافتراضية في الصفحة
+    for(const c of document.querySelectorAll('.src-card')){const d=srcKey((c.querySelector('.src-dom')||{}).textContent);if(hit(d))return {domain:d,name:c.querySelector('.src-name').textContent.trim()};}
+  }
+  for(const d in SRC_NAMES)if(hit(d))return {domain:d,name:SRC_NAMES[d][LANG==='en'?1:0]};
+  return null;
+}
+/* عنوان الصفحة لجهة خارج القائمة: أول مقطع قبل الفاصل، مثل «هيئة كذا | الرئيسية» */
+function srcTitle(t){return String(t||'').split(/\s[|\u2013\u2014:-]\s/)[0].trim().slice(0,70);}
+function srcList(src){
+  const one=(host,url,title,name)=>{
+    const e=srcEntity(host),h=srcKey(host);
+    return {host:h,domain:e?e.domain:h,name:name||(e&&e.name)||srcTitle(title)||h,url:/^https:\/\/[^\s"<>]+$/i.test(url||'')?url:null};
+  };
+  if(Array.isArray(src))return src.slice(0,3).map(s=>one(s&&s.host,s&&s.url,s&&s.title)).filter(s=>s.host);
+  if(src&&src.n&&src.u)return [one(src.u,'https://'+srcKey(src.u),'',src.n)];
+  return [];
+}
+function renderSources(msg,src){
+  const list=srcList(src),content=msg&&msg.children[1];
+  if(!list.length||!content||content.querySelector('.msg-srcs'))return;
+  const en=LANG==='en',label=en?(list.length>1?'Sources for this answer':'Source for this answer'):(list.length>1?'مصادر هذه الإجابة':'مصدر هذه الإجابة');
+  const box=document.createElement('div');box.className='msg-srcs';
+  box.innerHTML='<div class="msg-srcs-h"><svg class="ico" aria-hidden="true"><use href="#ic-book"/></svg><span></span></div><ul class="msg-srcs-list"></ul>';
+  box.querySelector('.msg-srcs-h span').textContent=label;
+  box.querySelector('ul').setAttribute('aria-label',label);
+  for(const s of list){
+    const li=document.createElement('li'),card=document.createElement(s.url?'a':'div');
+    card.className='msg-srccard';
+    if(s.url){card.href=s.url;card.target='_blank';card.rel='noopener';}
+    card.innerHTML='<span class="msg-srclogo"></span><span class="msg-srctxt"><b></b><span class="sr-only">، </span><small><bdi dir="ltr"></bdi></small></span>'
+      +(s.url?'<svg class="ico msg-srcgo" aria-hidden="true"><use href="#ic-arrow-left"/></svg><span class="sr-only msg-srcnew"></span>':'');
+    srcLogo(card.querySelector('.msg-srclogo'),s.domain);
+    card.querySelector('b').textContent=s.name;
+    card.querySelector('bdi').textContent=s.host;
+    if(s.url)card.querySelector('.msg-srcnew').textContent=en?' (opens in a new tab)':'، يفتح في نافذة جديدة';
+    li.appendChild(card);box.querySelector('ul').appendChild(li);
+  }
+  content.querySelector('.msg-bubble').after(box);
+}
+/* نص المصادر مع النسخ والبلاغ عن خطأ، فيعرف المراجع أي صفحة يراجع */
+function srcText(msg){
+  const cards=msg?[...msg.querySelectorAll('.msg-srccard')]:[];
+  if(!cards.length)return '';
+  return '\n\n'+msg.querySelector('.msg-srcs-h').textContent.trim()+':\n'
+    +cards.map(c=>'• '+c.querySelector('b').textContent+(c.href?': '+c.href:'')).join('\n');
 }
 function aiActionsHtml(opts){
 opts=opts||{};
@@ -2441,8 +2546,8 @@ go('chat');
 setTimeout(()=>{document.getElementById('chatInput').value=txt;send();},200);
 }
 function copyMsg(btn){
-const bubble=btn.closest('.msg').querySelector('.msg-bubble');
-if(bubble)navigator.clipboard.writeText(bubble.textContent).then(()=>{btn.style.color='var(--primary)';setTimeout(()=>btn.style.color='',1500);});
+const msg=btn.closest('.msg'),bubble=msg.querySelector('.msg-bubble');
+if(bubble)navigator.clipboard.writeText(bubble.textContent+srcText(msg)).then(()=>{btn.style.color='var(--primary)';setTimeout(()=>btn.style.color='',1500);});
 }
 function speakMsg(btn){
 const bubble=btn?btn.closest('.msg')?.querySelector('.msg-bubble'):null;
@@ -3085,10 +3190,10 @@ function requireAuth(target){
 }
 
 /* ================= المحادثة ================= */
-async function sendToModel(q,signal){
+async function sendToModel(q,signal,fallback){
   const hist=(LS.get('hist',[])||[]).slice(-6);
-  const res=await api('chat.php',{message:q,history:hist,mode:currentMode(),user:USER?USER.id:0},null,signal);
-  if(res.ok&&res.reply)return {a:res.reply,src:'server'};
+  const res=await api('chat.php',{message:q,history:hist,mode:currentMode(),user:USER?USER.id:0,fallback},null,signal);
+  if(res.ok&&res.reply)return {a:res.reply,src:res.sources||[]};
   return localAnswer(q);
 }
 function currentMode(){const b=document.querySelector('.chat-mode-btn.on');return b?b.dataset.mode:'simple';}
@@ -3098,7 +3203,12 @@ function askQuestion(t){const i=document.getElementById('chatInput');if(i)i.valu
 /* ---------- الرد الفوري المتدفق (chat-stream.php) ----------
    fetch+getReader لا EventSource: نحتاج إرسال جسم POST (السؤال + آخر ٦ أدوار
    من السجل) لا معامِلات رابط — EventSource لا يرسل جسماً أصلاً. */
-async function streamReply(txt,qEl){
+function streamReply(txt,qEl){
+  const p=streamReplyRun(txt,qEl);
+  _replyDone=p.catch(()=>{});
+  return p;
+}
+async function streamReplyRun(txt,qEl){
   const ctl=_streamAbort=new AbortController();
   setStreamingUI(true);
   setStreamStatus('وصال يكتب…');
@@ -3106,9 +3216,11 @@ async function streamReply(txt,qEl){
   const turn=qEl.dataset.turn;
   const bubble=addMsg('ai','',{streaming:true,turn});
   const hist=(LS.get('hist',[])||[]).slice(-6);
-  let streamText='', gotAnyDelta=false, sawJson=null, sawBroken=false, committedClient=false;
+  let streamText='', gotAnyDelta=false, sawJson=null, sawBroken=false, committedClient=false, sources=null, res=null;
+  // سبب السقوط إلى chat.php ومدة الانتظار قبله، يُسجَّلان في chat_logs لتشخيص البث (chatFallbackInfo)
+  const t0=Date.now(),fb=reason=>({reason,ms:Date.now()-t0,status:res?res.status:0});
   try{
-    const res=await fetch(API+'chat-stream.php',{
+    res=await fetch(API+'chat-stream.php',{
       method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
       body:JSON.stringify({message:txt,history:hist,mode:currentMode(),user:USER?USER.id:0}),
       signal:ctl.signal
@@ -3143,6 +3255,8 @@ async function streamReply(txt,qEl){
             handleReadWhileTyping(streamText);
           }else if(ev==='suggestions'&&data&&Array.isArray(data.items)){
             renderSuggestions(bubble,data.items);
+          }else if(ev==='sources'&&data&&Array.isArray(data.items)){
+            sources=data.items;   // تُعرض مع اكتمال الرد (finalizeStreamBubble) لا قبله
           }else if(ev==='error'){
             sawBroken=true;
           }
@@ -3153,7 +3267,7 @@ async function streamReply(txt,qEl){
     // الإلغاء يُعالَج بعد الكتلة: قد يقع أثناء res.json() فيُبتلَع بلا استثناء
     if(!ctl.signal.aborted){
       if(!committedClient&&sawJson===null){
-        await streamFallbackToClassic(bubble,txt,ctl,qEl);
+        await streamFallbackToClassic(bubble,txt,ctl,qEl,fb(res?'read':'network'));
         return;
       }
       sawBroken=true;   // التزم الخادم لكن انقطع الاتصال هنا — لا سقوط لـchat.php، فقط إنهاء بالجزء المتوفر
@@ -3162,7 +3276,7 @@ async function streamReply(txt,qEl){
   if(ctl.signal.aborted){endStoppedReply(bubble,streamText,gotAnyDelta,qEl);return;}
 
   if(!sawJson&&!gotAnyDelta&&!committedClient){
-    await streamFallbackToClassic(bubble,txt,ctl,qEl);
+    await streamFallbackToClassic(bubble,txt,ctl,qEl,fb('badjson'));
     return;
   }
   setStreamingUI(false);
@@ -3170,7 +3284,7 @@ async function streamReply(txt,qEl){
   if(sawJson){
     bubble.remove();
     if(sawJson.ok&&sawJson.reply){
-      addMsg('ai',sawJson.reply,{src:sawJson.small?null:'server',report:!sawJson.small,canRegenerate:!sawJson.small,turn});
+      addMsg('ai',sawJson.reply,{src:sawJson.small?null:sawJson.sources,report:!sawJson.small,canRegenerate:!sawJson.small,turn});
       if(!sawJson.small)saveChatEntry(txt,sawJson.reply,qEl);
       setStreamStatus(sawJson.small?'':'انتهى الرد.');
       return;
@@ -3182,7 +3296,7 @@ async function streamReply(txt,qEl){
     return;
   }
 
-  finalizeStreamBubble(bubble,streamText,{report:true,canRegenerate:true});
+  finalizeStreamBubble(bubble,streamText,{report:true,canRegenerate:true,src:sources});
   if(!sawBroken)saveChatEntry(txt,streamText,qEl);
   setStreamStatus(sawBroken?'انقطع الاتصال قبل اكتمال الرد.':'انتهى الرد.');
   if(replyReadMode()==='after')speakText(streamText);
@@ -3191,9 +3305,9 @@ async function streamReply(txt,qEl){
 /* لا محتوى وصل إطلاقاً ولا رد JSON — يعني chat-stream.php لم يخصم رصيداً بعد
    (الالتزام بالبث لم يحدث)، فالسقوط لـchat.php آمن ولا يخصم مرتين. الرد يبقى
    قيد الوصول بفقاعته وزر إيقافه حتى يكتمل، كما في البث. */
-async function streamFallbackToClassic(bubble,txt,ctl,qEl){
+async function streamFallbackToClassic(bubble,txt,ctl,qEl,why){
   let reply;
-  try{reply=await sendToModel(txt,ctl.signal);}catch(e){reply=localAnswer(txt);}
+  try{reply=await sendToModel(txt,ctl.signal,why);}catch(e){reply=localAnswer(txt);}
   if(ctl.signal.aborted){endStoppedReply(bubble,'',false,qEl);return;}
   if(typeof reply==='string')reply={a:reply,src:null};
   setStreamingUI(false);
@@ -3202,12 +3316,12 @@ async function streamFallbackToClassic(bubble,txt,ctl,qEl){
   addMsg('ai',reply.a,{src:reply.src,report:true,turn:qEl.dataset.turn});
   saveChatEntry(txt,reply.a,qEl);
 }
-/* أُلغي الرد: بزر الإيقاف أو Esc يبقى ما وصل منه في فقاعته، وبتعديل سؤاله
-   أزالت editLastQuestion السؤال وردوده فلا يبقى ما يُعرض. */
+/* أُلغي الرد: بزر الإيقاف أو Esc يبقى ما وصل منه في فقاعته، وبإرسال تعديل سؤاله
+   أزالت confirmInlineEdit ردوده القديمة وجدّدت رقم دورته فلا يبقى ما يُعرض. */
 function endStoppedReply(bubble,text,partial,qEl){
   setStreamingUI(false);
   cancelReadQueue();
-  if(!qEl.isConnected)return;
+  if(!qEl.isConnected||qEl.dataset.turn!==bubble.dataset.turn)return;
   finalizeStreamBubble(bubble,text,{report:partial,canRegenerate:partial});
   setStreamStatus('توقف الرد.');
 }
@@ -3218,6 +3332,7 @@ function updateStreamingBubble(el,text){
 }
 function finalizeStreamBubble(el,text,opts){
   opts=opts||{};
+  text=String(text||'').replace(/\s+$/,'');   // السطر الفارغ الذي يكتبه النموذج قبل علامة الذيل
   const b=el.querySelector('.msg-bubble');
   if(b){
     b.innerHTML=text?mdLite(esc(text)):'<span style="color:var(--muted)">(لم يصل رد، حاول مرة أخرى)</span>';
@@ -3230,6 +3345,7 @@ function finalizeStreamBubble(el,text,opts){
     actions.innerHTML=aiActionsHtml(opts);
     content.appendChild(actions);
   }
+  if(text)renderSources(el,opts.src);
   el.dataset.raw=text;
 }
 function renderSuggestions(bubble,items){
@@ -3285,22 +3401,59 @@ async function regenerateMsg(btn){
   await streamReply(q,prev);
   if(prev.isConnected)maybeSurveyNudge();
 }
-/* تعديل آخر سؤال يسحبه بكل ما يخصه ويعيده لخانة الكتابة، ويعمل ورده قيد الوصول
-   أيضاً فيوقفه. يزيل السؤال وكل رد له من السجل، ويسحبهما من سياق النموذج (hist)
-   ومن المحفوظات، وإلا أجاب وصال عن السؤال المعدّل وهو يرى القديم وجوابه.
-   الرصيد لا يُسترد، كما مع زر الإيقاف: الخادم خصمه حين بدأ يجهّز الرد. */
+/* ---------- تعديل آخر سؤال في مكانه ----------
+   القلم يحوّل فقاعة السؤال إلى خانة تعديل بجانبها ✓ للإرسال و✗ للإلغاء، والرد
+   الجاري يكمل أثناء التعديل. الإلغاء (✗ أو Esc) يعيد السؤال كما كان ويبقى رده.
+   الإرسال (✓ أو Enter) يضع النص الجديد في مكان السؤال بدورة جديدة، ويوقف الرد
+   الجاري ويزيل ردود النص القديم، ويسحبها من سياق النموذج (hist) ومن المحفوظات،
+   ثم يجيب عن النص الجديد. نص لم يتغير كالإلغاء. الرصيد كسؤال جديد، والقديم لا
+   يُسترد لأن الخادم خصمه حين بدأ الرد. */
 function editLastQuestion(btn){
-  const msgEl=btn.closest('.msg');
-  if(!msgEl||!msgEl.classList.contains('msg-editable'))return;
-  const raw=msgEl.dataset.raw||'';
-  msgEl.remove();
-  document.querySelectorAll('#chatBody .msg-ai[data-turn="'+msgEl.dataset.turn+'"]').forEach(m=>m.remove());
+  const q=btn.closest('.msg');
+  if(!q||!q.classList.contains('msg-editable')||q.classList.contains('editing'))return;
+  q.classList.add('editing');
+  const box=document.createElement('div');box.className='msg-editbox';
+  box.innerHTML='<textarea class="msg-edit-input" rows="1" aria-label="عدّل سؤالك"></textarea>'
+    +'<div class="msg-editacts"><button type="button" class="msg-editbtn msg-editno" aria-label="إلغاء التعديل" title="إلغاء"><svg class="ico" aria-hidden="true"><use href="#ic-x"/></svg></button>'
+    +'<button type="button" class="msg-editbtn msg-edityes" aria-label="إرسال التعديل" title="إرسال"><svg class="ico" aria-hidden="true"><use href="#ic-check"/></svg></button></div>';
+  const ta=box.querySelector('textarea');
+  ta.value=q.dataset.raw||'';
+  box.querySelector('.msg-editno').onclick=()=>closeInlineEdit(q);
+  box.querySelector('.msg-edityes').onclick=()=>confirmInlineEdit(q);
+  ta.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();confirmInlineEdit(q);}
+    else if(e.key==='Escape'){e.preventDefault();e.stopPropagation();closeInlineEdit(q);}
+  });
+  ta.addEventListener('input',()=>autoResize(ta));
+  q.querySelector('.msg-bubble').after(box);
+  autoResize(ta);
+  ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);
+}
+function closeInlineEdit(q){
+  q=q||document.querySelector('#chatBody .msg-user.editing');
+  if(!q||!q.classList.contains('editing'))return;
+  const box=q.querySelector('.msg-editbox'),hadFocus=box&&box.contains(document.activeElement);
+  if(box)box.remove();
+  q.classList.remove('editing');
+  const pen=q.querySelector('.msg-edit-btn');if(hadFocus&&pen)pen.focus();
+}
+async function confirmInlineEdit(q){
+  const ta=q.querySelector('.msg-edit-input');if(!ta)return;
+  const txt=ta.value.trim();
+  if(!txt){ta.focus();return;}
+  if(txt===q.dataset.raw){closeInlineEdit(q);return;}
+  if(!smallTalk(txt)&&!canAfford(txt))return;
+  const oldTurn=q.dataset.turn,oldRaw=q.dataset.raw,saved=+q.dataset.saved||0;
+  q.dataset.raw=txt;q.dataset.saved=0;q.dataset.turn=++_turnSeq;
+  q.querySelector('.msg-bubble').innerHTML=esc(txt).replace(/\n/g,'<br>');
+  closeInlineEdit(q);
+  document.querySelectorAll('#chatBody .msg-ai[data-turn="'+oldTurn+'"]').forEach(m=>m.remove());
+  if(!_speakBtn||!_speakBtn.isConnected)cancelReadQueue();   // لا تكمل قراءة رد أُزيل
+  _voiceTurn=false;   // التعديل يُكتب ولا يُملى، فرده كرد أي سؤال مكتوب
   hideTyping();
-  if(_streaming)stopStreaming();
-  retractChatEntries(raw,+msgEl.dataset.saved||0);
-  const inp=document.getElementById('chatInput');
-  if(inp){inp.value=raw;autoResize(inp);inp.focus();}
-  setStreamStatus('عدّل سؤالك ثم أرسله.');
+  if(_streaming){stopStreaming();await _replyDone;}
+  retractChatEntries(oldRaw,saved);
+  await answer(q,txt);
 }
 /* ---------- القراءة الصوتية ----------
    طابور واحد لكل قراءة: رد كامل يُقسَّم جملاً (speakText)، أو جمل تُضاف أثناء
@@ -4943,6 +5096,20 @@ function expStat(icon,tone,num,label){
 /* الأرقام من الخادم لأعضاء الفريق، ومن بيانات المستخدم نفسه لغيرهم.
    قبل هذا كانت البطاقات الأربع تقرأ من التخزين المحلي: رقمان متطابقان
    تحت عنوانين مختلفين، وعدد مستخدمين لا علاقة له بقاعدة البيانات. */
+/* تشخيص المحادثة لمدير النظام: حال قاعدة المعرفة، ومنها تأتي مصادر الإجابات، وصحة
+   الرد المباشر وسبب تعطّله إن تعطّل (chatStreamStats وragKbStats في api/). */
+function paintChatDiag(t){
+  const kb=t.kb||{},s=t.stream||{},hosts=Object.entries(kb.hosts||{});
+  const put=(id,v)=>setTxt(document.getElementById(id),v);
+  put('diagKb',kb.pages?'قاعدة المعرفة: الصفحات '+ar(kb.pages)+'، والجهات '+ar(hosts.length)+'. منها تأتي مصادر الإجابات.'
+    :'قاعدة المعرفة فارغة، فلا تظهر مصادر تحت الإجابات حتى تُعبَّأ.');
+  put('diagHosts',hosts.length?'صفحات كل جهة: '+hosts.slice(0,8).map(([h,n])=>((srcEntity(h)||{}).name||h)+' '+ar(n)).join('، ')+'.':'');
+  const why={network:'انقطاع الاتصال قبل أول كلمة',read:'انقطاع أثناء قراءة الرد',badjson:'رد من الخادم لم تفهمه الصفحة'}[s.fallbackTop];
+  put('diagStream','الرد المباشر (٧ أيام): نجح '+ar(s.ok||0)+'، وتعطّل '+ar(s.fallbacks||0)+(s.fallbacks
+    ?' فأُجيب دفعة واحدة. أكثر الأسباب '+(why||'غير معروف')+'، بعد انتظار '+ar(Math.round((s.fallbackMs||0)/1000))+' ثانية في المتوسط.'
+    :'.'));
+  put('diagProv','لم يرد مزوّد النموذج (٧ أيام): '+ar(s.noProvider||0)+(s.noProvider?'، وفيها أجابت الصفحة من إجاباتها الجاهزة.':'.'));
+}
 async function paintStats(){
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
   const lab=(id,v)=>setTxt(document.getElementById(id+'L'),v);
@@ -4956,6 +5123,7 @@ async function paintStats(){
       set('stUsers',ar(t.users)); lab('stUsers','مستخدم مسجّل');
       set('stTtfb',ar(t.avgTtfb||0));
       set('stTotal',ar(t.avgTotal||0));
+      paintChatDiag(t);
       return;
     }
   }
@@ -4984,7 +5152,7 @@ function lpGet(doc,path){const [s,k]=path.split('.');return doc[s]&&doc[s].f?doc
    assets/sources/<النطاق>.webp يجهّزه tools/source-logo.php، والرقم إصداره:
    ارفعه عند استبدال الملف حتى لا تبقى النسخة القديمة في ذاكرة المتصفح.
    النطاق بلا ملف يظهر برمز عام بنفس المقاس. */
-const SRC_LOGOS={'apd.gov.sa':1,'hrdf.org.sa':1,'hrsd.gov.sa':1,'kscdr.org.sa':1,'moe.gov.sa':1,'moh.gov.sa':1,'my.gov.sa':1};
+const SRC_LOGOS={'apd.gov.sa':1,'hrc.gov.sa':1,'hrdf.org.sa':1,'hrsd.gov.sa':1,'kscdr.org.sa':1,'moe.gov.sa':1,'moh.gov.sa':1,'my.gov.sa':1,'sdb.gov.sa':1};
 function srcLogo(box,domain){
   const d=String(domain||'').trim().toLowerCase().replace(/^www\./,'').split('/')[0];
   const v=Object.prototype.hasOwnProperty.call(SRC_LOGOS,d)&&SRC_LOGOS[d];
@@ -5439,7 +5607,7 @@ async function doReset(){
 function reportMsg(btn){
   const msg=btn.closest('.msg');
   const txt=(msg&&msg.querySelector('.msg-bubble')?msg.querySelector('.msg-bubble').innerText:'').slice(0,300);
-  const quote='بلاغ عن إجابة من «محادثة مع وصال»:\n«'+txt+(txt.length>=300?'…':'')+'»\n\nالخطأ الذي لاحظته: ';
+  const quote='بلاغ عن إجابة من «محادثة مع وصال»:\n«'+txt+(txt.length>=300?'…':'')+'»'+srcText(msg)+'\n\nالخطأ الذي لاحظته: ';
   if(USER){
     go('dashboard');
     setTimeout(()=>{

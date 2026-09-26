@@ -74,11 +74,31 @@ CREATE TABLE IF NOT EXISTS chat_logs (
   ttfb_ms     INT UNSIGNED NULL,       -- زمن أول كلمة (بث فقط)
   total_ms    INT UNSIGNED NULL,
   aborted     TINYINT(1)   NOT NULL DEFAULT 0,
+  fallback    VARCHAR(16)  NULL,       -- وصل chat.php لأن البث تعطّل في المتصفح: network | read | badjson[:الحالة]
+  fallback_ms INT UNSIGNED NULL,       -- انتظار المتصفح قبل تعطّل البث
   created_at  DATETIME     NOT NULL,
   KEY ix_user (user_id),
   KEY ix_created (created_at),
   KEY ix_provider (provider, created_at),
   CONSTRAINT fk_chat_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------------------------
+--  قاعدة المعرفة (RAG): مقاطع الصفحات الرسمية ومتجهاتها
+--  يملؤها tools/rag/ingest-kb.php، ويقرؤها ragRetrieve() في api/rag.php.
+--  source_url هوية الصفحة (إعادة التلقيم تستبدل مقاطعها)، وref_url المرجع
+--  الرسمي الذي يُنسب إليه المقطع تحت الإجابة إن اختلف عنها.
+-- --------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS kb_chunks (
+  id           INT AUTO_INCREMENT PRIMARY KEY,
+  source_url   VARCHAR(500) NOT NULL,
+  ref_url      VARCHAR(500) NULL,
+  source_title VARCHAR(300) NULL,
+  chunk_index  INT          NOT NULL DEFAULT 0,
+  chunk_text   TEXT         NOT NULL,
+  embedding    LONGTEXT     NOT NULL,   -- متجه التضمين JSON
+  created_at   DATETIME     NOT NULL,
+  INDEX (source_url)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------------------------

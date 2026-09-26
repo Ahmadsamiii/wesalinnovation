@@ -225,6 +225,7 @@ switch ($act) {
     /* ==================== الإحصاءات ==================== */
 
     case 'stats': {
+        require_once __DIR__ . '/chat-shared.php';   // chatStreamStats وragKbStats
         $d = db();
         out(['ok' => true, 'stats' => [
             'users'     => (int)$d->query('SELECT COUNT(*) c FROM users')->fetch()['c'],
@@ -245,6 +246,9 @@ switch ($act) {
                                               AND created_at >= (NOW() - INTERVAL 7 DAY)")->fetch()['v'],
             'streamPct' => (int)$d->query("SELECT ROUND(100*AVG(stream)) v FROM chat_logs
                                             WHERE created_at >= (NOW() - INTERVAL 7 DAY)")->fetch()['v'],
+            /* تشخيص المحادثة: صحة البث وحال قاعدة المعرفة (مصادر الإجابات) */
+            'stream'    => chatStreamStats(7),
+            'kb'        => ragKbStats(),
         ]]);
     }
 

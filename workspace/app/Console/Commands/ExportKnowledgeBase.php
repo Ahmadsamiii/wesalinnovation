@@ -11,8 +11,10 @@ use Illuminate\Support\Facades\File;
 
 /**
  * يصدّر المحتوى الصحي المعتمد ملفات JSON بالصيغة التي يقرؤها
- * tools/rag/ingest-kb.php في مستودع المنصة ({url, title, text, ok}): ملف لكل
- * محتوى، ورابطه صفحته العامة المعتمدة التي يستشهد بها المساعد.
+ * tools/rag/ingest-kb.php في مستودع المنصة ({url, ref, title, text, ok}): ملف لكل
+ * محتوى. url صفحته العامة المعتمدة وهي هويته في قاعدة المعرفة، وref مرجعه الرسمي
+ * (source_url) إن وُجد، فتُنسب الإجابة المبنية عليه إلى جهة المرجع تحت الإجابة
+ * (وزارة الصحة مثلاً) لا إلى مساحة العمل.
  */
 #[Signature('content:export-kb {directory : مجلد الإخراج (يُنشأ إن لم يوجد)}')]
 #[Description('تصدير المحتوى الصحي المعتمد لقاعدة معرفة مساعد المنصة')]
@@ -28,12 +30,15 @@ class ExportKnowledgeBase extends Command
         foreach ($published as $content) {
             $text = collect([$content->published_summary, $content->published_body])->filter()->implode("\n\n");
 
-            File::put("{$directory}/wesal-content-{$content->id}.json", json_encode([
+            $ref = (string) $content->source_url;
+
+            File::put("{$directory}/wesal-content-{$content->id}.json", json_encode(array_filter([
                 'url' => route('kb.show', $content),
+                'ref' => preg_match('#^https?://#i', $ref) ? $ref : null,
                 'title' => $content->published_title,
                 'text' => $text,
                 'ok' => true,
-            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+            ], fn ($value) => $value !== null), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
         }
 
         $this->info("صُدّر {$published->count()} محتوى معتمداً إلى {$directory}");

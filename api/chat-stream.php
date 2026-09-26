@@ -40,7 +40,7 @@ $left = $bal['left'];
 session_write_close();
 
 $SYSTEM = chatSystemPrompt($mode);
-[$SYSTEM, ] = chatAugmentWithRag($SYSTEM, $message);
+[$SYSTEM, $ragChunks] = chatAugmentWithRag($SYSTEM, $message);
 
 /* ---------- البث ---------- */
 function sseCommitHeaders(): void {
@@ -57,23 +57,11 @@ function sseEmit(string $event, array $data): void {
     echo 'event: ' . $event . "\ndata: " . json_encode($data, JSON_UNESCAPED_UNICODE) . "\n\n";
     flush();
 }
-/** طول أطول بادئة لاحقة من $s تطابق بداية $marker — يمنع إفلات جزء ناشئ من
- *  العلامة ===ASK3=== لو وصلت مقسومة بين دفعتين قرب حافة نافذة الأمان. */
-function chatTrailingPartialMarker(string $s, string $marker): int {
-    $max = min(strlen($marker) - 1, strlen($s));
-    for ($k = $max; $k > 0; $k--) {
-        if (substr($s, -$k) === substr($marker, 0, $k)) return $k;
-    }
-    return 0;
-}
-
-const ASK3_MARKER = '===ASK3===';
-
 $committedHeaders = false;
 $ttfbMs = null;
-$pending = '';          // مُعلَّق ريثما يُتأكَّد أمانه (تعتيم اسم المزوّد + العلامة)
-$inSuggestions = false; // بعد اكتشاف العلامة: توقف عن delta، اجمع للاقتراحات
-$suggestTail = '';
+$pending = '';          // مُعلَّق ريثما يُتأكَّد أمانه (تعتيم اسم المزوّد + علامات الذيل)
+$inSuggestions = false; // بعد أول علامة ذيل (chatTailStart): توقف عن delta، واجمع الذيل
+$suggestTail = '';      // الذيل من علامته: أرقام المصادر والأسئلة المقترحة
 $fullReply = '';        // النص الخام كاملاً (بلا فصل الذيل) — للتسجيل فقط
 
 $onDelta = function (string $text) use (
@@ -91,12 +79,12 @@ $onDelta = function (string $text) use (
 
     $pending .= $text;
 
-    $markerPos = strpos($pending, ASK3_MARKER);
-    if ($markerPos !== false) {
+    $markerPos = chatTailStart($pending);
+    if ($markerPos !== null) {
         $before = substr($pending, 0, $markerPos);
         if ($before !== '') sseEmit('delta', ['text' => chatScrubReply($before)]);
         $inSuggestions = true;
-        $suggestTail = substr($pending, $markerPos + strlen(ASK3_MARKER));
+        $suggestTail = substr($pending, $markerPos);
         $pending = '';
         return;
     }
@@ -112,7 +100,7 @@ $onDelta = function (string $text) use (
     $rel = ($sp === false) ? $nl : (($nl === false) ? $sp : max($sp, $nl));
     $cut = ($rel === false) ? $windowStart : ($windowStart + $rel + 1);
 
-    $cut -= chatTrailingPartialMarker(substr($pending, 0, $cut), ASK3_MARKER);
+    $cut -= chatTrailingPartialMarker(substr($pending, 0, $cut));
     if ($cut <= 0) return;
 
     $safe = substr($pending, 0, $cut);
@@ -142,14 +130,14 @@ if (!$committedHeaders) {
 /* التزمنا: أنهِ ما تبقى معلَّقاً وأرسل الاقتراحات إن وُجدت */
 if ($pending !== '') { sseEmit('delta', ['text' => chatScrubReply($pending)]); $pending = ''; }
 
-$suggestions = [];
 if ($inSuggestions) {
-    $ex = chatExtractSuggestions(ASK3_MARKER . $suggestTail);
-    $suggestions = $ex['suggestions'];
-    if ($suggestions) sseEmit('suggestions', ['items' => $suggestions]);
+    $ex = chatSplitReply($suggestTail);
+    if ($ex['suggestions']) sseEmit('suggestions', ['items' => $ex['suggestions']]);
+    $sources = chatSources($ragChunks, $ex['cited']);
+    if ($sources) sseEmit('sources', ['items' => $sources]);
 }
 
-$cleanFull = chatExtractSuggestions($fullReply)['reply'] ?: $fullReply;
+$cleanFull = chatSplitReply($fullReply)['reply'] ?: $fullReply;
 chatLogInteraction($u, $message, $cleanFull, $mode, $cost, [
     'model'    => $GLOBALS['ai_last_model'] ?? null,
     'provider' => $providerUsed,

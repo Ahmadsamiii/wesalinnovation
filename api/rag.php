@@ -63,8 +63,9 @@ function ragCosine(array $a, array $b): float
 }
 
 /**
- * أقرب مقاطع قاعدة المعرفة لسؤال المستخدم.
- * @return array<int, array{text:string, url:string, title:?string, score:float}>
+ * أقرب مقاطع قاعدة المعرفة لسؤال المستخدم. ref رابط المرجع الرسمي الذي يُنسب
+ * إليه المقطع إن اختلف عن صفحته (محتوى مساحة العمل الصحي)، وإلا null.
+ * @return array<int, array{text:string, url:string, ref:?string, title:?string, score:float}>
  */
 function ragRetrieve(string $query): array
 {
@@ -72,7 +73,8 @@ function ragRetrieve(string $query): array
         $qVec = ragEmbed($query, 'RETRIEVAL_QUERY');
         if ($qVec === null) return [];
 
-        $rows = db()->query('SELECT chunk_text, source_url, source_title, embedding FROM kb_chunks')->fetchAll();
+        ensureSchema();   // عمود ref_url على قاعدة قديمة، قبل أن يسقط الاستعلام بلا أثر
+        $rows = db()->query('SELECT chunk_text, source_url, ref_url, source_title, embedding FROM kb_chunks')->fetchAll();
         if (!$rows) return [];
 
         $scored = [];
@@ -81,7 +83,7 @@ function ragRetrieve(string $query): array
             if (!is_array($vec)) continue;
             $score = ragCosine($qVec, $vec);
             if ($score >= RAG_MIN_SCORE) {
-                $scored[] = ['text' => $r['chunk_text'], 'url' => $r['source_url'],
+                $scored[] = ['text' => $r['chunk_text'], 'url' => $r['source_url'], 'ref' => $r['ref_url'],
                              'title' => $r['source_title'], 'score' => $score];
             }
         }
@@ -93,13 +95,40 @@ function ragRetrieve(string $query): array
     }
 }
 
-/** يبني كتلة نصية تُلحق بتوجيه النموذج، أو '' إن لم يوجد شيء ذو صلة. */
+/** نطاق الرابط بلا www. — به تُعرَّف الجهة (اسمها وشعارها) في الواجهة. */
+function ragHost(string $url): string
+{
+    $h = strtolower((string) parse_url($url, PHP_URL_HOST));
+    return preg_replace('/^www\./', '', rtrim($h, '.'));
+}
+
+/** يبني كتلة نصية تُلحق بتوجيه النموذج، أو '' إن لم يوجد شيء ذو صلة. المصادر
+ *  مرقّمة بترتيبها في $chunks، ورقمها هو ما يذكره النموذج بعد ===SRC=== (chatSources). */
 function ragContextBlock(array $chunks): string
 {
     if (!$chunks) return '';
-    $out = "\n\nمعلومات مسترجَعة من مصادر رسمية (استخدمها حصراً لأي حقيقة رسمية، واذكر رابط المصدر بالضبط كما ورد):\n";
+    $out = "\n\nمعلومات مسترجَعة من مصادر رسمية مرقّمة (استخدمها حصراً لأي حقيقة رسمية):\n";
     foreach ($chunks as $i => $c) {
-        $out .= ($i + 1) . ". [" . ($c['title'] ?: 'مصدر رسمي') . "](" . $c['url'] . ")\n" . mb_substr($c['text'], 0, 1200) . "\n\n";
+        $host = ragHost((string) (($c['ref'] ?? '') ?: $c['url']));
+        $out .= 'المصدر ' . ($i + 1) . ': ' . ($c['title'] ?: 'مصدر رسمي') . ($host !== '' ? " ($host)" : '') . "\n"
+              . mb_substr($c['text'], 0, 1200) . "\n\n";
     }
     return $out;
+}
+
+/** حال قاعدة المعرفة للوحة الإدارة وصفحة التشخيص: عدد صفحاتها ومقاطعها وجهاتها.
+ *  الجهة نطاق المرجع الرسمي إن وُجد وإلا نطاق الصفحة، كما تظهر تحت الإجابة.
+ *  @return array{pages:int, chunks:int, hosts:array<string,int>} */
+function ragKbStats(): array
+{
+    $rows = db()->query('SELECT source_url, MAX(ref_url) ref, COUNT(*) n FROM kb_chunks GROUP BY source_url')->fetchAll();
+    $hosts = [];
+    $chunks = 0;
+    foreach ($rows as $r) {
+        $h = ragHost((string) ($r['ref'] ?: $r['source_url']));
+        if ($h !== '') $hosts[$h] = ($hosts[$h] ?? 0) + 1;
+        $chunks += (int) $r['n'];
+    }
+    arsort($hosts);
+    return ['pages' => count($rows), 'chunks' => $chunks, 'hosts' => $hosts];
 }

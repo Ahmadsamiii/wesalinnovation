@@ -823,6 +823,7 @@ function ensureSchema(): void {
         db()->exec("CREATE TABLE IF NOT EXISTS kb_chunks (
             id INT AUTO_INCREMENT PRIMARY KEY,
             source_url VARCHAR(500) NOT NULL,
+            ref_url VARCHAR(500) NULL,
             source_title VARCHAR(300) NULL,
             chunk_index INT NOT NULL DEFAULT 0,
             chunk_text TEXT NOT NULL,
@@ -830,6 +831,10 @@ function ensureSchema(): void {
             created_at DATETIME NOT NULL,
             INDEX (source_url)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        /* المرجع الرسمي الذي يُنسب إليه المقطع إن اختلف عن صفحته (مصدر الإجابة) */
+        if (!colExists('kb_chunks', 'ref_url')) {
+            db()->exec("ALTER TABLE kb_chunks ADD COLUMN ref_url VARCHAR(500) NULL AFTER source_url");
+        }
 
         /* قياس زمن الاستجابة (مسار الرد الفوري المتدفق): اسم النموذج/المزوّد
            الفعليَين سجلٌّ تشغيلي داخلي يقرأه الإداري فقط، ولا يخالف قاعدة
@@ -843,6 +848,12 @@ function ensureSchema(): void {
                 ADD COLUMN total_ms  INT UNSIGNED     NULL,
                 ADD COLUMN aborted   TINYINT(1)       NOT NULL DEFAULT 0,
                 ADD INDEX ix_provider (provider, created_at)");
+        }
+        /* سبب وصول السؤال إلى chat.php بعد تعطّل البث في المتصفح، ومدة الانتظار قبله */
+        if (!colExists('chat_logs', 'fallback')) {
+            db()->exec("ALTER TABLE chat_logs
+                ADD COLUMN fallback    VARCHAR(16)  NULL,
+                ADD COLUMN fallback_ms INT UNSIGNED NULL");
         }
 
         migrateSurveys();
