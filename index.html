@@ -3448,6 +3448,8 @@ async function confirmInlineEdit(q){
   q.querySelector('.msg-bubble').innerHTML=esc(txt).replace(/\n/g,'<br>');
   closeInlineEdit(q);
   document.querySelectorAll('#chatBody .msg-ai[data-turn="'+oldTurn+'"]').forEach(m=>m.remove());
+  if(!_speakBtn||!_speakBtn.isConnected)cancelReadQueue();   // لا تكمل قراءة رد أُزيل
+  _voiceTurn=false;   // التعديل يُكتب ولا يُملى، فرده كرد أي سؤال مكتوب
   hideTyping();
   if(_streaming){stopStreaming();await _replyDone;}
   retractChatEntries(oldRaw,saved);

@@ -329,6 +329,29 @@ const texts = h => JSON.stringify(h.map(x => x.text));
     check('لا يظهر رد التحية القديم، ويُجاب النص الجديد', s.users.join('|') === 'ما حقوقي في العمل؟' && s.ais.join('|') === 'رد السؤال بعد التحية' && !s.typing, JSON.stringify(s));
   });
 
+  await scenario('تعديل سؤال أُرسل بالصوت ورده يُقرأ', async () => {
+    const page = await open();
+    // صوت الجهاز بنطق لا ينتهي، فيبقى ما بعد الجملة الأولى في طابور القراءة
+    await page.evaluate(() => {
+      VOICE.srv = false; window.__spoken = [];
+      speechSynthesis.speak = u => { window.__spoken.push(u.text); };
+      speechSynthesis.cancel = () => {};
+    });
+    const voice = () => page.evaluate(() => ({ turn: _voiceTurn, spoken: window.__spoken, queued: _speechQueue.length, speaking: _speaking,
+      ais: [...document.querySelectorAll('#chatBody .msg-ai')].slice(1).map(m => m.dataset.raw) }));
+    await mock(page, { frames: reply('جملة أولى. جملة ثانية. جملة ثالثة.') });
+    await page.evaluate(() => dictated('سؤال بالصوت'));
+    await page.click('#chatSendBtn');
+    await idle(page);
+    let r = await voice();
+    check('سؤال بالصوت: رده يُقرأ وبقيته في الطابور', r.turn && r.spoken.length === 1 && r.queued === 1, JSON.stringify(r));
+    await editTo(page, 'شكرا');
+    await page.waitForTimeout(1000);
+    r = await voice();
+    check('✓ يوقف قراءة الرد الذي أُزيل', r.queued === 0 && !r.speaking && r.ais.length === 1, JSON.stringify(r));
+    check('التعديل مكتوب: رده لا يُقرأ بالصوت', !r.turn && r.spoken.length === 1, JSON.stringify(r));
+  });
+
   await scenario('خانة التعديل: لوحة المفاتيح وحالات خاصة', async () => {
     const page = await open();
     await mock(page, { frames: slow('جزء ', 'وتكملة') });
