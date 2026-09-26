@@ -27,6 +27,8 @@ $bal = chatCheckBalance($u, $ip, $cost);
 $u   = $bal['u'];
 $left = $bal['left'];
 
+session_write_close();   // كما في chat-stream.php: لا يقفل الجلسة طوال انتظار المزوّد
+
 $SYSTEM = chatSystemPrompt($mode);
 [$SYSTEM, ] = chatAugmentWithRag($SYSTEM, $message);
 
