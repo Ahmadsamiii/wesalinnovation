@@ -344,12 +344,6 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 .typing span:nth-child(2){animation-delay:.2s;}
 .typing span:nth-child(3){animation-delay:.4s;}
 .chat-input-area{padding:var(--s4) var(--s5);border-top:1px solid var(--border);background:var(--surface);}
-/* زر إعدادات الوصول العائم (#fab) ثابت أسفل يسار الشاشة، وخانة السؤال تلاصق يسارها
-   في العربية (وفي الإنجليزية حين تختفي القائمة الجانبية)، فكان يغطي زر الإرسال
-   والإيقاف. عمود الزاوية محجوز له بعرضه وهامشه ما دام في الصفحة، فإن أُزيل الزر
-   سقط الحجز وحده بلا فراغ. */
-:root:has(#fab) .chat-input-area{padding-left:calc(var(--s6) + 52px + var(--s2));}
-@media(min-width:769px){:root[dir="ltr"]:has(#fab) .chat-input-area{padding-left:var(--s5);}}
 .chat-chips{display:flex;gap:var(--s2);margin-bottom:var(--s3);flex-wrap:wrap;}
 .chat-chip{padding:var(--s1) var(--s3);border-radius:var(--r-full);font-family:inherit;font-size:var(--f-xs);background:var(--surface-alt);border:1px solid var(--border);color:var(--text);cursor:pointer;transition:all var(--dur) var(--ease);}
 /* على أجهزة اللمس فقط: أهداف لمس أوسع للعناصر الصغيرة، بلا أي تغيير على
@@ -360,6 +354,18 @@ body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
 .msg-user .msg-actions{justify-content:flex-end;}
 .msg-user .msg-edit-btn{display:none;}
 .msg-user.msg-editable .msg-edit-btn{display:inline-flex;}
+/* تعديل السؤال في مكانه (editLastQuestion): خانة مكان الفقاعة وتحتها ✓ و✗ */
+.msg-user.editing .msg-bubble,.msg-user.msg-editable.editing .msg-edit-btn{display:none;}
+.msg-editbox{display:flex;flex-direction:column;gap:var(--s2);width:min(460px,70vw);}
+.msg-edit-input{width:100%;min-height:48px;padding:var(--s3) var(--s4);border:2px solid var(--secondary);border-radius:var(--r-lg);background:var(--surface);color:var(--ink);font-family:inherit;font-size:var(--f-sm);line-height:1.8;resize:none;outline:none;}
+.msg-edit-input:focus-visible{box-shadow:0 0 0 3px rgba(129,79,195,.18);}
+.msg-editacts{display:flex;gap:var(--s2);justify-content:flex-end;}
+.msg-editbtn{width:36px;height:36px;border-radius:50%;border:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:transform var(--dur) var(--ease);}
+.msg-editbtn .ico{width:18px;height:18px;}
+.msg-editbtn:hover{transform:scale(1.06);}
+.msg-editbtn:focus-visible{outline:2px solid var(--secondary);outline-offset:2px;}
+.msg-edityes{background:var(--g-brand);color:#fff;}
+.msg-editno{background:var(--surface-alt);color:var(--text);border:1px solid var(--border);}
 .chat-input-row{display:flex;align-items:flex-end;gap:var(--s2);background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--r-xl);padding:var(--s2);transition:border-color var(--dur) var(--ease);}
 .chat-input-row:focus-within{border-color:var(--secondary);box-shadow:0 0 0 3px rgba(129,79,195,.1);}
 .chat-input-row textarea{flex:1;border:none;background:none;font-family:inherit;font-size:var(--f-sm);color:var(--ink);resize:none;outline:none;padding:var(--s2) var(--s3);min-height:40px;max-height:120px;line-height:1.6;}
@@ -2353,34 +2359,41 @@ function toggleDark(){setC(document.documentElement.getAttribute('data-contrast'
 // Chat
 /* رد واحد قيد الوصول في كل مرة (_streaming)، من إرسال السؤال حتى اكتمال رده
    بأي مسار: البث أو chat.php البديل. _streamAbort متحكّمه، يلغيه زر الإيقاف
-   وEsc وتعديل السؤال. كل سؤال له رقم دورة (data-turn) على فقاعته وعلى كل رد
-   له، فالتعديل يعرف ما يسحبه معه، ولا يظهر رد بعد سحب سؤاله. */
-let _streaming=false, _streamAbort=null, _turnSeq=0;
+   وEsc وإرسال تعديل السؤال، و_replyDone يكتمل حين ينتهي الرد الجاري كله.
+   كل سؤال له رقم دورة (data-turn) على فقاعته وعلى كل رد له، ويتجدد الرقم حين
+   يُرسل تعديله، فأي رد يصل بعدها لرقمه القديم يُهمل: لا يظهر ولا يُحفظ. */
+let _streaming=false, _streamAbort=null, _turnSeq=0, _replyDone=Promise.resolve();
 async function send(){
 if(_streaming){stopStreaming();return;}
 const inp=document.getElementById('chatInput');
 const txt=inp.value.trim();
 if(!txt)return;
-const stReply=smallTalk(txt);
-if(stReply){
-  inp.value='';inp.style.height='auto';
-  const chips0=document.getElementById('chatChips');if(chips0)chips0.style.display='none';
-  const q=addMsg('user',txt);showTyping();
-  setTimeout(()=>{hideTyping();if(q.isConnected)addMsg('ai',stReply,{turn:q.dataset.turn});},450+Math.random()*350);
-  return;
-}
-const st=tokenState(),cost=costOf(txt);
-if(st.left<cost){
-  if(st.guest){requireAuth('chat');return;}
-  addMsg('ai','انتهى رصيد أسئلتك لهذه الفترة، ويتجدّد تلقائياً '+renewIn(st.next)+'.\n\nإذا احتجت رصيداً أكبر لغرض بحثي أو مؤسسي، فراسلنا من صفحة «تواصل معنا».');
-  return;
-}
+closeInlineEdit();   // سؤال جديد: السؤال المفتوح للتعديل لم يعد آخر سؤال
+if(!smallTalk(txt)&&!canAfford(txt))return;
 inp.value='';
 inp.style.height='auto';
 const chips=document.getElementById('chatChips');
 if(chips)chips.style.display='none';
-const q=addMsg('user',txt);
-spendTokens(cost);
+await answer(addMsg('user',txt),txt);
+}
+/* الرصيد قبل السؤال: الزائر يُحوَّل لإنشاء حساب، والمستخدم يعرف متى يتجدد */
+function canAfford(txt){
+const st=tokenState();
+if(st.left>=costOf(txt))return true;
+if(st.guest){requireAuth('chat');return false;}
+addMsg('ai','انتهى رصيد أسئلتك لهذه الفترة، ويتجدّد تلقائياً '+renewIn(st.next)+'.\n\nإذا احتجت رصيداً أكبر لغرض بحثي أو مؤسسي، فراسلنا من صفحة «تواصل معنا».');
+return false;
+}
+/* يجيب عن السؤال في فقاعته q: رد التحية الجاهز، أو يخصم الرصيد ويبث الرد.
+   يناديه الإرسال وإرسال التعديل معاً، فيبقى السلوك واحداً. */
+async function answer(q,txt){
+const stReply=smallTalk(txt);
+if(stReply){
+  const turn=q.dataset.turn;showTyping();
+  setTimeout(()=>{hideTyping();if(q.isConnected&&q.dataset.turn===turn)addMsg('ai',stReply,{turn});},450+Math.random()*350);
+  return;
+}
+spendTokens(costOf(txt));
 await streamReply(txt,q);
 if(q.isConnected)maybeSurveyNudge();
 }
@@ -3129,7 +3142,12 @@ function askQuestion(t){const i=document.getElementById('chatInput');if(i)i.valu
 /* ---------- الرد الفوري المتدفق (chat-stream.php) ----------
    fetch+getReader لا EventSource: نحتاج إرسال جسم POST (السؤال + آخر ٦ أدوار
    من السجل) لا معامِلات رابط — EventSource لا يرسل جسماً أصلاً. */
-async function streamReply(txt,qEl){
+function streamReply(txt,qEl){
+  const p=streamReplyRun(txt,qEl);
+  _replyDone=p.catch(()=>{});
+  return p;
+}
+async function streamReplyRun(txt,qEl){
   const ctl=_streamAbort=new AbortController();
   setStreamingUI(true);
   setStreamStatus('وصال يكتب…');
@@ -3237,12 +3255,12 @@ async function streamFallbackToClassic(bubble,txt,ctl,qEl,why){
   addMsg('ai',reply.a,{src:reply.src,report:true,turn:qEl.dataset.turn});
   saveChatEntry(txt,reply.a,qEl);
 }
-/* أُلغي الرد: بزر الإيقاف أو Esc يبقى ما وصل منه في فقاعته، وبتعديل سؤاله
-   أزالت editLastQuestion السؤال وردوده فلا يبقى ما يُعرض. */
+/* أُلغي الرد: بزر الإيقاف أو Esc يبقى ما وصل منه في فقاعته، وبإرسال تعديل سؤاله
+   أزالت confirmInlineEdit ردوده القديمة وجدّدت رقم دورته فلا يبقى ما يُعرض. */
 function endStoppedReply(bubble,text,partial,qEl){
   setStreamingUI(false);
   cancelReadQueue();
-  if(!qEl.isConnected)return;
+  if(!qEl.isConnected||qEl.dataset.turn!==bubble.dataset.turn)return;
   finalizeStreamBubble(bubble,text,{report:partial,canRegenerate:partial});
   setStreamStatus('توقف الرد.');
 }
@@ -3322,22 +3340,57 @@ async function regenerateMsg(btn){
   await streamReply(q,prev);
   if(prev.isConnected)maybeSurveyNudge();
 }
-/* تعديل آخر سؤال يسحبه بكل ما يخصه ويعيده لخانة الكتابة، ويعمل ورده قيد الوصول
-   أيضاً فيوقفه. يزيل السؤال وكل رد له من السجل، ويسحبهما من سياق النموذج (hist)
-   ومن المحفوظات، وإلا أجاب وصال عن السؤال المعدّل وهو يرى القديم وجوابه.
-   الرصيد لا يُسترد، كما مع زر الإيقاف: الخادم خصمه حين بدأ يجهّز الرد. */
+/* ---------- تعديل آخر سؤال في مكانه ----------
+   القلم يحوّل فقاعة السؤال إلى خانة تعديل بجانبها ✓ للإرسال و✗ للإلغاء، والرد
+   الجاري يكمل أثناء التعديل. الإلغاء (✗ أو Esc) يعيد السؤال كما كان ويبقى رده.
+   الإرسال (✓ أو Enter) يضع النص الجديد في مكان السؤال بدورة جديدة، ويوقف الرد
+   الجاري ويزيل ردود النص القديم، ويسحبها من سياق النموذج (hist) ومن المحفوظات،
+   ثم يجيب عن النص الجديد. نص لم يتغير كالإلغاء. الرصيد كسؤال جديد، والقديم لا
+   يُسترد لأن الخادم خصمه حين بدأ الرد. */
 function editLastQuestion(btn){
-  const msgEl=btn.closest('.msg');
-  if(!msgEl||!msgEl.classList.contains('msg-editable'))return;
-  const raw=msgEl.dataset.raw||'';
-  msgEl.remove();
-  document.querySelectorAll('#chatBody .msg-ai[data-turn="'+msgEl.dataset.turn+'"]').forEach(m=>m.remove());
+  const q=btn.closest('.msg');
+  if(!q||!q.classList.contains('msg-editable')||q.classList.contains('editing'))return;
+  q.classList.add('editing');
+  const box=document.createElement('div');box.className='msg-editbox';
+  box.innerHTML='<textarea class="msg-edit-input" rows="1" aria-label="عدّل سؤالك"></textarea>'
+    +'<div class="msg-editacts"><button type="button" class="msg-editbtn msg-editno" aria-label="إلغاء التعديل" title="إلغاء"><svg class="ico" aria-hidden="true"><use href="#ic-x"/></svg></button>'
+    +'<button type="button" class="msg-editbtn msg-edityes" aria-label="إرسال التعديل" title="إرسال"><svg class="ico" aria-hidden="true"><use href="#ic-check"/></svg></button></div>';
+  const ta=box.querySelector('textarea');
+  ta.value=q.dataset.raw||'';
+  box.querySelector('.msg-editno').onclick=()=>closeInlineEdit(q);
+  box.querySelector('.msg-edityes').onclick=()=>confirmInlineEdit(q);
+  ta.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();confirmInlineEdit(q);}
+    else if(e.key==='Escape'){e.preventDefault();e.stopPropagation();closeInlineEdit(q);}
+  });
+  ta.addEventListener('input',()=>autoResize(ta));
+  q.querySelector('.msg-bubble').after(box);
+  autoResize(ta);
+  ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);
+}
+function closeInlineEdit(q){
+  q=q||document.querySelector('#chatBody .msg-user.editing');
+  if(!q||!q.classList.contains('editing'))return;
+  const box=q.querySelector('.msg-editbox'),hadFocus=box&&box.contains(document.activeElement);
+  if(box)box.remove();
+  q.classList.remove('editing');
+  const pen=q.querySelector('.msg-edit-btn');if(hadFocus&&pen)pen.focus();
+}
+async function confirmInlineEdit(q){
+  const ta=q.querySelector('.msg-edit-input');if(!ta)return;
+  const txt=ta.value.trim();
+  if(!txt){ta.focus();return;}
+  if(txt===q.dataset.raw){closeInlineEdit(q);return;}
+  if(!smallTalk(txt)&&!canAfford(txt))return;
+  const oldTurn=q.dataset.turn,oldRaw=q.dataset.raw,saved=+q.dataset.saved||0;
+  q.dataset.raw=txt;q.dataset.saved=0;q.dataset.turn=++_turnSeq;
+  q.querySelector('.msg-bubble').innerHTML=esc(txt).replace(/\n/g,'<br>');
+  closeInlineEdit(q);
+  document.querySelectorAll('#chatBody .msg-ai[data-turn="'+oldTurn+'"]').forEach(m=>m.remove());
   hideTyping();
-  if(_streaming)stopStreaming();
-  retractChatEntries(raw,+msgEl.dataset.saved||0);
-  const inp=document.getElementById('chatInput');
-  if(inp){inp.value=raw;autoResize(inp);inp.focus();}
-  setStreamStatus('عدّل سؤالك ثم أرسله.');
+  if(_streaming){stopStreaming();await _replyDone;}
+  retractChatEntries(oldRaw,saved);
+  await answer(q,txt);
 }
 /* ---------- القراءة أثناء الكتابة (A11Y.readMode==='while') ----------
    تبدأ قراءة أول جملة تكتمل بدل انتظار الرد كاملاً، وتُشغَّل الجمل تباعاً عبر
