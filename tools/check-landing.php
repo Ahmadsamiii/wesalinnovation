@@ -15,6 +15,8 @@
  *    - شعارات «مصادر البيانات»: لكل نطاق في SRC_LOGOS ملف بمقاس
  *      tools/source-logo.php ولا ملف بلا نطاق، وكل بطاقة ثابتة تعرض شعار نطاقها
  *      أو الرمز العام
+ *    - روابط البطاقات (data-lph): تأتي من حقل نطاق، وكل بطاقة ثابتة رابطها
+ *      https:// ونطاقها، ويفتح نافذة جديدة بتنبيه قارئ الشاشة من newTabHint()
  *  لا يحتاج قاعدة بيانات ولا إعدادات.
  * ========================================================================== */
 
@@ -164,6 +166,42 @@ foreach (landingSchema() as $sec) {
             } elseif ($img->length || !preg_match('/\bis-empty\b/', $s->item(0)->getAttribute('class'))
                       || !$xp->query('.//*[local-name()="use"][@href="#ic-landmark"]', $s->item(0))->length) {
                 bad("$key.{$d['id']}: «{$dom}» بلا ملف شعار، فيجب أن تعرض البطاقة الرمز العام");
+            }
+        }
+    }
+}
+
+echo "روابط البطاقات:\n";
+/* data-lph: البطاقة رابط لموقع جهتها، ونصه كما تكتبه srcHref() في الصفحة */
+$hint = preg_match("/function newTabHint\(lang\)\{return lang==='en'\?'[^']*':'([^']+)';\}/", $html, $m) ? $m[1] : null;
+if ($hint === null) bad('newTabHint() غير موجودة في index.html بالصيغة المتوقعة');
+foreach (landingSchema() as $sec) {
+    foreach ($sec['lists'] as $ld) {
+        $key = $sec['id'] . '.' . $ld['k'];
+        $box = live($xp, "//*[@data-lp-list='$key']");
+        $tpl = count($box) === 1 ? $xp->query('./template', $box[0]) : null;
+        $link = $tpl && $tpl->length ? $xp->query('.//*[@data-lph]', $tpl->item(0)) : null;
+        if (!$link || !$link->length) continue;
+        $link = $link->item(0);
+        $fk = $link->getAttribute('data-lph');
+        if (!array_filter($ld['fields'], fn($fd) => $fd['k'] === $fk && $fd['t'] === 'domain')) {
+            bad("$key: data-lph=\"$fk\" ليس حقل نطاق في السجل");
+            continue;
+        }
+        $newTab = fn(DOMElement $a) => $a->nodeName === 'a' && $a->getAttribute('target') === '_blank'
+            && preg_match('/\bnoopener\b/', $a->getAttribute('rel')) && $xp->query('.//*[contains(concat(" ", @class, " "), " sr-only ")]', $a)->length === 1;
+        if (!$newTab($link)) bad("$key: رابط القالب يحتاج <a target=\"_blank\" rel=\"noopener\"> وفيه span.sr-only لتنبيه النافذة الجديدة");
+        $items = $xp->query('./*[@data-lp-id]', $box[0]);
+        if ($items->length !== count($ld['items'])) continue;   // الترتيب أُبلغ عنه أعلاه
+        foreach ($ld['items'] as $i => $d) {
+            $a = $xp->query('.//*[@data-lph]', $items->item($i));
+            if ($a->length !== 1) { bad("$key.{$d['id']}: لا يوجد رابط data-lph"); continue; }
+            $a = $a->item(0);
+            $want = 'https://' . trim($d['f'][$fk]['v'] ?? '');
+            if ($a->getAttribute('href') !== $want) bad("$key.{$d['id']}: الرابط «" . $a->getAttribute('href') . "» ≠ «{$want}»");
+            if (!$newTab($a)) bad("$key.{$d['id']}: الرابط يحتاج target=\"_blank\" rel=\"noopener\" وspan.sr-only كما في القالب");
+            elseif ($hint !== null && norm($xp->query('.//*[contains(concat(" ", @class, " "), " sr-only ")]', $a)->item(0)->textContent) !== norm($hint)) {
+                bad("$key.{$d['id']}: تنبيه النافذة الجديدة ليس «{$hint}» كما في newTabHint()");
             }
         }
     }
