@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS users (
   name_en     VARCHAR(80)  NULL,                     -- الاسم بالإنجليزية
   dob         DATE         NULL,                     -- تاريخ الميلاد
   email       VARCHAR(120) NOT NULL,
-  phone       VARCHAR(20)  NOT NULL,                 -- بصيغة 05XXXXXXXX
+  phone       VARCHAR(20)  NULL,                     -- بصيغة 05XXXXXXXX. يشترطه التسجيل، ويقبل الفراغ حساب انضم من مساحة العمل
   pref        ENUM('simple','detailed','voice','visual') NOT NULL DEFAULT 'simple',
   pass_hash   VARCHAR(255) NOT NULL,                 -- password_hash() — لا تخزّن كلمة المرور أبداً
   role        ENUM('user','reviewer','mod','admin') NOT NULL DEFAULT 'user',
@@ -426,4 +426,22 @@ CREATE TABLE IF NOT EXISTS auth_sessions (
   UNIQUE KEY uq_token (token_hash),
   KEY ix_user (user_id, ended_at),
   KEY ix_ended (ended_at, seen_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- سجل ربط حسابات مساحة العمل بحسابات المنصة (أداة platform:link-accounts في workspace/).
+-- كل صف أثر ربط واحد بدفعته، وبه يمكن التراجع عن الدفعة.
+CREATE TABLE IF NOT EXISTS account_links (
+  id                INT AUTO_INCREMENT PRIMARY KEY,
+  batch             CHAR(12)     NOT NULL,
+  workspace_user_id INT UNSIGNED NOT NULL,
+  platform_user_id  INT          NOT NULL,
+  action            ENUM('linked','created') NOT NULL,
+  prev_role         VARCHAR(16)  NULL,
+  prev_org_role     VARCHAR(30)  NULL,
+  prev_status       VARCHAR(16)  NULL,
+  created_at        DATETIME     NOT NULL,
+  reverted_at       DATETIME     NULL,
+  UNIQUE KEY uq_ws (workspace_user_id),
+  UNIQUE KEY uq_pl (platform_user_id),
+  KEY ix_batch (batch)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

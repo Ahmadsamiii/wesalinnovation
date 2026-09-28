@@ -901,6 +901,29 @@ function ensureSchema(): void {
         }
         ensureAuthTable();
 
+        /* الجوال قابل للفراغ: حسابات مساحة العمل التي تنضم إلى المنصة قد لا يكون لها جوال. التسجيل
+           يبقى يشترطه (auth.php register) والفرادة تبقى (MySQL يقبل أكثر من NULL في مفتاح فريد). */
+        if (!colNullable('users', 'phone')) {
+            db()->exec("ALTER TABLE users MODIFY COLUMN phone VARCHAR(20) NULL");
+        }
+        /* سجل ربط حسابات مساحة العمل بحسابات المنصة (أداة platform:link-accounts في workspace/).
+           كل صف أثر ربط واحد بدفعته، وبه يمكن التراجع عن الدفعة. */
+        db()->exec("CREATE TABLE IF NOT EXISTS account_links (
+            id                INT AUTO_INCREMENT PRIMARY KEY,
+            batch             CHAR(12)     NOT NULL,
+            workspace_user_id INT UNSIGNED NOT NULL,
+            platform_user_id  INT          NOT NULL,
+            action            ENUM('linked','created') NOT NULL,
+            prev_role         VARCHAR(16)  NULL,
+            prev_org_role     VARCHAR(30)  NULL,
+            prev_status       VARCHAR(16)  NULL,
+            created_at        DATETIME     NOT NULL,
+            reverted_at       DATETIME     NULL,
+            UNIQUE KEY uq_ws (workspace_user_id),
+            UNIQUE KEY uq_pl (platform_user_id),
+            KEY ix_batch (batch)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
         migrateSurveys();
         ensureRateTable();
     } catch (Throwable $e) {
