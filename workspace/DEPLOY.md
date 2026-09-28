@@ -234,7 +234,8 @@ WORKSPACE_CANONICAL_STATUS=302
 5. **ثم مساحة العمل:** في `.env` هنا `UNIFIED_AUTH=true`، و`UNIFIED_LOGIN_URL` بعنوان شاشة
    الدخول (`https://wesalinnovation.sa/login`)، و`WORKSPACE_HOME_URL` بعنوان الموقع، ثم
    `bash workspace/deploy.sh`. يُسجَّل كل من في مساحة العمل خروجه مرة واحدة ويدخل من شاشة
-   المنصة.
+   المنصة. رابط «مساعد وصال» في القائمتين يقرأ `UNIFIED_CHAT_URL` (الافتراضي
+   `https://wesalinnovation.sa/chat`، وهو ثابت قبل التبديل وبعده).
 
 الترتيب في ٤ و٥ ضروري: تشغيل مساحة العمل قبل المنصة يحوّل الجميع إلى شاشة دخول لا تضع
 الكوكي. **الرجوع بالعكس:** أطفئ `UNIFIED_AUTH` هنا وانشر، فيعود الدخول المحلي بكلمات المرور
