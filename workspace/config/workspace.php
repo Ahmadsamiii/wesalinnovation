@@ -29,4 +29,21 @@ return [
 
     'invoice_payment_terms_days' => (int) env('INVOICE_PAYMENT_TERMS_DAYS', 30),
 
+    /*
+    |--------------------------------------------------------------------------
+    | الدخول الموحد مع المنصة العامة
+    |--------------------------------------------------------------------------
+    | true: الحساب والجلسة والدور من المنصة (App\Support\PlatformSession). الدخول
+    | من شاشة واحدة، والخروج أو الإيقاف أو الخمول في أحد النظامين يُخرج الآخر.
+    | يحتاج قاعدة المنصة (PLATFORM_DB_*) وحسابات مربوطة بأداة الربط. مطفأً (الافتراضي)
+    | يبقى الدخول المحلي بكلمة مرور مساحة العمل كما كان.
+    */
+    'unified_auth' => (bool) env('UNIFIED_AUTH', false),
+    // اسم كوكي الجلسة ثابت في عقد المنصة (api/session-lib.php)، فلا يُضبط من البيئة.
+    'auth_cookie' => 'wesal_auth',
+    'auth_cookie_domain' => env('UNIFIED_AUTH_COOKIE_DOMAIN'),
+    'login_url' => env('UNIFIED_LOGIN_URL', 'https://wesalinnovation.sa/login'),
+    'home_url' => env('WORKSPACE_HOME_URL', '/'),
+    'session_grace_seconds' => 120,
+
 ];

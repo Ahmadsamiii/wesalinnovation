@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Support\PlatformSession;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -44,12 +45,19 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        $unified = PlatformSession::enabled();
+
+        // الدخول الموحد: الخروج ينهي صف الجلسة في المنصة فيخرج منها أيضاً
+        if ($unified) {
+            PlatformSession::endFromRequest($request, 'logout');
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
 
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return $unified ? redirect()->away(config('workspace.home_url')) : redirect('/');
     }
 }

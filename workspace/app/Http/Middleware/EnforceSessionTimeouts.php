@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Enums\AuditAction;
 use App\Models\AuditLog;
 use App\Models\User;
+use App\Support\PlatformSession;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,6 +26,12 @@ class EnforceSessionTimeouts
 
     public function handle(Request $request, Closure $next): Response
     {
+        // الدخول الموحد: صف الجلسة في المنصة هو المرجع للمهلتين، وقد فحصه الحارس في هذا
+        // الطلب. فإن تعذّر الوصول إليه (لم يضع الحارس العلامة) تبقى القواعد المحلية أدناه.
+        if (PlatformSession::enabled() && $request->attributes->get('platform_session_checked')) {
+            return $next($request);
+        }
+
         $user = $request->user();
 
         if (! $user instanceof User) {

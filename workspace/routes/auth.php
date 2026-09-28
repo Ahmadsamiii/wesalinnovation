@@ -15,30 +15,38 @@ use Illuminate\Support\Facades\Route;
 /* لا تسجيل عام: هذا نظام داخلي بحسابات يُنشئها مدير النظام فقط (انضمام
    بدعوة، القسم 4.3 من الوثيقة التنفيذية) — لا مسار تسجيل ذاتي مطلقاً. */
 Route::middleware('guest')->group(function () {
+    /* مع الدخول الموحد (UNIFIED_AUTH) تنتقل هذه المسارات إلى المنصة: الحساب وكلمة
+       المرور هناك (platform.credentials). مطفأً يبقى كل شيء كما كان. */
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
+        ->middleware('platform.credentials')
         ->name('login');
 
-    Route::post('login', [AuthenticatedSessionController::class, 'store']);
+    Route::post('login', [AuthenticatedSessionController::class, 'store'])
+        ->middleware('platform.credentials');
 
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
+        ->middleware('platform.credentials')
         ->name('password.request');
 
     Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
-        ->middleware('throttle:6,1')
+        ->middleware(['platform.credentials', 'throttle:6,1'])
         ->name('password.email');
 
     Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
+        ->middleware('platform.credentials')
         ->name('password.reset');
 
     Route::post('reset-password', [NewPasswordController::class, 'store'])
+        ->middleware('platform.credentials')
         ->name('password.store');
 
     /* قبول الدعوة التي يرسلها مدير النظام — الطريق الوحيد لتفعيل حساب جديد. */
     Route::get('invitation/{user}', [InvitationController::class, 'show'])
+        ->middleware('platform.credentials')
         ->name('invitation.show');
 
     Route::post('invitation/{user}', [InvitationController::class, 'store'])
-        ->middleware('throttle:10,1')
+        ->middleware(['platform.credentials', 'throttle:10,1'])
         ->name('invitation.store');
 });
 
@@ -59,7 +67,9 @@ Route::middleware('auth')->group(function () {
 
     Route::post('confirm-password', [ConfirmablePasswordController::class, 'store']);
 
-    Route::put('password', [PasswordController::class, 'update'])->name('password.update');
+    Route::put('password', [PasswordController::class, 'update'])
+        ->middleware('platform.credentials:profile')
+        ->name('password.update');
 
     /* عدّاد الخمول في الواجهة: نبضة عند النشاط، وخروج حين ينتهي العدّ التنازلي. */
     Route::post('session/heartbeat', [SessionActivityController::class, 'heartbeat'])
