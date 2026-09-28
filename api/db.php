@@ -468,7 +468,15 @@ function migrateSurveys(): void {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
     if ((int)(db()->query('SELECT COUNT(*) c FROM surveys')->fetch()['c'] ?? 0) === 0) {
-        seedPlatformSurveyAndMigrateLegacyData();
+        // البذر كله أو لا شيء: عطل في منتصفه لا يترك استبياناً بلا أسئلة، فيُعاد البذر في الطلب التالي
+        db()->beginTransaction();
+        try {
+            seedPlatformSurveyAndMigrateLegacyData();
+            db()->commit();
+        } catch (Throwable $e) {
+            if (db()->inTransaction()) db()->rollBack();
+            throw $e;
+        }
     }
 }
 
