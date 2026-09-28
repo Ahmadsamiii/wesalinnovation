@@ -205,15 +205,17 @@ function enforceUnifiedSession(): string {
             return 'gone';
         }
     } elseif ($row === null || $row['ended_at'] !== null) {
-        if ($row !== null) {
-            // انتهت من مكان آخر (خروج أو إيقاف أو تغيير كلمة المرور): تنتهي هنا أيضاً
+        if ($row !== null || !empty($_SESSION['auth_sid'])) {
+            // انتهت من مكان آخر (خروج أو إيقاف أو تغيير كلمة المرور): تنتهي هنا أيضاً. الكوكي
+            // الغائب مع جلسة سبق أن ارتبطت بصف (auth_sid) هو خروج من مساحة العمل الذي يمسحه من
+            // المتصفح، لا جلسة قديمة تُرحَّل: لو أُنشئ لها صف جديد لبقي الدخول بعد الخروج.
             $_SESSION = [];
             session_regenerate_id(true);
-            authCookieClear();
+            if ($row !== null) authCookieClear();
             header('X-Session-Ended: gone');
             return 'gone';
         }
-        // جلسة بلا صف: تُنشأ لها بأوقاتها القائمة فلا يتغير عليها شيء
+        // جلسة سبقت التشغيل ولم ترتبط بصف قط: تُنشأ لها بأوقاتها القائمة فلا يتغير عليها شيء
         $authAt = (int) ($_SESSION['auth_at'] ?? $now);
         $seenAt = (int) ($_SESSION['seen_at'] ?? $now);
         authSessionCreate((int) $_SESSION['uid'], (string) ($_SESSION['role'] ?? 'user'), !empty($_SESSION['org']), $authAt, $seenAt);

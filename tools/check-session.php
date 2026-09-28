@@ -23,6 +23,9 @@ if (!file_exists($cfg)) {
 }
 
 require_once __DIR__ . '/../api/db.php';
+/* هذا الفحص للمسار القديم (جلسة PHP وحدها) بحسابات وهمية. المفتاح UNIFIED_SESSION لا يغيّره:
+   الجلسة الموحدة لها فحصها في tools/check-auth-session.php. */
+$GLOBALS['WESAL_UNIFIED_OVERRIDE'] = false;
 
 $fails = 0;
 function check(string $label, bool $ok): void {

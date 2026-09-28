@@ -196,6 +196,15 @@ $other = authRowById((function () use ($uUser) { $a = $_SESSION; $_COOKIE_SAVE =
 authSessionsRevoke($uUser, 'password', (int) $other['id']);
 check('تغيير كلمة المرور ينهي بقية الجلسات ويُبقي الجلسة الحالية', authRowById((int) $other['id'])['ended_at'] === null && authRowById($keep)['ended_at'] !== null);
 
+// خرج من مساحة العمل: أُنهي الصف ومُسح الكوكي من المتصفح، وجلسة PHP هنا ما زالت حية
+$r = login($uUser);
+authSessionEnd((int) $r['id'], 'logout');
+unset($_COOKIE[AUTH_COOKIE]);
+$live = fn() => count(array_filter(rowsOf($uUser), fn($x) => $x['ended_at'] === null));
+$liveBefore = $live();
+check('الكوكي الممسوح مع جلسة PHP كانت مرتبطة بصف: تنتهي ولا يُنشأ لها صف جديد (لا دخول بعد الخروج)',
+      req() === 'gone' && empty($_SESSION['uid']) && $live() === $liveBefore);
+
 $uSus = mkUser('user');
 $r = login($uSus);
 db()->prepare("UPDATE users SET status='suspended' WHERE id=?")->execute([$uSus]);
