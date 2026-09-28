@@ -15,7 +15,8 @@ use Illuminate\View\View;
 
 /**
  * «طلبات التوظيف»: مسؤول الفريق يطلب بمبرراته، والمدير التنفيذي يقرّر، ثم
- * يُغلق الطلب بشغل الوظيفة أو إلغائه — وكل خطوة في سجل التدقيق.
+ * يُغلق الطلب بشغل الوظيفة أو إلغائه، وكل خطوة في سجل التدقيق. مدير الموارد
+ * البشرية يرى كل الطلبات ويغلقها بالشغل أو الإلغاء.
  */
 class HiringRequestController extends Controller
 {
@@ -26,18 +27,24 @@ class HiringRequestController extends Controller
         $user = $request->user();
         $filters = $request->validate(['status' => ['nullable', Rule::enum(HiringRequestStatus::class)]]);
 
+        // الموارد البشرية تتابع شغل الوظائف، فالمعتمَد عندها قبل المنتظر للقرار.
+        $firstStatus = $user->hasRole('hr') ? HiringRequestStatus::Approved : HiringRequestStatus::Pending;
+        $secondStatus = $user->hasRole('hr') ? HiringRequestStatus::Pending : HiringRequestStatus::Approved;
+
         return view('hiring-requests.index', [
             'hiringRequests' => HiringRequest::query()
                 ->visibleTo($user)
                 ->with(['requester', 'project'])
                 ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
-                ->orderByRaw('case status when ? then 0 when ? then 1 else 2 end', [HiringRequestStatus::Pending->value, HiringRequestStatus::Approved->value])
+                ->orderByRaw('case status when ? then 0 when ? then 1 else 2 end', [$firstStatus->value, $secondStatus->value])
                 ->latest('id')
                 ->paginate(20)
                 ->withQueryString(),
             'counts' => HiringRequest::query()->visibleTo($user)->toBase()->groupBy('status')->selectRaw('status, count(*) as total')->pluck('total', 'status'),
             'filters' => $filters,
             'isApprover' => $user->hasRole('executive'),
+            'seesAll' => $user->hasAnyRole(HiringRequest::SEES_ALL_ROLES),
+            'isHr' => $user->hasRole('hr'),
         ]);
     }
 

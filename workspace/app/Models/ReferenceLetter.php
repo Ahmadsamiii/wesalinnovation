@@ -21,6 +21,13 @@ class ReferenceLetter extends Model
     use HasFactory, HasVerificationCode;
 
     /**
+     * أدوار ترى كل الطلبات. غيرها يرى طلباته وحدها.
+     *
+     * @var list<string>
+     */
+    public const SEES_ALL_ROLES = ['executive', 'hr'];
+
+    /**
      * @var array<string, mixed>
      */
     protected $attributes = [
@@ -60,9 +67,29 @@ class ReferenceLetter extends Model
      */
     public function scopeVisibleTo(Builder $query, User $user): void
     {
-        if (! $user->hasRole('executive')) {
+        if (! $user->hasAnyRole(self::SEES_ALL_ROLES)) {
             $query->where('requester_id', $user->id);
         }
+    }
+
+    /**
+     * اسم من يعتمد الإفادات الآن: مدير الموارد البشرية إن وُجد حساب نشط له،
+     * وإلا المدير التنفيذي. إفادة مدير الموارد نفسه يعتمدها التنفيذي دائماً.
+     */
+    public static function approverLabel(?User $requester = null): string
+    {
+        $hrDecides = User::hasActiveHr() && ! $requester?->hasRole('hr');
+
+        return config($hrDecides ? 'roles.hr.label' : 'roles.executive.label');
+    }
+
+    /**
+     * من يصحح البيانات الوظيفية التي تُكتب منها الإفادة: مدير الموارد البشرية
+     * إن وُجد حساب نشط له، وإلا مدير النظام.
+     */
+    public static function profileOwnerLabel(): string
+    {
+        return config(User::hasActiveHr() ? 'roles.hr.label' : 'roles.sysadmin.label');
     }
 
     /**

@@ -2,9 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Enums\AccountStatus;
 use App\Models\User;
+use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class DashboardRoleAccessTest extends TestCase
@@ -78,12 +81,62 @@ class DashboardRoleAccessTest extends TestCase
         $response->assertDontSee('فواتيري');
     }
 
-    public function test_all_seven_roles_from_the_spec_exist_and_are_seeded(): void
+    public function test_all_nine_roles_exist_and_are_seeded(): void
     {
-        $expected = ['executive', 'pm', 'finance', 'sysadmin', 'medical', 'team_member', 'client'];
+        $expected = ['executive', 'pm', 'finance', 'sysadmin', 'medical', 'hr', 'crm', 'team_member', 'client'];
+
+        $this->assertSame($expected, array_keys(config('roles')));
 
         foreach ($expected as $role) {
             $this->assertDatabaseHas('roles', ['name' => $role]);
+        }
+    }
+
+    public function test_demo_seed_creates_a_signable_account_for_every_role_including_hr_and_crm(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+
+        foreach (array_keys(config('roles')) as $role) {
+            $user = User::firstWhere('email', $role.'@wesalinnovation.sa');
+
+            $this->assertNotNull($user, $role);
+            $this->assertTrue($user->hasRole($role), $role);
+            $this->assertTrue(Hash::check('password', $user->password), $role);
+            $this->assertTrue($user->status() === AccountStatus::Active, $role);
+        }
+
+        $this->assertSame('مدير الموارد البشرية', User::firstWhere('email', 'hr@wesalinnovation.sa')->roleLabel());
+        $this->assertSame('مدير علاقات العملاء', User::firstWhere('email', 'crm@wesalinnovation.sa')->roleLabel());
+        $this->assertTrue(User::hasActiveHr());
+    }
+
+    public function test_hr_and_crm_land_on_their_first_tab(): void
+    {
+        $this->actingAs(User::factory()->role('hr')->create())->get('/dashboard')->assertRedirect(route('hr.employees'));
+        $this->actingAs(User::factory()->role('crm')->create())->get('/dashboard')->assertRedirect(route('crm.clients'));
+    }
+
+    public function test_hr_and_crm_see_their_own_tabs_and_not_each_others(): void
+    {
+        $hr = $this->actingAs(User::factory()->role('hr')->create())->followingRedirects()->get('/dashboard');
+
+        $hr->assertOk()->assertSee('مدير الموارد البشرية');
+        foreach (config('roles.hr.tabs') as $tab) {
+            $hr->assertSee($tab['label']);
+        }
+        foreach (array_keys(config('roles.crm.tabs')) as $key) {
+            $hr->assertDontSee('data-tab="'.$key.'"', false);
+        }
+        $hr->assertDontSee('الاعتمادات المالية')->assertDontSee('فواتيري');
+
+        $crm = $this->actingAs(User::factory()->role('crm')->create())->followingRedirects()->get('/dashboard');
+
+        $crm->assertOk()->assertSee('مدير علاقات العملاء');
+        foreach (config('roles.crm.tabs') as $tab) {
+            $crm->assertSee($tab['label']);
+        }
+        foreach (['الموظفون', 'طلبات التوظيف', 'الإفادات الوظيفية', 'الاعتمادات المالية'] as $label) {
+            $crm->assertDontSee($label);
         }
     }
 

@@ -56,6 +56,8 @@ require_once __DIR__ . '/config.php';
    تعديل بعد أي ترقية تضيف إعداداً جديداً. الشرح الكامل في config.example.php. */
 foreach ([
     'APP_DEBUG'              => false,
+    'UNIFIED_SESSION'        => false,
+    'CHAT_URL'               => defined('SITE_URL') ? SITE_URL : '',
     'GUEST_LIMIT'            => 5,
     'USER_TOKENS'            => 30,
     'RENEW_HOURS'            => 6,
@@ -110,6 +112,7 @@ session_set_cookie_params([
     'samesite' => 'Lax',
     'secure'   => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
 ]);
+require_once __DIR__ . '/session-lib.php';   // الجلسة الموحدة مع مساحة العمل (مطفأة افتراضياً)
 session_start();
 
 /* ---------- الخروج التلقائي: مهلة الخمول والحد الأقصى للجلسة ----------
@@ -125,9 +128,10 @@ session_start();
 const STAFF_ROLES    = ['admin', 'mod', 'reviewer'];
 const IDLE_GRACE_SEC = 120;
 
-/** مهلة الخمول والحد الأقصى بالثواني. فريق المنصة يرى بيانات كل المستخدمين فمهلته أقصر. */
-function sessionLimits(string $role): array {
-    $staff = in_array($role, STAFF_ROLES, true);
+/** مهلة الخمول والحد الأقصى بالثواني. فريق المنصة يرى بيانات كل المستخدمين فمهلته أقصر،
+ *  ومثله كل صاحب دور في مساحة العمل ($org): تلك الأدوار تصل إلى عقود وفواتير وبيانات موظفين. */
+function sessionLimits(string $role, bool $org = false): array {
+    $staff = $org || in_array($role, STAFF_ROLES, true);
     return [
         'idle' => ($staff ? IDLE_MINUTES_STAFF : IDLE_MINUTES_USER) * 60,
         'max'  => ($staff ? SESSION_MAX_HOURS_STAFF : SESSION_MAX_HOURS_USER) * 3600,
@@ -135,11 +139,21 @@ function sessionLimits(string $role): array {
 }
 
 /** بداية جلسة حساب: معرّف جديد (ضد تثبيت الجلسة) وبداية العدّ للمهلتين */
-function startAuthSession(int $uid, string $role): void {
+function startAuthSession(int $uid, string $role, ?string $orgRole = null): void {
     session_regenerate_id(true);
     $_SESSION['uid']     = $uid;
     $_SESSION['role']    = $role;
+    $_SESSION['org']     = ($orgRole !== null && $orgRole !== '') ? 1 : 0;
     $_SESSION['auth_at'] = $_SESSION['seen_at'] = time();
+    if (unifiedSession()) {
+        try {
+            // دخول جديد في متصفح فيه جلسة سابقة يُنهي الصف السابق، فلا يبقى حياً بلا صاحب
+            if ($prev = authRowFromCookie()) authSessionEnd((int) $prev['id'], 'replaced');
+            authSessionCreate($uid, $role, !empty($_SESSION['org']), $_SESSION['auth_at'], $_SESSION['seen_at']);
+        } catch (Throwable $e) {
+            error_log('WESAL_AUTH_START_FAIL: ' . $e->getMessage());   // الدخول يكمل بجلسة PHP وحدها
+        }
+    }
 }
 
 /** إنهاء جلسة الحساب آلياً ($why: idle أو max). خروج حسابات الفريق يُسجَّل في سجل العمليات. */
@@ -154,12 +168,32 @@ function endAuthSession(string $why): void {
                 audit($u, 'auto_logout', $u['email'], $why === 'idle' ? 'بعد مدة دون نشاط' : 'بلغت الجلسة أقصى مدة لها');
         } catch (Throwable $e) { /* السجل لا يوقف الخروج */ }
     }
+    if (unifiedSession()) {
+        try {
+            if (!empty($_SESSION['auth_sid'])) authSessionEnd((int) $_SESSION['auth_sid'], $why);
+        } catch (Throwable $e) { error_log('WESAL_AUTH_END_FAIL: ' . $e->getMessage()); }
+        if (isset($_COOKIE[AUTH_COOKIE])) authCookieClear();
+    }
     $_SESSION = [];
     session_regenerate_id(true);
 }
 
-/** يعيد سبب إنهاء الجلسة في هذا الطلب (idle أو max أو gone)، أو '' إن بقيت. يفحصه tools/check-session.php. */
+/** يعيد سبب إنهاء الجلسة في هذا الطلب (idle أو max أو gone)، أو '' إن بقيت. يفحصه tools/check-session.php.
+ *  مع الجلسة الموحدة (session-lib.php) الصف في auth_sessions هو المرجع، وعطل قاعدة البيانات
+ *  فيه يعيد الطلب إلى المسار القديم بدل أن يُخرج الجميع. */
 function enforceSessionTimeouts(): string {
+    if (unifiedSession()) {
+        try {
+            return enforceUnifiedSession();
+        } catch (Throwable $e) {
+            error_log('WESAL_UNIFIED_SESSION_FAIL: ' . $e->getMessage());
+        }
+    }
+    return enforceLegacySession();
+}
+
+/** المسار الأصلي: جلسة PHP وحدها تحمل الوقتين */
+function enforceLegacySession(): string {
     if (empty($_SESSION['uid'])) {
         // صفحة ما زالت تعرض حساباً لم تعد له جلسة هنا: انتهت، أو خرج صاحبها من مكان آخر
         if (empty($_SERVER['HTTP_X_WESAL_USER'])) return '';
@@ -167,7 +201,7 @@ function enforceSessionTimeouts(): string {
         return 'gone';
     }
     $now  = time();
-    $lim  = sessionLimits((string)($_SESSION['role'] ?? 'user'));
+    $lim  = sessionLimits((string)($_SESSION['role'] ?? 'user'), !empty($_SESSION['org']));
     // جلسة فُتحت قبل هذه الميزة: يبدأ عدّها من الآن
     $seen = (int)($_SESSION['seen_at'] ?? $now);
     $auth = (int)($_SESSION['auth_at'] ?? $now);
@@ -434,7 +468,15 @@ function migrateSurveys(): void {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
     if ((int)(db()->query('SELECT COUNT(*) c FROM surveys')->fetch()['c'] ?? 0) === 0) {
-        seedPlatformSurveyAndMigrateLegacyData();
+        // البذر كله أو لا شيء: عطل في منتصفه لا يترك استبياناً بلا أسئلة، فيُعاد البذر في الطلب التالي
+        db()->beginTransaction();
+        try {
+            seedPlatformSurveyAndMigrateLegacyData();
+            db()->commit();
+        } catch (Throwable $e) {
+            if (db()->inTransaction()) db()->rollBack();
+            throw $e;
+        }
     }
 }
 
@@ -468,7 +510,7 @@ function seedPlatformSurveyAndMigrateLegacyData(): void {
 
     /** يضيف سؤال اختيار (فردي) بخياراته، ويعيد [question_id, [قيمة => option_id]] */
     $addChoice = function (int $pos, string $q, string $hint, array $opts, ?array $follow = null) use ($qIns, $oIns, $surveyId, $now): array {
-        $qIns->execute([$surveyId, $pos, 'single_choice', $q, $hint ?: null, null, null, null, null, null, $now]);
+        $qIns->execute([$surveyId, $pos, 'single_choice', $q, $hint ?: null, null, null, null, null, null, null, $now]);
         $qid = (int)db()->lastInsertId();
         $byValue = [];
         foreach ($opts as $i => [$text, $value]) {
@@ -856,6 +898,40 @@ function ensureSchema(): void {
                 ADD COLUMN fallback_ms INT UNSIGNED NULL");
         }
 
+        /* دور الحساب في مساحة العمل (executive وpm وfinance وmedical وteam_member وclient وhr وcrm
+           وsysadmin). عمود مستقل عن role عمداً: كل كود المنصة القائم يقرأ role كما هو، وحسابات
+           الفريق تبقى بدور user في المحادثة. NULL = بلا دور في مساحة العمل. */
+        if (!colExists('users', 'org_role')) {
+            db()->exec("ALTER TABLE users ADD COLUMN org_role VARCHAR(30) NULL, ADD INDEX ix_org_role (org_role)");
+        }
+        if (!colExists('invites', 'org_role_target')) {
+            db()->exec("ALTER TABLE invites ADD COLUMN org_role_target VARCHAR(30) NULL");
+        }
+        ensureAuthTable();
+
+        /* الجوال قابل للفراغ: حسابات مساحة العمل التي تنضم إلى المنصة قد لا يكون لها جوال. التسجيل
+           يبقى يشترطه (auth.php register) والفرادة تبقى (MySQL يقبل أكثر من NULL في مفتاح فريد). */
+        if (!colNullable('users', 'phone')) {
+            db()->exec("ALTER TABLE users MODIFY COLUMN phone VARCHAR(20) NULL");
+        }
+        /* سجل ربط حسابات مساحة العمل بحسابات المنصة (أداة platform:link-accounts في workspace/).
+           كل صف أثر ربط واحد بدفعته، وبه يمكن التراجع عن الدفعة. */
+        db()->exec("CREATE TABLE IF NOT EXISTS account_links (
+            id                INT AUTO_INCREMENT PRIMARY KEY,
+            batch             CHAR(12)     NOT NULL,
+            workspace_user_id INT UNSIGNED NOT NULL,
+            platform_user_id  INT          NOT NULL,
+            action            ENUM('linked','created') NOT NULL,
+            prev_role         VARCHAR(16)  NULL,
+            prev_org_role     VARCHAR(30)  NULL,
+            prev_status       VARCHAR(16)  NULL,
+            created_at        DATETIME     NOT NULL,
+            reverted_at       DATETIME     NULL,
+            UNIQUE KEY uq_ws (workspace_user_id),
+            UNIQUE KEY uq_pl (platform_user_id),
+            KEY ix_batch (batch)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
         migrateSurveys();
         ensureRateTable();
     } catch (Throwable $e) {
@@ -887,22 +963,80 @@ function clean($v, int $max = 2000): string {
 function currentUser(): ?array {
     if (empty($_SESSION['uid'])) return null;
     ensureSchema();
-    $s = db()->prepare('SELECT id,name,name_en,dob,email,phone,pref,role,status,must_change_pw,improve,
-                               is_demo,tokens,tokens_at,created_at,questions,
-                               avatar,city,age_range,disability,interests,bio,support_level
-                        FROM users WHERE id=? LIMIT 1');
-    $s->execute([$_SESSION['uid']]);
+    $cols = 'id,name,name_en,dob,email,phone,pref,role,status,must_change_pw,improve,
+             is_demo,tokens,tokens_at,created_at,questions,
+             avatar,city,age_range,disability,interests,bio,support_level';
+    try {
+        $s = db()->prepare("SELECT $cols,org_role FROM users WHERE id=? LIMIT 1");
+        $s->execute([$_SESSION['uid']]);
+    } catch (Throwable $e) {
+        /* العمود org_role يضيفه ensureSchema(). لو تعذّرت الترقية على الخادم (صلاحية ALTER)
+           يبقى الدخول كما كان بدل أن يفشل كل طلب لمستخدم مسجّل. */
+        $s = db()->prepare("SELECT $cols FROM users WHERE id=? LIMIT 1");
+        $s->execute([$_SESSION['uid']]);
+    }
     $u = $s->fetch();
     if (!$u) return null;
     // حساب أوقفه مدير النظام: تُنهى جلسته فوراً في أول طلب بعد الإيقاف
-    if (($u['status'] ?? 'active') === 'suspended') { $_SESSION = []; return null; }
+    if (($u['status'] ?? 'active') === 'suspended') {
+        authSessionsRevoke((int) $u['id'], 'suspended');   // وتُنهى معها جلساته في مساحة العمل
+        if (isset($_COOKIE[AUTH_COOKIE])) authCookieClear();
+        $_SESSION = [];
+        return null;
+    }
     $_SESSION['role'] = $u['role'];   // تغيّر الدور يغيّر مهلة الخمول من الطلب التالي
+    $_SESSION['org']  = empty($u['org_role']) ? 0 : 1;
     return $u;
 }
 
 /* ---------- الأدوار ---------- */
 const ROLES = ['user', 'reviewer', 'mod', 'admin'];
 function isAdmin(?array $u): bool { return $u && $u['role'] === 'admin'; }
+
+/* ---------- الأدوار الموحدة: اثنا عشر دوراً، ودور واحد لكل حساب ----------
+   في المنصة عمودان: role (user وreviewer وmod وadmin) وorg_role (دور مساحة العمل). الدور الفعلي
+   واحد: admin هو sysadmin، وإلا org_role إن وُجد، وإلا role. أسماء أدوار مساحة العمل ونصوصها
+   هي نفسها في workspace/config/roles.php (المصدر الوحيد هناك)، ويفحص التطابق tools/check-roles.php. */
+const ORG_ROLES = ['executive', 'pm', 'finance', 'medical', 'team_member', 'client', 'hr', 'crm', 'sysadmin'];
+const ALL_ROLES = ['user', 'reviewer', 'mod', 'sysadmin', 'executive', 'pm', 'finance', 'medical', 'team_member', 'client', 'hr', 'crm'];
+const ROLE_LABELS = [
+    'user' => 'مستفيد', 'reviewer' => 'مراجع محتوى', 'mod' => 'مشرف', 'admin' => 'مدير النظام',
+    'sysadmin' => 'مدير النظام', 'executive' => 'المدير التنفيذي', 'pm' => 'مدير المشاريع',
+    'finance' => 'المدير المالي', 'medical' => 'المدير الطبي', 'team_member' => 'عضو الفريق',
+    'client' => 'العميل', 'hr' => 'مدير الموارد البشرية', 'crm' => 'مدير علاقات العملاء',
+];
+
+/** الدور الفعلي للحساب (واحد من ALL_ROLES) */
+function effectiveRole(array $u): string {
+    if (($u['role'] ?? 'user') === 'admin') return 'sysadmin';
+    $o = (string)($u['org_role'] ?? '');
+    return in_array($o, ORG_ROLES, true) ? $o : (string)($u['role'] ?? 'user');
+}
+
+/** عمودا التخزين [role, org_role] لدور فعلي */
+function roleColumns(string $eff): array {
+    if ($eff === 'sysadmin') return ['admin', 'sysadmin'];
+    if (in_array($eff, ['user', 'reviewer', 'mod'], true)) return [$eff, null];
+    return ['user', $eff];
+}
+
+/**
+ * الأدوار التي يحق للحساب دعوة أحد بها. الخادم هو الحكم لا الواجهة:
+ * مدير النظام أي دور، ومدير الموارد البشرية الموظفون دون المناصب العليا (لا المدير التنفيذي
+ * ولا مدير النظام ولا مدير الموارد نفسه)، ومدير علاقات العملاء العميل وحده، والمشرف المستفيد.
+ */
+function invitableRoles(array $actor): array {
+    return match (effectiveRole($actor)) {
+        'sysadmin' => ALL_ROLES,
+        'hr'       => ['team_member', 'pm', 'finance', 'medical', 'crm', 'mod', 'reviewer'],
+        'crm'      => ['client'],
+        'mod'      => ['user'],
+        default    => [],
+    };
+}
+function canInviteRole(array $actor, string $target): bool {
+    return in_array($target, invitableRoles($actor), true);
+}
 
 /* ---------- أنواع تذاكر الدعم ----------
    المصدر الوحيد للأنواع. كانت مكرّرة نصّاً في auth.php وفي قائمة HTML،
@@ -944,6 +1078,15 @@ function contentMap(): array {
     return $out;
 }
 
+/** من يدير الحسابات والدعوات: فريق المنصة، ومدير الموارد البشرية، ومدير علاقات العملاء.
+ *  الأخيران لا يبلغان من admin.php إلا ما يسمح لهما به كل إجراء بنفسه (needRole يرفض role=user). */
+function requireUserManager(): array {
+    $u = currentUser();
+    if (!$u || !(in_array($u['role'], ['admin', 'mod', 'reviewer'], true) || in_array(effectiveRole($u), ['hr', 'crm'], true)))
+        fail('غير مصرّح لك بالوصول لهذه البيانات.', 403);
+    return $u;
+}
+
 /** أي عضو في الفريق: مدير نظام أو مشرف أو مراجع محتوى */
 function requireStaff(): array {
     $u = currentUser();
@@ -954,8 +1097,7 @@ function requireStaff(): array {
 
 /** اسم الدور بالعربية — مصدر واحد تستخدمه الرسائل والسجل والبريد */
 function roleName(string $r): string {
-    return ['admin' => 'مدير النظام', 'mod' => 'مشرف',
-            'reviewer' => 'مراجع محتوى', 'user' => 'مستفيد'][$r] ?? 'مستفيد';
+    return ROLE_LABELS[$r] ?? 'مستفيد';
 }
 
 /** إرسال بريد HTML من عنوان المنصة — SMTP مصادَق إن كانت SMTP_PASS مضبوطة،
@@ -1045,7 +1187,9 @@ function smtpSend(string $to, string $subject, string $html): bool {
 /** قالب بريد الدعوة */
 function inviteEmailHtml(string $inviter, string $roleTarget, string $link): string {
     $isTeam  = $roleTarget !== 'user';
-    $roleTxt = $isTeam ? 'للانضمام لفريق وصال بصفة ' . roleName($roleTarget) : 'لتجربة منصة وصال';
+    $isClient = $roleTarget === 'client';
+    $roleTxt = $isClient ? 'إلى مساحة عمل وصال لمتابعة مشروعك معنا'
+             : ($isTeam ? 'للانضمام لفريق وصال بصفة ' . roleName($roleTarget) : 'لتجربة منصة وصال');
     $btnTxt  = $isTeam ? 'قبول الدعوة وإنشاء حسابي' : 'تجربة وصال الآن';
     $i = htmlspecialchars($inviter, ENT_QUOTES, 'UTF-8');
     return '<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;background:#f4f2fb;padding:32px 16px">'
@@ -1266,6 +1410,13 @@ function publicUser(array $u): array {
         'support_level' => $u['support_level'] ?? 'none',
         /* مهلة الخمول بالدقائق: الواجهة تنبّه وتُخرج على هذه القيمة نفسها،
            فلا نسخة ثانية منها في index.html تختلف عمّا يطبّقه الخادم. */
-        'idle_min' => intdiv(sessionLimits((string)$u['role'])['idle'], 60),
+        'idle_min' => intdiv(sessionLimits((string)$u['role'], !empty($u['org_role']))['idle'], 60),
+        /* دوره في مساحة العمل (أو null): تُظهر الواجهة به رابط المساحة والمبدّل بين النظامين */
+        'org_role' => $u['org_role'] ?? null,
+        /* الدور الفعلي (واحد من الاثني عشر) وهل للحساب مساحة عمل: تعرض الواجهة بهما
+           اسم الدور ورابط المساحة والمبدّل بين النظامين */
+        'eff_role' => effectiveRole($u),
+        'role_label' => roleName(effectiveRole($u)),
+        'workspace' => ($u['role'] ?? 'user') === 'admin' || !empty($u['org_role']),
     ];
 }

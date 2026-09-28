@@ -1,8 +1,8 @@
 <x-app-layout>
-    @php($pageTitle = $isClient ? 'حالة مشروعي' : (auth()->user()->hasRole('pm') ? 'مشاريعي' : 'المشاريع'))
+    @php($pageTitle = $isClient ? 'حالة مشروعي' : ($isCrm ? 'مشاريع العملاء' : (auth()->user()->hasRole('pm') ? 'مشاريعي' : 'المشاريع')))
     <x-slot:title>{{ $pageTitle }}</x-slot:title>
 
-    <x-page-header :title="$pageTitle" :description="$isClient ? 'مشاريعك مع وصال الابتكار ومدى تقدّمها.' : null">
+    <x-page-header :title="$pageTitle" :description="$isClient ? 'مشاريعك مع وصال الابتكار ومدى تقدّمها.' : ($isCrm ? 'كل المشاريع للقراءة: الحالة والتقدم والمراحل، بلا تفاصيل العمل الداخلي.' : null)">
         <x-slot:actions>
             @can('create', \App\Models\Project::class)
                 <x-button :href="route('projects.create')">مشروع جديد</x-button>

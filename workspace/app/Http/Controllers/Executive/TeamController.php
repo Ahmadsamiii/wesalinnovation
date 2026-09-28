@@ -31,7 +31,7 @@ class TeamController extends Controller
         $people = User::query()
             ->active()
             ->with('roles')
-            ->whereHas('roles', fn (Builder $query) => $query->whereIn('name', $filters['role'] ?? array_keys($roles)))
+            ->whereHas('roles', fn (Builder $query) => $query->whereIn('name', (array) ($filters['role'] ?? array_keys($roles))))
             ->withCount([
                 'assignedTasks as open_tasks_count' => fn (Builder $query) => $query->where('status', '!=', TaskStatus::Done),
                 'assignedTasks as overdue_tasks_count' => fn (Builder $query) => $query->overdue(),

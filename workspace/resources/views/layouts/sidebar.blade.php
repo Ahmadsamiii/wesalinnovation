@@ -64,6 +64,13 @@
             <span class="truncate lg:sb-collapsed:sr-only">الملف الشخصي</span>
         </a>
 
+        @if (\App\Support\PlatformSession::enabled())
+            <a href="{{ config('workspace.chat_url') }}" :title="collapsed ? 'مساعد وصال' : null" class="{{ $itemBase }} {{ $itemIdle }}">
+                <x-sidebar-icon name="chat" />
+                <span class="truncate lg:sb-collapsed:sr-only">مساعد وصال</span>
+            </a>
+        @endif
+
         <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button type="submit" :title="collapsed ? 'تسجيل الخروج' : null" class="{{ $itemBase }} text-red-700 hover:bg-red-50">

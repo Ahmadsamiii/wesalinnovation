@@ -38,6 +38,7 @@ echo "فحص محرّك الاستبيانات\n\n";
 check('BETA_TRIAL_HOURS قيمة موجبة', BETA_TRIAL_HOURS > 0);
 check('INVITE_DAILY_LIMIT صفر أو أكثر', INVITE_DAILY_LIMIT >= 0);
 check('SITE_URL بلا شرطة مائلة في النهاية', !str_ends_with(SITE_URL, '/'));
+check('CHAT_URL بلا شرطة مائلة في النهاية', !str_ends_with(CHAT_URL, '/'));
 check('api/invite-redeem.php موجود', file_exists(__DIR__ . '/../api/invite-redeem.php'));
 check('api/surveys.php موجود',       file_exists(__DIR__ . '/../api/surveys.php'));
 check('api/experience.php أُزيل (اندمجت وظائفه في api/surveys.php)', !file_exists(__DIR__ . '/../api/experience.php'));

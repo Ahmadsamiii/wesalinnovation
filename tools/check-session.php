@@ -23,6 +23,9 @@ if (!file_exists($cfg)) {
 }
 
 require_once __DIR__ . '/../api/db.php';
+/* هذا الفحص للمسار القديم (جلسة PHP وحدها) بحسابات وهمية. المفتاح UNIFIED_SESSION لا يغيّره:
+   الجلسة الموحدة لها فحصها في tools/check-auth-session.php. */
+$GLOBALS['WESAL_UNIFIED_OVERRIDE'] = false;
 
 $fails = 0;
 function check(string $label, bool $ok): void {
@@ -99,7 +102,7 @@ check('الاستطلاع الآلي يرسل X-Wesal-Idle', str_contains($html,
 check('لا خانة «أبقني مسجّلاً» في صفحة الدخول', !str_contains($html, 'liRemember'));
 check('سياسة الخصوصية تذكر المدتين كما في الإعدادات',
       str_contains($html, 'إذا مرّت ' . IDLE_MINUTES_USER . ' دقيقة دون أي نشاط منك')
-      && str_contains($html, 'لحسابات فريق المنصة ' . IDLE_MINUTES_STAFF . ' دقيقة'));
+      && str_contains($html, IDLE_MINUTES_STAFF . ' دقيقة لحسابات فريق المنصة ولأصحاب الأدوار في مساحة العمل'));
 
 echo "\n" . ($fails ? "✗ فشل $fails فحصاً\n" : "✓ كل الفحوص ناجحة\n");
 exit($fails ? 1 : 0);

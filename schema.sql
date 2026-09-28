@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS users (
   name_en     VARCHAR(80)  NULL,                     -- الاسم بالإنجليزية
   dob         DATE         NULL,                     -- تاريخ الميلاد
   email       VARCHAR(120) NOT NULL,
-  phone       VARCHAR(20)  NOT NULL,                 -- بصيغة 05XXXXXXXX
+  phone       VARCHAR(20)  NULL,                     -- بصيغة 05XXXXXXXX. يشترطه التسجيل، ويقبل الفراغ حساب انضم من مساحة العمل
   pref        ENUM('simple','detailed','voice','visual') NOT NULL DEFAULT 'simple',
   pass_hash   VARCHAR(255) NOT NULL,                 -- password_hash() — لا تخزّن كلمة المرور أبداً
   role        ENUM('user','reviewer','mod','admin') NOT NULL DEFAULT 'user',
@@ -49,11 +49,15 @@ CREATE TABLE IF NOT EXISTS users (
   disability  VARCHAR(60)  NULL,
   interests   VARCHAR(300) NULL,
   bio         VARCHAR(500) NULL,
+  -- دور الحساب في مساحة العمل (executive وpm وfinance وmedical وteam_member وclient وhr وcrm وsysadmin).
+  -- مستقل عن role عمداً: كود المنصة يقرأ role كما هو، وNULL = بلا دور في مساحة العمل.
+  org_role    VARCHAR(30)  NULL,
   UNIQUE KEY uq_email (email),
   UNIQUE KEY uq_phone (phone),
   KEY ix_created (created_at),
   KEY ix_role (role),
-  KEY ix_demo (is_demo)
+  KEY ix_demo (is_demo),
+  KEY ix_org_role (org_role)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------------------------
@@ -139,6 +143,7 @@ CREATE TABLE IF NOT EXISTS invites (
   id          INT AUTO_INCREMENT PRIMARY KEY,
   email       VARCHAR(120) NOT NULL,
   role_target ENUM('user','reviewer','mod') NOT NULL DEFAULT 'user',
+  org_role_target VARCHAR(30) NULL,               -- دور مساحة العمل الذي تمنحه الدعوة، وNULL = لا دور
   token       VARCHAR(64)  NOT NULL,
   invited_by  INT          NOT NULL,
   status      ENUM('sent','accepted','revoked') NOT NULL DEFAULT 'sent',
@@ -402,4 +407,41 @@ CREATE TABLE IF NOT EXISTS survey_answer_options (
   PRIMARY KEY (answer_id, option_id),
   CONSTRAINT fk_answer_opt_answer FOREIGN KEY (answer_id) REFERENCES survey_answers(id)         ON DELETE CASCADE,
   CONSTRAINT fk_answer_opt_option FOREIGN KEY (option_id) REFERENCES survey_question_options(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- الجلسة الموحدة بين المنصة ومساحة العمل (api/session-lib.php). صف لكل دخول، والكوكي
+-- wesal_auth يحمل رمزه العشوائي، ولا يُخزَّن منه إلا الهاش. المرجع الوحيد للمهلتين.
+CREATE TABLE IF NOT EXISTS auth_sessions (
+  id         BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id    INT          NOT NULL,
+  token_hash CHAR(64)     NOT NULL,                  -- sha256 للرمز في الكوكي
+  auth_at    INT UNSIGNED NOT NULL,                  -- لحظة الدخول (unix)
+  seen_at    INT UNSIGNED NOT NULL,                  -- آخر نشاط للمستخدم (unix)
+  idle_sec   INT UNSIGNED NOT NULL,                  -- مهلة الخمول وقت الإنشاء
+  max_sec    INT UNSIGNED NOT NULL,                  -- أقصى مدة للجلسة وقت الإنشاء
+  ended_at   INT UNSIGNED NULL,                      -- NULL = حية
+  ended_why  VARCHAR(16)  NULL,                      -- logout idle max suspended password role replaced deleted
+  ip         VARCHAR(45)  NULL,
+  ua         VARCHAR(160) NULL,
+  UNIQUE KEY uq_token (token_hash),
+  KEY ix_user (user_id, ended_at),
+  KEY ix_ended (ended_at, seen_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- سجل ربط حسابات مساحة العمل بحسابات المنصة (أداة platform:link-accounts في workspace/).
+-- كل صف أثر ربط واحد بدفعته، وبه يمكن التراجع عن الدفعة.
+CREATE TABLE IF NOT EXISTS account_links (
+  id                INT AUTO_INCREMENT PRIMARY KEY,
+  batch             CHAR(12)     NOT NULL,
+  workspace_user_id INT UNSIGNED NOT NULL,
+  platform_user_id  INT          NOT NULL,
+  action            ENUM('linked','created') NOT NULL,
+  prev_role         VARCHAR(16)  NULL,
+  prev_org_role     VARCHAR(30)  NULL,
+  prev_status       VARCHAR(16)  NULL,
+  created_at        DATETIME     NOT NULL,
+  reverted_at       DATETIME     NULL,
+  UNIQUE KEY uq_ws (workspace_user_id),
+  UNIQUE KEY uq_pl (platform_user_id),
+  KEY ix_batch (batch)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -115,7 +115,8 @@ if [ -f "$SHARED/.env" ]; then
     [ "$(env_value DB_CONNECTION)" = "mysql" ] || { problem "DB_CONNECTION في .env ليس mysql."; env_ok=0; }
     APP_URL="$(env_value APP_URL)"
     case "$APP_URL" in
-      https://*/*) problem "APP_URL في .env يجب أن يكون النطاق وحده، بلا مسار ولا شرطة مائلة في آخره."; env_ok=0 ;;
+      https://?*/workspace) ;;   # بعد التبديل: مساحة العمل على wesalinnovation.sa/workspace
+      https://*/*) problem "APP_URL في .env يجب أن يكون النطاق وحده (أو النطاق مع /workspace بعد التبديل)، بلا شرطة مائلة في آخره."; env_ok=0 ;;
       https://?*) ;;
       *) problem "APP_URL في .env يجب أن يبدأ بـ https://"; env_ok=0 ;;
     esac
@@ -441,8 +442,12 @@ fi
 ok "$APP_URL/up: التطبيق يعمل"
 
 code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$APP_URL/login" || true)"
-[ "$code" = "200" ] || die "صفحة الدخول لا ترد بـ 200 (الرد: $code).$rollback_hint"
-ok "صفحة الدخول تعمل"
+# 302 مع الدخول الموحد: الصفحة تحوّل إلى شاشة الدخول في المنصة
+case "$code" in
+  200|302) ;;
+  *) die "صفحة الدخول لا ترد بـ 200 أو 302 (الرد: $code).$rollback_hint" ;;
+esac
+ok "صفحة الدخول تعمل ($code)"
 
 # بعد التحقق لا قبله: نشرٌ لم يجتز التحقق يُعاد في المرة التالية ولو لم يتغير الكود.
 commit="$(git -C "$REPO_DIR" rev-parse HEAD 2>/dev/null || echo unknown)"

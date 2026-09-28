@@ -17,7 +17,14 @@ define('DB_PASS', '');
 
 /* ---------- الموقع ---------- */
 define('SITE_NAME', 'وصال');
-define('SITE_URL',  'https://wesalinnovation.sa');   // بلا شرطة مائلة في النهاية — تُستخدم في روابط الدعوات
+define('SITE_URL',  'https://wesalinnovation.sa');   // بلا شرطة مائلة في النهاية. صفحة الشركة وروابط التذاكر (ticket.html)
+
+/* عنوان تطبيق المحادثة، وتُبنى عليه روابط بريد إعادة تعيين كلمة المرور والدعوات
+ * والاستبيانات. اتركه محذوفاً ما دامت المحادثة على النطاق الرئيسي (يساوي SITE_URL).
+ * يوم التبديل ضعه هنا على النطاق الفرعي، بلا شرطة مائلة في النهاية:
+ *     define('CHAT_URL', 'https://chat.wesalinnovation.sa');
+ * انظر «التبديل يوم 13 أكتوبر» في README.md. */
+// define('CHAT_URL', 'https://chat.wesalinnovation.sa');
 
 /* ---------- وضع التطوير ----------
  * true يعرض رسائل الأخطاء الفعلية في ردود JSON. اتركه false في الإنتاج دائماً. */
@@ -56,6 +63,17 @@ define('IDLE_MINUTES_USER',       30);  // المستفيد
 define('IDLE_MINUTES_STAFF',      15);  // مدير النظام والمشرف ومراجع المحتوى
 define('SESSION_MAX_HOURS_USER',  24);
 define('SESSION_MAX_HOURS_STAFF', 12);
+
+/* ---------- الجلسة الموحدة مع مساحة العمل ----------
+ * true: دخول واحد وجلسة واحدة للمنصة ومساحة العمل. يُنشأ صف لكل دخول في
+ * auth_sessions وكوكي wesal_auth للنطاق الأعلى، فالخروج أو الإيقاف أو الخمول في
+ * أحدهما يُخرج الآخر. false (الافتراضي): السلوك القديم حرفياً، بلا صف ولا كوكي.
+ * لا تُشغَّله قبل ضبط مساحة العمل (UNIFIED_AUTH في .env) وربط الحسابات
+ * (انظر workspace/DEPLOY.md). أي عطل في قاعدة البيانات يعيد الطلب للمسار القديم. */
+define('UNIFIED_SESSION', false);
+// نطاق الكوكي: يُشتق من SITE_URL (يحذف www وchat وworkspace من أوله) فيصير .wesalinnovation.sa.
+// اضبطه صراحةً إن اختلفت الحال. فارغ = كوكي للمضيف وحده (لـ localhost).
+// define('AUTH_COOKIE_DOMAIN', '.wesalinnovation.sa');
 
 /* ---------- الوكيل العكسي ----------
  * اجعله true فقط إذا كان الموقع خلف Cloudflare أو موازن حِمل يضبط

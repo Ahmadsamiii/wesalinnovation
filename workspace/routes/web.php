@@ -12,6 +12,7 @@ use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\CardController;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\ContractController;
+use App\Http\Controllers\Crm\ClientController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Executive\DecisionLogController;
 use App\Http\Controllers\Executive\FinancialApprovalController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\Executive\ProjectApprovalController;
 use App\Http\Controllers\Executive\TeamController;
 use App\Http\Controllers\HealthContentController;
 use App\Http\Controllers\HiringRequestController;
+use App\Http\Controllers\Hr\EmployeeController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\InvoicePaymentController;
 use App\Http\Controllers\KnowledgeBaseController;
@@ -200,6 +202,17 @@ Route::middleware('auth')->group(function () {
         Route::get('system/deployment', DeploymentController::class)->name('system.deployment');
         Route::get('system/ai', AiIntegrationController::class)->name('system.ai');
     });
+
+    /*
+     * مدير الموارد البشرية ومدير علاقات العملاء. مدير النظام يقرأ القائمتين فقط؛
+     * التعديل لمدير الموارد وحده. صلاحيات الطلبات والمشاريع في سياساتها.
+     */
+    Route::middleware('role:hr|sysadmin')->get('hr/employees', [EmployeeController::class, 'index'])->name('hr.employees');
+    Route::middleware('role:hr')->prefix('hr/employees')->name('hr.employees.')->group(function () {
+        Route::get('{user}/edit', [EmployeeController::class, 'edit'])->name('edit');
+        Route::put('{user}', [EmployeeController::class, 'update'])->name('update');
+    });
+    Route::middleware('role:crm|sysadmin')->get('crm/clients', [ClientController::class, 'index'])->name('crm.clients');
 });
 
 require __DIR__.'/auth.php';

@@ -13,6 +13,11 @@
 
     RewriteEngine On
 
+    # www إلى النطاق الرئيسي: التطبيق يعمل الآن أيضاً على wesalinnovation.sa/workspace، وقواعد
+    # الموقع العام لا تصل هنا لأن هذا الملف يشغّل محرك التحويل من جديد.
+    RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+    RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L]
+
     # HTTPS دائماً: كوكي الجلسة آمنة، فلا يعمل الدخول عبر http. قواعد الموقع العام
     # التي تحوّل إلى https لا تصل هنا، لأن هذا الملف يشغّل محرك التحويل من جديد.
     # X-Forwarded-Proto لأن الطلب خلف CDN يصل عبر http وإن كان الزائر على https.

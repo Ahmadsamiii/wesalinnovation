@@ -672,7 +672,7 @@ body.in-dash .footer{display:none;}
 [data-contrast="high"] .dash-side,[data-contrast="high"] .dash-main,[data-contrast="high"] body.in-dash #nav{--muted:#333;}
 /* hidden يجب أن يُخفي فعلاً — قواعد display في الأزرار كانت تتغلّب عليه
    فتُظهر تبويبات وأزرار الإدارة لمن لا يملك صلاحيتها */
-[data-perm][hidden],.dash-side [hidden],.dash-hero [hidden]{display:none!important;}
+[data-perm][hidden],.dash-side [hidden],.dash-hero [hidden],.ws-only[hidden]{display:none!important;}
 body.in-dash #toasts{inset-inline-start:calc(var(--sb-cur) + 24px);}
 body.in-dash .tk-drawer-overlay{z-index:1020;}
 body.in-dash .tk-drawer{z-index:1021;}
@@ -1181,6 +1181,7 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <div class="user-menu" id="userMenu" role="menu">
 <div class="user-menu-head"><b id="umName"></b><span id="umEmail"></span><em class="role-pill" id="umRolePill" hidden></em></div>
 <button class="user-menu-item" onclick="go('dashboard');closeUserMenu()"><svg><use href="#ic-zap"/></svg> لوحة التحكم</button>
+<button class="user-menu-item ws-only" hidden onclick="closeUserMenu();location.href='/workspace/'"><svg><use href="#ic-clipboard"/></svg> مساحة العمل</button>
 <button class="user-menu-item" onclick="closeUserMenu();openDashTab('profile')"><svg><use href="#ic-settings"/></svg> ملفي الشخصي</button>
 <button class="user-menu-item" onclick="go('settings');closeUserMenu()"><svg><use href="#ic-a11y"/></svg> إعدادات الوصول</button>
 <button class="user-menu-item um-dash-only" onclick="go('home');closeUserMenu()"><svg><use href="#ic-home"/></svg> العودة للموقع</button>
@@ -1207,6 +1208,7 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <button class="mob-link" onclick="go('contact');toggleMob()" data-pg="contact"><svg><use href="#ic-mail"/></svg> <span data-lp="nav.contact">تواصل معنا</span></button>
 <div class="mob-sep"></div>
 <button class="mob-link mob-auth" onclick="go('dashboard');toggleMob()" data-pg="dashboard"><svg><use href="#ic-zap"/></svg> لوحة التحكم</button>
+<button class="mob-link ws-only" hidden onclick="location.href='/workspace/'"><svg><use href="#ic-clipboard"/></svg> مساحة العمل</button>
 <button class="mob-link" onclick="go('settings');toggleMob()" data-pg="settings"><svg><use href="#ic-a11y"/></svg> إعدادات الوصول</button>
 <button class="mob-cta mob-guest" onclick="startTrial();toggleMob()"><svg class="ico" style="width:18px;height:18px"><use href="#ic-chat"/></svg> <span data-lp="nav.cta">جرّب الآن</span></button>
 <button class="mob-ghost mob-guest" onclick="go('login');toggleMob()"><svg class="ico" style="width:18px;height:18px"><use href="#ic-check"/></svg> <span data-lp="nav.login">تسجيل الدخول</span></button>
@@ -1683,13 +1685,12 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <div class="tbl-head"><h3>المستخدمون المسجّلون</h3>
 <div style="display:flex;gap:var(--s2)"><input type="search" class="form-input" id="uSearch" placeholder="ابحث بالاسم أو البريد" oninput="renderUsers()" style="min-width:200px"><button class="btn btn-md btn-surface" data-perm="users.export" hidden onclick="exportUsers()"><svg class="ico"><use href="#ic-copy"/></svg> تصدير CSV</button></div></div>
 <div class="tbl-actions">
-<button class="btn btn-md btn-primary" data-perm="users.invite" hidden onclick="openInvite('user')"><svg class="ico"><use href="#ic-mail"/></svg> دعوة مستخدم للتجربة</button>
-<button class="btn btn-md btn-surface" data-perm="users.manage" hidden onclick="openInvite('mod')"><svg class="ico"><use href="#ic-users"/></svg> دعوة مشرف</button>
-<button class="btn btn-md btn-surface" data-perm="users.manage" hidden onclick="openInvite('reviewer')"><svg class="ico"><use href="#ic-shield"/></svg> دعوة مراجع محتوى</button>
+<button class="btn btn-md btn-primary" data-perm="users.invite" hidden onclick="openInvite()"><svg class="ico"><use href="#ic-mail"/></svg> دعوة</button>
 </div>
 <div id="inviteBox" style="display:none;background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--r-lg);padding:var(--s5);margin:var(--s4) var(--s6)">
 <div style="display:flex;gap:var(--s3);flex-wrap:wrap;align-items:flex-end">
-<div class="form-group" style="flex:1;min-width:230px;margin:0"><label for="invEmail">بريد المدعو <span id="invRoleLbl" style="color:var(--primary)">(مستخدم)</span></label><input type="email" id="invEmail" class="form-input ltr-input" placeholder="name@email.com"></div>
+<div class="form-group" style="flex:1;min-width:230px;margin:0"><label for="invEmail">بريد المدعو</label><input type="email" id="invEmail" class="form-input ltr-input" placeholder="name@email.com"></div>
+<div class="form-group" style="min-width:200px;margin:0"><label for="invRoleSel">الدور</label><select id="invRoleSel" class="form-input"></select></div>
 <button class="btn btn-md btn-primary" id="invSendBtn" onclick="sendInvite()">إرسال الدعوة</button>
 <button class="btn btn-md btn-surface" onclick="document.getElementById('inviteBox').style.display='none'">إلغاء</button>
 </div></div>
@@ -2144,7 +2145,7 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 <li><b>صلاحيات حسب الدور:</b> في المنصة أربعة أدوار (مستفيد، ومراجع محتوى، ومشرف، ومدير النظام)، ولا يرى كل دور إلا ما يحتاجه لعمله.</li>
 <li><b>سجل العمليات:</b> نوثّق عمليات الدخول وتغيير الصلاحيات وتصدير البيانات في سجل يراجعه مدير النظام.</li>
 <li><b>الحد الأدنى من البيانات:</b> لا نجمع إلا ما تحتاجه الخدمة.</li>
-<li><b>الخروج التلقائي:</b> إذا مرّت 30 دقيقة دون أي نشاط منك سجّلنا خروجك تلقائياً، وننبّهك قبل ذلك بدقيقتين لتبقى متصلاً إن أردت. والمدة لحسابات فريق المنصة 15 دقيقة.</li>
+<li><b>الخروج التلقائي:</b> إذا مرّت 30 دقيقة دون أي نشاط منك سجّلنا خروجك تلقائياً، وننبّهك قبل ذلك بدقيقتين لتبقى متصلاً إن أردت. والمدة 15 دقيقة لحسابات فريق المنصة ولأصحاب الأدوار في مساحة العمل.</li>
 </ul>
 <h2>مدة الاحتفاظ</h2>
 <p>نحتفظ ببياناتك ما دام حسابك قائماً. وعند حذف حسابك نحذف بياناتك الشخصية من أنظمتنا التشغيلية خلال 30 يوماً على الأكثر، وتبقى المحادثات في الإحصاءات دون ما يدل على هويتك.</p>
@@ -3035,13 +3036,14 @@ function syncAuthUI(){
       document.getElementById('navName').textContent=(USER.name||'').split(' ')[0];
       const n=document.getElementById('umName'),e=document.getElementById('umEmail'),mn=document.getElementById('mobName');
       if(n)n.textContent=USER.name||'';if(e)e.textContent=USER.email||'';if(mn)mn.textContent=USER.name||'';
-      const lbl=roleLabel(USER.role||'user');
+      const lbl=roleLabel(effRole(USER));
       ['navRolePill','umRolePill','mobRolePill'].forEach(id=>{
         const el=document.getElementById(id);if(!el)return;el.textContent=lbl;el.hidden=false;
       });
     }}
   document.querySelectorAll('.mob-guest').forEach(e=>e.style.display=USER?'none':'');
   document.querySelectorAll('.mob-auth').forEach(e=>e.style.display=USER?'':'none');
+  document.querySelectorAll('.ws-only').forEach(e=>{e.hidden=!(USER&&USER.workspace);});   // رابط مساحة العمل لمن له دور فيها
   document.querySelectorAll('.sb-auth').forEach(e=>e.hidden=!USER);
   applyRoleUI();
 }
@@ -3783,7 +3785,7 @@ function paintDashHello(){
     setTxt(sub,USER.role==='admin'?'دخلت بصفة مدير النظام. تدير المستخدمين والرسائل والطلبات وسجل العمليات من القائمة الجانبية.':(USER.role==='mod'?'دخلت بصفة مشرف. تتابع المستخدمين والرسائل والاستبيانات من القائمة الجانبية.':(USER.role==='reviewer'?'دخلت بصفة مراجع محتوى. تصلك بلاغات دقة المعلومات في قسم تذاكر الدعم.':'هنا تجد محادثاتك ورصيدك وإعداداتك.')));
   }else{setTxt(hello,'مرحباً بك في وصال');setTxt(sub,'أنشئ حساباً مجانياً لنحفظ محادثاتك وتحصل على رصيد أكبر.');}
   const hr=document.getElementById('dashHeroRole');
-  if(hr){hr.hidden=!USER;if(USER)setTxt(hr,roleLabel(USER.role||'user'));}
+  if(hr){hr.hidden=!USER;if(USER)setTxt(hr,roleLabel(effRole(USER)));}
 }
 function paintHeroDate(){
   const hd=document.getElementById('dashHeroDate');if(!hd)return;
@@ -3887,13 +3889,12 @@ function paintDash(){
     if(g('prInterests'))g('prInterests').value=USER.interests||'';
     if(g('prBio'))g('prBio').value=USER.bio||'';
     if(g('prPref'))g('prPref').value=USER.pref||'simple';
-    if(g('prRole'))g('prRole').textContent=roleLabel(USER.role||'user');
+    if(g('prRole'))g('prRole').textContent=roleLabel(effRole(USER));
     if(g('optImprove'))g('optImprove').checked=USER.improve===true;
     paintAvatars();
     if(g('prRole')){
-      g('prRole').textContent=roleLabel(USER.role);
-      g('prRole').className='pill '+(USER.role==='admin'?'pill-amber':
-        (USER.role==='mod'?'pill-green':(USER.role==='reviewer'?'pill-sky':'pill-purple')));
+      g('prRole').textContent=roleLabel(effRole(USER));
+      g('prRole').className='pill '+rolePillClass(effRole(USER));
     }
     loadMyTickets();
   }
@@ -3955,14 +3956,25 @@ async function loadMyTickets(){
 }
 
 /* --------- المستخدمون (مشرف) --------- *//* --------- المستخدمون (مشرف) --------- */
-let _users=[];
+let _users=[],_invitable=[];
 async function loadUsers(){
   const res=await api('admin.php',{action:'users'});
   _users=(res.ok&&res.users)?res.users:[];
+  _invitable=(res.ok&&res.invitable)?res.invitable:[];   // الخادم هو من يحدد من يدعو من
   renderUsers();
   loadInvites();
 }
-function roleLabel(r){return {admin:'مدير النظام',mod:'مشرف',reviewer:'مراجع محتوى',user:'مستفيد'}[r]||'مستفيد';}
+/* اثنا عشر دوراً، ودور واحد لكل حساب. النصوص هي نفسها في workspace/config/roles.php (يفحصها tools/check-roles.php) */
+const ROLE_LABELS={admin:'مدير النظام',sysadmin:'مدير النظام',mod:'مشرف',reviewer:'مراجع محتوى',user:'مستفيد',
+  executive:'المدير التنفيذي',pm:'مدير المشاريع',finance:'المدير المالي',medical:'المدير الطبي',team_member:'عضو الفريق',
+  client:'العميل',hr:'مدير الموارد البشرية',crm:'مدير علاقات العملاء'};
+const ALL_ROLES=['user','reviewer','mod','sysadmin','executive','pm','finance','medical','team_member','client','hr','crm'];
+function roleLabel(r){return ROLE_LABELS[r]||'مستفيد';}
+/** الدور الفعلي لحساب: من الخادم (eff_role في الحساب الحالي، eff في القوائم) وإلا role */
+function effRole(u){return (u&&(u.eff_role||u.eff))||(u&&u.role)||'user';}
+/** عمودا التخزين من الدور الفعلي، كما في الخادم (roleColumns) */
+function roleCols(eff){return eff==='sysadmin'?['admin','sysadmin']:(['user','reviewer','mod'].includes(eff)?[eff,null]:['user',eff]);}
+function rolePillClass(eff){return eff==='sysadmin'?'pill-amber':(eff==='mod'?'pill-green':(eff==='reviewer'?'pill-sky':'pill-purple'));}
 function renderUsers(){
   const body=document.getElementById('usersBody'),empty=document.getElementById('usersEmpty');
   if(!body)return;
@@ -3994,14 +4006,12 @@ function renderUsers(){
       sel.className='form-input';
       sel.style.cssText='min-height:34px;padding:4px 26px 4px 10px;width:auto;font-size:var(--f-xs)';
       sel.setAttribute('aria-label','صلاحية '+(u.name||u.email||''));
-      [['user','مستفيد'],['reviewer','مراجع محتوى'],['mod','مشرف'],['admin','مدير النظام']]
-        .forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;sel.appendChild(o);});
-      sel.value=u.role||'user';
+      ALL_ROLES.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=roleLabel(v);sel.appendChild(o);});
+      sel.value=effRole(u);
       sel.onchange=()=>setRole(u.id,sel.value,sel,u);
       rc.appendChild(sel);
     }else{
-      const pill=u.role==='admin'?'pill-amber':(u.role==='mod'?'pill-green':(u.role==='reviewer'?'pill-sky':'pill-purple'));
-      const sp=document.createElement('span');sp.className='pill '+pill;sp.textContent=roleLabel(u.role);
+      const sp=document.createElement('span');sp.className='pill '+rolePillClass(effRole(u));sp.textContent=roleLabel(effRole(u));
       rc.appendChild(sp);
     }
 
@@ -4189,20 +4199,21 @@ async function deleteUser(u){
 }
 
 async function setRole(id,role,sel,u){
-  if(!can('users.manage')){sel.value=u.role||'user';return toast('ليست لديك صلاحية تعديل الأدوار.','err');}
+  if(!can('users.manage')){sel.value=effRole(u);return toast('ليست لديك صلاحية تعديل الأدوار.','err');}
   const res=await api('admin.php',{action:'set_role',user_id:id,role});
   if(!res.ok){
-    sel.value=(u.role==='mod'||u.role==='reviewer')?u.role:'user';
+    sel.value=effRole(u);
     return toast(res.offline?'تعذّر الاتصال بالخادم، ولم تتغير الصلاحية.':(res.error||'تعذّر تعديل الصلاحية.'),'err');
   }
-  u.role=res.role||role;
-  toast('أصبحت صلاحيته: '+roleLabel(u.role)+'.','ok');
+  u.eff=res.role||role;[u.role,u.org_role]=roleCols(u.eff);
+  toast('أصبحت صلاحيته: '+roleLabel(u.eff)+'.','ok');
   renderUsers();
 }
-let _invRole='user';
 function openInvite(role){
-  _invRole=role;
-  document.getElementById('invRoleLbl').textContent='('+roleLabel(role)+')';
+  const sel=document.getElementById('invRoleSel');
+  sel.innerHTML='';
+  _invitable.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=roleLabel(v);sel.appendChild(o);});
+  sel.value=_invitable.includes(role)?role:(_invitable.includes('user')?'user':(_invitable[0]||''));
   const b=document.getElementById('inviteBox');b.style.display='block';
   document.getElementById('invEmail').focus();
 }
@@ -4212,7 +4223,9 @@ async function sendInvite(){
   const email=inp.value.trim().toLowerCase();
   if(!validEmail(email))return toast('اكتب بريداً إلكترونياً صحيحاً.','err');
   const btn=document.getElementById('invSendBtn');btn.disabled=true;
-  const res=await api('admin.php',{action:'invite',email,role:_invRole});
+  const role=document.getElementById('invRoleSel').value;
+  if(!role)return toast('ليست لديك صلاحية دعوة أحد بأي دور.','err');
+  const res=await api('admin.php',{action:'invite',email,role});
   btn.disabled=false;
   if(res.ok){
     toast(res.mailed===false?'سُجّلت الدعوة لكن تعذّر إرسال البريد الآن، ويمكن للمدعو التسجيل برابط الدعوة لاحقاً.':'أُرسلت الدعوة إلى بريده بنجاح.',res.mailed===false?'err':'ok',5000);
@@ -4228,7 +4241,7 @@ async function loadInvites(){
   body.innerHTML=list.length?'':'<tr><td colspan="4" style="color:var(--muted)">لا توجد دعوات بعد.</td></tr>';
   list.forEach(i=>{
     const tr=document.createElement('tr');
-    tr.innerHTML='<td class="c-e" dir="ltr" style="text-align:right"></td><td>'+(i.role==='mod'?'مشرف':'مستخدم')+'</td><td><span class="pill '+(i.status==='accepted'?'pill-green':'pill-amber')+'">'+(i.status==='accepted'?'قُبلت':'مُرسلة')+'</span></td><td>'+fmtDate(i.t)+'</td>';
+    tr.innerHTML='<td class="c-e" dir="ltr" style="text-align:right"></td><td>'+roleLabel(i.role)+'</td><td><span class="pill '+(i.status==='accepted'?'pill-green':'pill-amber')+'">'+(i.status==='accepted'?'قُبلت':'مُرسلة')+'</span></td><td>'+fmtDate(i.t)+'</td>';
     tr.querySelector('.c-e').textContent=i.email;
     body.appendChild(tr);
   });
@@ -4672,10 +4685,17 @@ const ROLE_PERMS={
   user:{},
   reviewer:{},
   mod:{'users.view':1,'users.invite':1,'messages.view':1,'experience.view':1},
+  /* الموارد البشرية وعلاقات العملاء: يريان حسابات مجالهما ويدعوان بما يحدده الخادم وحده (invitableRoles) */
+  hr:{'users.view':1,'users.invite':1},
+  crm:{'users.view':1,'users.invite':1},
   admin:{'users.view':1,'users.manage':1,'users.invite':1,'users.export':1,'messages.view':1,
          'audit.view':1,'content.manage':1,'experience.view':1}
 };
-function curRole(){return USER?(USER.role||'user'):'guest';}
+function curRole(){
+  if(!USER)return 'guest';
+  const e=effRole(USER);
+  return (e==='hr'||e==='crm')?e:(USER.role||'user');   // بقية أصحاب أدوار مساحة العمل مستفيدون هنا
+}
 /* تذاكر الدعم مستقلة تماماً عن دور المنصة — تُحكَم بـsupport_level وحده،
    حتى يقدر أي حساب (مراجع محتوى مثلاً) يصير معالج تذاكر دون منحه صلاحيات
    إدارية. هذا يطابق نفس الفصل في الخادم (requireAgent في tickets.php). */
@@ -5126,7 +5146,8 @@ function paintChatDiag(t){
 async function paintStats(){
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
   const lab=(id,v)=>setTxt(document.getElementById(id+'L'),v);
-  if(can('users.view')){
+  // الموارد البشرية وعلاقات العملاء يريان قائمة المستخدمين لا إحصاءات المنصة (الخادم يرفضها لهما)
+  if(can('users.view')&&!['hr','crm'].includes(effRole(USER))){
     const r=await api('admin.php',{action:'stats'});
     if(r&&r.ok&&r.stats){
       const t=r.stats;

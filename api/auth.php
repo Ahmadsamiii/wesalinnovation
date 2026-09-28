@@ -57,15 +57,18 @@ try {
             $s->execute([$phone]);
             if ($s->fetch()) fail('يوجد حساب مسجّل برقم الجوال هذا. سجّل دخولك أو استخدم رقماً آخر.');
 
-            $inviteRole = null; $inviteId = null;
+            $inviteRole = null; $inviteId = null; $inviteOrg = null;
             $tok = preg_replace('/[^a-f0-9]/', '', (string)($in['invite'] ?? ''));
             if (strlen($tok) >= 32) {
-                $s = db()->prepare("SELECT id,email,role_target FROM invites WHERE token=? AND status='sent' LIMIT 1");
+                $s = db()->prepare("SELECT id,email,role_target,org_role_target FROM invites WHERE token=? AND status='sent' LIMIT 1");
                 $s->execute([$tok]);
                 if ($inv = $s->fetch()) {
                     if (mb_strtolower($inv['email']) !== $email)
                         fail('هذه الدعوة مرسلة إلى بريد إلكتروني آخر. سجّل بالبريد الذي وصلته الدعوة.');
                     $inviteRole = $inv['role_target'];
+                    $inviteOrg  = ($inv['org_role_target'] ?? '') !== '' ? $inv['org_role_target'] : null;
+                    // دعوة بدور مساحة العمل: sysadmin يعني admin في المنصة (دور واحد)، وغيره يبقى user فيها
+                    if ($inviteOrg === 'sysadmin') $inviteRole = 'admin';
                     $inviteId   = (int)$inv['id'];
                 } else fail('رابط الدعوة غير صالح أو استُخدم من قبل.');
             }
@@ -80,7 +83,10 @@ try {
                 password_hash($pass, PASSWORD_DEFAULT),
                 $isFirst ? 'admin' : ($inviteRole ?: 'user'), USER_TOKENS]);
 
-            startAuthSession((int) db()->lastInsertId(), $isFirst ? 'admin' : ($inviteRole ?: 'user'));
+            $newId = (int) db()->lastInsertId();
+            // دور مساحة العمل من الدعوة. تحديث منفصل عمداً: التسجيل العادي لا يمس العمود الجديد أبداً.
+            if ($inviteOrg !== null && !$isFirst) db()->prepare('UPDATE users SET org_role=? WHERE id=?')->execute([$inviteOrg, $newId]);
+            startAuthSession($newId, $isFirst ? 'admin' : ($inviteRole ?: 'user'), $isFirst ? null : $inviteOrg);
             if ($inviteId) db()->prepare("UPDATE invites SET status='accepted', accepted_at=NOW() WHERE id=?")->execute([$inviteId]);
             out(['ok' => true, 'user' => publicUser(currentUser())]);
         }
@@ -98,7 +104,7 @@ try {
             if (($u['status'] ?? 'active') === 'suspended')
                 fail('حسابك موقوف حالياً. راسلنا من صفحة «تواصل معنا» لنراجع الأمر معك.', 403);
 
-            startAuthSession((int) $u['id'], (string) $u['role']);
+            startAuthSession((int) $u['id'], (string) $u['role'], $u['org_role'] ?? null);
             db()->prepare('UPDATE users SET last_login=NOW() WHERE id=?')->execute([$u['id']]);
             out(['ok' => true, 'user' => publicUser(refreshTokens($u))]);
         }
@@ -115,7 +121,7 @@ try {
             // الرد نفسه سواء وُجد الحساب أو لا، حتى لا يُستخدم النموذج لمعرفة من هو مسجّل
             if ($u && $u['status'] !== 'suspended') {
                 $token = issueResetToken((int)$u['id']);
-                $link  = SITE_URL . '/?reset=' . $token;
+                $link  = CHAT_URL . '/?reset=' . $token;
                 sendMail($email, 'إعادة تعيين كلمة المرور في وصال',
                          resetEmailHtml($u['name'], $link, false, 2));
                 audit(null, 'forgot', $email, 'طلب المستخدم إعادة تعيين');
@@ -161,6 +167,8 @@ try {
                 fail(APP_DEBUG ? $e->getMessage() : 'تعذّر تعيين كلمة المرور. حاول مرة أخرى.', 500);
             }
             audit(null, 'reset_done', 'user#' . $r['user_id'], 'عبر رابط إعادة التعيين');
+            authSessionsRevoke((int)$r['user_id'], 'password');   // وكل جلساته في مساحة العمل
+            authSessionLogout();
             $_SESSION = [];   // أنهِ أي جلسة قائمة — يدخل بكلمة المرور الجديدة
             out(['ok' => true, 'message' => 'تم تعيين كلمة المرور. سجّل دخولك الآن.']);
         }
@@ -180,6 +188,7 @@ try {
             db()->prepare('UPDATE users SET pass_hash=?, must_change_pw=0 WHERE id=?')
                 ->execute([password_hash($new, PASSWORD_DEFAULT), $u['id']]);
             audit($u, 'change_pw', $u['email'], '');
+            authSessionsRevoke((int)$u['id'], 'password', (int)($_SESSION['auth_sid'] ?? 0));   // بقية أجهزته
             out(['ok' => true, 'user' => publicUser(currentUser())]);
         }
 
@@ -222,6 +231,8 @@ try {
                 fail(APP_DEBUG ? $e->getMessage() : 'تعذّر حذف الحساب. حاول مرة أخرى.', 500);
             }
             audit(null, 'delete_account', $u['email'], 'حذف ذاتي');
+            authSessionsRevoke((int)$u['id'], 'deleted');
+            authSessionLogout();
             $_SESSION = [];
             session_destroy();
             out(['ok' => true, 'message' => 'حُذف حسابك وبياناتك الشخصية نهائياً من أنظمتنا.']);
@@ -345,6 +356,7 @@ try {
             if (($in['why'] ?? '') === 'idle' && !empty($_SESSION['uid'])) {
                 endAuthSession('idle');
             } else {
+                authSessionLogout();   // ينهي صف الجلسة الموحدة فيخرج معه الطرف الآخر
                 $_SESSION = [];
                 session_destroy();
             }
@@ -354,11 +366,13 @@ try {
         case 'invite_info': {
             $tok = preg_replace('/[^a-f0-9]/', '', (string)($in['invite'] ?? ''));
             if (strlen($tok) < 32) fail('رابط الدعوة غير صالح.');
-            $s = db()->prepare("SELECT email, role_target FROM invites WHERE token=? AND status='sent' LIMIT 1");
+            $s = db()->prepare("SELECT email, role_target, org_role_target FROM invites WHERE token=? AND status='sent' LIMIT 1");
             $s->execute([$tok]);
             $inv = $s->fetch();
             if (!$inv) fail('رابط الدعوة غير صالح أو استُخدم من قبل.');
-            out(['ok' => true, 'email' => $inv['email'], 'role_target' => $inv['role_target']]);
+            $eff = ($inv['org_role_target'] ?? '') !== '' ? $inv['org_role_target'] : $inv['role_target'];
+            out(['ok' => true, 'email' => $inv['email'], 'role_target' => $inv['role_target'],
+                 'role' => $eff, 'role_label' => roleName($eff)]);
         }
 
         default: fail('طلب غير معروف.');

@@ -34,7 +34,9 @@
 
         <div class="mt-16 w-64 text-center text-sm">
             <p class="border-t border-gray-300 pt-2 font-semibold">{{ $letter->decider->name }}</p>
-            <p class="text-gray-500">المدير التنفيذي</p>
+            @if ($letter->decider->roleLabel())
+                <p class="text-gray-500">{{ $letter->decider->roleLabel() }}</p>
+            @endif
         </div>
 
         <footer class="mt-16 border-t border-gray-100 pt-4 text-xs text-gray-500">

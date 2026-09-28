@@ -26,8 +26,10 @@ $iconForTab = [
     'sensitive_alerts' => 'alert',
     'my_tasks' => 'check-square',
     'my_card' => 'id-card',
+    'employees' => 'users', 'clients' => 'user',
+    'reference_letters' => 'file', 'client_projects' => 'folder',
     'reference_request' => 'send',
-    'dashboard' => 'grid', 'profile' => 'user', 'logout' => 'logout',
+    'dashboard' => 'grid', 'profile' => 'user', 'logout' => 'logout', 'chat' => 'message',
 ];
 
 $paths = [
@@ -53,6 +55,7 @@ $paths = [
     'send' => '<path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/>',
     'user' => '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
     'logout' => '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/>',
+    'message' => '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.4A8 8 0 1 1 21 12z"/>',
     'dot' => '<circle cx="12" cy="12" r="3"/>',
 ];
 

@@ -53,6 +53,9 @@ ServerSignature Off
   # HSTS — يُرسل على اتصالات HTTPS فقط
   Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" env=HTTPS
 
+  # chat. قبل التبديل: بلا فهرسة (انظر قواعد التبديل في كتلة mod_rewrite)
+  Header always set X-Robots-Tag "noindex, nofollow" env=WESAL_NOINDEX
+
   # لا تخزّن ردود الواجهة البرمجية مؤقتاً
   <FilesMatch "\.php$">
     Header always set Cache-Control "no-store, no-cache, must-revalidate"
@@ -82,6 +85,85 @@ ServerSignature Off
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
   RewriteRule ^uploads/.+\.(php|phtml|phar|php[0-9]|pl|py|cgi|sh|htaccess|htpasswd)$ - [F,L,NC]
+
+  # ------------------------------------------------------------------------
+  #  الروابط الثابتة: تعمل قبل التبديل وبعده فلا تُعدَّل يوم التبديل، وبها
+  #  تُكتب صفحة الشركة (homepage/) وأي رسالة أو مطبوع.
+  #    /chat   المحادثة أينما كانت: الجذر قبل التبديل، ثم chat. بعده
+  #    /login  الدخول (تفتح شاشته في المحادثة إلى أن تُبنى شاشة الدخول الموحدة)
+  #  %1 اسم النطاق بلا chat. ولا منفذ، فتعمل القواعد نفسها على أي نطاق.
+  #  التحويل 302 عمداً: رابط ثابت وجهته تتغير لا يجوز أن يحفظه المتصفح.
+  # ------------------------------------------------------------------------
+  RewriteCond %{DOCUMENT_ROOT}/.switch -f
+  RewriteCond %{HTTP_HOST} ^(?:chat\.)?([^:]+)(?::[0-9]+)?$ [NC]
+  RewriteRule ^chat/?$ https://chat.%1/ [R=302,L]
+  RewriteRule ^chat/?$ / [R=302,L]
+
+  # شاشة الدخول الموحدة (login.html) على النطاق الرئيسي وعلى chat. بلا تحويل. ملف لا مجلد عمداً:
+  # مجلد باسم login يجعل Apache يحوّل /login إلى /login/ قبل هذه القاعدة. إن لم يصل الملف إلى
+  # الخادم لسبب ما يبقى الدخول القديم في المحادثة بدل رابط منقطع.
+  RewriteCond %{DOCUMENT_ROOT}/login.html -f
+  RewriteRule ^login/?$ login.html [L]
+
+  RewriteCond %{DOCUMENT_ROOT}/.switch -f
+  RewriteCond %{HTTP_HOST} ^(?:chat\.)?([^:]+)(?::[0-9]+)?$ [NC]
+  RewriteRule ^login/?$ https://chat.%1/#login [R=302,NE,L]
+  RewriteRule ^login/?$ /#login [R=302,NE,L]
+
+  # الصفحة المؤسسية القديمة صارت /homepage/. الشرط الثاني يحمي الرابط القديم
+  # من الانقطاع لو لم تصل الصفحة الجديدة إلى الخادم لسبب ما.
+  RewriteCond %{DOCUMENT_ROOT}/homepage/index.html -f
+  RewriteRule ^corporate\.html$ /homepage/ [R=301,L]
+
+  # ------------------------------------------------------------------------
+  #  التبديل (13 أكتوبر). وجود الملف .switch في جذر الموقع يشغّل هذه الكتلة،
+  #  وحذفه يرجع كل شيء فوراً بلا نشر. بغيابه لا أثر لأي سطر هنا.
+  #  مع وجوده يعرض النطاق الرئيسي صفحة الشركة، وتذهب إلى chat. روابط المحادثة
+  #  القديمة التي وُزّعت (دعوات وإعادة تعيين واستبيانات) والصفحة الرئيسية
+  #  القديمة. التحويل 302 في الأسبوع الأول، ويُرفع إلى 301 بعد استقرار التبديل.
+  #  الإجراء الكامل: README.md ← «التبديل يوم 13 أكتوبر».
+  # ------------------------------------------------------------------------
+  RewriteCond %{DOCUMENT_ROOT}/.switch -f
+  RewriteCond %{HTTP_HOST} !^chat\. [NC]
+  RewriteCond %{QUERY_STRING} (^|&)(invite|reset|invited)= [NC]
+  RewriteRule ^$ https://chat.%{HTTP_HOST}/ [R=302,L]
+
+  RewriteCond %{DOCUMENT_ROOT}/.switch -f
+  RewriteCond %{HTTP_HOST} !^chat\. [NC]
+  RewriteRule ^index\.html$ https://chat.%{HTTP_HOST}/ [R=302,L]
+
+  RewriteCond %{DOCUMENT_ROOT}/.switch -f
+  RewriteCond %{HTTP_HOST} !^chat\. [NC]
+  RewriteRule ^(survey\.html|invite/[a-f0-9]{40})$ https://chat.%{HTTP_HOST}/$1 [R=302,L]
+
+  RewriteCond %{DOCUMENT_ROOT}/.switch -f
+  RewriteCond %{HTTP_HOST} !^chat\. [NC]
+  RewriteRule ^$ homepage/ [L]
+
+  # /homepage/ صار الجذر. THE_REQUEST يحمل الطلب الأصلي لا المعاد كتابته، فلا
+  # تدور القاعدة على الكتابة الداخلية أعلاه. 302 كسائر الكتلة حتى يبقى الرجوع سهلاً.
+  RewriteCond %{DOCUMENT_ROOT}/.switch -f
+  RewriteCond %{HTTP_HOST} !^chat\. [NC]
+  RewriteCond %{THE_REQUEST} "^[A-Z]+ /homepage/?[ ?]"
+  RewriteRule ^homepage/?$ / [R=302,L]
+
+  # ما يخص كل نطاق من خريطة الموقع وتعليمات الزواحف
+  RewriteCond %{DOCUMENT_ROOT}/.switch -f
+  RewriteCond %{HTTP_HOST} ^chat\. [NC]
+  RewriteRule ^sitemap\.xml$ sitemap-chat.xml [L]
+  RewriteCond %{DOCUMENT_ROOT}/.switch -f
+  RewriteCond %{HTTP_HOST} ^chat\. [NC]
+  RewriteRule ^robots\.txt$ robots-chat.txt [L]
+  RewriteCond %{DOCUMENT_ROOT}/.switch -f
+  RewriteCond %{HTTP_HOST} !^chat\. [NC]
+  RewriteRule ^sitemap\.xml$ sitemap-home.xml [L]
+
+  # قبل التبديل يعرض chat. المحتوى نفسه الذي يعرضه النطاق الرئيسي، فيُمنع من
+  # الفهرسة حتى لا يظهر التكرار في محركات البحث. الشرطان يحجبانه، والترويسة
+  # تُضاف في كتلة mod_headers أعلاه.
+  RewriteCond %{DOCUMENT_ROOT}/.switch !-f
+  RewriteCond %{HTTP_HOST} ^chat\. [NC]
+  RewriteRule ^ - [E=WESAL_NOINDEX:1]
 
   # رابط دعوة النسخة التجريبية — /invite/{token} يصل بالمدعو لمستلم الدعوات
   RewriteRule ^invite/([a-f0-9]{40})$ api/invite-redeem.php?token=$1 [L,QSA]

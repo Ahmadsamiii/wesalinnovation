@@ -1,18 +1,22 @@
 <x-app-layout>
-    @php($pageTitle = $isApprover ? 'طلبات الإفادة' : 'طلب إفادة')
+    @php($pageTitle = $isHr ? 'الإفادات الوظيفية' : ($seesAll ? 'طلبات الإفادة' : 'طلب إفادة'))
     <x-slot:title>{{ $pageTitle }}</x-slot:title>
 
-    <x-page-header :title="$pageTitle" :description="$isApprover ? 'إفادات منسوبي المنشأة: ما ينتظر اعتمادك أولاً.' : 'إفادة وظيفية تثبت عملك في وصال الابتكار، برمز تحقق تتأكد منه الجهة المقدَّمة إليها.'">
+    <x-page-header :title="$pageTitle" :description="match (true) {
+        $canDecide => 'إفادات منسوبي المنشأة: ما ينتظر اعتمادك أولاً.',
+        $seesAll => 'إفادات منسوبي المنشأة، يعتمدها '.$approverLabel.'.',
+        default => 'إفادة وظيفية تثبت عملك في وصال الابتكار، برمز تحقق تتأكد منه الجهة المقدَّمة إليها.',
+    }">
         <x-slot:actions>
-            @unless ($isApprover)
+            @if ($canRequest)
                 <x-button :href="route('reference-letters.create')">طلب إفادة جديدة</x-button>
-            @endunless
+            @endif
         </x-slot:actions>
     </x-page-header>
 
-    @if ($missingProfile && ! $isApprover)
+    @if ($missingProfile && $canRequest)
         <p class="mb-6 rounded-xl border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800" role="note">
-            مسماك الوظيفي أو تاريخ انضمامك غير مسجّل؛ الإفادة تُكتب منهما. اطلب من مدير النظام استكمالهما قبل الطلب.
+            مسماك الوظيفي أو تاريخ انضمامك غير مسجّل؛ الإفادة تُكتب منهما. اطلب من {{ $profileOwnerLabel }} استكمالهما قبل الطلب.
         </p>
     @endif
 
@@ -22,7 +26,7 @@
                 <div class="min-w-0 flex-1 text-sm">
                     <div class="flex flex-wrap items-center gap-2">
                         <x-badge :color="$letter->status->color()">{{ $letter->status->label() }}</x-badge>
-                        @if ($isApprover)
+                        @if ($seesAll)
                             <span class="font-semibold">{{ $letter->requester->name }}</span>
                             <span class="text-gray-500">— {{ $letter->requester->job_title ?? 'بلا مسمى' }}</span>
                         @endif
@@ -65,7 +69,7 @@
             </div>
         </x-card>
     @empty
-        <x-empty-state :title="$isApprover ? 'لا طلبات إفادة.' : 'لم تطلب إفادة بعد.'" />
+        <x-empty-state :title="$seesAll ? 'لا طلبات إفادة.' : 'لم تطلب إفادة بعد.'" />
     @endforelse
 
     @if ($letters->hasPages())

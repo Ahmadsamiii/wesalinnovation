@@ -7,7 +7,9 @@ use App\Models\HiringRequest;
 use App\Models\User;
 
 /**
- * يطلب التوظيف مسؤولو الفرق، ويقرّره المدير التنفيذي. لا يعتمد أحد طلبه.
+ * يطلب التوظيف مسؤولو الفرق، ويقرّره المدير التنفيذي وحده. لا يعتمد أحد طلبه.
+ * مدير الموارد البشرية يرى كل الطلبات ويغلقها بشغل الوظيفة أو الإلغاء، ولا
+ * يطلب ولا يقرّر.
  */
 class HiringRequestPolicy
 {
@@ -20,12 +22,12 @@ class HiringRequestPolicy
 
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['executive', ...self::REQUESTER_ROLES]);
+        return $user->hasAnyRole([...HiringRequest::SEES_ALL_ROLES, ...self::REQUESTER_ROLES]);
     }
 
     public function view(User $user, HiringRequest $request): bool
     {
-        return $user->hasRole('executive') || $request->requested_by === $user->id;
+        return $user->hasAnyRole(HiringRequest::SEES_ALL_ROLES) || $request->requested_by === $user->id;
     }
 
     public function create(User $user): bool

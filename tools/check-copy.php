@@ -9,6 +9,7 @@
  *  أو المستخدم، لأنها من أوضح علامات النص المولَّد آلياً. يفحص:
  *    - صفحات HTML: النصوص والسمات، والسلاسل داخل <script>
  *    - assets/landing-editor.js: سلاسله النصية
+ *    - homepage/: صفحة الشركة، كل HTML وJS فيها
  *    - api/*.php: كل سلسلة نصية (رسائل الأخطاء والبريد والنصوص الافتراضية)
  *  ولا يفحص التعليقات البرمجية ولا CSS. الشرطة المحصورة بين قوسين أو علامتي
  *  تنصيص مثل «(—)» ذِكرٌ للحرف نفسه لا استعمالٌ له، فتُتجاوز.
@@ -22,8 +23,12 @@ if (PHP_SAPI !== 'cli') {
 }
 
 $ROOT = realpath(__DIR__ . '/..');
-const HTML_FILES = ['index.html', 'corporate.html', 'survey.html', 'ticket.html'];
+const HTML_FILES = ['index.html', 'corporate.html', 'survey.html', 'ticket.html', 'login.html'];
 const JS_FILES   = ['assets/landing-editor.js'];
+/* صفحة الشركة (homepage/): كل ما فيها من HTML وJS يُفحص دون تسمية ملفاتها واحداً واحداً */
+$rel = fn(string $p): string => substr($p, strlen($ROOT) + 1);
+$HOME_HTML = array_map($rel, glob("$ROOT/homepage/*.html") ?: []);
+$HOME_JS   = array_map($rel, glob("$ROOT/homepage/assets/*.js") ?: []);
 /* أدوات تشخيص للمطوّر، يوصي README بحذفها من الإنتاج */
 const PHP_SKIP   = ['diag.php', 'stream-test.php'];
 const CLICHES    = ['رحلتك المعرفية', 'في صميم', 'تجربة فريدة', 'قوة الذكاء الاصطناعي', 'أحدث تقنيات',
@@ -130,7 +135,7 @@ function jsStrings(string $src, int $line = 1): array {
 function blankOut(string $s): string { return str_repeat("\n", substr_count($s, "\n")); }
 
 echo "صفحات HTML:\n";
-foreach (HTML_FILES as $f) {
+foreach (array_merge(HTML_FILES, $HOME_HTML) as $f) {
     $src = file_get_contents("$ROOT/$f");
     $scripts = [];
     $markup = preg_replace_callback('/<script\b([^>]*)>(.*?)<\/script>/is', function ($m) use (&$scripts) {
@@ -154,7 +159,7 @@ foreach (HTML_FILES as $f) {
 }
 
 echo "ملفات JS:\n";
-foreach (JS_FILES as $f) {
+foreach (array_merge(JS_FILES, $HOME_JS) as $f) {
     foreach (jsStrings(file_get_contents("$ROOT/$f")) as [$ln, $s]) {
         if (hasDash($s)) report($f, $ln, 'JS', $s);
         warnCliches($f, $ln, $s);

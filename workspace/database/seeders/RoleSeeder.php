@@ -8,7 +8,7 @@ use Spatie\Permission\Models\Role;
 class RoleSeeder extends Seeder
 {
     /**
-     * ينشئ أدوار النظام السبعة من المصدر الوحيد config/roles.php — لا تُضف
+     * ينشئ أدوار النظام التسعة من المصدر الوحيد config/roles.php. لا تُضف
      * دوراً هنا مباشرة، أضفه هناك ليبقى معرَّفاً في مكان واحد للوحة والصلاحيات معاً.
      */
     public function run(): void

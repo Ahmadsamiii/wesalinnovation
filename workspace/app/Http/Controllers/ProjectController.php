@@ -21,8 +21,8 @@ use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 /**
- * «مشاريعي» لمدير المشاريع و«حالة مشروعي» للعميل: نفس القائمة مفلترة بما
- * يخص كل مستخدم (Project::visibleTo).
+ * «مشاريعي» لمدير المشاريع و«حالة مشروعي» للعميل و«مشاريع العملاء» لمدير علاقات
+ * العملاء: نفس القائمة مفلترة بما يخص كل مستخدم (Project::visibleTo).
  */
 class ProjectController extends Controller
 {
@@ -50,6 +50,7 @@ class ProjectController extends Controller
             'projects' => $projects,
             'filters' => $filters,
             'isClient' => $request->user()->hasRole('client'),
+            'isCrm' => $request->user()->hasRole('crm'),
         ]);
     }
 

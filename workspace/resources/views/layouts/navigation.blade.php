@@ -24,6 +24,9 @@
                 <p class="truncate text-xs text-brand-muted" dir="ltr">{{ Auth::user()->email }}</p>
             </div>
             <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-brand-text hover:bg-brand-surface focus:bg-brand-surface focus:outline-none">الملف الشخصي</a>
+            @if (\App\Support\PlatformSession::enabled())
+                <a href="{{ config('workspace.chat_url') }}" class="block px-4 py-2 text-sm text-brand-text hover:bg-brand-surface focus:bg-brand-surface focus:outline-none">مساعد وصال</a>
+            @endif
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit" class="block w-full px-4 py-2 text-start text-sm text-red-700 hover:bg-red-50 focus:bg-red-50 focus:outline-none">تسجيل الخروج</button>

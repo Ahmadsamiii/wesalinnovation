@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تسجيل الدخول | وصال</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#282692">
+<link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="preload" href="/fonts/thmanyahsans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/thmanyahsans-Bold.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+/* نفس هوية وصال: القيم منسوخة من homepage/assets/home.css حتى تبقى الصفحتان تجربة واحدة */
+@font-face{font-family:'Thmanyah Sans';src:url('/fonts/thmanyahsans-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Thmanyah Sans';src:url('/fonts/thmanyahsans-Medium.woff2') format('woff2');font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Thmanyah Sans';src:url('/fonts/thmanyahsans-Bold.woff2') format('woff2');font-weight:600 700;font-style:normal;font-display:swap}
+:root{--primary:#282692;--secondary:#814fc3;--tertiary:#5039a8;--navy:#20134f;--sky:#52bdf9;--white:#fff;--bg:#f8f6fd;--surface:#fff;--border:#d9d0ea;--muted:#6b5f86;--text:#3d3558;--ink:#1a1632;--err:#b42318;--err-bg:#fef3f2;--ok:#047857;--ok-bg:#ecfdf5;--r:14px}
+@media(prefers-color-scheme:dark){:root{--bg:#0f0d1a;--surface:#1a1730;--border:#3a3560;--muted:#b3a6d3;--text:#d8d0ec;--ink:#f0ecf8;--err:#ffb4a9;--err-bg:#3a1a17;--ok:#6ee7b7;--ok-bg:#0f2a20}}
+@media(prefers-contrast:more){:root{--border:#5a4f7a;--muted:#3d3558}}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{min-height:100vh;display:grid;place-items:center;padding:24px 16px;font-family:'Thmanyah Sans','Segoe UI',system-ui,sans-serif;line-height:1.75;color:var(--text);background:radial-gradient(1200px 600px at 100% -10%,rgba(129,79,195,.22),transparent 60%),radial-gradient(900px 500px at 0% 110%,rgba(82,189,249,.16),transparent 60%),var(--bg);-webkit-font-smoothing:antialiased}
+:focus-visible{outline:3px solid var(--sky);outline-offset:2px;border-radius:8px}
+.skip{position:absolute;top:-100%;right:16px;background:var(--primary);color:#fff;padding:8px 16px;border-radius:0 0 8px 8px;z-index:9;text-decoration:none}.skip:focus{top:0}
+.card{width:100%;max-width:440px;background:var(--surface);border:1px solid var(--border);border-radius:24px;box-shadow:0 4px 8px rgba(40,38,146,.05),0 24px 60px rgba(40,38,146,.14);overflow:hidden}
+.card-head{padding:28px 28px 22px;color:#fff;background:linear-gradient(160deg,#12103a 0%,#282892 50%,#814fc3 100%)}
+.card-head img{height:44px;width:auto;display:block;margin-bottom:14px}
+.card-head h1{font-size:1.6rem;line-height:1.3;color:#fff}
+.card-head p{margin-top:6px;color:rgba(255,255,255,.86);font-size:.95rem}
+.card-body{padding:26px 28px 28px}
+label{display:block;font-weight:600;color:var(--ink);margin-bottom:6px;font-size:.95rem}
+.field{margin-bottom:18px}
+input[type=email],input[type=password],input[type=text]{width:100%;min-height:48px;padding:10px 14px;font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(--border);border-radius:12px;line-height:2;padding-block:6px}
+input:focus{border-color:var(--primary);outline:0;box-shadow:0 0 0 3px rgba(82,189,249,.45)}
+input[dir=ltr]{text-align:right}
+.pw{position:relative}
+.pw input{padding-inline-end:76px}
+.pw button{position:absolute;inset-block:6px;inset-inline-end:6px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:var(--primary);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:50px;padding:0 20px;border:0;border-radius:999px;font:inherit;font-weight:700;font-size:1rem;cursor:pointer;text-decoration:none;color:#fff;background:linear-gradient(135deg,#814fc3,#5039a8 45%,#282692);box-shadow:0 8px 22px rgba(80,57,168,.32)}
+.btn:hover{filter:brightness(1.06)}
+.btn[disabled]{opacity:.7;cursor:progress}
+.btn.alt{background:var(--surface);color:var(--primary);border:1.5px solid var(--primary);box-shadow:none;margin-top:10px}
+.btn.plain{background:transparent;color:var(--muted);border:0;box-shadow:none;min-height:44px;font-weight:600;margin-top:6px}
+.spin{width:18px;height:18px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:s .7s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.spin{animation-duration:2s}}
+.msg{display:none;margin-bottom:16px;padding:12px 14px;border-radius:12px;font-size:.95rem}
+.msg.on{display:block}
+.msg.err{background:var(--err-bg);color:var(--err);border:1px solid currentColor}
+.msg.ok{background:var(--ok-bg);color:var(--ok);border:1px solid currentColor}
+.links{margin-top:22px;display:grid;gap:8px;font-size:.92rem}
+.links a{color:var(--primary);font-weight:600}
+@media(prefers-color-scheme:dark){.links a,.pw button,.btn.alt{color:#c9b6f5}.btn.alt{border-color:#c9b6f5}}
+.who{padding:14px 16px;border-radius:12px;background:var(--bg);border:1px solid var(--border);margin-bottom:16px}
+.who b{color:var(--ink)}
+.who span{display:block;color:var(--muted);font-size:.9rem}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<a class="skip" href="#form">تخطَّ إلى النموذج</a>
+<main class="card">
+<div class="card-head">
+<img src="/assets/logo-white.png" alt="وصال" width="180" height="44">
+<h1 id="ttl">تسجيل الدخول</h1>
+<p>حساب واحد لمساعد وصال ولمساحة العمل.</p>
+</div>
+<div class="card-body">
+<div id="err" class="msg err" role="alert" tabindex="-1"></div>
+<div id="note" class="msg ok" role="status"></div>
+
+<form id="form" novalidate>
+<div class="field"><label for="email">البريد الإلكتروني</label><input id="email" name="email" type="email" dir="ltr" autocomplete="username" inputmode="email" autocapitalize="none" spellcheck="false" required></div>
+<div class="field"><label for="pass">كلمة المرور</label><div class="pw"><input id="pass" name="password" type="password" dir="ltr" autocomplete="current-password" required><button type="button" id="showPw" aria-pressed="false" aria-controls="pass">إظهار</button></div></div>
+<button class="btn" id="go" type="submit">دخول</button>
+<div class="links">
+<a href="/chat#forgot">نسيت كلمة المرور؟</a>
+<a href="/chat#register">ليس لك حساب؟ أنشئ حساباً في مساعد وصال</a>
+<a href="/homepage/">العودة إلى الموقع</a>
+</div>
+</form>
+
+<section id="signedIn" hidden aria-labelledby="ttl2">
+<h2 id="ttl2" style="font-size:1.15rem;color:var(--ink);margin-bottom:12px">أنت مسجّل الدخول</h2>
+<div class="who"><b id="whoName"></b><span id="whoRole"></span></div>
+<a class="btn" id="toWorkspace" href="/workspace/" hidden>افتح مساحة العمل</a>
+<a class="btn alt" id="toChat" href="/chat">افتح مساعد وصال</a>
+<button class="btn plain" id="logout" type="button">تسجيل الخروج</button>
+</section>
+</div>
+</main>
+
+<script>
+(function(){
+'use strict';
+var API='/api/auth.php';
+var $=function(id){return document.getElementById(id);};
+var params=new URLSearchParams(location.search);
+
+/* الوجهة بعد الدخول: رابط المتصفح next، ولا يُقبل إلا على هذا الموقع ونطاقاته الفرعية
+   (الموقع الرئيسي وchat. وworkspace.)، وبمخطط http أو https فقط. غير ذلك يُهمَل. */
+function safeNext(raw){
+  if(!raw)return null;
+  try{
+    var u=new URL(raw,location.origin);
+    if(u.protocol!=='http:'&&u.protocol!=='https:')return null;
+    var mine=location.hostname,base=mine.replace(/^(www|chat|workspace)\./,'');
+    var local=/^(localhost|127\.0\.0\.1)$/.test(mine);
+    var ok=u.hostname===mine||(!local&&(u.hostname===base||u.hostname.slice(-(base.length+1))==='.'+base));
+    return ok?u.href:null;
+  }catch(e){return null;}
+}
+var next=safeNext(params.get('next'));
+
+function api(body){
+  return fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(body)})
+    .then(function(r){return r.json().catch(function(){return null;}).then(function(j){return j&&typeof j==='object'?j:{ok:false,offline:true};});})
+    .catch(function(){return {ok:false,offline:true};});
+}
+function show(el,text){el.textContent=text||'';el.classList.toggle('on',!!text);}
+function busy(on){var b=$('go');b.disabled=on;b.setAttribute('aria-busy',on?'true':'false');b.innerHTML=on?'<span class="spin" aria-hidden="true"></span> لحظة':'دخول';}
+
+/* من له دور في مساحة العمل غير مدير النظام يبدأ منها، ومدير النظام يختار، وغيرهما إلى المحادثة.
+   كلمة المرور المؤقتة تُغيَّر من المحادثة فتذهب إليها دائماً. */
+function route(user){
+  if(user.must_change_pw)return '/chat';
+  if(next)return next;
+  if(user.workspace&&user.role!=='admin')return '/workspace/';
+  return user.workspace?null:'/chat';
+}
+function signedIn(user){
+  $('form').hidden=true;$('signedIn').hidden=false;
+  $('ttl').textContent='مرحباً بك';
+  $('whoName').textContent=user.name||user.email||'';
+  $('whoRole').textContent=user.role_label||'';
+  $('toWorkspace').hidden=!user.workspace;
+  var first=$('toWorkspace').hidden?$('toChat'):$('toWorkspace');
+  first.focus();
+}
+
+function arrived(user){
+  var to=route(user);
+  if(to)location.replace(to);else signedIn(user);
+}
+
+/* جلسة قائمة: إن جاء من صفحة طلبت الدخول يعود إليها، وإلا يختار وجهته */
+api({action:'me'}).then(function(r){if(r.ok&&r.user)arrived(r.user);});
+
+$('showPw').addEventListener('click',function(){
+  var p=$('pass'),on=p.type==='password';
+  p.type=on?'text':'password';this.textContent=on?'إخفاء':'إظهار';this.setAttribute('aria-pressed',on?'true':'false');
+});
+
+$('form').addEventListener('submit',function(e){
+  e.preventDefault();
+  show($('err'),'');
+  var email=$('email').value.trim().toLowerCase(),pass=$('pass').value;
+  if(!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(email)){show($('err'),'اكتب بريداً إلكترونياً صحيحاً.');$('err').focus();return;}
+  if(!pass){show($('err'),'اكتب كلمة المرور.');$('err').focus();return;}
+  busy(true);
+  api({action:'login',email:email,password:pass}).then(function(r){
+    busy(false);
+    if(!r.ok||!r.user){
+      show($('err'),r.offline?'تعذّر الاتصال بالخادم. تحقق من الاتصال وأعد المحاولة.':(r.error||'تعذّر تسجيل الدخول. حاول مرة أخرى.'));
+      $('err').focus();return;
+    }
+    arrived(r.user);
+  });
+});
+
+$('logout').addEventListener('click',function(){
+  api({action:'logout'}).then(function(){location.reload();});
+});
+
+/* رسالة من صفحة أخرى: انتهت الجلسة (?ended=idle) أو خرج من مكان آخر */
+var ended=params.get('ended');
+if(ended==='idle')show($('note'),'سجّلنا خروجك تلقائياً بعد مدة دون نشاط. سجّل دخولك للمتابعة.');
+})();
+</script>
+</body>
+</html>

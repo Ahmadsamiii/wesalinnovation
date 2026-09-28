@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class NavigationTest extends TestCase
@@ -16,6 +17,15 @@ class NavigationTest extends TestCase
         foreach (config('roles') as $role) {
             foreach ($role['tabs'] as $key => $tab) {
                 $this->assertMatchesRegularExpression('/^[a-z][a-z.-]*$/', $tab['route'], "tab {$key}");
+            }
+        }
+    }
+
+    public function test_every_tab_of_every_role_points_to_a_built_route(): void
+    {
+        foreach (config('roles') as $name => $role) {
+            foreach ($role['tabs'] as $key => $tab) {
+                $this->assertTrue(Route::has($tab['route']), "{$name} tab {$key} route {$tab['route']}");
             }
         }
     }

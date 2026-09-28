@@ -67,6 +67,9 @@
                 <p class="mb-4 whitespace-pre-line text-sm leading-7 text-gray-700">{{ $project->description }}</p>
             @endif
             <dl class="space-y-2 text-sm">
+                @unless (auth()->user()->hasRole('client'))
+                    <div class="flex justify-between gap-2"><dt class="text-gray-500">العميل</dt><dd>{{ $project->client?->name ?? 'داخلي' }}</dd></div>
+                @endunless
                 <div class="flex justify-between gap-2"><dt class="text-gray-500">مدير المشروع</dt><dd>{{ $project->pm->name }}</dd></div>
                 <div class="flex justify-between gap-2"><dt class="text-gray-500">للتواصل</dt><dd dir="ltr"><a href="mailto:{{ $project->pm->email }}" class="text-brand-800 hover:underline">{{ $project->pm->email }}</a></dd></div>
                 <div class="flex justify-between gap-2"><dt class="text-gray-500">البداية</dt><dd><x-date :value="$project->actual_start_date ?? $project->start_date" /></dd></div>
