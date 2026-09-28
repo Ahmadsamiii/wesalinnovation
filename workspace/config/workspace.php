@@ -44,6 +44,8 @@ return [
     'auth_cookie_domain' => env('UNIFIED_AUTH_COOKIE_DOMAIN'),
     'login_url' => env('UNIFIED_LOGIN_URL', 'https://wesalinnovation.sa/login'),
     'home_url' => env('WORKSPACE_HOME_URL', '/'),
+    // رابط مساعد وصال في قائمة المستخدم. /chat ثابت قبل التبديل وبعده.
+    'chat_url' => env('UNIFIED_CHAT_URL', 'https://wesalinnovation.sa/chat'),
     'session_grace_seconds' => 120,
 
     /*

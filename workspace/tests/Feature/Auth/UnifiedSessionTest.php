@@ -366,6 +366,29 @@ class UnifiedSessionTest extends TestCase
         $this->assertSame($before, $user->fresh()->password);
     }
 
+    // -------------------------------------------------------------- رابط مساعد وصال
+
+    public function test_the_layout_links_back_to_the_assistant_when_sign_in_is_unified(): void
+    {
+        config(['workspace.chat_url' => 'https://wesalinnovation.sa/chat']);
+        $s = $this->signedIn();
+
+        $html = $this->withUnencryptedCookie(self::COOKIE, $s->token)->get('/profile')->assertOk()->getContent();
+
+        $this->assertSame(2, substr_count($html, 'href="https://wesalinnovation.sa/chat"'), 'الرابط في القائمة الجانبية وقائمة المستخدم');
+        $this->assertStringContainsString('مساعد وصال', $html);
+    }
+
+    public function test_the_layout_has_no_assistant_link_while_sign_in_is_local(): void
+    {
+        config(['workspace.unified_auth' => false]);
+
+        $html = $this->actingAs(User::factory()->role('pm')->create())->get('/profile')->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('wesalinnovation.sa/chat', $html);
+        $this->assertStringNotContainsString('مساعد وصال', $html);
+    }
+
     // -------------------------------------------------------------- عطل المنصة
 
     public function test_an_unreachable_platform_leaves_the_local_rules_in_charge(): void
