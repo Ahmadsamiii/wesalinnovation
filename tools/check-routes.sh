@@ -70,6 +70,7 @@ done
 echo "CHAT-APP"          > "$DOCS/index.html"
 echo "HOMEPAGE"          > "$DOCS/homepage/index.html"
 echo "OLD-CORPORATE"     > "$DOCS/corporate.html"
+echo "LOGIN-PAGE"        > "$DOCS/login.html"
 echo "SURVEY"            > "$DOCS/survey.html"
 echo "INVITE-STUB"       > "$DOCS/api/invite-redeem.php"
 echo "AUTH-STUB"         > "$DOCS/api/auth.php"
@@ -161,7 +162,10 @@ expect_body    "الجذر على chat. هو المحادثة أيضاً"       
 expect_body    "/homepage/ يعرض صفحة الشركة"                         "$APEX" "/homepage/"                "HOMEPAGE"
 expect_redirect "/chat يعود إلى الجذر"                               "$APEX" "/chat"                     302 "/"
 expect_redirect "/chat/ بشرطة مائلة كذلك"                            "$APEX" "/chat/"                    302 "/"
-expect_redirect "/login يفتح شاشة الدخول بعلامة # سليمة (لا %23)"    "$APEX" "/login"                    302 "/#login"
+expect_body    "/login يعرض شاشة الدخول الموحدة على النطاق الرئيسي"      "$APEX" "/login"                    "LOGIN-PAGE"
+expect_body    "وعلى chat. كذلك"                                      "$CHAT" "/login"                    "LOGIN-PAGE"
+expect_body    "وبشرطة مائلة"                                         "$APEX" "/login/"                   "LOGIN-PAGE"
+expect_body    "ومع وجهة العودة next في الاستعلام"                    "$APEX" "/login?next=%2Fworkspace%2F" "LOGIN-PAGE"
 expect_redirect "corporate.html يحوّل إلى /homepage/ تحويلاً دائماً" "$APEX" "/corporate.html"           301 "/homepage/"
 expect_code    "رابط الدعوة والقيم في الجذر تبقى للمحادثة (بلا تحويل)" "$APEX" "/?invite=abc123"          200
 expect_code    "رابط إعادة التعيين في الجذر يبقى للمحادثة"             "$APEX" "/?reset=abc123"           200
@@ -183,6 +187,14 @@ h="$(hdr "$APEX" "/" x-frame-options)"
 [ "$h" = "SAMEORIGIN" ] && ok "ترويسة X-Frame-Options باقية" || bad "X-Frame-Options" "SAMEORIGIN" "${h:-لا ترويسة}"
 h="$(hdr "$APEX" "/assets/logo.webp" content-type)"
 [[ "$h" == image/webp* ]] && ok "نوع MIME لـ webp باقٍ" || bad "نوع MIME لـ webp" "image/webp" "${h:-لا ترويسة}"
+
+# غياب شاشة الدخول الجديدة عن الخادم: يبقى الدخول القديم في المحادثة بدل رابط منقطع، بعلامة # سليمة (لا %23)
+mv "$DOCS/login.html" "$DOCS/login.off"
+expect_redirect "/login بلا الشاشة الجديدة يفتح دخول المحادثة"        "$APEX" "/login"                    302 "/#login"
+: > "$DOCS/.switch"
+expect_redirect "وبعد التبديل يفتحه على chat. بعلامة # سليمة"          "$APEX" "/login"                    302 "https://$CHAT/#login"
+rm -f "$DOCS/.switch"
+mv "$DOCS/login.off" "$DOCS/login.html"
 
 # حماية رابط corporate.html لو غابت الصفحة الجديدة عن الخادم
 mv "$DOCS/homepage/index.html" "$DOCS/homepage/index.off"
@@ -214,7 +226,7 @@ expect_body    "الجذر على النطاق الرئيسي صار صفحة ا
 expect_body    "الجذر على chat. ما زال المحادثة"                      "$CHAT" "/"                         "CHAT-APP"
 expect_redirect "/chat يذهب إلى chat."                               "$APEX" "/chat"                     302 "https://$CHAT/"
 expect_redirect "/chat على chat. لا يدور"                            "$CHAT" "/chat"                     302 "https://$CHAT/"
-expect_redirect "/login يذهب إلى دخول chat. بعلامة # سليمة"          "$APEX" "/login"                    302 "https://$CHAT/#login"
+expect_body    "/login يعرض الشاشة نفسها بعد التبديل بلا تحويل"          "$APEX" "/login"                    "LOGIN-PAGE"
 expect_redirect "رابط الدعوة القديم /?invite= يحفظ قيمته"            "$APEX" "/?invite=abc123"           302 "https://$CHAT/?invite=abc123"
 expect_redirect "رابط إعادة التعيين القديم /?reset= يحفظ قيمته"       "$APEX" "/?reset=tok9"              302 "https://$CHAT/?reset=tok9"
 expect_redirect "رجوع الدعوة /?invited=1&t= يحفظ الاستعلام"          "$APEX" "/?invited=1&trial_until=5&t=ab" 302 "https://$CHAT/?invited=1&trial_until=5&t=ab"

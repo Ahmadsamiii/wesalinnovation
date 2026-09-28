@@ -99,6 +99,12 @@ ServerSignature Off
   RewriteRule ^chat/?$ https://chat.%1/ [R=302,L]
   RewriteRule ^chat/?$ / [R=302,L]
 
+  # شاشة الدخول الموحدة (login.html) على النطاق الرئيسي وعلى chat. بلا تحويل. ملف لا مجلد عمداً:
+  # مجلد باسم login يجعل Apache يحوّل /login إلى /login/ قبل هذه القاعدة. إن لم يصل الملف إلى
+  # الخادم لسبب ما يبقى الدخول القديم في المحادثة بدل رابط منقطع.
+  RewriteCond %{DOCUMENT_ROOT}/login.html -f
+  RewriteRule ^login/?$ login.html [L]
+
   RewriteCond %{DOCUMENT_ROOT}/.switch -f
   RewriteCond %{HTTP_HOST} ^(?:chat\.)?([^:]+)(?::[0-9]+)?$ [NC]
   RewriteRule ^login/?$ https://chat.%1/#login [R=302,NE,L]

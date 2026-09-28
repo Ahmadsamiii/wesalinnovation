@@ -1408,6 +1408,7 @@ function publicUser(array $u): array {
         /* الدور الفعلي (واحد من الاثني عشر) وهل للحساب مساحة عمل: تعرض الواجهة بهما
            اسم الدور ورابط المساحة والمبدّل بين النظامين */
         'eff_role' => effectiveRole($u),
+        'role_label' => roleName(effectiveRole($u)),
         'workspace' => ($u['role'] ?? 'user') === 'admin' || !empty($u['org_role']),
     ];
 }
