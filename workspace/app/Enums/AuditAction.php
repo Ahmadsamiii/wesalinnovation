@@ -61,6 +61,8 @@ enum AuditAction: string
     case HiringFilled = 'hiring.filled';
     case HiringCancelled = 'hiring.cancelled';
 
+    case EmployeeUpdated = 'hr.employee_updated';
+
     case MailTestSent = 'system.mail_test';
 
     case ContentCreated = 'content.created';
@@ -122,6 +124,7 @@ enum AuditAction: string
             self::HiringRejected => 'رفض طلب توظيف',
             self::HiringFilled => 'شغل وظيفة',
             self::HiringCancelled => 'إلغاء طلب توظيف',
+            self::EmployeeUpdated => 'تعديل بيانات وظيفية لموظف',
             self::MailTestSent => 'رسالة بريد تجريبية',
             self::ContentCreated => 'إنشاء محتوى صحي',
             self::ContentSubmitted => 'تقديم محتوى للمراجعة الطبية',
@@ -171,6 +174,7 @@ enum AuditAction: string
             'finance' => 'المالية',
             'certificate' => 'الشهادات والإفادات',
             'hiring' => 'التوظيف',
+            'hr' => 'الموارد البشرية',
             'system' => 'النظام',
             'content' => 'المحتوى الصحي',
             default => $group,

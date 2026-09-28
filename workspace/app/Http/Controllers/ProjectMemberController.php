@@ -19,7 +19,8 @@ use Illuminate\View\View;
 
 /**
  * فريق المشروع. الأعضاء من الحسابات الداخلية النشطة فقط: العميل يتابع
- * مشروعه من بوابته، لا من داخل الفريق.
+ * مشروعه من بوابته، لا من داخل الفريق. مدير الموارد البشرية ومدير علاقات
+ * العملاء لا ينضمان لفريق، فلا يصلان بالعضوية إلى تفاصيل العمل الداخلي.
  */
 class ProjectMemberController extends Controller
 {
@@ -103,7 +104,7 @@ class ProjectMemberController extends Controller
         return User::query()
             ->with('roles')
             ->active()
-            ->whereHas('roles', fn (Builder $query) => $query->where('name', '!=', 'client'))
+            ->whereHas('roles', fn (Builder $query) => $query->whereNotIn('name', ['client', 'hr', 'crm']))
             ->whereKeyNot($project->pm_id)
             ->whereNotIn('id', $project->members()->select('user_id'))
             ->orderBy('name')

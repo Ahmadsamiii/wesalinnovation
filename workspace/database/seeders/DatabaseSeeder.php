@@ -8,7 +8,8 @@ use Illuminate\Database\Seeder;
 class DatabaseSeeder extends Seeder
 {
     /**
-     * يُنشئ الأدوار السبعة، ثم مستخدماً تجريبياً واحداً لكل دور لتجربة النظام
+     * يُنشئ أدوار config/roles.php التسعة، ثم مستخدماً تجريبياً واحداً لكل دور
+     * (ومنها hr@wesalinnovation.sa وcrm@wesalinnovation.sa) لتجربة النظام
      * فوراً. هذه الحسابات التجريبية بكلمة مرور معروفة — لتطوير محلي فقط،
      * لا تُشغَّل على قاعدة إنتاج حقيقية.
      *

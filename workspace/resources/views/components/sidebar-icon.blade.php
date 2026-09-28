@@ -26,6 +26,8 @@ $iconForTab = [
     'sensitive_alerts' => 'alert',
     'my_tasks' => 'check-square',
     'my_card' => 'id-card',
+    'employees' => 'users', 'clients' => 'user',
+    'reference_letters' => 'file', 'client_projects' => 'folder',
     'reference_request' => 'send',
     'dashboard' => 'grid', 'profile' => 'user', 'logout' => 'logout',
 ];

@@ -20,7 +20,13 @@
                     <div><dt class="text-gray-500">المباشرة المطلوبة</dt><dd class="mt-0.5 font-medium"><x-date :value="$hiringRequest->target_start_date" empty="حين تتوفر" /></dd></div>
                     <div><dt class="text-gray-500">التكلفة الشهرية التقديرية للوظيفة</dt><dd class="mt-0.5 font-medium">@if ($hiringRequest->monthly_budget !== null)<x-money :amount="$hiringRequest->monthly_budget" />@else — @endif</dd></div>
                     @if ($hiringRequest->project)
-                        <div class="sm:col-span-2"><dt class="text-gray-500">لمشروع</dt><dd class="mt-0.5 font-medium"><a href="{{ route('projects.show', $hiringRequest->project) }}" class="text-brand-800 hover:underline">{{ $hiringRequest->project->name }}</a></dd></div>
+                        <div class="sm:col-span-2"><dt class="text-gray-500">لمشروع</dt><dd class="mt-0.5 font-medium">
+                            @can('view', $hiringRequest->project)
+                                <a href="{{ route('projects.show', $hiringRequest->project) }}" class="text-brand-800 hover:underline">{{ $hiringRequest->project->name }}</a>
+                            @else
+                                {{ $hiringRequest->project->name }}
+                            @endcan
+                        </dd></div>
                     @endif
                 </dl>
 

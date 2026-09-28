@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot:title>طلب إفادة</x-slot:title>
 
-    <x-page-header title="طلب إفادة" description="تُكتب الإفادة من بياناتك الوظيفية المسجلة، ويعتمدها المدير التنفيذي.">
+    <x-page-header title="طلب إفادة" :description="'تُكتب الإفادة من بياناتك الوظيفية المسجلة، ويعتمدها '.$approverLabel.'.'">
         <x-slot:breadcrumb><a href="{{ route('reference-letters.index') }}" class="hover:underline">طلب إفادة</a></x-slot:breadcrumb>
     </x-page-header>
 
@@ -23,7 +23,7 @@
                 <div class="flex justify-between gap-2"><dt class="text-gray-500">القسم</dt><dd>{{ $user->department ?? '—' }}</dd></div>
                 <div class="flex justify-between gap-2"><dt class="text-gray-500">تاريخ الالتحاق</dt><dd><x-date :value="$user->joined_at" /></dd></div>
             </dl>
-            <p class="mt-4 text-xs text-gray-500">بيانات ناقصة أو خاطئة؟ يصححها مدير النظام قبل الاعتماد.</p>
+            <p class="mt-4 text-xs text-gray-500">بيانات ناقصة أو خاطئة؟ يصححها {{ $profileOwnerLabel }} قبل الاعتماد.</p>
         </x-card>
     </div>
 </x-app-layout>

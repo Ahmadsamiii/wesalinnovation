@@ -24,6 +24,13 @@ class HiringRequest extends Model
     use HasFactory;
 
     /**
+     * أدوار ترى كل الطلبات. غيرها يرى طلباته وحدها.
+     *
+     * @var list<string>
+     */
+    public const SEES_ALL_ROLES = ['executive', 'hr'];
+
+    /**
      * @var array<string, mixed>
      */
     protected $attributes = [
@@ -88,13 +95,13 @@ class HiringRequest extends Model
     }
 
     /**
-     * المدير التنفيذي يرى كل الطلبات، وكل مسؤول طلباته.
+     * المدير التنفيذي ومدير الموارد البشرية يريان كل الطلبات، وكل مسؤول طلباته.
      *
      * @param  Builder<HiringRequest>  $query
      */
     public function scopeVisibleTo(Builder $query, User $user): void
     {
-        if (! $user->hasRole('executive')) {
+        if (! $user->hasAnyRole(self::SEES_ALL_ROLES)) {
             $query->where('requested_by', $user->id);
         }
     }

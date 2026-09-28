@@ -52,6 +52,19 @@ class DashboardController extends Controller
     }
 
     /**
+     * طلبات الإفادة التي ينتظر قرارها المدير التنفيذي. مع وجود مدير موارد نشط
+     * يقرّرها هو، فلا تُحسب هنا إلا إفادات مدير الموارد نفسه.
+     */
+    private function letterQueueCount(User $user): int
+    {
+        return ReferenceLetter::query()
+            ->where('status', ReferenceLetterStatus::Pending)
+            ->where('requester_id', '!=', $user->id)
+            ->when(User::hasActiveHr(), fn (Builder $query) => $query->whereHas('requester', fn (Builder $query) => $query->withRole('hr')))
+            ->count();
+    }
+
+    /**
      * ما ينتظر قرار المدير التنفيذي، ولمحة المحفظة والمال، وما يحتاج انتباهه.
      *
      * @return array<string, mixed>
@@ -66,7 +79,7 @@ class DashboardController extends Controller
                 ['label' => 'مشاريع بانتظار الاعتماد', 'count' => Project::where('status', ProjectStatus::PendingApproval)->count(), 'url' => route('approvals.projects')],
                 ['label' => 'أوامر شراء بانتظار اعتمادك', 'count' => PurchaseOrder::where('status', PurchaseOrderStatus::PendingExecutive)->count(), 'url' => route('approvals.financial')],
                 ['label' => 'طلبات توظيف', 'count' => HiringRequest::where('status', HiringRequestStatus::Pending)->where('requested_by', '!=', $user->id)->count(), 'url' => route('hiring-requests.index', ['status' => HiringRequestStatus::Pending->value])],
-                ['label' => 'طلبات إفادة', 'count' => ReferenceLetter::where('status', ReferenceLetterStatus::Pending)->where('requester_id', '!=', $user->id)->count(), 'url' => route('reference-letters.index')],
+                ['label' => 'طلبات إفادة', 'count' => $this->letterQueueCount($user), 'url' => route('reference-letters.index')],
             ],
             'kpis' => [
                 'active' => Project::whereIn('status', [ProjectStatus::Approved, ProjectStatus::InProgress])->count(),

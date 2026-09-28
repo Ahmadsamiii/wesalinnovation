@@ -6,14 +6,15 @@ use App\Enums\AuditAction;
 use App\Enums\ReferenceLetterStatus;
 use App\Models\AuditLog;
 use App\Models\ReferenceLetter;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 /**
- * «طلب إفادة»: الموظف يطلب، والمدير التنفيذي يعتمد أو يرفض بتعليل، والإفادة
- * المعتمدة تُطبع برمز تحقق عام.
+ * «طلب إفادة»: الموظف يطلب، ومدير الموارد البشرية يعتمد أو يرفض بتعليل (والمدير
+ * التنفيذي ما دام لا يوجد مدير موارد نشط)، والإفادة المعتمدة تُطبع برمز تحقق عام.
  */
 class ReferenceLetterController extends Controller
 {
@@ -30,7 +31,12 @@ class ReferenceLetterController extends Controller
                 ->orderByRaw('case when status = ? then 0 else 1 end', [ReferenceLetterStatus::Pending->value])
                 ->latest('id')
                 ->paginate(20),
-            'isApprover' => $user->hasRole('executive'),
+            'seesAll' => $user->hasAnyRole(ReferenceLetter::SEES_ALL_ROLES),
+            'canDecide' => $user->hasRole('hr') || ($user->hasRole('executive') && ! User::hasActiveHr()),
+            'canRequest' => ! $user->hasRole('executive'),
+            'isHr' => $user->hasRole('hr'),
+            'approverLabel' => ReferenceLetter::approverLabel(),
+            'profileOwnerLabel' => ReferenceLetter::profileOwnerLabel(),
             'missingProfile' => blank($user->job_title) || $user->joined_at === null,
         ]);
     }
@@ -39,7 +45,11 @@ class ReferenceLetterController extends Controller
     {
         Gate::authorize('create', ReferenceLetter::class);
 
-        return view('reference-letters.create', ['user' => $request->user()]);
+        return view('reference-letters.create', [
+            'user' => $request->user(),
+            'approverLabel' => ReferenceLetter::approverLabel($request->user()),
+            'profileOwnerLabel' => ReferenceLetter::profileOwnerLabel(),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -58,7 +68,7 @@ class ReferenceLetterController extends Controller
 
         AuditLog::record(AuditAction::ReferenceLetterRequested, $letter);
 
-        return redirect()->route('reference-letters.index')->with('status', 'أُرسل طلبك للمدير التنفيذي. تظهر الإفادة هنا حين تُعتمد.');
+        return redirect()->route('reference-letters.index')->with('status', 'أُرسل طلبك إلى '.ReferenceLetter::approverLabel($request->user()).'. تظهر الإفادة هنا حين تُعتمد.');
     }
 
     /**

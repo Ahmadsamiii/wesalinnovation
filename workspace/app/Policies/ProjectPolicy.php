@@ -10,32 +10,43 @@ use App\Models\User;
 /**
  * من يرى المشروع ومن يغيّره. مدير المشروع (pm_id) يدير مشروعه، والمدير
  * التنفيذي يعتمد ويوقف ويلغي ويستطيع التدخل في أي مشروع، والعميل يرى
- * مشاريعه بلا تفاصيل العمل الداخلي، والعضو يرى مشروعه ويعمل على مهامه.
+ * مشاريعه بلا تفاصيل العمل الداخلي، ومدير علاقات العملاء يقرأ كل المشاريع
+ * بالعرض المحدود نفسه، والعضو يرى مشروعه ويعمل على مهامه. مدير الموارد
+ * البشرية لا يرى المشاريع.
  */
 class ProjectPolicy
 {
+    /**
+     * أدوار ترى المشروع بعرض العميل المحدود: بلا مهام ولا فريق ولا قرارات ولا
+     * ملفات. القاعدة واحدة في viewInternals، فلا تتكرر لكل دور.
+     *
+     * @var list<string>
+     */
+    public const LIMITED_VIEW_ROLES = ['client', 'crm'];
+
     /**
      * القائمة نفسها مفلترة بـ Project::visibleTo، فكل مستخدم بدور يرى ما يخصه.
      */
     public function viewAny(User $user): bool
     {
-        return $user->roleName() !== null;
+        return $user->roleName() !== null && ! $user->hasRole('hr');
     }
 
     public function view(User $user, Project $project): bool
     {
-        return $user->hasAnyRole(['executive', 'finance'])
+        return $user->hasAnyRole(['executive', 'finance', 'crm'])
             || $project->pm_id === $user->id
             || $project->client_id === $user->id
             || $project->hasMember($user);
     }
 
     /**
-     * تفاصيل العمل الداخلي (المهام والتعليقات والفريق والقرارات) مخفية عن العميل.
+     * تفاصيل العمل الداخلي (المهام والتعليقات والفريق والقرارات والملفات)
+     * مخفية عن العميل ومدير علاقات العملاء.
      */
     public function viewInternals(User $user, Project $project): bool
     {
-        return $this->view($user, $project) && ! $user->hasRole('client');
+        return $this->view($user, $project) && ! $user->hasAnyRole(self::LIMITED_VIEW_ROLES);
     }
 
     public function create(User $user): bool

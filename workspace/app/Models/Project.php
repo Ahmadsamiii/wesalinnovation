@@ -169,14 +169,14 @@ class Project extends Model
 
     /**
      * المشاريع التي يراها المستخدم: التنفيذي والمالي يريان الكل (الاعتماد
-     * والعقود والفواتير تمر عليها كلها)، والعميل مشاريعه، وغيرهم ما يديره أو
-     * هو عضو فيه.
+     * والعقود والفواتير تمر عليها كلها)، ومدير علاقات العملاء الكل لقراءتها
+     * بالعرض المحدود، والعميل مشاريعه، وغيرهم ما يديره أو هو عضو فيه.
      *
      * @param  Builder<Project>  $query
      */
     public function scopeVisibleTo(Builder $query, User $user): void
     {
-        if ($user->hasAnyRole(['executive', 'finance'])) {
+        if ($user->hasAnyRole(['executive', 'finance', 'crm'])) {
             return;
         }
 

@@ -103,6 +103,14 @@ class AuditLog extends Model
                     $properties['fields'],
                 ))
                 : null,
+            AuditAction::EmployeeUpdated => collect($properties['changes'] ?? [])
+                ->map(fn (array $change, string $field): string => sprintf(
+                    '%s: من «%s» إلى «%s»',
+                    __("validation.attributes.{$field}"),
+                    $change['from'] ?? '-',
+                    $change['to'] ?? '-',
+                ))
+                ->implode('، '),
             AuditAction::AuthFailed, AuditAction::InvitationSent => $properties['email'] ?? null,
             AuditAction::ProjectDecided, AuditAction::PurchaseOrderReviewed, AuditAction::PurchaseOrderDecided => trim(($properties['decision_label'] ?? '').(isset($properties['note']) ? ': '.$properties['note'] : '')),
             AuditAction::ProjectMemberAdded, AuditAction::ProjectMemberRemoved => $properties['member'] ?? null,

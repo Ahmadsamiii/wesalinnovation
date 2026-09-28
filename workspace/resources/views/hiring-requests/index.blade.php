@@ -1,7 +1,11 @@
 <x-app-layout>
     <x-slot:title>طلبات التوظيف</x-slot:title>
 
-    <x-page-header title="طلبات التوظيف" :description="$isApprover ? 'احتياجات الفرق من الوظائف: ما ينتظر قرارك أولاً.' : 'اطلب وظيفة لفريقك بمبرراتها، ويقرّرها المدير التنفيذي.'">
+    <x-page-header title="طلبات التوظيف" :description="match (true) {
+        $isApprover => 'احتياجات الفرق من الوظائف: ما ينتظر قرارك أولاً.',
+        $isHr => 'احتياجات الفرق من الوظائف: المعتمَدة أولاً، لتغلقها بشغل الوظيفة أو بالإلغاء.',
+        default => 'اطلب وظيفة لفريقك بمبرراتها، ويقرّرها المدير التنفيذي.',
+    }">
         <x-slot:actions>
             @can('create', \App\Models\HiringRequest::class)
                 <x-button :href="route('hiring-requests.create')">طلب توظيف جديد</x-button>
@@ -41,7 +45,7 @@
                     </p>
                     <p class="mt-1 line-clamp-2 text-gray-600">{{ $hiringRequest->justification }}</p>
                     <p class="mt-2 text-xs text-gray-500">
-                        @if ($isApprover) طلبه {{ $hiringRequest->requester->name }} — @endif
+                        @if ($seesAll) طلبه {{ $hiringRequest->requester->name }}، @endif
                         <x-date :value="$hiringRequest->created_at" relative />
                     </p>
                 </div>

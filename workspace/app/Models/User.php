@@ -149,6 +149,16 @@ class User extends Authenticatable
     }
 
     /**
+     * مشاريع العميل: التي ربطها مدير المشروع بحسابه.
+     *
+     * @return HasMany<Project, $this>
+     */
+    public function clientProjects(): HasMany
+    {
+        return $this->hasMany(Project::class, 'client_id');
+    }
+
+    /**
      * رمز التحقق من البطاقة الرقمية، يُولَّد عند أول طلب له.
      */
     public function cardCode(): string
@@ -199,6 +209,36 @@ class User extends Authenticatable
     public function scopeWithRole(Builder $query, string $role): void
     {
         $query->whereHas('roles', fn (Builder $query) => $query->where('name', $role));
+    }
+
+    /**
+     * مفاتيح أدوار المنسوبين: كل أدوار config/roles.php عدا العميل.
+     *
+     * @return list<string>
+     */
+    public static function employeeRoles(): array
+    {
+        return array_values(array_diff(array_keys(config('roles')), ['client']));
+    }
+
+    /**
+     * الحسابات الداخلية: من دوره غير العميل.
+     *
+     * @param  Builder<User>  $query
+     */
+    public function scopeEmployees(Builder $query): void
+    {
+        $query->whereHas('roles', fn (Builder $query) => $query->whereIn('name', static::employeeRoles()));
+    }
+
+    /**
+     * هل يوجد مدير موارد بشرية قادر على الدخول؟ ما دام لا يوجد، يبقى اعتماد
+     * الإفادات الوظيفية عند المدير التنفيذي كي لا يتوقف قبل أول حساب لهذا الدور.
+     * حساب دُعي ولم يقبل دعوته ليس قادراً على الدخول، فلا يُسقط صلاحية التنفيذي.
+     */
+    public static function hasActiveHr(): bool
+    {
+        return static::withRole('hr')->canSignIn()->exists();
     }
 
     /**
