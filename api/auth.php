@@ -57,15 +57,18 @@ try {
             $s->execute([$phone]);
             if ($s->fetch()) fail('يوجد حساب مسجّل برقم الجوال هذا. سجّل دخولك أو استخدم رقماً آخر.');
 
-            $inviteRole = null; $inviteId = null;
+            $inviteRole = null; $inviteId = null; $inviteOrg = null;
             $tok = preg_replace('/[^a-f0-9]/', '', (string)($in['invite'] ?? ''));
             if (strlen($tok) >= 32) {
-                $s = db()->prepare("SELECT id,email,role_target FROM invites WHERE token=? AND status='sent' LIMIT 1");
+                $s = db()->prepare("SELECT id,email,role_target,org_role_target FROM invites WHERE token=? AND status='sent' LIMIT 1");
                 $s->execute([$tok]);
                 if ($inv = $s->fetch()) {
                     if (mb_strtolower($inv['email']) !== $email)
                         fail('هذه الدعوة مرسلة إلى بريد إلكتروني آخر. سجّل بالبريد الذي وصلته الدعوة.');
                     $inviteRole = $inv['role_target'];
+                    $inviteOrg  = ($inv['org_role_target'] ?? '') !== '' ? $inv['org_role_target'] : null;
+                    // دعوة بدور مساحة العمل: sysadmin يعني admin في المنصة (دور واحد)، وغيره يبقى user فيها
+                    if ($inviteOrg === 'sysadmin') $inviteRole = 'admin';
                     $inviteId   = (int)$inv['id'];
                 } else fail('رابط الدعوة غير صالح أو استُخدم من قبل.');
             }
@@ -80,7 +83,10 @@ try {
                 password_hash($pass, PASSWORD_DEFAULT),
                 $isFirst ? 'admin' : ($inviteRole ?: 'user'), USER_TOKENS]);
 
-            startAuthSession((int) db()->lastInsertId(), $isFirst ? 'admin' : ($inviteRole ?: 'user'));
+            $newId = (int) db()->lastInsertId();
+            // دور مساحة العمل من الدعوة. تحديث منفصل عمداً: التسجيل العادي لا يمس العمود الجديد أبداً.
+            if ($inviteOrg !== null && !$isFirst) db()->prepare('UPDATE users SET org_role=? WHERE id=?')->execute([$inviteOrg, $newId]);
+            startAuthSession($newId, $isFirst ? 'admin' : ($inviteRole ?: 'user'), $isFirst ? null : $inviteOrg);
             if ($inviteId) db()->prepare("UPDATE invites SET status='accepted', accepted_at=NOW() WHERE id=?")->execute([$inviteId]);
             out(['ok' => true, 'user' => publicUser(currentUser())]);
         }
@@ -360,11 +366,13 @@ try {
         case 'invite_info': {
             $tok = preg_replace('/[^a-f0-9]/', '', (string)($in['invite'] ?? ''));
             if (strlen($tok) < 32) fail('رابط الدعوة غير صالح.');
-            $s = db()->prepare("SELECT email, role_target FROM invites WHERE token=? AND status='sent' LIMIT 1");
+            $s = db()->prepare("SELECT email, role_target, org_role_target FROM invites WHERE token=? AND status='sent' LIMIT 1");
             $s->execute([$tok]);
             $inv = $s->fetch();
             if (!$inv) fail('رابط الدعوة غير صالح أو استُخدم من قبل.');
-            out(['ok' => true, 'email' => $inv['email'], 'role_target' => $inv['role_target']]);
+            $eff = ($inv['org_role_target'] ?? '') !== '' ? $inv['org_role_target'] : $inv['role_target'];
+            out(['ok' => true, 'email' => $inv['email'], 'role_target' => $inv['role_target'],
+                 'role' => $eff, 'role_label' => roleName($eff)]);
         }
 
         default: fail('طلب غير معروف.');

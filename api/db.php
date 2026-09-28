@@ -502,7 +502,7 @@ function seedPlatformSurveyAndMigrateLegacyData(): void {
 
     /** يضيف سؤال اختيار (فردي) بخياراته، ويعيد [question_id, [قيمة => option_id]] */
     $addChoice = function (int $pos, string $q, string $hint, array $opts, ?array $follow = null) use ($qIns, $oIns, $surveyId, $now): array {
-        $qIns->execute([$surveyId, $pos, 'single_choice', $q, $hint ?: null, null, null, null, null, null, $now]);
+        $qIns->execute([$surveyId, $pos, 'single_choice', $q, $hint ?: null, null, null, null, null, null, null, $now]);
         $qid = (int)db()->lastInsertId();
         $byValue = [];
         foreach ($opts as $i => [$text, $value]) {
@@ -985,6 +985,51 @@ function currentUser(): ?array {
 const ROLES = ['user', 'reviewer', 'mod', 'admin'];
 function isAdmin(?array $u): bool { return $u && $u['role'] === 'admin'; }
 
+/* ---------- الأدوار الموحدة: اثنا عشر دوراً، ودور واحد لكل حساب ----------
+   في المنصة عمودان: role (user وreviewer وmod وadmin) وorg_role (دور مساحة العمل). الدور الفعلي
+   واحد: admin هو sysadmin، وإلا org_role إن وُجد، وإلا role. أسماء أدوار مساحة العمل ونصوصها
+   هي نفسها في workspace/config/roles.php (المصدر الوحيد هناك)، ويفحص التطابق tools/check-roles.php. */
+const ORG_ROLES = ['executive', 'pm', 'finance', 'medical', 'team_member', 'client', 'hr', 'crm', 'sysadmin'];
+const ALL_ROLES = ['user', 'reviewer', 'mod', 'sysadmin', 'executive', 'pm', 'finance', 'medical', 'team_member', 'client', 'hr', 'crm'];
+const ROLE_LABELS = [
+    'user' => 'مستفيد', 'reviewer' => 'مراجع محتوى', 'mod' => 'مشرف', 'admin' => 'مدير النظام',
+    'sysadmin' => 'مدير النظام', 'executive' => 'المدير التنفيذي', 'pm' => 'مدير المشاريع',
+    'finance' => 'المدير المالي', 'medical' => 'المدير الطبي', 'team_member' => 'عضو الفريق',
+    'client' => 'العميل', 'hr' => 'مدير الموارد البشرية', 'crm' => 'مدير علاقات العملاء',
+];
+
+/** الدور الفعلي للحساب (واحد من ALL_ROLES) */
+function effectiveRole(array $u): string {
+    if (($u['role'] ?? 'user') === 'admin') return 'sysadmin';
+    $o = (string)($u['org_role'] ?? '');
+    return in_array($o, ORG_ROLES, true) ? $o : (string)($u['role'] ?? 'user');
+}
+
+/** عمودا التخزين [role, org_role] لدور فعلي */
+function roleColumns(string $eff): array {
+    if ($eff === 'sysadmin') return ['admin', 'sysadmin'];
+    if (in_array($eff, ['user', 'reviewer', 'mod'], true)) return [$eff, null];
+    return ['user', $eff];
+}
+
+/**
+ * الأدوار التي يحق للحساب دعوة أحد بها. الخادم هو الحكم لا الواجهة:
+ * مدير النظام أي دور، ومدير الموارد البشرية الموظفون دون المناصب العليا (لا المدير التنفيذي
+ * ولا مدير النظام ولا مدير الموارد نفسه)، ومدير علاقات العملاء العميل وحده، والمشرف المستفيد.
+ */
+function invitableRoles(array $actor): array {
+    return match (effectiveRole($actor)) {
+        'sysadmin' => ALL_ROLES,
+        'hr'       => ['team_member', 'pm', 'finance', 'medical', 'crm', 'mod', 'reviewer'],
+        'crm'      => ['client'],
+        'mod'      => ['user'],
+        default    => [],
+    };
+}
+function canInviteRole(array $actor, string $target): bool {
+    return in_array($target, invitableRoles($actor), true);
+}
+
 /* ---------- أنواع تذاكر الدعم ----------
    المصدر الوحيد للأنواع. كانت مكرّرة نصّاً في auth.php وفي قائمة HTML،
    فأي تعديل في أحدهما يكسر الآخر صامتاً.
@@ -1025,6 +1070,15 @@ function contentMap(): array {
     return $out;
 }
 
+/** من يدير الحسابات والدعوات: فريق المنصة، ومدير الموارد البشرية، ومدير علاقات العملاء.
+ *  الأخيران لا يبلغان من admin.php إلا ما يسمح لهما به كل إجراء بنفسه (needRole يرفض role=user). */
+function requireUserManager(): array {
+    $u = currentUser();
+    if (!$u || !(in_array($u['role'], ['admin', 'mod', 'reviewer'], true) || in_array(effectiveRole($u), ['hr', 'crm'], true)))
+        fail('غير مصرّح لك بالوصول لهذه البيانات.', 403);
+    return $u;
+}
+
 /** أي عضو في الفريق: مدير نظام أو مشرف أو مراجع محتوى */
 function requireStaff(): array {
     $u = currentUser();
@@ -1035,8 +1089,7 @@ function requireStaff(): array {
 
 /** اسم الدور بالعربية — مصدر واحد تستخدمه الرسائل والسجل والبريد */
 function roleName(string $r): string {
-    return ['admin' => 'مدير النظام', 'mod' => 'مشرف',
-            'reviewer' => 'مراجع محتوى', 'user' => 'مستفيد'][$r] ?? 'مستفيد';
+    return ROLE_LABELS[$r] ?? 'مستفيد';
 }
 
 /** إرسال بريد HTML من عنوان المنصة — SMTP مصادَق إن كانت SMTP_PASS مضبوطة،
@@ -1126,7 +1179,9 @@ function smtpSend(string $to, string $subject, string $html): bool {
 /** قالب بريد الدعوة */
 function inviteEmailHtml(string $inviter, string $roleTarget, string $link): string {
     $isTeam  = $roleTarget !== 'user';
-    $roleTxt = $isTeam ? 'للانضمام لفريق وصال بصفة ' . roleName($roleTarget) : 'لتجربة منصة وصال';
+    $isClient = $roleTarget === 'client';
+    $roleTxt = $isClient ? 'إلى مساحة عمل وصال لمتابعة مشروعك معنا'
+             : ($isTeam ? 'للانضمام لفريق وصال بصفة ' . roleName($roleTarget) : 'لتجربة منصة وصال');
     $btnTxt  = $isTeam ? 'قبول الدعوة وإنشاء حسابي' : 'تجربة وصال الآن';
     $i = htmlspecialchars($inviter, ENT_QUOTES, 'UTF-8');
     return '<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;background:#f4f2fb;padding:32px 16px">'
@@ -1350,5 +1405,9 @@ function publicUser(array $u): array {
         'idle_min' => intdiv(sessionLimits((string)$u['role'], !empty($u['org_role']))['idle'], 60),
         /* دوره في مساحة العمل (أو null): تُظهر الواجهة به رابط المساحة والمبدّل بين النظامين */
         'org_role' => $u['org_role'] ?? null,
+        /* الدور الفعلي (واحد من الاثني عشر) وهل للحساب مساحة عمل: تعرض الواجهة بهما
+           اسم الدور ورابط المساحة والمبدّل بين النظامين */
+        'eff_role' => effectiveRole($u),
+        'workspace' => ($u['role'] ?? 'user') === 'admin' || !empty($u['org_role']),
     ];
 }
