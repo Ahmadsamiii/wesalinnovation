@@ -3,6 +3,7 @@
 use App\Http\Middleware\AuthenticateFromPlatformSession;
 use App\Http\Middleware\EnforceSessionTimeouts;
 use App\Http\Middleware\EnsureAccountIsActive;
+use App\Http\Middleware\RedirectToCanonicalHost;
 use App\Http\Middleware\RedirectToPlatformLogin;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
@@ -47,7 +48,18 @@ return Application::configure(basePath: dirname(__DIR__))
         // جذر النطاق الفرعي في Hostinger مجلد داخل جذر الموقع العام، فيصل التطبيق
         // أيضاً عبر wesalinnovation.sa/workspace. خارج التطوير لا يُقبل إلا مضيف
         // APP_URL، فلا تعمل نسخة ثانية على نطاق الموقع العام وكوكيزه.
-        $middleware->trustHosts();
+        // WORKSPACE_HOSTS تسمّي المضيفات المقبولة صراحةً (الموقع الرئيسي مع النطاق الفرعي القديم في
+        // مرحلة الانتقال). بدونها السلوك السابق: مضيف APP_URL ونطاقاته الفرعية.
+        $middleware->trustHosts(at: function (): array {
+            $hosts = config('workspace.hosts');
+
+            if ($hosts === []) {
+                return ['^(.+\.)?'.preg_quote((string) parse_url((string) config('app.url'), PHP_URL_HOST), '/').'$'];
+            }
+
+            return array_map(fn (string $host): string => '^'.preg_quote($host, '/').'$', $hosts);
+        }, subdomains: false);
+        $middleware->append(RedirectToCanonicalHost::class);
 
         $middleware->alias([
             'role' => RoleMiddleware::class,

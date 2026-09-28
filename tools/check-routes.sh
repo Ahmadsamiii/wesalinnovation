@@ -62,7 +62,7 @@ stop() { [ -f "$TMP/apache.pid" ] && kill "$(cat "$TMP/apache.pid")" 2>/dev/null
 trap stop EXIT
 
 DOCS="$TMP/htdocs"
-mkdir -p "$DOCS/homepage" "$DOCS/api" "$DOCS/uploads" "$DOCS/assets"
+mkdir -p "$DOCS/homepage" "$DOCS/api" "$DOCS/uploads" "$DOCS/assets" "$DOCS/workspace/build"
 cp "$ROOT/.htaccess" "$DOCS/.htaccess"
 for f in sitemap.xml sitemap-home.xml sitemap-chat.xml robots.txt robots-chat.txt; do
     [ -f "$ROOT/$f" ] && cp "$ROOT/$f" "$DOCS/$f"
@@ -75,6 +75,10 @@ echo "INVITE-STUB"       > "$DOCS/api/invite-redeem.php"
 echo "AUTH-STUB"         > "$DOCS/api/auth.php"
 echo "SHELL"             > "$DOCS/uploads/x.php"
 echo "LOGO"              > "$DOCS/assets/logo.webp"
+# مساحة العمل: .htaccess التطبيق نفسه ومتحكم أمامي بديل (يقدّم رداً نصياً)
+cp "$ROOT/workspace/public/.htaccess" "$DOCS/workspace/.htaccess"
+echo "WS-FRONT"          > "$DOCS/workspace/index.php"
+echo "WS-ASSET"          > "$DOCS/workspace/build/app.js"
 chmod -R a+rX "$TMP"
 
 RUNUSER=""
@@ -185,6 +189,24 @@ mv "$DOCS/homepage/index.html" "$DOCS/homepage/index.off"
 expect_body    "corporate.html لا يُحوَّل إن غابت /homepage/"        "$APEX" "/corporate.html"           "OLD-CORPORATE"
 mv "$DOCS/homepage/index.off" "$DOCS/homepage/index.html"
 
+# ------------------------------------------------------------- مساحة العمل تحت /workspace
+say "مساحة العمل على wesalinnovation.sa/workspace (.htaccess التطبيق نفسه)"
+expect_body    "المسار يصل المتحكم الأمامي"                           "$APEX" "/workspace/login"          "WS-FRONT"
+expect_body    "وعلى النطاق الفرعي القديم كذلك"                        "workspace.$APEX" "/workspace/login" "WS-FRONT"
+expect_body    "الملفات الثابتة تُقدَّم مباشرة"                         "$APEX" "/workspace/build/app.js"   "WS-ASSET"
+expect_redirect "www يحوّل إلى النطاق الرئيسي بمسار مساحة العمل"        "www.$APEX" "/workspace/login"      301 "https://$APEX/workspace/login"
+out="$(curl -s -o /dev/null -w '%{http_code}|%{redirect_url}' -H "Host: $APEX" "$BASE/workspace/login")"
+[ "${out%%|*}" = "301" ] && [[ "${out#*|}" == https://$APEX/workspace/login ]] && ok "http يحوّل إلى https" || bad "http في مساحة العمل يحوّل إلى https" "301 → https://$APEX/workspace/login" "$out"
+expect_redirect "الشرطة المائلة الأخيرة تُزال"                          "$APEX" "/workspace/verify/"        301 "/workspace/verify"
+h="$(hdr "$APEX" "/workspace/login" content-security-policy)"
+[[ "$h" == *"'unsafe-eval'"* ]] && ok "سياسة مساحة العمل تسمح بـ unsafe-eval (Alpine)" || bad "سياسة مساحة العمل" "فيها 'unsafe-eval'" "${h:-لا ترويسة}"
+h="$(hdr "$APEX" "/" content-security-policy)"
+[[ "$h" != *"'unsafe-eval'"* ]] && ok "وسياسة بقية الموقع لا تتسع لها" || bad "سياسة الجذر" "بلا 'unsafe-eval'" "$h"
+h="$(hdr "$APEX" "/workspace/login" permissions-policy)"
+[[ "$h" != *"microphone=(self)"* ]] && ok "سياسة الأذونات في مساحة العمل بلا ميكروفون" || bad "سياسة الأذونات في مساحة العمل" "بلا microphone=(self)" "$h"
+h="$(hdr "$APEX" "/" permissions-policy)"
+[[ "$h" == *"microphone=(self)"* ]] && ok "والمحادثة تحتفظ بميكروفونها" || bad "سياسة أذونات الجذر" "microphone=(self)" "$h"
+
 # ------------------------------------------------------------- بعد التبديل
 : > "$DOCS/.switch"
 say "بعد التبديل (بوجود .switch)"
@@ -215,6 +237,7 @@ expect_body    "robots.txt للنطاق الرئيسي كما هو"             
 h="$(hdr "$CHAT" "/" x-robots-tag)"
 [ -z "$h" ] && ok "chat. بعد التبديل قابلة للفهرسة (بلا noindex)" || bad "chat. بعد التبديل بلا noindex" "لا ترويسة" "$h"
 expect_redirect "www يبقى يحوّل إلى النطاق الرئيسي بعد التبديل"      "www.$APEX" "/"                     301 "https://$APEX/"
+expect_body    "مساحة العمل لا تتأثر بالتبديل"                         "$APEX" "/workspace/login"          "WS-FRONT"
 
 # ------------------------------------------------------------- الرجوع
 rm -f "$DOCS/.switch"

@@ -46,4 +46,18 @@ return [
     'home_url' => env('WORKSPACE_HOME_URL', '/'),
     'session_grace_seconds' => 120,
 
+    /*
+    |--------------------------------------------------------------------------
+    | العنوان: نطاق فرعي، أو مسار داخل الموقع الرئيسي
+    |--------------------------------------------------------------------------
+    | hosts: المضيفات التي يقبلها التطبيق (WORKSPACE_HOSTS بفواصل). فارغة: مضيف APP_URL
+    |   وحده، أي السلوك القائم. القبول بلا تحويل هو وضع التجربة قبل التبديل.
+    | canonical_url: العنوان المعتمد (https://wesalinnovation.sa/workspace). مع ضبطه يُحوَّل
+    |   إليه كل طلب قراءة من مضيف آخر بمساره واستعلامه (RedirectToCanonicalHost).
+    | canonical_status: 302 في أول أيام التبديل، ثم 301.
+    */
+    'hosts' => array_values(array_filter(array_map('trim', explode(',', (string) env('WORKSPACE_HOSTS', ''))))),
+    'canonical_url' => env('WORKSPACE_CANONICAL_URL'),
+    'canonical_status' => (int) env('WORKSPACE_CANONICAL_STATUS', 302),
+
 ];
