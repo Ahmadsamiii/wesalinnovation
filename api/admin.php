@@ -115,7 +115,7 @@ switch ($act) {
         }
 
         $token = issueResetToken((int)$t['id'], (int)$STAFF['id']);
-        $link  = SITE_URL . '/?reset=' . $token;
+        $link  = CHAT_URL . '/?reset=' . $token;
         $mailed = sendMail($t['email'], 'إعادة تعيين كلمة المرور في وصال',
                            resetEmailHtml($t['name'], $link, true, 2));
         audit($STAFF, 'reset_pw', $t['email'], $mailed ? 'رابط أُرسل بالبريد' : 'رابط (تعذّر إرسال البريد)');
@@ -278,7 +278,7 @@ switch ($act) {
                            VALUES (?,?,?,?,'sent',NOW())")
                 ->execute([$email, $role, $token, $STAFF['id']]);
         }
-        $link   = SITE_URL . '/?invite=' . $token;
+        $link   = CHAT_URL . '/?invite=' . $token;
         $mailed = sendMail($email,
             $role === 'user' ? 'دعوة لتجربة منصة وصال' : 'دعوة للانضمام لفريق وصال',
             inviteEmailHtml($STAFF['name'], $role, $link));

@@ -115,7 +115,7 @@ try {
             // الرد نفسه سواء وُجد الحساب أو لا، حتى لا يُستخدم النموذج لمعرفة من هو مسجّل
             if ($u && $u['status'] !== 'suspended') {
                 $token = issueResetToken((int)$u['id']);
-                $link  = SITE_URL . '/?reset=' . $token;
+                $link  = CHAT_URL . '/?reset=' . $token;
                 sendMail($email, 'إعادة تعيين كلمة المرور في وصال',
                          resetEmailHtml($u['name'], $link, false, 2));
                 audit(null, 'forgot', $email, 'طلب المستخدم إعادة تعيين');

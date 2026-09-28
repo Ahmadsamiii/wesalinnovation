@@ -286,7 +286,7 @@ case 'survey_list': {
     $list = array_map(fn($r) => [
         'id' => (int)$r['id'], 'title' => $r['title'], 'status' => $r['status'],
         'public_link_enabled' => (bool)$r['public_link_enabled'],
-        'public_link' => ($r['public_link_enabled'] && $r['public_token']) ? SITE_URL . '/survey.html?s=' . $r['public_token'] : null,
+        'public_link' => ($r['public_link_enabled'] && $r['public_token']) ? CHAT_URL . '/survey.html?s=' . $r['public_token'] : null,
         'grants_trial' => (bool)$r['grants_trial'],
         'response_count' => (int)$r['response_count'], 'invitation_count' => (int)$r['invitation_count'],
         'created_at' => strtotime($r['created_at']) * 1000,
@@ -301,7 +301,7 @@ case 'survey_get': {
         'id' => (int)$survey['id'], 'title' => $survey['title'], 'description' => $survey['description'],
         'thank_you_message' => $survey['thank_you_message'], 'status' => $survey['status'],
         'public_link_enabled' => (bool)$survey['public_link_enabled'],
-        'public_link' => ($survey['public_link_enabled'] && $survey['public_token']) ? SITE_URL . '/survey.html?s=' . $survey['public_token'] : null,
+        'public_link' => ($survey['public_link_enabled'] && $survey['public_token']) ? CHAT_URL . '/survey.html?s=' . $survey['public_token'] : null,
         'grants_trial' => (bool)$survey['grants_trial'],
     ], 'questions' => array_map('questionOut', loadSurveyQuestions((int)$survey['id']))]);
 }
@@ -482,7 +482,7 @@ case 'survey_set_public_link': {
         ->execute([$enabled ? 1 : 0, $token, (int)$survey['id']]);
     audit($STAFF, 'survey_public_link', $survey['title'], $enabled ? 'فُعِّل' : 'أُوقف');
     out(['ok' => true, 'public_link_enabled' => $enabled,
-         'public_link' => $enabled ? (SITE_URL . '/survey.html?s=' . $token) : null]);
+         'public_link' => $enabled ? (CHAT_URL . '/survey.html?s=' . $token) : null]);
 }
 
 /* إرسال دفعة دعوات لاستبيان محدد — سطر لكل بريد أو فواصل بينها */
@@ -518,7 +518,7 @@ case 'survey_send_invitations': {
         $token = bin2hex(random_bytes(20));
         $ins->execute([$surveyId, $email, $token, $campaign, $STAFF['id']]);
         $mailed = sendMail($email, 'دعوتك لاستبيان: ' . $survey['title'],
-            surveyInviteEmailHtml($survey['title'], SITE_URL . '/invite/' . $token, (bool)$survey['grants_trial']));
+            surveyInviteEmailHtml($survey['title'], CHAT_URL . '/invite/' . $token, (bool)$survey['grants_trial']));
         $mailed ? $sent++ : $failedMail++;
     }
     audit($STAFF, 'survey_invite', $survey['title'], "الحملة $campaign: أُرسلت $sent، وتعذّر بريد $failedMail، ومكررة $skipped");
@@ -533,7 +533,7 @@ case 'survey_invitations_list': {
     $rows->execute([(int)$survey['id']]);
     $list = array_map(fn($r) => [
         'id' => (int)$r['id'], 'email' => $r['email'], 'campaign' => $r['campaign_name'], 'status' => $r['status'],
-        'link' => SITE_URL . '/invite/' . $r['token'],
+        'link' => CHAT_URL . '/invite/' . $r['token'],
         'sent' => strtotime($r['sent_at']) * 1000,
         'opened' => $r['opened_at'] ? strtotime($r['opened_at']) * 1000 : null,
         'completed' => $r['completed_at'] ? strtotime($r['completed_at']) * 1000 : null,

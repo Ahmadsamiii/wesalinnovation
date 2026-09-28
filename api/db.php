@@ -56,6 +56,7 @@ require_once __DIR__ . '/config.php';
    تعديل بعد أي ترقية تضيف إعداداً جديداً. الشرح الكامل في config.example.php. */
 foreach ([
     'APP_DEBUG'              => false,
+    'CHAT_URL'               => defined('SITE_URL') ? SITE_URL : '',
     'GUEST_LIMIT'            => 5,
     'USER_TOKENS'            => 30,
     'RENEW_HOURS'            => 6,
