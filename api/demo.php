@@ -94,6 +94,7 @@ function seedDemoAccounts(?array $actor = null): array {
                 $upd->execute([$hash, $a['role'], USER_TOKENS,
                                $a['name'], $a['name_en'], $a['phone'], $row['id']]);
                 $id = (int)$row['id'];
+                authSessionsRevoke($id, 'password');   // كلمة المرور والدور تغيّرا: تنتهي جلساته القديمة
                 $fresh = false;
             } else {
                 $ins->execute([$a['name'], $a['name_en'], $a['dob'], $a['email'], $a['phone'],

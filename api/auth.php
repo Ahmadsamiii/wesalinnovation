@@ -98,7 +98,7 @@ try {
             if (($u['status'] ?? 'active') === 'suspended')
                 fail('حسابك موقوف حالياً. راسلنا من صفحة «تواصل معنا» لنراجع الأمر معك.', 403);
 
-            startAuthSession((int) $u['id'], (string) $u['role']);
+            startAuthSession((int) $u['id'], (string) $u['role'], $u['org_role'] ?? null);
             db()->prepare('UPDATE users SET last_login=NOW() WHERE id=?')->execute([$u['id']]);
             out(['ok' => true, 'user' => publicUser(refreshTokens($u))]);
         }
@@ -161,6 +161,8 @@ try {
                 fail(APP_DEBUG ? $e->getMessage() : 'تعذّر تعيين كلمة المرور. حاول مرة أخرى.', 500);
             }
             audit(null, 'reset_done', 'user#' . $r['user_id'], 'عبر رابط إعادة التعيين');
+            authSessionsRevoke((int)$r['user_id'], 'password');   // وكل جلساته في مساحة العمل
+            authSessionLogout();
             $_SESSION = [];   // أنهِ أي جلسة قائمة — يدخل بكلمة المرور الجديدة
             out(['ok' => true, 'message' => 'تم تعيين كلمة المرور. سجّل دخولك الآن.']);
         }
@@ -180,6 +182,7 @@ try {
             db()->prepare('UPDATE users SET pass_hash=?, must_change_pw=0 WHERE id=?')
                 ->execute([password_hash($new, PASSWORD_DEFAULT), $u['id']]);
             audit($u, 'change_pw', $u['email'], '');
+            authSessionsRevoke((int)$u['id'], 'password', (int)($_SESSION['auth_sid'] ?? 0));   // بقية أجهزته
             out(['ok' => true, 'user' => publicUser(currentUser())]);
         }
 
@@ -222,6 +225,8 @@ try {
                 fail(APP_DEBUG ? $e->getMessage() : 'تعذّر حذف الحساب. حاول مرة أخرى.', 500);
             }
             audit(null, 'delete_account', $u['email'], 'حذف ذاتي');
+            authSessionsRevoke((int)$u['id'], 'deleted');
+            authSessionLogout();
             $_SESSION = [];
             session_destroy();
             out(['ok' => true, 'message' => 'حُذف حسابك وبياناتك الشخصية نهائياً من أنظمتنا.']);
@@ -345,6 +350,7 @@ try {
             if (($in['why'] ?? '') === 'idle' && !empty($_SESSION['uid'])) {
                 endAuthSession('idle');
             } else {
+                authSessionLogout();   // ينهي صف الجلسة الموحدة فيخرج معه الطرف الآخر
                 $_SESSION = [];
                 session_destroy();
             }

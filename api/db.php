@@ -56,6 +56,7 @@ require_once __DIR__ . '/config.php';
    تعديل بعد أي ترقية تضيف إعداداً جديداً. الشرح الكامل في config.example.php. */
 foreach ([
     'APP_DEBUG'              => false,
+    'UNIFIED_SESSION'        => false,
     'CHAT_URL'               => defined('SITE_URL') ? SITE_URL : '',
     'GUEST_LIMIT'            => 5,
     'USER_TOKENS'            => 30,
@@ -111,6 +112,7 @@ session_set_cookie_params([
     'samesite' => 'Lax',
     'secure'   => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
 ]);
+require_once __DIR__ . '/session-lib.php';   // الجلسة الموحدة مع مساحة العمل (مطفأة افتراضياً)
 session_start();
 
 /* ---------- الخروج التلقائي: مهلة الخمول والحد الأقصى للجلسة ----------
@@ -126,9 +128,10 @@ session_start();
 const STAFF_ROLES    = ['admin', 'mod', 'reviewer'];
 const IDLE_GRACE_SEC = 120;
 
-/** مهلة الخمول والحد الأقصى بالثواني. فريق المنصة يرى بيانات كل المستخدمين فمهلته أقصر. */
-function sessionLimits(string $role): array {
-    $staff = in_array($role, STAFF_ROLES, true);
+/** مهلة الخمول والحد الأقصى بالثواني. فريق المنصة يرى بيانات كل المستخدمين فمهلته أقصر،
+ *  ومثله كل صاحب دور في مساحة العمل ($org): تلك الأدوار تصل إلى عقود وفواتير وبيانات موظفين. */
+function sessionLimits(string $role, bool $org = false): array {
+    $staff = $org || in_array($role, STAFF_ROLES, true);
     return [
         'idle' => ($staff ? IDLE_MINUTES_STAFF : IDLE_MINUTES_USER) * 60,
         'max'  => ($staff ? SESSION_MAX_HOURS_STAFF : SESSION_MAX_HOURS_USER) * 3600,
@@ -136,11 +139,21 @@ function sessionLimits(string $role): array {
 }
 
 /** بداية جلسة حساب: معرّف جديد (ضد تثبيت الجلسة) وبداية العدّ للمهلتين */
-function startAuthSession(int $uid, string $role): void {
+function startAuthSession(int $uid, string $role, ?string $orgRole = null): void {
     session_regenerate_id(true);
     $_SESSION['uid']     = $uid;
     $_SESSION['role']    = $role;
+    $_SESSION['org']     = ($orgRole !== null && $orgRole !== '') ? 1 : 0;
     $_SESSION['auth_at'] = $_SESSION['seen_at'] = time();
+    if (unifiedSession()) {
+        try {
+            // دخول جديد في متصفح فيه جلسة سابقة يُنهي الصف السابق، فلا يبقى حياً بلا صاحب
+            if ($prev = authRowFromCookie()) authSessionEnd((int) $prev['id'], 'replaced');
+            authSessionCreate($uid, $role, !empty($_SESSION['org']), $_SESSION['auth_at'], $_SESSION['seen_at']);
+        } catch (Throwable $e) {
+            error_log('WESAL_AUTH_START_FAIL: ' . $e->getMessage());   // الدخول يكمل بجلسة PHP وحدها
+        }
+    }
 }
 
 /** إنهاء جلسة الحساب آلياً ($why: idle أو max). خروج حسابات الفريق يُسجَّل في سجل العمليات. */
@@ -155,12 +168,32 @@ function endAuthSession(string $why): void {
                 audit($u, 'auto_logout', $u['email'], $why === 'idle' ? 'بعد مدة دون نشاط' : 'بلغت الجلسة أقصى مدة لها');
         } catch (Throwable $e) { /* السجل لا يوقف الخروج */ }
     }
+    if (unifiedSession()) {
+        try {
+            if (!empty($_SESSION['auth_sid'])) authSessionEnd((int) $_SESSION['auth_sid'], $why);
+        } catch (Throwable $e) { error_log('WESAL_AUTH_END_FAIL: ' . $e->getMessage()); }
+        if (isset($_COOKIE[AUTH_COOKIE])) authCookieClear();
+    }
     $_SESSION = [];
     session_regenerate_id(true);
 }
 
-/** يعيد سبب إنهاء الجلسة في هذا الطلب (idle أو max أو gone)، أو '' إن بقيت. يفحصه tools/check-session.php. */
+/** يعيد سبب إنهاء الجلسة في هذا الطلب (idle أو max أو gone)، أو '' إن بقيت. يفحصه tools/check-session.php.
+ *  مع الجلسة الموحدة (session-lib.php) الصف في auth_sessions هو المرجع، وعطل قاعدة البيانات
+ *  فيه يعيد الطلب إلى المسار القديم بدل أن يُخرج الجميع. */
 function enforceSessionTimeouts(): string {
+    if (unifiedSession()) {
+        try {
+            return enforceUnifiedSession();
+        } catch (Throwable $e) {
+            error_log('WESAL_UNIFIED_SESSION_FAIL: ' . $e->getMessage());
+        }
+    }
+    return enforceLegacySession();
+}
+
+/** المسار الأصلي: جلسة PHP وحدها تحمل الوقتين */
+function enforceLegacySession(): string {
     if (empty($_SESSION['uid'])) {
         // صفحة ما زالت تعرض حساباً لم تعد له جلسة هنا: انتهت، أو خرج صاحبها من مكان آخر
         if (empty($_SERVER['HTTP_X_WESAL_USER'])) return '';
@@ -168,7 +201,7 @@ function enforceSessionTimeouts(): string {
         return 'gone';
     }
     $now  = time();
-    $lim  = sessionLimits((string)($_SESSION['role'] ?? 'user'));
+    $lim  = sessionLimits((string)($_SESSION['role'] ?? 'user'), !empty($_SESSION['org']));
     // جلسة فُتحت قبل هذه الميزة: يبدأ عدّها من الآن
     $seen = (int)($_SESSION['seen_at'] ?? $now);
     $auth = (int)($_SESSION['auth_at'] ?? $now);
@@ -857,6 +890,17 @@ function ensureSchema(): void {
                 ADD COLUMN fallback_ms INT UNSIGNED NULL");
         }
 
+        /* دور الحساب في مساحة العمل (executive وpm وfinance وmedical وteam_member وclient وhr وcrm
+           وsysadmin). عمود مستقل عن role عمداً: كل كود المنصة القائم يقرأ role كما هو، وحسابات
+           الفريق تبقى بدور user في المحادثة. NULL = بلا دور في مساحة العمل. */
+        if (!colExists('users', 'org_role')) {
+            db()->exec("ALTER TABLE users ADD COLUMN org_role VARCHAR(30) NULL, ADD INDEX ix_org_role (org_role)");
+        }
+        if (!colExists('invites', 'org_role_target')) {
+            db()->exec("ALTER TABLE invites ADD COLUMN org_role_target VARCHAR(30) NULL");
+        }
+        ensureAuthTable();
+
         migrateSurveys();
         ensureRateTable();
     } catch (Throwable $e) {
@@ -888,16 +932,29 @@ function clean($v, int $max = 2000): string {
 function currentUser(): ?array {
     if (empty($_SESSION['uid'])) return null;
     ensureSchema();
-    $s = db()->prepare('SELECT id,name,name_en,dob,email,phone,pref,role,status,must_change_pw,improve,
-                               is_demo,tokens,tokens_at,created_at,questions,
-                               avatar,city,age_range,disability,interests,bio,support_level
-                        FROM users WHERE id=? LIMIT 1');
-    $s->execute([$_SESSION['uid']]);
+    $cols = 'id,name,name_en,dob,email,phone,pref,role,status,must_change_pw,improve,
+             is_demo,tokens,tokens_at,created_at,questions,
+             avatar,city,age_range,disability,interests,bio,support_level';
+    try {
+        $s = db()->prepare("SELECT $cols,org_role FROM users WHERE id=? LIMIT 1");
+        $s->execute([$_SESSION['uid']]);
+    } catch (Throwable $e) {
+        /* العمود org_role يضيفه ensureSchema(). لو تعذّرت الترقية على الخادم (صلاحية ALTER)
+           يبقى الدخول كما كان بدل أن يفشل كل طلب لمستخدم مسجّل. */
+        $s = db()->prepare("SELECT $cols FROM users WHERE id=? LIMIT 1");
+        $s->execute([$_SESSION['uid']]);
+    }
     $u = $s->fetch();
     if (!$u) return null;
     // حساب أوقفه مدير النظام: تُنهى جلسته فوراً في أول طلب بعد الإيقاف
-    if (($u['status'] ?? 'active') === 'suspended') { $_SESSION = []; return null; }
+    if (($u['status'] ?? 'active') === 'suspended') {
+        authSessionsRevoke((int) $u['id'], 'suspended');   // وتُنهى معها جلساته في مساحة العمل
+        if (isset($_COOKIE[AUTH_COOKIE])) authCookieClear();
+        $_SESSION = [];
+        return null;
+    }
     $_SESSION['role'] = $u['role'];   // تغيّر الدور يغيّر مهلة الخمول من الطلب التالي
+    $_SESSION['org']  = empty($u['org_role']) ? 0 : 1;
     return $u;
 }
 
@@ -1267,6 +1324,8 @@ function publicUser(array $u): array {
         'support_level' => $u['support_level'] ?? 'none',
         /* مهلة الخمول بالدقائق: الواجهة تنبّه وتُخرج على هذه القيمة نفسها،
            فلا نسخة ثانية منها في index.html تختلف عمّا يطبّقه الخادم. */
-        'idle_min' => intdiv(sessionLimits((string)$u['role'])['idle'], 60),
+        'idle_min' => intdiv(sessionLimits((string)$u['role'], !empty($u['org_role']))['idle'], 60),
+        /* دوره في مساحة العمل (أو null): تُظهر الواجهة به رابط المساحة والمبدّل بين النظامين */
+        'org_role' => $u['org_role'] ?? null,
     ];
 }

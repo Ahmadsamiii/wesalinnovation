@@ -82,6 +82,7 @@ switch ($act) {
         if ($t['role'] === $role) out(['ok' => true, 'role' => $role]);
         if ($t['role'] === 'admin') guardLastAdmin($t);
         db()->prepare('UPDATE users SET role=? WHERE id=?')->execute([$role, $t['id']]);
+        authSessionsRevoke((int)$t['id'], 'role');   // حدّا مهلته يتغيران بدوره، فيدخل من جديد
         audit($STAFF, 'role', $t['email'], $t['role'] . ' ← ' . $role);
         out(['ok' => true, 'role' => $role]);
     }
@@ -92,6 +93,7 @@ switch ($act) {
         $t = targetUser($STAFF, $in['user_id'] ?? 0, 'توقف');
         if ($status === 'suspended') guardLastAdmin($t);
         db()->prepare('UPDATE users SET status=? WHERE id=?')->execute([$status, $t['id']]);
+        if ($status === 'suspended') authSessionsRevoke((int)$t['id'], 'suspended');   // يخرج من النظامين فوراً
         audit($STAFF, 'status', $t['email'], $status === 'suspended' ? 'إيقاف' : 'تفعيل');
         out(['ok' => true, 'status' => $status]);
     }
@@ -109,6 +111,7 @@ switch ($act) {
                 ->execute([password_hash($temp, PASSWORD_DEFAULT), $t['id']]);
             db()->prepare('UPDATE password_resets SET used_at=NOW() WHERE user_id=? AND used_at IS NULL')
                 ->execute([$t['id']]);
+            authSessionsRevoke((int)$t['id'], 'password');
             audit($STAFF, 'reset_pw', $t['email'], 'كلمة مرور مؤقتة');
             out(['ok' => true, 'mode' => 'temp', 'temp_password' => $temp,
                  'message' => 'سلّم كلمة المرور المؤقتة للمستخدم عبر قناة موثوقة. سيُطالَب بتغييرها عند أول دخول.']);
@@ -156,6 +159,7 @@ switch ($act) {
             db()->rollBack();
             fail(APP_DEBUG ? $e->getMessage() : 'تعذّر حذف الحساب. حاول مرة أخرى.', 500);
         }
+        authSessionsRevoke((int)$t['id'], 'deleted');
         audit($STAFF, 'delete_user', $t['email'], 'حذف إداري');
         out(['ok' => true]);
     }
