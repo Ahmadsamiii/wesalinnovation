@@ -5,14 +5,7 @@ ensureSchema();
 $in = body();
 $action = $in['action'] ?? '';
 
-/** توحيد رقم الجوال السعودي إلى صيغة 05XXXXXXXX */
-function normPhone(string $p): string {
-    $p = preg_replace('/[\s\-()]/', '', $p);
-    if (preg_match('/^\+9665\d{8}$/', $p)) return '0' . substr($p, 4);
-    if (preg_match('/^9665\d{8}$/',  $p)) return '0' . substr($p, 3);
-    return $p;
-}
-function validPhone(string $p): bool { return preg_match('/^05\d{8}$/', $p) === 1; }
+// normPhone() وvalidPhone() في db.php، تستعملهما الدعوات أيضاً
 function validName(string $n): bool  { return preg_match('/^[\p{L}\s\'\-]{2,40}$/u', $n) === 1; }
 function validNameAr(string $n): bool { return preg_match('/^[\x{0621}-\x{064A}\s]{2,40}$/u', $n) === 1; }
 function validNameEn(string $n): bool { return preg_match('/^[A-Za-z\s\'\-]{2,40}$/', $n) === 1; }
@@ -38,8 +31,29 @@ try {
             $pref  = in_array($in['pref'] ?? '', ['simple','detailed','voice','visual'], true) ? $in['pref'] : 'simple';
             $pass  = (string)($in['password'] ?? '');
 
-            if (!validNameAr($first))                      fail('اكتب اسمك الأول بالحروف العربية فقط.');
-            if (!validNameAr($last))                       fail('اكتب اسمك الأخير بالحروف العربية فقط.');
+            /* الدعوة أولاً: الاسم الكامل بالعربية والجوال فيها يكتبهما الداعي، فيُعتمدان كما هما
+               ولا يُقرآن من النموذج. الدعوات القديمة بلا اسم ولا جوال يكملهما المدعو كالمعتاد. */
+            $inviteRole = null; $inviteId = null; $inviteOrg = null; $inviteName = ''; $invitePhone = '';
+            $tok = preg_replace('/[^a-f0-9]/', '', (string)($in['invite'] ?? ''));
+            if (strlen($tok) >= 32) {
+                $s = db()->prepare("SELECT * FROM invites WHERE token=? AND status='sent' LIMIT 1");
+                $s->execute([$tok]);
+                if (!($inv = $s->fetch())) fail('رابط الدعوة غير صالح أو استُخدم من قبل.');
+                if (inviteState($inv) === 'expired') fail(INVITE_EXPIRED_MSG);
+                if (mb_strtolower($inv['email']) !== $email)
+                    fail('هذه الدعوة مرسلة إلى بريد إلكتروني آخر. سجّل بالبريد الذي وصلته الدعوة.');
+                $inviteRole  = $inv['role_target'];
+                $inviteOrg   = ($inv['org_role_target'] ?? '') !== '' ? $inv['org_role_target'] : null;
+                // دعوة بدور مساحة العمل: sysadmin يعني admin في المنصة (دور واحد)، وغيره يبقى user فيها
+                if ($inviteOrg === 'sysadmin') $inviteRole = 'admin';
+                $inviteId    = (int)$inv['id'];
+                $inviteName  = (string)($inv['name'] ?? '');
+                $invitePhone = (string)($inv['phone'] ?? '');
+                if ($invitePhone !== '') $phone = $invitePhone;
+            }
+
+            if ($inviteName === '' && !validNameAr($first)) fail('اكتب اسمك الأول بالحروف العربية فقط.');
+            if ($inviteName === '' && !validNameAr($last))  fail('اكتب اسمك الأخير بالحروف العربية فقط.');
             if (!validNameEn($firstEn))                    fail('اكتب اسمك الأول بالحروف الإنجليزية فقط (First name).');
             if (!validNameEn($lastEn))                     fail('اكتب اسمك الأخير بالحروف الإنجليزية فقط (Last name).');
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) fail('البريد الإلكتروني غير صحيح. تأكد من كتابته.');
@@ -57,23 +71,7 @@ try {
             $s->execute([$phone]);
             if ($s->fetch()) fail('يوجد حساب مسجّل برقم الجوال هذا. سجّل دخولك أو استخدم رقماً آخر.');
 
-            $inviteRole = null; $inviteId = null; $inviteOrg = null;
-            $tok = preg_replace('/[^a-f0-9]/', '', (string)($in['invite'] ?? ''));
-            if (strlen($tok) >= 32) {
-                $s = db()->prepare("SELECT id,email,role_target,org_role_target FROM invites WHERE token=? AND status='sent' LIMIT 1");
-                $s->execute([$tok]);
-                if ($inv = $s->fetch()) {
-                    if (mb_strtolower($inv['email']) !== $email)
-                        fail('هذه الدعوة مرسلة إلى بريد إلكتروني آخر. سجّل بالبريد الذي وصلته الدعوة.');
-                    $inviteRole = $inv['role_target'];
-                    $inviteOrg  = ($inv['org_role_target'] ?? '') !== '' ? $inv['org_role_target'] : null;
-                    // دعوة بدور مساحة العمل: sysadmin يعني admin في المنصة (دور واحد)، وغيره يبقى user فيها
-                    if ($inviteOrg === 'sysadmin') $inviteRole = 'admin';
-                    $inviteId   = (int)$inv['id'];
-                } else fail('رابط الدعوة غير صالح أو استُخدم من قبل.');
-            }
-
-            $name   = trim($first . ' ' . $last);
+            $name   = $inviteName !== '' ? $inviteName : trim($first . ' ' . $last);
             $nameEn = trim($firstEn . ' ' . $lastEn);
             $isFirst = (int) db()->query('SELECT COUNT(*) c FROM users')->fetch()['c'] === 0;
 
@@ -366,13 +364,16 @@ try {
         case 'invite_info': {
             $tok = preg_replace('/[^a-f0-9]/', '', (string)($in['invite'] ?? ''));
             if (strlen($tok) < 32) fail('رابط الدعوة غير صالح.');
-            $s = db()->prepare("SELECT email, role_target, org_role_target FROM invites WHERE token=? AND status='sent' LIMIT 1");
+            $s = db()->prepare("SELECT * FROM invites WHERE token=? AND status='sent' LIMIT 1");
             $s->execute([$tok]);
             $inv = $s->fetch();
             if (!$inv) fail('رابط الدعوة غير صالح أو استُخدم من قبل.');
+            if (inviteState($inv) === 'expired') fail(INVITE_EXPIRED_MSG);
             $eff = ($inv['org_role_target'] ?? '') !== '' ? $inv['org_role_target'] : $inv['role_target'];
             out(['ok' => true, 'email' => $inv['email'], 'role_target' => $inv['role_target'],
-                 'role' => $eff, 'role_label' => roleName($eff)]);
+                 'role' => $eff, 'role_label' => roleName($eff),
+                 'name' => (string)($inv['name'] ?? ''), 'phone' => (string)($inv['phone'] ?? ''),
+                 'expires' => inviteExpiresTs($inv) * 1000]);
         }
 
         default: fail('طلب غير معروف.');

@@ -141,13 +141,16 @@ CREATE TABLE IF NOT EXISTS support_tickets (
 -- --------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS invites (
   id          INT AUTO_INCREMENT PRIMARY KEY,
+  name        VARCHAR(80)  NULL,                     -- اسم المدعو الكامل بالعربية كما كتبه الداعي
+  phone       VARCHAR(20)  NULL,                     -- جوال المدعو بصيغة 05XXXXXXXX
   email       VARCHAR(120) NOT NULL,
   role_target ENUM('user','reviewer','mod') NOT NULL DEFAULT 'user',
   org_role_target VARCHAR(30) NULL,               -- دور مساحة العمل الذي تمنحه الدعوة، وNULL = لا دور
   token       VARCHAR(64)  NOT NULL,
   invited_by  INT          NOT NULL,
   status      ENUM('sent','accepted','revoked') NOT NULL DEFAULT 'sent',
-  created_at  DATETIME     NOT NULL,
+  created_at  DATETIME     NOT NULL,                 -- تاريخ آخر إرسال
+  expires_at  DATETIME     NULL,                     -- نهاية صلاحية الرابط (INVITE_TTL_DAYS من الإرسال)
   accepted_at DATETIME     NULL,
   UNIQUE KEY uq_email (email),
   KEY ix_token (token)
