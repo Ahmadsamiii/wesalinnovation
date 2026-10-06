@@ -272,10 +272,12 @@ switch ($act) {
     /* ==================== الدعوات ==================== */
 
     case 'invite': {
-        /* من يدعو من: invitableRoles() في db.php، والخادم هو الحكم. المدعو يكمل الاسم والجوال
-           وتاريخ الميلاد وكلمة المرور بنفسه من رابط الدعوة. */
+        /* من يدعو من: invitableRoles() في db.php، والخادم هو الحكم. الداعي يكتب الاسم الكامل
+           بالعربية والجوال والبريد، والمدعو يكمل اسمه بالإنجليزية وتاريخ ميلاده وكلمة المرور. */
         if (invitableRoles($STAFF) === []) fail('ليست لديك صلاحية لهذا الإجراء.', 403);
         rateLimit('invite', 10);
+        $name  = cleanFullNameAr(clean($in['name'] ?? '', 120));
+        $phone = normPhone(clean($in['phone'] ?? '', 20));
         $email = mb_strtolower(clean($in['email'] ?? '', 120));
         $eff   = (string)($in['role'] ?? 'user');
         if ($eff === 'admin') $eff = 'sysadmin';
@@ -285,42 +287,88 @@ switch ($act) {
                                           : 'لا يحق لك دعوة أحد بهذا الدور.', 403);
         [$role, $org] = roleColumns($eff);
         $roleCol = $org === null ? $role : 'user';   // عمود role_target قديم: user وreviewer وmod فقط
+        if (!validFullNameAr($name))                    fail('اكتب اسم المدعو الكامل بالحروف العربية، ثلاثة أسماء على الأقل.');
+        if (!validPhone($phone))                        fail('اكتب جوال المدعو بالصيغة 05XXXXXXXX.');
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) fail('اكتب بريداً إلكترونياً صحيحاً.');
         $s = db()->prepare('SELECT id FROM users WHERE email=? LIMIT 1');
         $s->execute([$email]);
         if ($s->fetch()) fail('هذا البريد مسجّل في المنصة أصلاً.');
+        $s = db()->prepare('SELECT id FROM users WHERE phone=? LIMIT 1');
+        $s->execute([$phone]);
+        if ($s->fetch()) fail('هذا الجوال مسجّل في المنصة لحساب آخر.');
+        $s = db()->prepare("SELECT email FROM invites WHERE phone=? AND email<>? AND status='sent' AND expires_at > NOW() LIMIT 1");
+        $s->execute([$phone, $email]);
+        if ($s->fetch()) fail('هذا الجوال في دعوة أخرى بانتظار القبول. احذفها أولاً أو استخدم جوالاً آخر.');
 
-        $token = bin2hex(random_bytes(24));
+        $token   = bin2hex(random_bytes(24));
+        $expires = time() + (int)INVITE_TTL_DAYS * 86400;
         $s = db()->prepare('SELECT id FROM invites WHERE email=? LIMIT 1');
         $s->execute([$email]);
         if ($inv = $s->fetch()) {
-            db()->prepare("UPDATE invites SET role_target=?, org_role_target=?, token=?, status='sent', created_at=NOW(),
-                           accepted_at=NULL, invited_by=? WHERE id=?")
-                ->execute([$roleCol, $org, $token, $STAFF['id'], $inv['id']]);
+            db()->prepare("UPDATE invites SET name=?, phone=?, role_target=?, org_role_target=?, token=?, status='sent', created_at=NOW(),
+                           expires_at=FROM_UNIXTIME(?), accepted_at=NULL, invited_by=? WHERE id=?")
+                ->execute([$name, $phone, $roleCol, $org, $token, $expires, $STAFF['id'], $inv['id']]);
         } else {
-            db()->prepare("INSERT INTO invites (email, role_target, org_role_target, token, invited_by, status, created_at)
-                           VALUES (?,?,?,?,?,'sent',NOW())")
-                ->execute([$email, $roleCol, $org, $token, $STAFF['id']]);
+            db()->prepare("INSERT INTO invites (name, phone, email, role_target, org_role_target, token, invited_by, status, created_at, expires_at)
+                           VALUES (?,?,?,?,?,?,?,'sent',NOW(),FROM_UNIXTIME(?))")
+                ->execute([$name, $phone, $email, $roleCol, $org, $token, $STAFF['id'], $expires]);
         }
         $link   = CHAT_URL . '/?invite=' . $token;
-        $mailed = sendMail($email,
-            $eff === 'user' ? 'دعوة لتجربة منصة وصال' : ($eff === 'client' ? 'دعوة إلى مساحة عمل وصال' : 'دعوة للانضمام لفريق وصال'),
-            inviteEmailHtml($STAFF['name'], $eff, $link));
-        audit($STAFF, 'invite', $email, roleName($eff) . ($mailed ? '' : ' (تعذّر إرسال البريد)'));
-        out(['ok' => true, 'mailed' => $mailed, 'link' => $link]);
+        $mailed = sendMail($email, inviteSubject($eff), inviteEmailHtml($STAFF['name'], $eff, $link, $name, $expires));
+        audit($STAFF, 'invite', $email, $name . '، ' . roleName($eff) . ($mailed ? '' : ' (تعذّر إرسال البريد)'));
+        out(['ok' => true, 'mailed' => $mailed, 'link' => $link, 'expires' => $expires * 1000]);
     }
 
     case 'invites': {
         if (invitableRoles($STAFF) === []) fail('ليست لديك صلاحية لهذا الإجراء.', 403);
         /* مدير الموارد وعلاقات العملاء يريان دعواتهما وحدها، والمشرف ومدير النظام كلها */
         $own  = in_array(effectiveRole($STAFF), ['hr', 'crm'], true);
-        $st   = db()->prepare('SELECT email, role_target, org_role_target, status, created_at, accepted_at
+        $st   = db()->prepare('SELECT id, name, phone, email, role_target, org_role_target, status, invited_by,
+                                      created_at, expires_at, accepted_at
                                FROM invites ' . ($own ? 'WHERE invited_by=? ' : '') . 'ORDER BY created_at DESC LIMIT 100');
         $st->execute($own ? [(int)$STAFF['id']] : []);
-        out(['ok' => true, 'invites' => array_map(fn($i) => [
-            'email' => $i['email'], 'role' => ($i['org_role_target'] ?: $i['role_target']), 'status' => $i['status'],
-            't' => strtotime($i['created_at']) * 1000,
-        ], $st->fetchAll())]);
+        out(['ok' => true, 'ttl_days' => (int)INVITE_TTL_DAYS, 'invites' => array_map(function ($i) use ($STAFF) {
+            $state = inviteState($i);
+            return [
+                'id' => (int)$i['id'], 'email' => $i['email'], 'name' => $i['name'], 'phone' => $i['phone'],
+                'role' => ($i['org_role_target'] ?: $i['role_target']), 'status' => $state,
+                't' => strtotime($i['created_at']) * 1000, 'expires' => inviteExpiresTs($i) * 1000,
+                'manage' => $state !== 'accepted' && canManageInvite($STAFF, $i),
+            ];
+        }, $st->fetchAll())]);
+    }
+
+    case 'resend_invite':
+    case 'delete_invite': {
+        /* إعادة الإرسال: رابط جديد بصلاحية كاملة من اليوم، ويتوقف الرابط السابق.
+           الحذف: يُحذف السجل فيتوقف رابطه فوراً. الدعوة المقبولة سجلٌّ لحساب قائم فلا تُمس. */
+        $s = db()->prepare('SELECT * FROM invites WHERE id=? LIMIT 1');
+        $s->execute([(int)($in['id'] ?? 0)]);
+        $inv = $s->fetch();
+        if (!$inv) fail('الدعوة غير موجودة، ولعلها حُذفت.');
+        if (!canManageInvite($STAFF, $inv)) fail('ليست لديك صلاحية على هذه الدعوة.', 403);
+        if ($inv['status'] === 'accepted') fail('قُبلت هذه الدعوة وأصبح لصاحبها حساب، فلا تُعدَّل.');
+        $eff = ($inv['org_role_target'] ?? '') !== '' ? $inv['org_role_target'] : $inv['role_target'];
+
+        if ($act === 'delete_invite') {
+            db()->prepare('DELETE FROM invites WHERE id=?')->execute([(int)$inv['id']]);
+            audit($STAFF, 'invite_deleted', $inv['email'], (string)($inv['name'] ?? ''));
+            out(['ok' => true]);
+        }
+
+        rateLimit('invite', 10);
+        $s = db()->prepare('SELECT id FROM users WHERE email=? LIMIT 1');
+        $s->execute([$inv['email']]);
+        if ($s->fetch()) fail('هذا البريد مسجّل في المنصة الآن، فلا حاجة للدعوة. احذفها.');
+        $token   = bin2hex(random_bytes(24));
+        $expires = time() + (int)INVITE_TTL_DAYS * 86400;
+        db()->prepare("UPDATE invites SET token=?, status='sent', created_at=NOW(), expires_at=FROM_UNIXTIME(?) WHERE id=?")
+            ->execute([$token, $expires, (int)$inv['id']]);
+        $link   = CHAT_URL . '/?invite=' . $token;
+        $mailed = sendMail($inv['email'], inviteSubject($eff),
+            inviteEmailHtml($STAFF['name'], $eff, $link, (string)($inv['name'] ?? ''), $expires));
+        audit($STAFF, 'invite_resent', $inv['email'], roleName($eff) . ($mailed ? '' : ' (تعذّر إرسال البريد)'));
+        out(['ok' => true, 'mailed' => $mailed, 'expires' => $expires * 1000]);
     }
 
     case 'revoke_invite': {

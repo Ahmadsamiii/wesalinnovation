@@ -13,6 +13,8 @@
  *    - قوائم المستخدمين والدعوات بحسب من يسأل، وأن الموارد وعلاقات العملاء لا يبلغان
  *      إحصاءات المنصة ولا إجراءات الإدارة الأخرى
  *    - تغيير الدور: مدير النظام وحده، إلى أي من الاثني عشر، ويعود بلا فقد
+ *    - الدعوة بالاسم الكامل بالعربية والجوال، وصلاحيتها INVITE_TTL_DAYS، وإعادة إرسالها
+ *      وحذفها بصلاحيات من يدعو، والدعوة المقبولة لا تُمس
  *  يحذف كل بيانات الفحص خلفه، لكنه يكتب في القاعدة ويصفّر عدّاد حدّ الدعوات
  *  (الحد الطبيعي 10 في الدقيقة)، فلا يُشغَّل على قاعدة إنتاج.
  * ========================================================================== */
@@ -105,8 +107,12 @@ mkUser('client', 'عميل');
 mkUser('pm', 'مدير مشاريع');
 
 echo "\nمن يدعو من:\n";
-$invite = function (string $as, string $target, string $email) use ($jars): array {
-    return call($jars[$as], 'admin.php', ['action' => 'invite', 'email' => $email, 'role' => $target]);
+/** جوال ثابت لكل بريد، لا يتكرر بين دعوات الفحص */
+function invPhone(string $email): string { return '058' . str_pad((string) (crc32($email) % 10000000), 7, '0', STR_PAD_LEFT); }
+const INV_NAME = 'محمد عبدالله الفاحص';
+$invite = function (string $as, string $target, string $email, array $extra = []) use ($jars): array {
+    return call($jars[$as], 'admin.php', array_merge(['action' => 'invite', 'email' => $email, 'role' => $target,
+        'name' => INV_NAME, 'phone' => invPhone($email)], $extra));
 };
 $allowed = ['sysadmin' => ALL_ROLES, 'hr' => ['team_member', 'pm', 'finance', 'medical', 'crm', 'mod', 'reviewer'], 'crm' => ['client'], 'mod' => ['user']];
 foreach (['sysadmin', 'hr', 'crm', 'mod'] as $as) {
@@ -207,6 +213,94 @@ foreach (['sysadmin', 'mod', 'reviewer'] as $as) {
     $r = call($jars[$as], 'admin.php', ['action' => 'stats']);
     check("$as: إحصاءات المنصة كما كانت (200)", $r['code'] === 200);
 }
+
+echo "\nالاسم والجوال في الدعوة:\n";
+resetInviteLimit();
+$bad = [];
+foreach ([['name' => ''], ['name' => 'محمد العتيبي'], ['name' => 'Mohammed Abdullah Check'], ['name' => 'محمد عبدالله 3'],
+          ['phone' => ''], ['phone' => '0123'], ['phone' => '06' . '12345678']] as $k => $over) {
+    $r = call($jars['sysadmin'], 'admin.php', array_merge(['action' => 'invite', 'email' => "inv-bad$k" . MAIL, 'role' => 'user',
+        'name' => INV_NAME, 'phone' => invPhone("inv-bad$k")], $over));
+    if ($r['json']['ok'] ?? false) $bad[] = json_encode($over, JSON_UNESCAPED_UNICODE);
+}
+check('اسم ناقص أو بغير العربية أو جوال غير صحيح يُرفض', $bad === [], implode(' ', $bad));
+resetInviteLimit();
+$taken = db()->query("SELECT phone FROM users WHERE email LIKE '%" . MAIL . "' AND phone IS NOT NULL LIMIT 1")->fetchColumn();
+$r = $invite('sysadmin', 'user', 'inv-takenphone' . MAIL, ['phone' => $taken]);
+check('جوال حساب قائم يُرفض', !($r['json']['ok'] ?? false) && str_contains($r['json']['error'] ?? '', 'الجوال'), $r['raw']);
+$r = $invite('sysadmin', 'user', 'inv-dupphone' . MAIL, ['phone' => invPhone('inv-sysadmin-pm' . MAIL)]);
+check('وجوال دعوة أخرى بانتظار القبول يُرفض', !($r['json']['ok'] ?? false), $r['raw']);
+$r = $invite('sysadmin', 'pm', 'inv-name' . MAIL, ['name' => '  سارة   خالد    الفاحصة ', 'phone' => '+966 58 111 2233']);
+$x = db()->query("SELECT name, phone, created_at, expires_at FROM invites WHERE email='inv-name" . MAIL . "'")->fetch();
+check('يُخزَّن الاسم بمسافات موحّدة والجوال بصيغة 05', $x && $x['name'] === 'سارة خالد الفاحصة' && $x['phone'] === '0581112233', json_encode($x, JSON_UNESCAPED_UNICODE));
+$ttl = (int) INVITE_TTL_DAYS * 86400;
+check('وتنتهي صلاحيتها بعد ' . INVITE_TTL_DAYS . ' يوماً من الإرسال', $x && abs(strtotime($x['expires_at']) - strtotime($x['created_at']) - $ttl) <= 5
+      && abs(($r['json']['expires'] ?? 0) / 1000 - strtotime($x['expires_at'])) <= 5);
+
+$tok = fn(string $e) => db()->query("SELECT token FROM invites WHERE email='$e" . MAIL . "'")->fetchColumn();
+$info = call(tempnam(sys_get_temp_dir(), 'jar'), 'auth.php', ['action' => 'invite_info', 'invite' => $tok('inv-name')]);
+check('معلومات الدعوة تعطي المدعو اسمه وجواله ونهاية صلاحيتها', ($info['json']['name'] ?? '') === 'سارة خالد الفاحصة'
+      && ($info['json']['phone'] ?? '') === '0581112233' && ($info['json']['expires'] ?? 0) > time() * 1000, $info['raw']);
+$jar = tempnam(sys_get_temp_dir(), 'jar');
+$reg = call($jar, 'auth.php', ['action' => 'register', 'invite' => $tok('inv-name'), 'first' => '', 'last' => '', 'first_en' => 'Sara', 'last_en' => 'Check',
+    'email' => 'inv-name' . MAIL, 'phone' => '0599999999', 'dob' => '1992-02-02', 'password' => PASS]);
+$u = db()->query("SELECT name, phone FROM users WHERE email='inv-name" . MAIL . "'")->fetch();
+check('التسجيل يعتمد اسم الدعوة وجوالها لا ما في النموذج', ($reg['json']['ok'] ?? false) && $u && $u['name'] === 'سارة خالد الفاحصة' && $u['phone'] === '0581112233', $reg['raw']);
+
+echo "\nالصلاحية وإعادة الإرسال والحذف:\n";
+resetInviteLimit();
+$invite('hr', 'team_member', 'inv-life' . MAIL);
+$id = (int) db()->query("SELECT id FROM invites WHERE email='inv-life" . MAIL . "'")->fetchColumn();
+$listed = function (string $as, string $e) use ($jars): ?array {
+    foreach (call($jars[$as], 'admin.php', ['action' => 'invites'])['json']['invites'] ?? [] as $i) if ($i['email'] === $e . MAIL) return $i;
+    return null;
+};
+$l = $listed('hr', 'inv-life');
+check('القائمة تعطي الاسم والجوال ونهاية الصلاحية وإمكان الإدارة', $l && $l['name'] === INV_NAME && $l['phone'] === invPhone('inv-life' . MAIL)
+      && $l['status'] === 'sent' && $l['manage'] === true && $l['expires'] > $l['t'], json_encode($l, JSON_UNESCAPED_UNICODE));
+
+db()->exec("UPDATE invites SET expires_at = NOW() - INTERVAL 1 MINUTE WHERE id=$id");
+$oldTok = $tok('inv-life');
+$info = call(tempnam(sys_get_temp_dir(), 'jar'), 'auth.php', ['action' => 'invite_info', 'invite' => $oldTok]);
+check('الدعوة المنتهية تُرفض برسالة انتهاء الصلاحية', !($info['json']['ok'] ?? true) && ($info['json']['error'] ?? '') === INVITE_EXPIRED_MSG, $info['raw']);
+$reg = call(tempnam(sys_get_temp_dir(), 'jar'), 'auth.php', ['action' => 'register', 'invite' => $oldTok, 'first' => '', 'last' => '', 'first_en' => 'Old', 'last_en' => 'Link',
+    'email' => 'inv-life' . MAIL, 'phone' => '0599999998', 'dob' => '1990-01-01', 'password' => PASS]);
+check('ولا يُسجَّل بها', !($reg['json']['ok'] ?? true) && (int) db()->query("SELECT COUNT(*) FROM users WHERE email='inv-life" . MAIL . "'")->fetchColumn() === 0);
+check('وتظهر في القائمة منتهية ويمكن إدارتها', ($listed('hr', 'inv-life')['status'] ?? '') === 'expired' && ($listed('hr', 'inv-life')['manage'] ?? false) === true);
+
+$r = call($jars['crm'], 'admin.php', ['action' => 'resend_invite', 'id' => $id]);
+check('علاقات العملاء لا تعيد إرسال دعوة غيرها (403)', $r['code'] === 403 && $tok('inv-life') === $oldTok);
+$r = call($jars['mod'], 'admin.php', ['action' => 'delete_invite', 'id' => $id]);
+check('والمشرف لا يحذف دعوة عضو فريق (403)', $r['code'] === 403 && $tok('inv-life') === $oldTok);
+$r = call($jars['hr'], 'admin.php', ['action' => 'resend_invite', 'id' => $id]);
+$y = db()->query("SELECT token, status, created_at, expires_at FROM invites WHERE id=$id")->fetch();
+check('إعادة الإرسال: رابط جديد بصلاحية كاملة من اليوم', ($r['json']['ok'] ?? false) && $y['token'] !== $oldTok && $y['status'] === 'sent'
+      && abs(strtotime($y['expires_at']) - time() - $ttl) <= 5, $r['raw']);
+$info = call(tempnam(sys_get_temp_dir(), 'jar'), 'auth.php', ['action' => 'invite_info', 'invite' => $oldTok]);
+check('والرابط السابق يتوقف', !($info['json']['ok'] ?? true));
+$info = call(tempnam(sys_get_temp_dir(), 'jar'), 'auth.php', ['action' => 'invite_info', 'invite' => $y['token']]);
+check('والجديد يعمل', ($info['json']['ok'] ?? false) && ($listed('hr', 'inv-life')['status'] ?? '') === 'sent');
+check('وتُسجَّل في سجل العمليات', (int) db()->query("SELECT COUNT(*) FROM audit_log WHERE action='invite_resent' AND target='inv-life" . MAIL . "'")->fetchColumn() === 1);
+
+$r = call($jars['hr'], 'admin.php', ['action' => 'delete_invite', 'id' => $id]);
+check('الحذف يزيل الدعوة ويوقف رابطها', ($r['json']['ok'] ?? false) && (int) db()->query("SELECT COUNT(*) FROM invites WHERE id=$id")->fetchColumn() === 0
+      && !(call(tempnam(sys_get_temp_dir(), 'jar'), 'auth.php', ['action' => 'invite_info', 'invite' => $y['token']])['json']['ok'] ?? true));
+check('ويُسجَّل في سجل العمليات', (int) db()->query("SELECT COUNT(*) FROM audit_log WHERE action='invite_deleted' AND target='inv-life" . MAIL . "'")->fetchColumn() === 1);
+$r = call($jars['hr'], 'admin.php', ['action' => 'delete_invite', 'id' => $id]);
+check('وحذف ما حُذف يعطي رسالة واضحة', !($r['json']['ok'] ?? true) && str_contains($r['json']['error'] ?? '', 'غير موجودة'));
+
+$acc = (int) db()->query("SELECT id FROM invites WHERE email='inv-name" . MAIL . "'")->fetchColumn();
+$r1 = call($jars['sysadmin'], 'admin.php', ['action' => 'resend_invite', 'id' => $acc]);
+$r2 = call($jars['sysadmin'], 'admin.php', ['action' => 'delete_invite', 'id' => $acc]);
+check('الدعوة المقبولة لا يُعاد إرسالها ولا تُحذف', !($r1['json']['ok'] ?? true) && !($r2['json']['ok'] ?? true)
+      && db()->query("SELECT status FROM invites WHERE id=$acc")->fetchColumn() === 'accepted');
+check('ولا تظهر لها إجراءات في القائمة', ($listed('sysadmin', 'inv-name')['manage'] ?? true) === false && ($listed('sysadmin', 'inv-name')['status'] ?? '') === 'accepted');
+check('المشرف يدير دعوات المستفيدين وحدها', ($listed('mod', 'inv-sysadmin-user')['manage'] ?? false) === true && ($listed('mod', 'inv-sysadmin-pm')['manage'] ?? true) === false);
+
+db()->exec("UPDATE invites SET expires_at=NULL, created_at = NOW() - INTERVAL " . ((int) INVITE_TTL_DAYS + 1) . " DAY WHERE email='inv-sysadmin-finance" . MAIL . "'");
+db()->exec("UPDATE invites SET expires_at=NULL, created_at = NOW() - INTERVAL 2 DAY WHERE email='inv-sysadmin-medical" . MAIL . "'");
+check('دعوة قديمة بلا تاريخ انتهاء تُحسب صلاحيتها من إرسالها', ($listed('sysadmin', 'inv-sysadmin-finance')['status'] ?? '') === 'expired'
+      && ($listed('sysadmin', 'inv-sysadmin-medical')['status'] ?? '') === 'sent');
 
 echo "\nتغيير الدور:\n";
 $targetId = mkUser('user', 'هدف');

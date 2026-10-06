@@ -97,6 +97,7 @@ foreach ([
     'IDLE_MINUTES_STAFF'      => 15,
     'SESSION_MAX_HOURS_USER'  => 24,
     'SESSION_MAX_HOURS_STAFF' => 12,
+    'INVITE_TTL_DAYS'         => 15,   // صلاحية رابط دعوة الحساب بالأيام
 ] as $k => $v) { if (!defined($k)) define($k, $v); }
 
 if (!APP_DEBUG) { ini_set('display_errors', '0'); error_reporting(0); }
@@ -907,6 +908,15 @@ function ensureSchema(): void {
         if (!colExists('invites', 'org_role_target')) {
             db()->exec("ALTER TABLE invites ADD COLUMN org_role_target VARCHAR(30) NULL");
         }
+        /* الدعوة باسم المدعو الكامل وجواله يكتبهما الداعي، ولها صلاحية محددة (INVITE_TTL_DAYS).
+           الدعوات السابقة لهذه الأعمدة تبدأ صلاحيتها من تاريخ إرسالها. */
+        if (!colExists('invites', 'name')) {
+            db()->exec("ALTER TABLE invites ADD COLUMN name VARCHAR(80) NULL, ADD COLUMN phone VARCHAR(20) NULL");
+        }
+        if (!colExists('invites', 'expires_at')) {
+            db()->exec("ALTER TABLE invites ADD COLUMN expires_at DATETIME NULL");
+            db()->exec("UPDATE invites SET expires_at = created_at + INTERVAL " . (int)INVITE_TTL_DAYS . " DAY WHERE expires_at IS NULL");
+        }
         ensureAuthTable();
 
         /* الجوال قابل للفراغ: حسابات مساحة العمل التي تنضم إلى المنصة قد لا يكون لها جوال. التسجيل
@@ -1184,20 +1194,75 @@ function smtpSend(string $to, string $subject, string $html): bool {
     return true;
 }
 
-/** قالب بريد الدعوة */
-function inviteEmailHtml(string $inviter, string $roleTarget, string $link): string {
+/** «20 أكتوبر 2026»: تاريخ ميلادي بأسماء الأشهر للبريد */
+function arDateLong(int $ts): string {
+    static $m = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+    return (int)date('j', $ts) . ' ' . $m[(int)date('n', $ts) - 1] . ' ' . date('Y', $ts);
+}
+
+/* ---------- دعوات الحسابات ---------- */
+
+/** توحيد رقم الجوال السعودي إلى صيغة 05XXXXXXXX (تستعمله الدعوات والتسجيل) */
+function normPhone(string $p): string {
+    $p = preg_replace('/[\s\-()]/', '', $p);
+    if (preg_match('/^\+9665\d{8}$/', $p)) return '0' . substr($p, 4);
+    if (preg_match('/^9665\d{8}$/',  $p)) return '0' . substr($p, 3);
+    return $p;
+}
+function validPhone(string $p): bool { return preg_match('/^05\d{8}$/', $p) === 1; }
+
+/** الاسم الكامل بالعربية: ثلاث كلمات فأكثر بالحروف العربية وحدها، والمسافات موحّدة */
+function cleanFullNameAr(string $n): string { return trim(preg_replace('/\s+/u', ' ', $n)); }
+function validFullNameAr(string $n): bool {
+    return mb_strlen($n) <= 80
+        && preg_match('/^[\x{0621}-\x{064A}]{2,}( [\x{0621}-\x{064A}]{2,}){2,}$/u', $n) === 1;
+}
+
+const INVITE_EXPIRED_MSG = 'انتهت صلاحية هذه الدعوة. اطلب من الجهة التي دعتك إعادة إرسالها.';
+
+/** نهاية صلاحية الدعوة، وحالتها كما تُعرض: sent (بانتظار القبول) أو accepted أو revoked أو expired */
+function inviteExpiresTs(array $inv): int {
+    $base = $inv['expires_at'] ?? null;
+    return $base ? strtotime($base) : strtotime($inv['created_at']) + (int)INVITE_TTL_DAYS * 86400;
+}
+function inviteState(array $inv): string {
+    if ($inv['status'] !== 'sent') return $inv['status'];
+    return inviteExpiresTs($inv) <= time() ? 'expired' : 'sent';
+}
+
+/** من يدير دعوة (يعيد إرسالها أو يحذفها): من يحق له الدعوة بدورها، والموارد البشرية
+ *  وعلاقات العملاء دعواتهم وحدها كما في قائمتهم */
+function canManageInvite(array $staff, array $inv): bool {
+    $eff = ($inv['org_role_target'] ?? '') !== '' ? $inv['org_role_target'] : $inv['role_target'];
+    if (!canInviteRole($staff, $eff)) return false;
+    if (in_array(effectiveRole($staff), ['hr', 'crm'], true)) return (int)$inv['invited_by'] === (int)$staff['id'];
+    return true;
+}
+
+/** عنوان بريد الدعوة حسب دورها */
+function inviteSubject(string $eff): string {
+    return $eff === 'user' ? 'دعوة لتجربة منصة وصال' : ($eff === 'client' ? 'دعوة إلى مساحة عمل وصال' : 'دعوة للانضمام لفريق وصال');
+}
+
+/** قالب بريد الدعوة: باسم المدعو إن وُجد، وتاريخ نهاية صلاحيتها */
+function inviteEmailHtml(string $inviter, string $roleTarget, string $link, string $name = '', int $expiresTs = 0): string {
     $isTeam  = $roleTarget !== 'user';
     $isClient = $roleTarget === 'client';
     $roleTxt = $isClient ? 'إلى مساحة عمل وصال لمتابعة مشروعك معنا'
              : ($isTeam ? 'للانضمام لفريق وصال بصفة ' . roleName($roleTarget) : 'لتجربة منصة وصال');
     $btnTxt  = $isTeam ? 'قبول الدعوة وإنشاء حسابي' : 'تجربة وصال الآن';
     $i = htmlspecialchars($inviter, ENT_QUOTES, 'UTF-8');
+    $hi = $name !== '' ? 'السلام عليكم ' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . '،' : 'السلام عليكم،';
+    $until = $expiresTs > 0
+        ? '<div style="font-size:13px;color:#5b4f78;margin-bottom:14px">الدعوة صالحة حتى <b>' . arDateLong($expiresTs) . '</b>. بعد هذا التاريخ يلزم طلب دعوة جديدة.</div>'
+        : '';
     return '<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;background:#f4f2fb;padding:32px 16px">'
         . '<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #e4ddf0">'
         . '<div style="background:linear-gradient(135deg,#814fc3,#282692);padding:26px;text-align:center;color:#fff;font-size:22px;font-weight:bold">وصــال</div>'
         . '<div style="padding:28px 26px;color:#3d3558;line-height:1.9;font-size:15px">'
-        . 'السلام عليكم،<br><b>' . $i . '</b> يدعوك ' . $roleTxt . '.<br>وصال منصة سعودية تعمل بالذكاء الاصطناعي، وتجيب الأشخاص ذوي الإعاقة عن حقوقهم والخدمات المتاحة لهم.'
+        . $hi . '<br><b>' . $i . '</b> يدعوك ' . $roleTxt . '.<br>وصال منصة سعودية تعمل بالذكاء الاصطناعي، وتجيب الأشخاص ذوي الإعاقة عن حقوقهم والخدمات المتاحة لهم.'
         . '<div style="text-align:center;margin:26px 0"><a href="' . $link . '" style="background:linear-gradient(135deg,#814fc3,#5039a8);color:#fff;text-decoration:none;padding:14px 34px;border-radius:99px;font-weight:bold;display:inline-block">' . $btnTxt . '</a></div>'
+        . $until
         . '<div style="font-size:12px;color:#8a7fa3">إذا لم يعمل الزر فانسخ الرابط التالي:<br><span dir="ltr" style="word-break:break-all">' . $link . '</span></div>'
         . '</div></div></div>';
 }
