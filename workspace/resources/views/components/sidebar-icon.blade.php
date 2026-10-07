@@ -30,6 +30,9 @@ $iconForTab = [
     'reference_letters' => 'file', 'client_projects' => 'folder',
     'reference_request' => 'send',
     'dashboard' => 'grid', 'profile' => 'user', 'logout' => 'logout', 'chat' => 'message',
+    // أقسام لوحة المنصة في القائمة الموحدة (AppLayout::$platformLinks)
+    'platform_users' => 'users', 'platform_messages' => 'mail', 'platform_tickets' => 'alert',
+    'platform_content' => 'file', 'platform_experience' => 'check-square', 'platform_audit' => 'history',
 ];
 
 $paths = [

@@ -8,7 +8,8 @@
  *  خادم PHP المدمج لا يقرأ .htaccess، فتُفتح الصفحة بـ /login.html (ملفها الفعلي، وقاعدة
  *  /login إلى ملفها يفحصها tools/check-routes.sh على Apache). يتحقق:
  *    - أخطاء النموذج مقروءة ومعلنة (role=alert) ويذهب إليها التركيز، وإظهار كلمة المرور
- *    - الوجهة بعد الدخول: عادي إلى المحادثة، صاحب دور في مساحة العمل إليها، مدير النظام يختار،
+ *    - الوجهة بعد الدخول: عادي إلى المحادثة، صاحب دور في مساحة العمل إليها، مدير النظام يختار
+ *      قبل تفعيل الدخول الموحد ويدخل مساحة العمل مباشرة بعده (نُحاكي ردّ unified من الخادم)،
  *      وكلمة المرور المؤقتة إلى المحادثة دائماً
  *    - next لا يُقبل إلا على هذا الموقع (مسار أو مضيف واحد)، وأي رابط غريب أو بمخطط
  *      javascript: يُهمَل فلا تتحول الشاشة إلى بابٍ يوجّه الناس إلى موقع آخر بعد دخولهم
@@ -113,6 +114,21 @@ const finalPath = page => { const u = new URL(page.url()); return u.pathname + u
     check('الخروج يعيد النموذج', await page.locator('#signedIn').isHidden());
     await ctx.close();
   }
+  {
+    // الدخول الموحد فعّال: الخادم يرسل unified:true، فيدخل مدير النظام مساحة العمل بلا شاشة اختيار
+    const { ctx, page } = await open(browser, PAGE);
+    await page.route('**/api/auth.php', async route => {
+      const res = await route.fetch();
+      const j = await res.json().catch(() => null);
+      if (j && j.user) j.user.unified = true;
+      await route.fulfill({ response: res, json: j || {} });
+    });
+    await login(page, 'admin');
+    await page.waitForURL(u => u.pathname.endsWith('/workspace/'), { timeout: 15000 }).catch(() => {});
+    check('مدير النظام مع الدخول الموحد يذهب إلى مساحة العمل مباشرة', finalPath(page) === '/workspace/', finalPath(page));
+    await ctx.close();
+  }
+  resetLimits();
 
   resetLimits();
   console.log('\nوجهة العودة next:');

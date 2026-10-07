@@ -121,12 +121,13 @@ function api(body){
 function show(el,text){el.textContent=text||'';el.classList.toggle('on',!!text);}
 function busy(on){var b=$('go');b.disabled=on;b.setAttribute('aria-busy',on?'true':'false');b.innerHTML=on?'<span class="spin" aria-hidden="true"></span> لحظة':'دخول';}
 
-/* من له دور في مساحة العمل غير مدير النظام يبدأ منها، ومدير النظام يختار، وغيرهما إلى المحادثة.
-   كلمة المرور المؤقتة تُغيَّر من المحادثة فتذهب إليها دائماً. */
+/* من له دور في مساحة العمل يبدأ منها، وغيره إلى المحادثة. قائمتها الجانبية تضم أقسام المنصة،
+   فلا حاجة لاختيار. قبل تفعيل الدخول الموحد لا تعرف مساحة العمل جلسة المنصة، فيبقى مدير النظام
+   يختار بين الوجهتين. كلمة المرور المؤقتة تُغيَّر من المحادثة فتذهب إليها دائماً. */
 function route(user){
   if(user.must_change_pw)return '/chat';
   if(next)return next;
-  if(user.workspace&&user.role!=='admin')return '/workspace/';
+  if(user.workspace&&(user.role!=='admin'||user.unified))return '/workspace/';
   return user.workspace?null:'/chat';
 }
 function signedIn(user){

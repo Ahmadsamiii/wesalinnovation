@@ -12,6 +12,8 @@
  *    - مدير علاقات العملاء: دعوة العميل وحده، وقائمة العملاء وحدهم
  *    - صاحب دور في مساحة العمل بلا صلاحيات إدارة: شارة دوره ورابط المساحة
  *    - المستفيد العادي: لا تبويب مستخدمين ولا رابط مساحة
+ *    - مجموعة «مساحة العمل» في القائمة الجانبية: لمن له دور فيها، وأقسام مدير النظام له وحده،
+ *      والرابط العميق #dashboard/القسم يفتح قسمه لمن يملك صلاحيته
  * ========================================================================== */
 
 const { chromium } = require('playwright');
@@ -44,7 +46,10 @@ const seed = (eff, name, n) => php(`
 
 const ALL = ['مستفيد', 'مراجع محتوى', 'مشرف', 'مدير النظام', 'المدير التنفيذي', 'مدير المشاريع', 'المدير المالي', 'المدير الطبي', 'عضو الفريق', 'العميل', 'مدير الموارد البشرية', 'مدير علاقات العملاء'];
 
+/** حدّ الدخول 12 في الدقيقة، والفحص يسجّل دخولاً أكثر منه، فيُصفَّر عدّاده قبل كل شخص */
+const resetLimits = () => php(`db()->exec("DELETE FROM rate_limits WHERE bucket IN ('m:login','m:reg','m:invite')");`);
 async function as(browser, eff, fn) {
+  resetLimits();
   const ctx = await browser.newContext({ locale: 'ar-SA' });
   const page = await ctx.newPage();
   const admin = [];
@@ -87,6 +92,42 @@ const inviteOptions = async page => {
     check('رابط مساحة العمل ظاهر', await page.locator('#userMenu .ws-only').evaluate(e => !e.hidden));
     check('ويصل /workspace/', (await page.getAttribute('#userMenu .ws-only', 'onclick')).includes('/workspace/'));
   });
+
+  console.log('\nمجموعة مساحة العمل في القائمة الجانبية:');
+  const wsLinks = async page => page.$$eval('#sbWs a.sb-link', as => as.filter(a => a.getClientRects().length).map(a => a.getAttribute('href')));
+  const WS_ADMIN = ['/workspace/content', '/workspace/system/health', '/workspace/system/ai', '/workspace/system/mail', '/workspace/audit-log', '/workspace/system/deployment', '/workspace/reports/technical'];
+  await as(browser, 'sysadmin', async page => {
+    const l = await wsLinks(page);
+    check('مدير النظام: لوحة مساحة العمل وأقسامه السبعة', l[0] === '/workspace/dashboard' && WS_ADMIN.every(h => l.includes(h)) && l.length === 8, l.join(' '));
+  });
+  await as(browser, 'team_member', async page => {
+    const l = await wsLinks(page);
+    check('صاحب دور عادي: رابط لوحة مساحة العمل وحده', l.join(' ') === '/workspace/dashboard', l.join(' '));
+  });
+  await as(browser, 'user', async page => {
+    check('المستفيد: المجموعة كلها مخفية', (await wsLinks(page)).length === 0 && await page.locator('#sbWs').evaluate(e => e.hidden));
+  });
+  await as(browser, 'hr', async page => {
+    check('الموارد البشرية: لوحة مساحة العمل وحدها بلا أقسام مدير النظام', (await wsLinks(page)).join(' ') === '/workspace/dashboard');
+  });
+  {
+    const open = async (eff, hash) => {
+      resetLimits();
+      const ctx = await browser.newContext({ locale: 'ar-SA' });
+      const page = await ctx.newPage();
+      await page.request.post(`${BASE}/api/auth.php`, { data: { action: 'login', email: `${eff}${MAIL}`, password: PASS } });
+      await page.goto(`${BASE}/#${hash}`, { waitUntil: 'domcontentloaded' });
+      await page.waitForFunction(() => typeof USER !== 'undefined' && USER && document.getElementById('umName') && document.getElementById('umName').textContent);
+      await page.waitForTimeout(600);
+      const tab = await page.evaluate(() => (document.querySelector('.dash-tab.on') || {}).dataset?.tab);
+      await ctx.close();
+      return tab;
+    };
+    check('الرابط العميق #dashboard/users يفتح «المستخدمون والأدوار» لمدير النظام', (await open('sysadmin', 'dashboard/users')) === 'users');
+    check('و#dashboard/audit يفتح سجل العمليات', (await open('sysadmin', 'dashboard/audit')) === 'audit');
+    check('والموارد البشرية تفتح users وتُرفض من audit فتبقى في لوحة المعلومات', (await open('hr', 'dashboard/users')) === 'users' && (await open('hr', 'dashboard/audit')) === 'overview');
+    check('وقسم غير موجود يبقى في لوحة المعلومات', (await open('sysadmin', 'dashboard/nothing')) === 'overview');
+  }
 
   console.log('\nمدير الموارد البشرية:');
   await as(browser, 'hr', async (page, admin) => {

@@ -87,5 +87,45 @@ check('غير هؤلاء لا يدعو أحداً', count(array_filter($none, fn
 check('حساب بلا دور (مصفوفة ناقصة) لا يدعو أحداً', invitableRoles([]) === [] && invitableRoles(['role' => 'user']) === []);
 check('لا يُدعى بدور غير معرَّف', !canInviteRole($actor('sysadmin'), 'astronaut'));
 
+/* ---------- القائمة الموحدة بين اللوحتين ---------- */
+echo "\nالقائمة الموحدة (روابط كل لوحة في الأخرى):\n";
+$html = (string) @file_get_contents(__DIR__ . '/../index.html');
+$routes = (string) @file_get_contents(__DIR__ . '/../workspace/routes/web.php');
+
+// أقسام مدير النظام في مساحة العمل كما تعرضها قائمة المنصة (data-ws-role="sysadmin")
+preg_match_all('#<a class="sb-link" data-ws-role="sysadmin" href="/workspace/([^"]+)"[^>]*>.*?<span class="sb-label">([^<]+)</span>#su', $html, $m, PREG_SET_ORDER);
+$shown = array_map(fn($x) => [$x[1], $x[2]], $m);
+$tabs = $ws['sysadmin']['tabs'] ?? [];
+unset($tabs['roles_permissions']);   // يحل محله «المستخدمون والأدوار» في المنصة
+check('قائمة المنصة تعرض أقسام مدير النظام في مساحة العمل بتسمياتها حرفياً وترتيبها',
+      array_column($shown, 1) === array_column($tabs, 'label'));
+// المسار كاملاً، أو آخر مقطع منه داخل مجموعة بادئة (Route::prefix('reports')->...)
+$missing = array_filter($shown, fn($x) => !str_contains($routes, "'" . $x[0] . "'") && !str_contains($routes, "'" . basename($x[0]) . "'"));
+check('ولكل رابط مسار في routes/web.php', $missing === [], implode(' ', array_column($missing, 0)));
+
+// أقسام المنصة في قائمة مساحة العمل (config/workspace.php → platform_sections)
+if (!function_exists('env')) { function env($k, $d = null) { return $d; } }
+$wsCfg = (array) (@include __DIR__ . '/../workspace/config/workspace.php');
+$sections = (array) ($wsCfg['platform_sections'] ?? []);
+check('أقسام المنصة معرَّفة في إعدادات مساحة العمل', $sections !== []);
+$permOf = ['users' => 'users.view', 'messages' => 'messages.view', 'content' => 'content.manage', 'experience' => 'experience.view', 'audit' => 'audit.view'];
+$roleOnPlatform = ['sysadmin' => 'admin', 'hr' => 'hr', 'crm' => 'crm'];
+preg_match_all("#^\s{2}(\w+):\{([^}]*)\}#m", (string) preg_replace('#^.*?const ROLE_PERMS=\{#s', '', $html, 1), $rp, PREG_SET_ORDER);
+$perms = [];
+foreach ($rp as $x) { preg_match_all("#'([a-z.]+)':1#", $x[2], $pm); $perms[$x[1]] = $pm[1]; }
+$bad = [];
+foreach ($sections as $key => $def) {
+    if (!preg_match('#data-tab="' . preg_quote($key, '#') . '"[^>]*>.*?<span class="sb-label">([^<]+)</span>#su', $html, $lb)) { $bad[] = "$key بلا تبويب في المنصة"; continue; }
+    if ($lb[1] !== $def['label']) $bad[] = "$key: «{$lb[1]}» في المنصة و«{$def['label']}» في مساحة العمل";
+    foreach ($def['roles'] as $role) {
+        if (!isset($roleOnPlatform[$role])) { $bad[] = "$key: دور غير معروف $role"; continue; }
+        if ($key === 'tickets') continue;   // تُحكَم بمستوى الدعم لا بالدور، ومدير النظام قائد الفريق التقني
+        if (!in_array($permOf[$key] ?? '', $perms[$roleOnPlatform[$role]] ?? [], true)) $bad[] = "$key: $role لا يملك {$permOf[$key]} في المنصة";
+    }
+}
+check('كل قسم يطابق تبويب المنصة تسمية وصلاحية (ما يُعرض لدور هناك يفتحه هناك)', $bad === [], implode(' | ', $bad));
+check('«المستخدمون والأدوار» حل محل التبويب المحلي: تسميتهما هي التي في المنصة',
+      ($sections['users']['label'] ?? '') === 'المستخدمون والأدوار');
+
 echo $fails === 0 ? "\n✓ كل الفحوص ناجحة\n" : "\n✗ فشل $fails فحصاً\n";
 exit($fails === 0 ? 0 : 1);

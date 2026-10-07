@@ -189,10 +189,13 @@ Route::middleware('auth')->group(function () {
 
     /* مدير النظام: الحسابات والسجل. */
     Route::middleware('role:sysadmin')->group(function () {
-        Route::resource('users', UserController::class)->except(['show', 'destroy']);
-        Route::post('users/{user}/deactivate', [UserActivationController::class, 'destroy'])->name('users.deactivate');
-        Route::post('users/{user}/reactivate', [UserActivationController::class, 'store'])->name('users.reactivate');
-        Route::post('users/{user}/invitation', [UserInvitationController::class, 'store'])->name('users.invitation');
+        // الدخول الموحد: الحسابات والأدوار تُدار في المنصة، فتنتقل هذه المسارات إلى هناك.
+        Route::middleware('platform.credentials:users')->group(function () {
+            Route::resource('users', UserController::class)->except(['show', 'destroy']);
+            Route::post('users/{user}/deactivate', [UserActivationController::class, 'destroy'])->name('users.deactivate');
+            Route::post('users/{user}/reactivate', [UserActivationController::class, 'store'])->name('users.reactivate');
+            Route::post('users/{user}/invitation', [UserInvitationController::class, 'store'])->name('users.invitation');
+        });
 
         Route::get('audit-log', [AuditLogController::class, 'index'])->name('audit.index');
 

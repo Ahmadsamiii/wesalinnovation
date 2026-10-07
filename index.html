@@ -713,6 +713,7 @@ body.sb-anim #nav{transition:left var(--dur-md) var(--ease),right var(--dur-md) 
 .dash-tabs{flex:1;min-height:0;display:flex;flex-direction:column;gap:var(--s4);padding:var(--s4) var(--s3);overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
 .sb-group{display:flex;flex-direction:column;gap:2px;}
 .sb-title{padding:0 var(--s3) var(--s1);font-size:11.5px;font-weight:700;color:var(--muted);letter-spacing:.01em;white-space:nowrap;}
+a.sb-link{text-decoration:none;}
 .dash-tab,.sb-link{position:relative;display:flex;align-items:center;gap:var(--s3);width:100%;min-height:42px;padding:0 var(--s3);border:none;background:none;border-radius:var(--r-md);font-family:inherit;font-size:.875rem;font-weight:600;color:var(--text);text-align:start;white-space:nowrap;cursor:pointer;transition:background var(--dur) var(--ease),color var(--dur) var(--ease),box-shadow var(--dur) var(--ease);}
 .dash-tab svg,.sb-link svg{width:19px;height:19px;flex-shrink:0;color:var(--muted);transition:color var(--dur) var(--ease);}
 .dash-tab:hover,.sb-link:hover{background:var(--surface-alt);color:var(--primary);}
@@ -1494,12 +1495,24 @@ code{background:rgba(80,57,168,.08);padding:1px 6px;border-radius:6px}
 </div>
 <div class="sb-group">
 <p class="sb-title">المساندة</p>
-<button type="button" class="dash-tab" data-tab="tickets" data-perm="tickets.view" hidden onclick="dashTab('tickets',this)" aria-controls="dp-tickets"><svg><use href="#ic-shield"/></svg><span class="sb-label">تذاكر الدعم</span></button>
+<button type="button" class="dash-tab" data-tab="tickets" data-perm="tickets.view" hidden onclick="dashTab('tickets',this)" aria-controls="dp-tickets"><svg><use href="#ic-shield"/></svg><span class="sb-label">تذاكر الدعم الفني</span></button>
 </div>
 <div class="sb-group">
 <p class="sb-title">المحتوى والتجربة</p>
 <button type="button" class="dash-tab" data-tab="content" data-perm="content.manage" hidden onclick="dashTab('content',this)" aria-controls="dp-content"><svg><use href="#ic-file"/></svg><span class="sb-label">محتوى صفحة الهبوط</span></button>
 <button type="button" class="dash-tab" data-tab="experience" data-perm="experience.view" hidden onclick="dashTab('experience',this)" aria-controls="dp-experience"><svg><use href="#ic-clipboard"/></svg><span class="sb-label">الاستبيانات</span></button>
+</div>
+<div class="sb-group sb-ws ws-only" id="sbWs" hidden>
+<p class="sb-title">مساحة العمل</p>
+<a class="sb-link" href="/workspace/dashboard"><svg><use href="#ic-grid"/></svg><span class="sb-label">لوحة مساحة العمل</span></a>
+<!-- أقسام مدير النظام في مساحة العمل: التسميات والمسارات كما في workspace/config/roles.php (يفحصها tools/check-roles.php) -->
+<a class="sb-link" data-ws-role="sysadmin" href="/workspace/content" hidden><svg><use href="#ic-book"/></svg><span class="sb-label">إدارة المحتوى</span></a>
+<a class="sb-link" data-ws-role="sysadmin" href="/workspace/system/health" hidden><svg><use href="#ic-heart"/></svg><span class="sb-label">صحة النظام</span></a>
+<a class="sb-link" data-ws-role="sysadmin" href="/workspace/system/ai" hidden><svg><use href="#ic-brain"/></svg><span class="sb-label">تكامل الذكاء الاصطناعي</span></a>
+<a class="sb-link" data-ws-role="sysadmin" href="/workspace/system/mail" hidden><svg><use href="#ic-mail"/></svg><span class="sb-label">تكامل البريد الإلكتروني</span></a>
+<a class="sb-link" data-ws-role="sysadmin" href="/workspace/audit-log" hidden><svg><use href="#ic-clock"/></svg><span class="sb-label">السجلات والتدقيق</span></a>
+<a class="sb-link" data-ws-role="sysadmin" href="/workspace/system/deployment" hidden><svg><use href="#ic-globe"/></svg><span class="sb-label">النطاقات والنشر</span></a>
+<a class="sb-link" data-ws-role="sysadmin" href="/workspace/reports/technical" hidden><svg><use href="#ic-file"/></svg><span class="sb-label">التقارير التقنية</span></a>
 </div>
 <div class="sb-group">
 <p class="sb-title">الرقابة</p>
@@ -3052,6 +3065,7 @@ function syncAuthUI(){
   document.querySelectorAll('.mob-guest').forEach(e=>e.style.display=USER?'none':'');
   document.querySelectorAll('.mob-auth').forEach(e=>e.style.display=USER?'':'none');
   document.querySelectorAll('.ws-only').forEach(e=>{e.hidden=!(USER&&USER.workspace);});   // رابط مساحة العمل لمن له دور فيها
+  document.querySelectorAll('[data-ws-role]').forEach(e=>{e.hidden=!(USER&&USER.workspace&&effRole(USER)===e.dataset.wsRole);});   // أقسام دور بعينه
   document.querySelectorAll('.sb-auth').forEach(e=>e.hidden=!USER);
   applyRoleUI();
 }
@@ -3808,7 +3822,7 @@ function paintDashTitle(){
 /* المجموعة التي لا يملك المستخدم أي تبويب فيها تختفي بعنوانها، والتبويب
    النشط إن سُحبت صلاحيته (خروج مثلاً) يرجع للنظرة العامة. */
 function syncDashGroups(){
-  document.querySelectorAll('#dashTabs .sb-group:not(.sb-foot)').forEach(g=>{
+  document.querySelectorAll('#dashTabs .sb-group:not(.sb-foot):not(.sb-ws)').forEach(g=>{
     g.hidden=![...g.querySelectorAll('.dash-tab')].some(b=>!b.hidden);
   });
   const on=document.querySelector('.dash-tab.on');
@@ -5876,8 +5890,12 @@ if(_invTok){
   });
   try{history.replaceState(null,'','/');}catch(e){}
 }else{
-  const h=(location.hash||'').replace('#','');
-  if(h&&pages.includes(h)&&h!=='home')go(h);
+  /* #dashboard أو #dashboard/القسم: روابط مساحة العمل تفتح قسماً بعينه من لوحة المنصة */
+  const [h,sec]=(location.hash||'').replace('#','').split('/');
+  if(h&&pages.includes(h)&&h!=='home'){
+    go(h);
+    if(h==='dashboard'&&sec&&USER&&dashTabBtn(sec))dashTab(sec);
+  }
 }
 /* بعد خروج آلي أو يدوي: السبب يُعرض بعد توجيه الصفحات (go يمسح رسائل صفحة الدخول).
    bootEnded: أغلق المستخدم الجهاز وعاد بعد انتهاء المهلة، فأنهى الخادم جلسته مع أول طلب */

@@ -13,6 +13,8 @@ use Symfony\Component\HttpFoundation\Response;
  * والحساب هناك، ولا يجوز أن يبقى هنا باب ثانٍ بكلمة مرور مختلفة. مطفأً لا يفعل شيئاً.
  *
  * الوضع profile: صفحة الملف الشخصي (مستخدم داخل) تعود بالتنبيه بدل الانتقال.
+ * الوضع users: إدارة الحسابات والأدوار في المنصة وحدها، فتنتقل إليها بدل صفحات محلية
+ * تعدّل حسابات تُعاد مزامنتها من المنصة عند كل طلب.
  */
 class RedirectToPlatformLogin
 {
@@ -24,6 +26,10 @@ class RedirectToPlatformLogin
 
         if ($mode === 'profile') {
             return back()->with('status', __('auth.managed_on_platform'));
+        }
+
+        if ($mode === 'users') {
+            return redirect()->away(PlatformSession::sectionUrl('users'));
         }
 
         return redirect()->away(PlatformSession::loginUrl($request));

@@ -1483,5 +1483,7 @@ function publicUser(array $u): array {
         'eff_role' => effectiveRole($u),
         'role_label' => roleName(effectiveRole($u)),
         'workspace' => ($u['role'] ?? 'user') === 'admin' || !empty($u['org_role']),
+        // الدخول موحد مع مساحة العمل: شاشة /login تدخل مدير النظام مباشرة بلا اختيار
+        'unified' => unifiedSession(),
     ];
 }

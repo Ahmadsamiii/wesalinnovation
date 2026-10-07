@@ -389,6 +389,77 @@ class UnifiedSessionTest extends TestCase
         $this->assertStringNotContainsString('مساعد وصال', $html);
     }
 
+    // -------------------------------------------------------------- قائمة واحدة لأقسام اللوحتين
+
+    /** @return list<string> روابط أقسام لوحة المنصة في القائمة الجانبية كما رسمها الخادم */
+    private function platformLinksIn(string $html): array
+    {
+        preg_match('/data-platform-links.*?<\/div>/s', $html, $block);
+        preg_match_all('/href="([^"]+)"/', $block[0] ?? '', $m);
+
+        return $m[1];
+    }
+
+    public function test_the_sysadmin_sidebar_lists_every_platform_section_with_deep_links(): void
+    {
+        config(['workspace.chat_url' => 'https://wesalinnovation.sa/chat']);
+        $s = $this->signedIn(['role' => 'admin', 'org_role' => null]);
+
+        $html = $this->withUnencryptedCookie(self::COOKIE, $s->token)->get('/profile')->assertOk()->getContent();
+
+        $this->assertSame(
+            array_map(fn (string $tab): string => 'https://wesalinnovation.sa/chat#dashboard/'.$tab, ['users', 'messages', 'tickets', 'content', 'experience', 'audit']),
+            $this->platformLinksIn($html),
+        );
+        $this->assertStringContainsString('المستخدمون والأدوار', $html);
+        $this->assertStringContainsString('تذاكر الدعم الفني', $html);
+    }
+
+    public function test_the_local_roles_tab_gives_way_to_the_platform_users_page_when_unified(): void
+    {
+        $s = $this->signedIn(['role' => 'admin', 'org_role' => null]);
+        $html = $this->withUnencryptedCookie(self::COOKIE, $s->token)->get('/profile')->getContent();
+        $this->assertStringNotContainsString('data-tab="roles_permissions"', $html);
+
+        config(['workspace.unified_auth' => false]);
+        $admin = User::factory()->role('sysadmin')->create();
+        $html = $this->actingAs($admin)->get('/profile')->getContent();
+        $this->assertStringContainsString('data-tab="roles_permissions"', $html);
+        $this->assertSame([], $this->platformLinksIn($html));
+    }
+
+    public function test_hr_sees_only_the_users_section_and_other_roles_none(): void
+    {
+        $hr = $this->signedIn(['org_role' => 'hr']);
+        $html = $this->withUnencryptedCookie(self::COOKIE, $hr->token)->get('/profile')->assertOk()->getContent();
+        $this->assertCount(1, $this->platformLinksIn($html));
+        $this->assertStringEndsWith('#dashboard/users', $this->platformLinksIn($html)[0]);
+
+        $pm = $this->platformUser(['email' => 'pm@example.test', 'phone' => '0500000002', 'org_role' => 'pm']);
+        $token = $this->platformSession($pm);
+        $html = $this->flushSession()->withUnencryptedCookie(self::COOKIE, $token)->get('/profile')->assertOk()->getContent();
+        $this->assertSame([], $this->platformLinksIn($html));
+    }
+
+    public function test_local_account_management_moves_to_the_platform_when_unified(): void
+    {
+        config(['workspace.chat_url' => 'https://wesalinnovation.sa/chat']);
+        $s = $this->signedIn(['role' => 'admin', 'org_role' => null]);
+        $to = 'https://wesalinnovation.sa/chat#dashboard/users';
+
+        $this->withUnencryptedCookie(self::COOKIE, $s->token)->get('/users')->assertRedirect($to);
+        $this->get('/users/create')->assertRedirect($to);
+        $this->post('/users', ['name' => 'x', 'email' => 'x@example.test', 'role' => 'pm'])->assertRedirect($to);
+        $this->assertDatabaseMissing('users', ['email' => 'x@example.test']);
+    }
+
+    public function test_local_account_management_stays_when_sign_in_is_local(): void
+    {
+        config(['workspace.unified_auth' => false]);
+
+        $this->actingAs(User::factory()->role('sysadmin')->create())->get('/users')->assertOk();
+    }
+
     // -------------------------------------------------------------- عطل المنصة
 
     public function test_an_unreachable_platform_leaves_the_local_rules_in_charge(): void

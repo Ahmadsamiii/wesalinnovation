@@ -55,6 +55,20 @@
                 <span class="truncate lg:sb-collapsed:sr-only">لوحة التحكم</span>
             </a>
         @endforelse
+
+        {{-- الدخول الموحد: أقسام لوحة المنصة في القائمة نفسها، تفتح في لوحتها بلا دخول ثانٍ --}}
+        @if ($platformLinks !== [])
+            <div class="flex flex-col gap-0.5" data-platform-links>
+                <p class="px-3 pb-1 text-[11.5px] font-bold text-brand-muted lg:sb-collapsed:sr-only">لوحة المنصة</p>
+                @foreach ($platformLinks as $link)
+                    <a href="{{ $link['url'] }}" data-tab="{{ $link['key'] }}" :title="collapsed ? @js($link['label']) : null"
+                        class="{{ $itemBase }} {{ $itemIdle }}">
+                        <x-sidebar-icon :name="$link['key']" />
+                        <span class="truncate lg:sb-collapsed:sr-only">{{ $link['label'] }}</span>
+                    </a>
+                @endforeach
+            </div>
+        @endif
     </nav>
 
     <div class="shrink-0 space-y-0.5 border-t border-brand-border p-3">

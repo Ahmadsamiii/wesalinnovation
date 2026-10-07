@@ -158,6 +158,14 @@ final class PlatformSession
     }
 
     /**
+     * قسم من لوحة المنصة (users وmessages وtickets...) كما تفتحه index.html بـ#dashboard/القسم.
+     */
+    public static function sectionUrl(string $tab): string
+    {
+        return rtrim((string) config('workspace.chat_url'), '/').'#dashboard/'.$tab;
+    }
+
+    /**
      * شاشة الدخول الموحدة، مع الوجهة التي يعود إليها المستخدم بعد الدخول.
      */
     public static function loginUrl(Request $request): string

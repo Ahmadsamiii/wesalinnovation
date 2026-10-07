@@ -46,6 +46,21 @@ return [
     'home_url' => env('WORKSPACE_HOME_URL', '/'),
     // رابط مساعد وصال في قائمة المستخدم. /chat ثابت قبل التبديل وبعده.
     'chat_url' => env('UNIFIED_CHAT_URL', 'https://wesalinnovation.sa/chat'),
+
+    /*
+    | أقسام لوحة المنصة التي تظهر في القائمة الجانبية هنا حين يكون الدخول موحداً، فتبدو اللوحتان
+    | قائمة واحدة. الرابط {chat_url}#dashboard/{tab} يفتح القسم في لوحة المنصة (index.html).
+    | roles: الأدوار التي ترى القسم، وتطابق صلاحيات ROLE_PERMS في المنصة (يفحصها tools/check-roles.php).
+    | الحسابات والأدوار تُدار في المنصة وحدها، فيحل «المستخدمون والأدوار» محل تبويب «الأدوار والصلاحيات» المحلي.
+    */
+    'platform_sections' => [
+        'users' => ['label' => 'المستخدمون والأدوار', 'roles' => ['sysadmin', 'hr', 'crm']],
+        'messages' => ['label' => 'رسائل التواصل', 'roles' => ['sysadmin']],
+        'tickets' => ['label' => 'تذاكر الدعم الفني', 'roles' => ['sysadmin']],
+        'content' => ['label' => 'محتوى صفحة الهبوط', 'roles' => ['sysadmin']],
+        'experience' => ['label' => 'الاستبيانات', 'roles' => ['sysadmin']],
+        'audit' => ['label' => 'سجل العمليات', 'roles' => ['sysadmin']],
+    ],
     'session_grace_seconds' => 120,
 
     /*

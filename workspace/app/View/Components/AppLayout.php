@@ -4,6 +4,7 @@ namespace App\View\Components;
 
 use App\Models\HiringRequest;
 use App\Models\ReferenceLetter;
+use App\Support\PlatformSession;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\View\Component;
@@ -30,12 +31,34 @@ class AppLayout extends Component
      */
     public array $services;
 
+    /**
+     * أقسام لوحة المنصة لدور المستخدم، حين يكون الدخول موحداً (config/workspace.php).
+     *
+     * @var list<array{key: string, label: string, url: string}>
+     */
+    public array $platformLinks = [];
+
     public ?string $section;
 
     public function __construct(Request $request)
     {
         $user = $request->user();
         $roleTabs = $user?->roleTabs() ?? [];
+
+        // الدخول الموحد: أقسام المنصة في هذه القائمة، و«المستخدمون والأدوار» منها يحل محل التبويب المحلي.
+        if ($user !== null && PlatformSession::enabled()) {
+            $role = $user->roleName();
+            $this->platformLinks = collect((array) config('workspace.platform_sections'))
+                ->filter(fn (array $section): bool => in_array($role, $section['roles'], true))
+                ->map(fn (array $section, string $key): array => [
+                    'key' => 'platform_'.$key,
+                    'label' => $section['label'],
+                    'url' => PlatformSession::sectionUrl($key),
+                ])
+                ->values()
+                ->all();
+            unset($roleTabs['roles_permissions']);
+        }
 
         // تبويب لم يُبنَ مساره بعد يشير إلى صفحة «قيد البناء» بدل أن يختفي.
         $this->tabs = collect($roleTabs)
