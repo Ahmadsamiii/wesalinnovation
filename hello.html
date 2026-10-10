@@ -2,182 +2,539 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>وصال | هاكاثون الذكاء الاصطناعي لذوي الإعاقة</title>
-<meta name="description" content="مساعد ذكي سعودي يجيب الأشخاص ذوي الإعاقة عن حقوقهم والخدمات المتاحة لهم والتقنيات المساعدة، استناداً إلى مصادر رسمية، بالكتابة أو بالصوت.">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>وصال | هاكاثون الذكاء الاصطناعي للأشخاص ذوي الإعاقة</title>
+<meta name="description" content="جناح وصال في هاكاثون الذكاء الاصطناعي للأشخاص ذوي الإعاقة. مساعد ذكي سعودي يجيب الأشخاص ذوي الإعاقة عن حقوقهم والخدمات المتاحة لهم والتقنيات المساعدة.">
 <meta name="theme-color" content="#282692">
 <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
 <link rel="shortcut icon" href="/favicon.ico">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://wesalinnovation.sa/hello">
-<meta property="og:title" content="وصال | هاكاثون الذكاء الاصطناعي لذوي الإعاقة">
+<meta property="og:title" content="وصال | هاكاثون الذكاء الاصطناعي للأشخاص ذوي الإعاقة">
 <meta property="og:description" content="اسأل عن حقوقك والخدمات المتاحة لك والتقنيات المساعدة، واحصل على إجابة واضحة من مصادر سعودية رسمية.">
 <meta property="og:image" content="https://wesalinnovation.sa/og-cover.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <link rel="preload" href="/fonts/thmanyahsans-Regular.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/thmanyahsans-Bold.woff2" as="font" type="font/woff2" crossorigin>
+<script>document.documentElement.className+=' js';</script>
 <style>
 @font-face{font-family:'Thmanyah Sans';src:url('/fonts/thmanyahsans-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
-@font-face{font-family:'Thmanyah Sans';src:url('/fonts/thmanyahsans-Medium.woff2') format('woff2');font-weight:500;font-style:normal;font-display:swap}
-@font-face{font-family:'Thmanyah Sans';src:url('/fonts/thmanyahsans-Bold.woff2') format('woff2');font-weight:600 700;font-style:normal;font-display:swap}
-@font-face{font-family:'Thmanyah Sans';src:url('/fonts/thmanyahsans-Black.woff2') format('woff2');font-weight:800 900;font-style:normal;font-display:swap}
-:root{--primary:#282692;--secondary:#814fc3;--tertiary:#5039a8;--navy:#20134f;--sky:#52bdf9;--white:#fff;--bg:#f8f6fd;--surface:#fff;--border:#d9d0ea;--muted:#6b5f86;--text:#3d3558;--ink:#1a1632;--r:18px}
-@media(prefers-color-scheme:dark){:root{--bg:#0f0d1a;--surface:#1a1730;--border:#3a3560;--muted:#b3a6d3;--text:#d8d0ec;--ink:#f0ecf8}}
-@media(prefers-contrast:more){:root{--border:#5a4f7a;--muted:#3d3558}}
-@media(prefers-contrast:more) and (prefers-color-scheme:dark){:root{--border:#a698c9;--muted:#e2dbf5;--text:#f7f4ff}}
+@font-face{font-family:'Thmanyah Sans';src:url('/fonts/thmanyahsans-Bold.woff2') format('woff2');font-weight:600 800;font-style:normal;font-display:swap}
+/* ألوان دليل الهوية البصرية فقط */
+:root{--primary:#282692;--secondary:#814fc3;--tertiary:#5039a8;--deep:#20134f;--blue:#3e9eed;--sky:#52bdf9;--paper:#fafafa;--ink:#20134f;--text:#473d6e;--muted:#615882;--line:#dddceb;--ease:cubic-bezier(.22,.8,.24,1)}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{-webkit-text-size-adjust:100%}
-body{min-height:100vh;font-family:'Thmanyah Sans','Segoe UI',system-ui,-apple-system,Tahoma,sans-serif;line-height:1.8;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased}
-:focus-visible{outline:3px solid var(--sky);outline-offset:2px;border-radius:8px}
-.skip{position:absolute;top:-100%;right:16px;background:var(--primary);color:#fff;padding:10px 18px;border-radius:0 0 10px 10px;z-index:20;text-decoration:none;font-weight:700}
-.skip:focus{top:0}
-.wrap{max-width:560px;margin-inline:auto;padding:0 18px 48px}
-
-/* ------------------------------------------------------------ البطل */
-.hero{color:#fff;background:radial-gradient(900px 500px at 15% -10%,rgba(82,189,249,.35),transparent 60%),linear-gradient(160deg,#12103a 0%,#282692 48%,#814fc3 100%);padding:40px 18px 56px;text-align:center}
-.hero img.logo{height:52px;width:auto;margin-bottom:22px}
-.eyebrow{display:inline-block;font-size:.85rem;font-weight:700;color:#e3d9fb;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:6px 16px;margin-bottom:18px}
-.hero h1{font-size:1.9rem;font-weight:800;line-height:1.4;max-width:420px;margin-inline:auto}
-.hero p.tag{margin-top:14px;font-size:1.02rem;color:rgba(255,255,255,.88);max-width:420px;margin-inline:auto}
-.hero .event{margin-top:24px;font-size:.85rem;color:rgba(255,255,255,.72);max-width:380px;margin-inline:auto}
-
-/* ------------------------------------------------------------ الأزرار */
-.actions{margin-top:28px;display:grid;gap:12px;max-width:380px;margin-inline:auto}
-.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:56px;padding:0 22px;border:0;border-radius:999px;font:inherit;font-weight:700;font-size:1.05rem;cursor:pointer;text-decoration:none;color:#fff;background:linear-gradient(135deg,#ffffff,#f1ecff);color:var(--primary);box-shadow:0 10px 28px rgba(10,6,40,.28)}
-.btn:hover{filter:brightness(.98)}
-.btn .ico{width:22px;height:22px;flex:none}
-.btn.ghost{background:rgba(255,255,255,.08);color:#fff;border:1.5px solid rgba(255,255,255,.55);box-shadow:none}
-.btn.ghost[aria-pressed="true"]{background:rgba(255,255,255,.22)}
-
-/* ------------------------------------------------------------ الأقسام */
-section.block{padding:40px 0 0}
-.block h2{font-size:1.15rem;color:var(--ink);text-align:center;margin-bottom:14px}
-.about p{color:var(--text);text-align:center;font-size:.98rem}
-.about p+p{margin-top:10px}
-
-.social{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-top:6px}
-.social a{display:flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:16px;background:var(--surface);border:1.5px solid var(--border);color:var(--primary);transition:transform .15s}
-.social a:hover{transform:translateY(-2px)}
-.social a svg{width:26px;height:26px}
-@media(prefers-reduced-motion:reduce){.social a{transition:none}.social a:hover{transform:none}}
-
-.card-note{margin-top:34px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:18px 20px;display:flex;gap:14px;align-items:flex-start}
-.card-note svg{width:26px;height:26px;flex:none;color:var(--primary);margin-top:2px}
-.card-note p{font-size:.92rem;color:var(--muted)}
-
-footer{margin-top:40px;text-align:center;font-size:.85rem;color:var(--muted)}
-footer a{color:var(--muted)}
-footer .brand{font-weight:700;color:var(--text);display:block;margin-bottom:4px}
-
+html,body{height:100%}
+body{font-family:'Thmanyah Sans','Segoe UI',system-ui,-apple-system,Tahoma,sans-serif;line-height:1.8;color:var(--text);background:var(--paper);-webkit-font-smoothing:antialiased;overflow:hidden}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--sky);outline-offset:3px;border-radius:12px}
 [hidden]{display:none!important}
+svg.ico{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.skip{position:absolute;top:-100px;right:16px;z-index:50;background:#fff;color:var(--primary);padding:10px 18px;border-radius:0 0 12px 12px;font-weight:700;text-decoration:none}
+.skip:focus{top:0}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes pop{to{transform:scale(1)}}
+@keyframes fadeIn{to{opacity:1}}
+@keyframes ripple{0%{transform:scale(.15);opacity:0}15%{opacity:1}100%{transform:scale(2.6);opacity:0}}
+@keyframes blink{50%{opacity:0}}
+@keyframes rvfb{to{opacity:1;transform:none}}
+@keyframes clipfb{to{clip-path:inset(-10px 0 -10px 0)}}
+
+/* ===================================================== شاشة الترحيب */
+.welcome{position:fixed;top:0;right:0;bottom:0;left:0;z-index:5;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;align-items:center;text-align:center;color:#fff;padding:calc(34px + env(safe-area-inset-top)) 24px calc(28px + env(safe-area-inset-bottom));background:linear-gradient(150deg,#282692 0%,#5039a8 62%,#814fc3 125%);transition:opacity .5s var(--ease),transform .5s var(--ease)}
+.welcome.leave{opacity:0;transform:translateY(-24px);pointer-events:none}
+.arcs{position:absolute;top:0;right:0;bottom:0;left:0;pointer-events:none;overflow:hidden}
+.arcs i{position:absolute;border-radius:50%;border:2px solid #814fc3;opacity:.55}
+.arcs i:nth-child(1){width:130vmax;height:130vmax;right:-85vmax;top:-30vmax}
+.arcs i:nth-child(2){width:96vmax;height:96vmax;left:-62vmax;bottom:-46vmax;border-color:#52bdf9;opacity:.38}
+.welcome>*:not(.arcs){position:relative;z-index:1}
+
+/* الشعار: أعلى الشاشة في المنتصف، ويفصله عن النص مسافة واضحة */
+.brand{flex:none;margin-bottom:clamp(36px,7vh,64px)}
+.lockup{position:relative;display:flex;align-items:center;justify-content:center;gap:clamp(12px,3.4vw,18px);direction:ltr}
+.lockup .ripple{position:absolute;right:4%;top:50%;width:90px;height:90px;margin-top:-45px;pointer-events:none}
+.ripple span{position:absolute;top:0;right:0;bottom:0;left:0;border-radius:50%;border:1.5px solid rgba(255,255,255,.6);opacity:0;animation:ripple 1.9s var(--ease) .1s forwards}
+.ripple span:nth-child(2){animation-delay:.35s}.ripple span:nth-child(3){animation-delay:.6s}
+.lockup .wm{height:clamp(44px,13.5vw,58px);width:auto;opacity:0;animation:fadeIn .9s ease 1.5s forwards}
+.lockup .sep{width:1.5px;height:clamp(32px,10vw,44px);background:rgba(255,255,255,.55);opacity:0;animation:fadeIn .9s ease 1.5s forwards}
+.lockup svg.mk{height:clamp(76px,23vw,98px);width:auto;overflow:visible}
+.reveal{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.3s cubic-bezier(.65,.05,.25,1) .2s forwards}
+.dotr{transform-box:fill-box;transform-origin:center;transform:scale(0);animation:pop .5s cubic-bezier(.3,1.5,.5,1) 1.35s forwards}
+.allr{opacity:0;animation:fadeIn .3s ease 1.55s forwards}
+
+/* المحتوى: كتلة واحدة تتوسط المساحة المتبقية بتوازن */
+.main{width:100%;max-width:420px;margin-top:auto;margin-bottom:auto;display:flex;flex-direction:column;align-items:center}
+.ttl{font-size:clamp(1.55rem,6.6vw,2.05rem);font-weight:700;line-height:1.5;letter-spacing:0}
+.tw{position:relative;display:inline-block}
+.txt{display:inline-block}
+.js .txt{clip-path:inset(-10px 0 -10px 100%);animation:clipfb .01s 8s forwards}
+.caret{position:absolute;top:.2em;width:3px;height:1.15em;border-radius:2px;background:var(--sky);animation:blink .9s steps(1) infinite;transition:opacity .5s}
+.caret.off{opacity:0!important;animation:none}
+.sub{max-width:360px;margin-top:14px;font-size:1.02rem;line-height:1.9}
+.ask{width:100%;margin-top:clamp(30px,5.5vh,44px)}
+.rv{opacity:1}
+.js .rv{opacity:0;transform:translateY(12px);transition:opacity .7s var(--ease),transform .7s var(--ease);animation:rvfb .01s 8s forwards}
+.js .rv.on{opacity:1;transform:none}
+
+.lbl{display:block;font-size:1.02rem;font-weight:700;line-height:1.9}
+.field{display:block;width:100%;min-height:60px;margin-top:16px;padding:0 20px;border:2px solid transparent;border-radius:18px;background:#fff;color:var(--ink);font-size:1.12rem;font-weight:700;text-align:center}
+.field::placeholder{color:var(--muted);font-weight:400}
+.field:focus{outline:none;border-color:var(--sky);box-shadow:0 0 0 4px rgba(82,189,249,.45)}
+.cap{margin-top:24px}
+.capl{font-size:.98rem;font-weight:700;margin-bottom:12px}
+.capl small{font-weight:400;font-size:.85rem}
+.cap .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:340px;margin:0 auto}
+.cap label{position:relative;display:block}
+.cap input{position:absolute;top:0;left:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.cap span{display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:999px;border:1.5px solid rgba(255,255,255,.6);font-weight:700;font-size:1rem;transition:background .2s,color .2s}
+.cap input:checked + span{background:#fff;color:var(--primary);border-color:#fff}
+.cap input:focus-visible + span{outline:3px solid var(--sky);outline-offset:3px}
+.privacy{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:20px;font-size:.88rem;line-height:1.8}
+.privacy svg.ico{width:16px;height:16px}
+.go{position:relative;display:flex;align-items:center;justify-content:center;gap:14px;width:100%;min-height:64px;margin-top:26px;border:0;border-radius:999px;background:#fff;color:var(--primary);font-weight:800;font-size:1.15rem;cursor:pointer;box-shadow:0 18px 36px -14px rgba(32,19,79,.7)}
+.go .arr{position:relative;display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#814fc3,#282692);color:#fff;overflow:hidden}
+.go .arr svg{width:20px;height:20px;animation:nudge 1.7s ease-in-out infinite}
+@keyframes nudge{0%,55%,100%{transform:translateX(0);opacity:1}25%{transform:translateX(-26px);opacity:0}26%{transform:translateX(26px);opacity:0}45%{transform:translateX(0);opacity:1}}
+.skipname{margin-top:14px;padding:10px 14px;border:0;background:none;color:#fff;font-size:.95rem;text-decoration:underline;text-underline-offset:4px;cursor:pointer}
+.foot{flex:none;max-width:380px;margin-top:clamp(30px,5vh,48px);font-size:.8rem;line-height:2}
+
+/* ===================================================== شاشة المحادثة */
+.bg{position:fixed;top:0;right:0;bottom:0;left:0;z-index:-1;overflow:hidden;background:var(--paper)}
+.bg i{position:absolute;border-radius:50%;border:2px solid var(--secondary);opacity:.22}
+.bg i:nth-child(1){width:120vmax;height:120vmax;right:-80vmax;top:-20vmax}
+.bg i:nth-child(2){width:90vmax;height:90vmax;left:-62vmax;bottom:-40vmax;border-color:var(--sky);opacity:.4}
+.app{height:100%;max-width:560px;margin:0 auto;display:flex;flex-direction:column}
+.app.enter{animation:fadeIn .6s ease both;opacity:0}
+.top{flex:none;display:flex;align-items:center;justify-content:space-between;padding:calc(16px + env(safe-area-inset-top)) 16px 16px;color:#fff;background:linear-gradient(120deg,#282692,#5039a8 70%,#814fc3 130%)}
+.top .sd{width:46px;height:46px}
+.lk{display:flex;align-items:center;gap:12px;direction:ltr}
+.lk .wm{height:30px;width:auto}
+.lk .sp{width:1.5px;height:26px;background:rgba(255,255,255,.55)}
+.lk .mk{height:48px;width:auto}
+.speak{flex:none;width:46px;height:46px;border-radius:14px;border:1.5px solid rgba(255,255,255,.55);background:transparent;color:#fff;display:grid;place-items:center;cursor:pointer}
+.speak[aria-pressed="true"]{background:#fff;color:var(--primary)}
+.event{flex:none;margin:18px auto 6px;max-width:420px;padding:0 24px;font-size:.8rem;line-height:1.9;color:var(--muted);text-align:center}
+.log{flex:1;overflow-y:auto;padding:12px 18px 28px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth}
+.msg{max-width:88%;padding:14px 18px;border-radius:22px;font-size:1.02rem;line-height:1.9;animation:in .45s var(--ease) both}
+.msg.w{align-self:flex-start;background:#fff;color:var(--ink);border:1px solid var(--line);border-top-left-radius:8px;box-shadow:0 8px 20px -16px rgba(40,38,146,.5)}
+.msg.u{align-self:flex-end;color:#fff;background:linear-gradient(130deg,#814fc3,#282692);border-top-right-radius:8px}
+@keyframes in{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+.typing{align-self:flex-start;display:flex;gap:6px;padding:16px 20px;border-radius:22px;border-top-left-radius:8px;background:#fff;border:1px solid var(--line)}
+.typing i{width:7px;height:7px;border-radius:50%;background:var(--secondary);animation:bob 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes bob{0%,60%,100%{transform:none;opacity:.45}30%{transform:translateY(-5px);opacity:1}}
+.chips{display:flex;flex-wrap:wrap;gap:10px;padding-top:4px;animation:in .45s var(--ease) both}
+.chip{min-height:46px;padding:0 18px;border-radius:999px;border:1.5px solid var(--primary);background:#fff;color:var(--primary);font-weight:700;font-size:.95rem;cursor:pointer;transition:background .2s,color .2s}
+.chip:hover{background:var(--primary);color:#fff}
+.card{align-self:flex-start;width:88%;padding:18px;border-radius:22px;border-top-left-radius:8px;background:#fff;color:var(--ink);border:1px solid var(--line);box-shadow:0 14px 30px -20px rgba(40,38,146,.55);animation:in .45s var(--ease) both}
+.card h3{font-size:1rem;font-weight:700;margin-bottom:14px}
+.card .row{display:flex;gap:12px;flex-wrap:wrap}
+.card .soc{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;background:var(--paper);border:1px solid var(--line);color:var(--primary)}
+.card .soc svg{width:24px;height:24px}
+.card p{font-size:.95rem;line-height:1.9;color:var(--text);margin-bottom:14px}
+.cta{display:flex;align-items:center;justify-content:center;gap:10px;min-height:58px;border-radius:999px;color:#fff;text-decoration:none;font-weight:800;font-size:1.05rem;background:linear-gradient(120deg,#814fc3,#282692);box-shadow:0 14px 30px -12px rgba(40,38,146,.8)}
+.composer{flex:none;display:flex;gap:10px;align-items:center;padding:12px 16px calc(14px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line)}
+.composer a.fld{flex:1;min-height:52px;display:flex;align-items:center;padding:0 20px;border-radius:999px;background:var(--paper);border:1px solid var(--line);color:var(--muted);text-decoration:none;font-size:.95rem}
+.composer a.round{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;color:#fff;background:linear-gradient(130deg,#814fc3,#282692)}
+.endbar{flex:none;display:flex;justify-content:center;padding:12px 16px 0;background:#fff;border-top:1px solid var(--line)}
+.endbtn{display:inline-flex;align-items:center;gap:8px;min-height:46px;padding:0 22px;border-radius:999px;border:1.5px solid var(--primary);background:#fff;color:var(--primary);font-weight:700;font-size:.95rem;cursor:pointer;transition:background .2s,color .2s}
+.endbtn:hover{background:var(--primary);color:#fff}
+.composer{border-top:0;padding-top:10px}
+
+/* ===================================================== شاشة الختام */
+.fin{position:fixed;top:0;right:0;bottom:0;left:0;z-index:8;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;align-items:center;text-align:center;color:#fff;padding:calc(34px + env(safe-area-inset-top)) 24px calc(28px + env(safe-area-inset-bottom));background:linear-gradient(150deg,#282692 0%,#5039a8 62%,#814fc3 125%);opacity:0;transition:opacity .5s var(--ease)}
+.fin.on{opacity:1}
+.fin>*:not(.arcs){position:relative;z-index:1}
+.fin .brand .lk{justify-content:center}
+.fin .brand .lk .wm{height:clamp(40px,12vw,52px)}
+.fin .brand .lk .sp{height:clamp(30px,9vw,40px)}
+.fin .brand .lk .mk{height:clamp(68px,20vw,88px)}
+.fin .main{max-width:420px}
+.fin h2{font-size:clamp(1.55rem,6.6vw,2.05rem);font-weight:700;line-height:1.5}
+.wait{display:flex;gap:7px;justify-content:center;margin-top:30px}
+.wait i{width:8px;height:8px;border-radius:50%;background:#fff;animation:bob 1s infinite}
+.wait i:nth-child(2){animation-delay:.15s}.wait i:nth-child(3){animation-delay:.3s}
+.numcard{width:100%;margin-top:clamp(24px,4vh,34px);padding:24px 20px 22px;border-radius:26px;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.4)}
+.numcard .n1{font-size:1.05rem;line-height:1.8}
+.numcard .num{margin:4px 0;font-size:clamp(3.6rem,18vw,5rem);font-weight:800;line-height:1.15;letter-spacing:0;font-variant-numeric:tabular-nums}
+.numcard .n2{font-size:1.05rem;font-weight:700;line-height:1.8}
+.fin .m1{margin-top:clamp(24px,4vh,34px);font-size:1.15rem;font-weight:800;line-height:1.8}
+.fin .m2{max-width:360px;margin-top:8px;font-size:1rem;line-height:2}
+.fin .acts{width:100%;margin-top:clamp(26px,4.4vh,38px)}
+.fin a.go{text-decoration:none}
+.fin .acts .go{margin-top:0}
+.wa{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:54px;margin-top:12px;border-radius:999px;border:1.5px solid rgba(255,255,255,.75);background:rgba(255,255,255,.1);color:#fff;font-weight:700;font-size:1.02rem;text-decoration:none}
+.wa svg.ico{width:24px;height:24px}
+.mini{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 16px;margin-top:14px}
+.pill{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border-radius:999px;border:1.5px solid rgba(255,255,255,.5);color:#fff;font-weight:700;font-size:.92rem;text-decoration:none}
+.pill svg.ico{width:18px;height:18px}
+.back{min-height:44px;padding:0 6px;border:0;background:none;color:#fff;font-size:.92rem;text-decoration:underline;text-underline-offset:4px;cursor:pointer}
+.fsoc{display:flex;justify-content:center;gap:12px;margin-top:22px}
+.fsoc a{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.14);border:1.5px solid rgba(255,255,255,.5);color:#fff}
+.fsoc a svg{width:24px;height:24px}
+bdi{unicode-bidi:isolate}
+/* الشاشات الأقصر: نضغط المسافات بنسبة واحدة فيبقى الإيقاع نفسه، وتظهر الأزرار دون تمرير قدر الإمكان */
+@media(max-height:960px){
+  .welcome,.fin{padding-top:calc(28px + env(safe-area-inset-top))}
+  .brand{margin-bottom:clamp(28px,5vh,48px)}
+  .lockup svg.mk{height:clamp(70px,21vw,90px)}
+  .lockup .wm{height:clamp(40px,12vw,54px)}
+  .lockup .sep{height:clamp(30px,9vw,40px)}
+  .ask{margin-top:clamp(24px,4.2vh,36px)}
+  .field{min-height:58px;margin-top:14px}
+  .cap{margin-top:20px}
+  .capl{margin-bottom:10px}
+  .cap span{min-height:46px}
+  .privacy{margin-top:16px}
+  .go{margin-top:22px}
+  .skipname{margin-top:10px}
+  .foot{margin-top:clamp(22px,3.6vh,36px)}
+  .fin .brand .lk .mk{height:clamp(62px,18.5vw,80px)}
+  .fin .brand .lk .wm{height:clamp(36px,11vw,48px)}
+  .fin .brand .lk .sp{height:clamp(28px,8.5vw,36px)}
+  .numcard{margin-top:20px;padding:18px 18px 16px}
+  .numcard .num{font-size:clamp(3.2rem,15vw,4.2rem)}
+  .fin .m1{margin-top:20px}
+  .fin .acts{margin-top:22px}
+  .fsoc{margin-top:16px}
+}
+@media(max-height:800px){
+  .welcome,.fin{padding-top:calc(24px + env(safe-area-inset-top))}
+  .brand{margin-bottom:clamp(22px,3.6vh,30px)}
+  .lockup svg.mk{height:clamp(58px,17vw,70px)}
+  .lockup .wm{height:clamp(34px,10vw,41px)}
+  .lockup .sep{height:clamp(24px,7vw,31px)}
+  .sub{margin-top:10px;line-height:1.8}
+  .ask{margin-top:clamp(16px,2.8vh,22px)}
+  .lbl{line-height:1.8}
+  .field{min-height:52px;margin-top:10px}
+  .cap{margin-top:14px}
+  .capl{margin-bottom:6px}
+  .cap span{min-height:40px}
+  .cap .grid{gap:8px}
+  .privacy{margin-top:10px;font-size:.85rem}
+  .go{margin-top:16px;min-height:56px}
+  .skipname{margin-top:4px;padding:8px 14px}
+  .foot{margin-top:clamp(14px,2.4vh,20px)}
+  .fin .brand .lk .mk{height:clamp(54px,16vw,64px)}
+  .fin .brand .lk .wm{height:clamp(32px,9.5vw,38px)}
+  .fin .brand .lk .sp{height:clamp(22px,6.5vw,28px)}
+  .numcard{margin-top:16px;padding:14px 16px 12px;border-radius:22px}
+  .numcard .n1,.numcard .n2{font-size:.98rem;line-height:1.7}
+  .numcard .num{font-size:3.2rem;margin:2px 0}
+  .fin .m1{margin-top:16px;font-size:1.08rem;line-height:1.7}
+  .fin .m2{margin-top:6px;font-size:.95rem;line-height:1.8}
+  .fin .acts{margin-top:18px}
+  .wa{min-height:48px;margin-top:8px}
+  .mini{margin-top:8px}
+  .pill,.back{min-height:40px}
+  .fsoc{margin-top:10px}
+  .fsoc a{width:42px;height:42px}
+}
+@media(max-height:700px){
+  .brand{margin-bottom:18px}
+  .lockup svg.mk{height:52px}
+  .lockup .wm{height:30px}
+  .lockup .sep{height:22px}
+  .sub{margin-top:8px;font-size:.96rem}
+  .ask{margin-top:14px}
+  .cap{margin-top:10px}
+  .cap span{min-height:36px}
+  .privacy{margin-top:8px}
+  .go{margin-top:12px;min-height:52px}
+  .fin .brand .lk .mk{height:50px}
+  .fin .brand .lk .wm{height:29px}
+  .fin .brand .lk .sp{height:20px}
+  .numcard{margin-top:12px;padding:10px 14px 8px}
+  .numcard .num{font-size:2.7rem}
+  .fin .m1{margin-top:12px}
+  .fin .acts{margin-top:14px}
+  .wa{min-height:44px}
+  .pill,.back{min-height:36px}
+  .fsoc a{width:38px;height:38px}
+}
+
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
-<a class="skip" href="#main">تخطَّ إلى المحتوى</a>
+<a class="skip" href="#nm">تخطَّ إلى حقل الاسم</a>
+<div class="bg" aria-hidden="true"><i></i><i></i></div>
 
-<header class="hero">
-<img class="logo" src="/assets/logo-white.png" alt="وصال" width="200" height="52">
-<span class="eyebrow">هاكاثون الذكاء الاصطناعي لذوي الإعاقة</span>
-<h1>مساعد ذكي للأشخاص ذوي الإعاقة في السعودية</h1>
-<p class="tag">يجيبك وصال عن حقوقك والخدمات المتاحة لك والتقنيات المساعدة، استناداً إلى مصادر رسمية، بالكتابة أو بالصوت.</p>
-<p class="event">من فعاليات المؤتمر الدولي السابع لذوي الإعاقة، تحت الرعاية الكريمة لخادم الحرمين الشريفين الملك سلمان بن عبدالعزيز.</p>
+<main class="welcome" id="welcome">
+  <div class="arcs" aria-hidden="true"><i></i><i></i></div>
 
-<div class="actions">
-<a class="btn" href="https://wesalinnovation.sa/#chat">
-<svg class="ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12a8 8 0 1 1 3.2 6.4L4 20l1.3-3.5A7.96 7.96 0 0 1 4 12Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
-جرّب وصال الآن
-</a>
-<button class="btn ghost" id="ttsBtn" type="button" aria-pressed="false">
-<svg class="ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M16.5 8.5a5 5 0 0 1 0 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-<span id="ttsLabel">استمع لهذه الصفحة</span>
-</button>
-</div>
-</header>
+  <div class="brand">
+    <div class="lockup" role="img" aria-label="شعار وصال">
+      <div class="ripple" aria-hidden="true"><span></span><span></span><span></span></div>
+      <img class="wm" src="/assets/hello-word-white.png" alt="" width="831" height="471">
+      <span class="sep" aria-hidden="true"></span>
+      <svg class="mk" viewBox="944.2 49.6 1004.4 723.6" aria-hidden="true" focusable="false">
+        <defs><mask id="hmask" maskUnits="userSpaceOnUse" x="930" y="40" width="1030" height="740"><path class="reveal" pathLength="1" d="M995 665 L1290 180 Q1350 75 1410 180 L1500 340 C1540 410 1625 500 1625 590 C1625 670 1550 712 1460 712 C1370 712 1312 650 1312 575 C1312 490 1380 418 1470 395 C1620 360 1740 320 1830 280" fill="none" stroke="#fff" stroke-width="170" stroke-linecap="round" stroke-linejoin="round"/><circle class="dotr" cx="1868" cy="220" r="105" fill="#fff"/><rect class="allr" x="930" y="40" width="1030" height="740" fill="#fff"/></mask></defs>
+        <image href="/assets/hello-mark-white.png" x="944.2" y="49.6" width="1004.4" height="723.6" mask="url(#hmask)"/>
+      </svg>
+    </div>
+  </div>
 
-<main id="main" class="wrap">
+  <div class="main">
+    <h1 class="ttl" aria-label="شكراً لزيارتك جناح وصال"><span class="tw" id="ty"><span class="txt" aria-hidden="true">شكراً لزيارتك جناح وصال</span><i class="caret" aria-hidden="true" hidden></i></span></h1>
+    <p class="sub rv">في هاكاثون الذكاء الاصطناعي للأشخاص ذوي الإعاقة</p>
 
-<section class="block about" aria-labelledby="about-h">
-<h2 id="about-h">من نحن</h2>
-<p>وصال الابتكار لتقنية المعلومات شركة سعودية من الرياض.</p>
-<p>بنينا وصال ليعمل مع قارئ الشاشة ولوحة المفاتيح، ويستند في إجاباته إلى المصادر الرسمية.</p>
-</section>
+    <form class="ask rv" id="ask" autocomplete="off" novalidate>
+      <label class="lbl" for="nm" id="lbl">اكتب لنا اسمك، لأننا نحب نخصّص كل شيء لك</label>
+      <input class="field" id="nm" name="nm" type="text" maxlength="30" placeholder="اسمك" autocomplete="given-name" autocapitalize="words" enterkeyhint="go" spellcheck="false" aria-describedby="priv">
+      <div class="cap" role="radiogroup" aria-labelledby="capL">
+        <p class="capl" id="capL">صفتك <small>(اختياري)</small></p>
+        <div class="grid">
+          <label><input type="radio" name="cap" value="jm"><span>محكّم</span></label>
+          <label><input type="radio" name="cap" value="jf"><span>محكّمة</span></label>
+          <label><input type="radio" name="cap" value="vm"><span>زائر</span></label>
+          <label><input type="radio" name="cap" value="vf"><span>زائرة</span></label>
+        </div>
+      </div>
+      <p class="privacy" id="priv"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>اللي تكتبه يبقى في جهازك بس، وزيارتك تُحسب كرقم فقط</p>
+      <button class="go" type="submit"><span id="goTxt">جرّب وصال</span><span class="arr" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></span></button>
+      <button class="skipname" type="button" id="skipname">أبغى أبدأ بدون اسم</button>
+    </form>
+  </div>
 
-<div class="card-note">
-<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 2 8l10 5 10-5-10-5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5" stroke="currentColor" stroke-width="1.6"/></svg>
-<p>زائر هذه الصفحة عبر البوث؟ اضغط «جرّب وصال الآن» واسأل أي سؤال عن حقوق وخدمات الأشخاص ذوي الإعاقة في السعودية.</p>
-</div>
-
-<section class="block" aria-labelledby="social-h">
-<h2 id="social-h">تابعونا</h2>
-<nav class="social" aria-label="روابط التواصل الاجتماعي">
-<a href="mailto:info@wesalinnovation.sa" aria-label="البريد الإلكتروني">
-<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6h16v12H4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m4 7 8 6 8-6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-</a>
-<!-- يُستبدل href="#" بالروابط الفعلية عند توفّرها -->
-<a href="#" aria-label="تويتر / X">
-<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 3l7.5 9.5L3.3 21h2.2l6.2-7.1 5 7.1H21l-7.8-9.9L20.4 3h-2.2l-5.8 6.6L7.3 3H3Z"/></svg>
-</a>
-<a href="#" aria-label="إنستقرام">
-<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.6"/><circle cx="17.2" cy="6.8" r="1" fill="currentColor"/></svg>
-</a>
-<a href="#" aria-label="لينكد إن">
-<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M8 10.5v6M8 7.8v.2M12 16.5v-3.6c0-1.2.8-2 2-2s2 .8 2 2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-</a>
-<a href="#" aria-label="واتساب">
-<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 12a8 8 0 1 1-3.6-6.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M16.5 5.6A8 8 0 0 0 4.3 15.8L3.5 20l4.3-1.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.2 10.2c.3 1.8 1.9 3.4 3.7 3.7.6.1 1-.4.8-1l-.4-.9c-.1-.3-.5-.5-.8-.4l-.6.2a4 4 0 0 1-1.7-1.7l.2-.6c.1-.3-.1-.7-.4-.8l-.9-.4c-.6-.2-1.1.2-1 .8Z" fill="currentColor"/></svg>
-</a>
-</nav>
-</section>
-
-<footer>
-<span class="brand">وصال الابتكار لتقنية المعلومات</span>
-<a href="mailto:info@wesalinnovation.sa" dir="ltr">info@wesalinnovation.sa</a>
-<p style="margin-top:10px">© 2026 جميع الحقوق محفوظة. <a href="/homepage/">الموقع الرئيسي</a></p>
-</footer>
-
+  <p class="foot rv">من فعاليات المؤتمر الدولي السابع لذوي الإعاقة، تحت الرعاية الكريمة لخادم الحرمين الشريفين الملك سلمان بن عبدالعزيز.</p>
+  <noscript><p class="foot"><a href="/#chat" style="color:#fff">افتح مساعد وصال</a></p></noscript>
 </main>
+
+<div class="app" id="app" hidden>
+  <header class="top">
+    <span class="sd" aria-hidden="true"></span>
+    <div class="lk" role="img" aria-label="شعار وصال">
+      <img class="wm" src="/assets/hello-word-white.png" alt="" width="831" height="471">
+      <span class="sp" aria-hidden="true"></span>
+      <img class="mk" src="/assets/hello-mark-white.png" alt="" width="1130" height="814">
+    </div>
+    <button class="speak" id="speak" type="button" aria-pressed="false" aria-label="اسمع الرسائل بصوت"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5v5h3.5L13 19V5L7.5 9.5z"/><path d="M16.5 9a4 4 0 0 1 0 6M19.5 6.5a8 8 0 0 1 0 11"/></svg></button>
+  </header>
+  <p class="event">هاكاثون الذكاء الاصطناعي للأشخاص ذوي الإعاقة، ضمن المؤتمر الدولي السابع لذوي الإعاقة</p>
+  <main class="log" id="log" tabindex="-1" aria-live="polite" aria-label="محادثة مع وصال"></main>
+  <div class="endbar"><button class="endbtn" id="endbtn" type="button"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>إنهاء التجربة</button></div>
+  <div class="composer">
+    <a class="fld" href="/#chat">اسأل وصال مباشرة</a>
+    <a class="round" href="/#chat" aria-label="كلّم وصال بصوتك"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></a>
+  </div>
+</div>
+
+<section class="fin" id="fin" hidden aria-labelledby="finT">
+  <div class="arcs" aria-hidden="true"><i></i><i></i></div>
+  <div class="brand">
+    <div class="lk" role="img" aria-label="شعار وصال">
+      <img class="wm" src="/assets/hello-word-white.png" alt="" width="831" height="471">
+      <span class="sp" aria-hidden="true"></span>
+      <img class="mk" src="/assets/hello-mark-white.png" alt="" width="1130" height="814">
+    </div>
+  </div>
+  <div class="main">
+    <h2 id="finT"></h2>
+    <div class="wait" id="wait" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="numcard" id="numcard" hidden>
+      <p class="n1" id="n1"></p>
+      <p class="num" id="num" aria-live="polite">0</p>
+      <p class="n2">في جناح وصال</p>
+    </div>
+    <p class="m1" id="m1" hidden></p>
+    <p class="m2" id="m2" hidden></p>
+    <div class="acts" id="acts" hidden>
+      <a class="go" href="/#chat"><span>جرّب المحادثة الكاملة</span><span class="arr" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></span></a>
+      <a class="wa" id="wa" href="https://wa.me/966500039204" target="_blank" rel="noopener noreferrer"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5l1.3-4.1A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 9.5c.4 2.2 2.3 4.1 4.5 4.5l1-1.3-1.8-.9-.7.8a3.6 3.6 0 0 1-1.6-1.6l.8-.7-.9-1.8z" fill="currentColor" stroke="none"/></svg><span>تواصل معنا عبر WhatsApp</span></a>
+      <div class="mini">
+        <a class="pill" href="https://wesalinnovation.sa/"><span>انتقل للصفحة الرئيسية</span><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></a>
+        <button class="back" type="button" id="back">رجوع للمحادثة</button>
+      </div>
+      <div class="fsoc" id="fsoc"></div>
+    </div>
+  </div>
+</section>
 
 <script>
 (function(){
 'use strict';
-var btn=document.getElementById('ttsBtn');
-var label=document.getElementById('ttsLabel');
-if(!('speechSynthesis' in window)){btn.hidden=true;return;}
+var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+function $(s,r){return (r||document).querySelector(s);}
+var welcome=$('#welcome'),app=$('#app'),log=$('#log'),input=$('#nm'),lbl=$('#lbl'),goTxt=$('#goTxt'),txt=$('.txt'),caret=$('.caret'),speakBtn=$('#speak');
+var NAME='',GENDER='',ROLE='';   /* الاسم والصيغة يبقيان في ذاكرة الصفحة فقط: لا تخزين ولا إرسال */
 
-function pageText(){
-  var parts=[
-    document.querySelector('.hero h1').textContent,
-    document.querySelector('.hero p.tag').textContent,
-    document.querySelector('.about p:nth-child(2)').textContent,
-    document.querySelector('.about p:nth-child(3)').textContent
-  ];
-  return parts.join('. ');
+function showAll(){[].forEach.call(document.querySelectorAll('.rv'),function(e){e.classList.add('on');});txt.style.clipPath='none';caret.hidden=true;}
+setTimeout(showAll,7000);
+
+/* ---------------------------------------------------- الصفة والصيغة (محكّم، محكّمة، زائر، زائرة) */
+function G(m,f,n){return GENDER==='f'?f:(GENDER==='m'?m:(n===undefined?m:n));}
+function renderWelcome(){
+  lbl.textContent=(GENDER==='f'?'اكتبي':'اكتب')+' لنا اسمك، لأننا نحب نخصّص كل شيء لك';
+  goTxt.textContent=(GENDER==='f'?'جرّبي':'جرّب')+' وصال';
+}
+[].forEach.call(document.querySelectorAll('.cap input'),function(i){i.addEventListener('change',function(){
+  if(!i.checked)return;ROLE=i.value.charAt(0);GENDER=i.value.charAt(1);renderWelcome();
+});});
+
+/* ---------------------------------------------------- الكتابة المتحركة للعنوان */
+function reveal(sel,delay){setTimeout(function(){[].forEach.call(document.querySelectorAll(sel),function(e){e.classList.add('on');});},delay);}
+function units(s){var out=[],i=0,j;while(i<s.length){j=i+1;while(j<s.length&&/[ً-ٰٟـ]/.test(s.charAt(j)))j++;out.push([i,j]);i=j;}return out;}
+function finishTyping(){reveal('.sub',150);reveal('.ask',650);reveal('.foot',1100);}
+function typeHeading(){
+  var node=txt.firstChild,s=node.nodeValue,us=units(s),range=document.createRange(),base=txt.getBoundingClientRect(),L=[],top0=null,wrapped=false;
+  us.forEach(function(u){range.setStart(node,u[0]);range.setEnd(node,u[1]);var r=range.getBoundingClientRect();
+    if(top0===null)top0=r.top;else if(Math.abs(r.top-top0)>6)wrapped=true;L.push(r.left-base.left);});
+  if(wrapped||reduce||!us.length){txt.style.clipPath='none';finishTyping();return;}
+  caret.hidden=false;
+  var k=0;
+  (function step(){
+    txt.style.clipPath='inset(-10px 0 -10px '+L[k]+'px)';
+    caret.style.left=(L[k]-2)+'px';
+    k++;
+    if(k<us.length)setTimeout(step,72);
+    else setTimeout(function(){
+      txt.style.clipPath='none';finishTyping();
+      setTimeout(function(){caret.classList.add('off');},1300);
+    },180);
+  })();
+}
+var started=false;
+function begin(){if(started)return;started=true;setTimeout(typeHeading,Math.max(0,1250-(window.performance?performance.now():0)));}
+if(document.fonts&&document.fonts.ready){document.fonts.ready.then(begin);setTimeout(begin,1600);}else begin();
+
+/* ---------------------------------------------------- المحادثة: كل الردود ثابتة وجاهزة، بلا أي استدعاء للشبكة */
+var ICONS=[
+ ['إكس','<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 3l7.5 9.5L3.3 21h2.2l6.2-7.1 5 7.1H21l-7.8-9.9L20.4 3h-2.2l-5.8 6.6L7.3 3H3Z"/></svg>','https://x.com/Wesalhub'],
+ ['إنستقرام','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r=".6" fill="currentColor"/></svg>','https://www.instagram.com/wesalhub'],
+ ['لينكد إن','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M8 10.5v6M8 7.8v.2M12 16.5v-3.6c0-1.2.8-2 2-2s2 .8 2 2v3.6"/></svg>','https://www.linkedin.com/company/wesalksa0'],
+ ['WhatsApp','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 20.5l1.3-4.1A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 9.5c.4 2.2 2.3 4.1 4.5 4.5l1-1.3-1.8-.9-.7.8a3.6 3.6 0 0 1-1.6-1.6l.8-.7-.9-1.8z" fill="currentColor" stroke="none"/></svg>','https://wa.me/966500039204'],
+ ['البريد الإلكتروني','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>','mailto:info@wesalinnovation.sa']
+];
+function socials(cls,skip){return ICONS.filter(function(i){return i[0]!==skip;}).map(function(i){var ext=i[2].indexOf('http')===0;return '<a class="'+cls+'" href="'+i[2]+'" aria-label="'+i[0]+'"'+(ext?' target="_blank" rel="noopener noreferrer"':'')+'>'+i[1]+'</a>';}).join('');}
+var SOC='<div class="row">'+socials('soc')+'</div>';
+
+function answers(){return {
+ help:{q:'وش تقدر تساعدني فيه؟',a:['أجاوبك عن حقوقك، والخدمات اللي تناسبك، والتقنيات المساعدة.','وأجاوبك بشكل واضح، وأذكر لك الجهة الرسمية وكيف توصل لها.']},
+ reader:{q:'تشتغل مع قارئ الشاشة؟',a:['إيه، انبنيت عشان أشتغل مع قارئ الشاشة ولوحة المفاتيح.',G('وتقدر تكتب سؤالك أو تقوله بصوتك.','وتقدرين تكتبين سؤالك أو تقولينه بصوتك.','والسؤال بالكتابة أو بالصوت، اللي يريحك.')]},
+ src:{q:'وش مصادرك؟',a:['أعتمد على الأنظمة والجهات السعودية، مثل هيئة رعاية الأشخاص ذوي الإعاقة، ووزارة الموارد البشرية والتنمية الاجتماعية، وصندوق تنمية الموارد البشرية (هدف)، وبرنامج توافق، ومنصة طاقات.','وإذا ما كنت متأكد من معلومة، أقولها بصراحة وأوجّهك للجهة الرسمية.']},
+ who:{q:'مين سوّاك؟',a:['فريق وصال الابتكار لتقنية المعلومات، شركة سعودية من الرياض.']},
+ soc:{q:'وين أتابعكم؟',a:[],card:'<h3>تابع وصال</h3>'+SOC},
+ go:{q:'أبغى أجرّب الحين',a:[G('تمام، اضغط الزر وابدأ بسؤالك الأول.','تمام، اضغطي الزر وابدئي بسؤالك الأول.','تمام، أنا جاهز لسؤالك الأول. الزر تحت.')],card:'<p>المحادثة الكاملة مع وصال</p><a class="cta" href="/#chat">'+G('ابدأ المحادثة','ابدئي المحادثة','ابدأ المحادثة')+'</a>'}
+};}
+var ORDER=['help','reader','src','who','soc','go'],used={};
+
+function wait(ms){return new Promise(function(r){setTimeout(r,reduce?0:ms);});}
+function down(){log.scrollTop=log.scrollHeight;}
+function node(cls,html){var d=document.createElement('div');d.className=cls;if(html)d.innerHTML=html;log.appendChild(d);down();return d;}
+/* الاسم يُضاف كعقدة نصية داخل bdi، فلا يصل ما يكتبه الزائر إلى innerHTML أبداً */
+function build(arr){var d=document.createElement('div');d.className='msg w';arr.forEach(function(p){if(p&&p.n){var b=document.createElement('bdi');b.textContent=NAME;d.appendChild(b);}else d.appendChild(document.createTextNode(p));});log.appendChild(d);down();speak(d.textContent);}
+function size(arr){return arr.reduce(function(n,p){return n+(p&&p.n?NAME.length:p.length);},0);}
+function say(a){a=[].concat(a);var t=node('typing','<i></i><i></i><i></i>');return wait(650+size(a)*12).then(function(){t.remove();build(a);});}
+function chips(keys,ans){
+  var c=node('chips');
+  keys.forEach(function(k){var b=document.createElement('button');b.className='chip';b.type='button';b.textContent=ans[k].q;b.addEventListener('click',function(){pick(k,c);});c.appendChild(b);});
+}
+function pick(k,c){
+  var ans=answers();c.remove();used[k]=1;
+  var u=node('msg u');u.textContent=ans[k].q;
+  var p=Promise.resolve();
+  ans[k].a.forEach(function(line){p=p.then(function(){return say(line);});});
+  p=p.then(function(){if(ans[k].card){return wait(300).then(function(){node('card',ans[k].card);});}});
+  p.then(function(){return wait(300);}).then(function(){var rest=ORDER.filter(function(x){return !used[x];});if(rest.length)chips(rest,answers());});
+}
+function chat(){
+  var pre=G('حيّاك الله','حيّاكِ الله','حيّاك الله');
+  var tail=ROLE==='j'?G('، شرّفتنا في جناح وصال.','، شرّفتينا في جناح وصال.'):ROLE==='v'?G('، نوّرتنا في جناح وصال.','، نوّرتينا في جناح وصال.'):' في جناح وصال.';
+  var hello=NAME?[pre+' ',{n:1},tail]:[pre+tail];
+  var ask=NAME?[G('إيش حاب تعرف يا ','إيش حابة تعرفين يا ','إيش أول شي يهمّك يا '),{n:1},G('؟ اختر من الأسئلة تحت.','؟ اختاري من الأسئلة تحت.','؟ الأسئلة تحت.')]
+             :[G('إيش حاب تعرف؟ اختر من الأسئلة تحت.','إيش حابة تعرفين؟ اختاري من الأسئلة تحت.','إيش أول شي يهمّك؟ الأسئلة تحت.')];
+  wait(600).then(function(){return say(hello);})
+   .then(function(){return say('أنا وصال، مساعد ذكي سعودي. أجاوب الأشخاص ذوي الإعاقة عن حقوقهم والخدمات اللي تناسبهم والتقنيات المساعدة، وأعتمد على مصادر رسمية.');})
+   .then(function(){return say(ask);})
+   .then(function(){chips(ORDER,answers());});
 }
 
-function pickVoice(){
-  var voices=speechSynthesis.getVoices();
-  return voices.find(function(v){return v.lang==='ar-SA';})
-    || voices.find(function(v){return v.lang&&v.lang.indexOf('ar')===0;})
-    || null;
-}
-
-var speaking=false;
-btn.addEventListener('click',function(){
-  if(speaking){
-    speechSynthesis.cancel();
-    return;
-  }
-  var u=new SpeechSynthesisUtterance(pageText());
-  u.lang='ar-SA';
-  var v=pickVoice();
-  if(v)u.voice=v;
-  u.onstart=function(){speaking=true;btn.setAttribute('aria-pressed','true');label.textContent='إيقاف الاستماع';};
-  u.onend=function(){speaking=false;btn.setAttribute('aria-pressed','false');label.textContent='استمع لهذه الصفحة';};
-  u.onerror=u.onend;
-  speechSynthesis.speak(u);
+/* ---------------------------------------------------- قراءة الرسائل بصوت (اختياري) */
+var talk=false,voice=null,tts='speechSynthesis' in window;
+function pickVoice(){var v=speechSynthesis.getVoices();voice=v.filter(function(x){return x.lang==='ar-SA';})[0]||v.filter(function(x){return /^ar/i.test(x.lang);})[0]||null;}
+if(tts){pickVoice();speechSynthesis.onvoiceschanged=pickVoice;}else speakBtn.hidden=true;
+function speak(t){if(!talk||!tts)return;var u=new SpeechSynthesisUtterance(t);u.lang='ar-SA';if(voice)u.voice=voice;u.rate=.95;speechSynthesis.speak(u);}
+speakBtn.addEventListener('click',function(){
+  talk=!talk;speakBtn.setAttribute('aria-pressed',talk?'true':'false');
+  if(!talk){speechSynthesis.cancel();return;}
+  var last=[].slice.call(log.querySelectorAll('.msg.w')).pop();if(last)speak(last.textContent);
 });
-window.addEventListener('pagehide',function(){speechSynthesis.cancel();});
+window.addEventListener('pagehide',function(){if(tts)speechSynthesis.cancel();});
+
+
+/* ---------------------------------------------------- إنهاء التجربة */
+var fin=$('#fin'),finT=$('#finT'),waitEl=$('#wait'),numcard=$('#numcard'),numEl=$('#num'),n1El=$('#n1'),m1El=$('#m1'),m2El=$('#m2'),acts=$('#acts');
+$('#fsoc').innerHTML=socials('','WhatsApp');
+$('#wa').href='https://wa.me/966500039204?text='+encodeURIComponent('السلام عليكم، زرت جناح وصال في هاكاثون الذكاء الاصطناعي للأشخاص ذوي الإعاقة وأبغى أتواصل معكم.');
+/* رقم الزائر يُحسب عند أول مسح، حتى لو لم يُكمل التجربة. العدّاد على الخادم، ولا يُختلق رقم أبداً:
+   إن لم يصل الرقم تُعرض شاشة الشكر بدونه. الجهاز نفسه يحتفظ برقمه فلا يُعدّ مرتين. */
+var VKEY='wesal_hello_visit',visitNo=null,visitReq=null;
+try{var sv=parseInt(localStorage.getItem(VKEY),10);if(sv>0)visitNo=sv;}catch(e){}
+function visit(){
+  if(visitNo!==null)return Promise.resolve(visitNo);
+  if(visitReq)return visitReq;
+  if(!window.fetch)return Promise.resolve(null);
+  var ctl=window.AbortController?new AbortController():null,to=setTimeout(function(){if(ctl)ctl.abort();},4000);
+  visitReq=fetch('/api/hello-visit.php',{method:'POST',headers:{'X-Hello':'1'},cache:'no-store',credentials:'omit',signal:ctl?ctl.signal:undefined})
+    .then(function(r){return r.ok?r.json():null;})
+    .then(function(j){clearTimeout(to);var n=j&&j.ok?parseInt(j.n,10):0;
+      if(n>0){visitNo=n;try{localStorage.setItem(VKEY,String(n));}catch(e){}return n;}return null;})
+    .catch(function(){clearTimeout(to);return null;})
+    .then(function(n){visitReq=null;return n;});
+  return visitReq;
+}
+function registerScan(){
+  if(visitNo!==null)return;
+  if(document.hidden){document.addEventListener('visibilitychange',function f(){if(!document.hidden){document.removeEventListener('visibilitychange',f);visit();}});}
+  else visit();
+}
+setTimeout(registerScan,1200);
+function countUp(to){
+  if(reduce||to<2){numEl.textContent=to;return;}
+  var t0=null,dur=1300;
+  function f(ts){if(t0===null)t0=ts;var k=Math.min(1,(ts-t0)/dur),e=1-Math.pow(1-k,3);numEl.textContent=Math.round(to*e);if(k<1)requestAnimationFrame(f);}
+  requestAnimationFrame(f);
+}
+function finish(){
+  if(tts)speechSynthesis.cancel();
+  finT.textContent='';finT.appendChild(document.createTextNode(NAME?'شكراً لك يا ':'شكراً لك'));
+  if(NAME){var b=document.createElement('bdi');b.textContent=NAME;finT.appendChild(b);}
+  numcard.hidden=true;m1El.hidden=true;m2El.hidden=true;acts.hidden=true;waitEl.hidden=false;
+  fin.hidden=false;requestAnimationFrame(function(){fin.classList.add('on');});
+  visit().then(function(n){
+    waitEl.hidden=true;
+    if(n){
+      n1El.textContent=G('أنت الزائر رقم','أنتِ الزائرة رقم','أنت الزائر رقم');
+      m1El.textContent='وهذا مو مجرد رقم زيارة.';
+      m2El.textContent=G('أنت ساهمت','أنتِ ساهمتِ','أنت ساهمت')+' في دعم فكرة وصال: أن توصل المعلومة الصحيحة لكل شخص يحتاجها، بأوضح لغة.';
+      numcard.hidden=false;numEl.textContent='0';
+    }else{
+      m1El.textContent='نشكرك على وقتك معنا.';
+      m2El.textContent='فكرة وصال: أن توصل المعلومة الصحيحة لكل شخص يحتاجها، بأوضح لغة.';
+    }
+    m1El.hidden=false;m2El.hidden=false;acts.hidden=false;
+    if(n)countUp(n);
+  });
+}
+$('#endbtn').addEventListener('click',finish);
+$('#back').addEventListener('click',function(){fin.classList.remove('on');setTimeout(function(){fin.hidden=true;},reduce?0:500);});
+
+/* ---------------------------------------------------- الدخول إلى المحادثة */
+function clean(v){return (v||'').replace(/[\u0000-\u001f\u007f<>‎‏‪-‮⁦-⁩]/g,'').replace(/\s+/g,' ').replace(/^\s+|\s+$/g,'').slice(0,30);}
+function start(name){
+  NAME=clean(name);
+  if(navigator.vibrate)try{navigator.vibrate(18);}catch(e){}
+  welcome.classList.add('leave');
+  setTimeout(function(){
+    welcome.hidden=true;app.hidden=false;app.classList.add('enter');
+    try{log.focus({preventScroll:true});}catch(e){log.focus();}
+    chat();
+  },reduce?0:420);
+}
+$('#ask').addEventListener('submit',function(e){e.preventDefault();start(input.value);});
+$('#skipname').addEventListener('click',function(){start('');});
 })();
 </script>
 </body>
