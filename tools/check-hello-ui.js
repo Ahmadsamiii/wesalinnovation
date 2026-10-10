@@ -11,9 +11,10 @@
  *    - العدّاد: المسح يُحسب مرة لكل جهاز، والزاحف والطلب الغريب لا يُحسبان
  *    - شاشة الختام: رقم الزائر ولوحة الشعار، القطعة من الرقم، والاكتمال عند 25، وتقليل الحركة
  *    - سقوط مكوّن اللوحة أو العدّاد لا يكسر الصفحة
- *    - شاشة الجناح: لوحة في المنتصف وعدّاد يدور بجانبه «زائر» ولا نص غيرهما، تقرأ العدّاد وتركّب
- *      القطع، والاكتمال عند 25 وشعار جديد، وتصفير العدّاد، وانقطاع الخادم، وبلا كوكي ولا طلب
- *      غير GET، وتناسب الشاشات الأفقية والعمودية
+ *    - شاشة الجناح: لوحة في المنتصف وتحتها عبارة «عدد زوار جناح وصال» ثم عدّاد يدور بجانبه «زائر»
+ *      ولا نص غيرها، والعبارة والعدّاد على محور المنتصف نفسه، تقرأ العدّاد وتركّب القطع،
+ *      والاكتمال عند 25 وشعار جديد، وتصفير العدّاد، وانقطاع الخادم، وبلا كوكي ولا طلب غير GET،
+ *      وتناسب الشاشات الأفقية والعمودية ولو كثرت خانات العدّاد
  *    - المقاسات: لا تمرير أفقي، ولا تمرير رأسي في شاشة الختام على الجوالات الشائعة
  * ========================================================================== */
 
@@ -97,7 +98,7 @@ const msgs = page => page.evaluate(() => [...document.querySelectorAll('.msg')].
     check('زائر: ترجع صيغة المذكر', l.startsWith('اكتب لنا اسمك') && g === 'جرّب وصال', l + ' | ' + g);
     check('سطر الخصوصية يذكر أن الزيارة تُحسب رقماً', /زيارتك تُحسب كرقم/.test(await p.textContent('#priv')));
     check('زر التخطي «ابدأ بدون اسم»', (await p.textContent('#skipname')).trim() === 'ابدأ بدون اسم');
-    check('سطر رعاية المؤتمر بصيغته المعتمدة', (await p.textContent('.foot')).trim() === 'من فعاليات المؤتمر الدولي السابع لذوي الإعاقة، تحت رعاية كريمة من خادم الحرمين الشريفين الملك سلمان بن عبدالعزيز آل سعود حفظه الله');
+    check('سطر رعاية المؤتمر بصيغته المعتمدة', (await p.textContent('.foot')).replace(/\u00a0/g, ' ').trim() === 'من فعاليات المؤتمر الدولي السابع لذوي الإعاقة، تحت رعاية كريمة من خادم الحرمين الشريفين الملك سلمان بن عبدالعزيز آل سعود حفظه الله');
     await ctx.close();
   }
 
@@ -230,13 +231,21 @@ const msgs = page => page.evaluate(() => [...document.querySelectorAll('.msg')].
     };
     const wsnap = page => page.evaluate(() => {
       const r = s => document.querySelector(s).getBoundingClientRect();
+      const c = s => { const b = r(s); return { x: (b.left + b.right) / 2, y: (b.top + b.bottom) / 2, l: b.left, r: b.right }; };
+      /* المحاذاة: العبارة والعدّاد على محور المنتصف، و«زائر» بجانب العدّاد وعلى منتصفه رأسياً */
+      const align = (() => {
+        const cap = c('.cap'), odo = c('#odo'), unit = c('#unit'), mid = innerWidth / 2;
+        return { cap: Math.abs(cap.x - mid) < 3, odo: Math.abs(odo.x - mid) < 3, unitMid: Math.abs(unit.y - odo.y) < 3,
+          unitBeside: unit.r <= odo.l, capAbove: cap.y < odo.y, inside: odo.l >= 0 && odo.r <= innerWidth && unit.l >= 0 };
+      })();
+      const lines = ['::before', '::after'].map(p => getComputedStyle(document.querySelector('.cap'), p).content);
       /* الرقم الظاهر فعلاً في العدّاد: موضع شريط كل خانة */
       const digits = [...document.querySelectorAll('#odo .strip')].map(t => (parseInt((t.style.transform.match(/-?(\d+)em/) || [0, 0])[1], 10) % 10)).join('');
       /* كل نص ظاهر في الصفحة خارج العدّاد وخارج نص القارئ الشاشي */
       const texts = [...document.body.querySelectorAll('*')].filter(e => !e.closest('#odo') && !e.closest('.sr') && !['SCRIPT', 'STYLE'].includes(e.tagName) && [...e.childNodes].some(c => c.nodeType === 3 && c.textContent.trim()))
         .map(e => e.textContent.trim());
       return {
-        txt: document.querySelector('#bigtxt').textContent, digits, texts,
+        txt: document.querySelector('#bigtxt').textContent, digits, texts, align, lines,
         on: document.querySelectorAll('.pz .pc.on').length, done: !!document.querySelector('.pz.done'),
         bad: document.querySelector('#stat').classList.contains('bad'),
         fits: document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight && r('.card').top >= 0 && r('.counter').bottom <= innerHeight,
@@ -249,7 +258,9 @@ const msgs = page => page.evaluate(() => [...document.querySelectorAll('.msg')].
     const w = await open({ n: 66 });
     let s = await wsnap(w.page);
     check('تبدأ من آخر رقم: 66 هو القطعة 16 من الشعار 3', s.txt === '66 زائر' && s.digits === '66' && s.on === 16 && !s.done && !s.bad, JSON.stringify(s));
-    check('اللوحة في المنتصف، ولا نص في الشاشة غير «زائر»', s.centered && s.texts.length === 1 && s.texts[0] === 'زائر', JSON.stringify(s.texts));
+    check('اللوحة في المنتصف، ولا نص في الشاشة غير العبارة و«زائر»', s.centered && s.texts.length === 2 && s.texts[0] === 'عدد زوار جناح وصال' && s.texts[1] === 'زائر', JSON.stringify(s.texts));
+    check('العبارة والعدّاد على محور المنتصف، و«زائر» بجانب العدّاد وعلى منتصفه رأسياً', s.align.cap && s.align.odo && s.align.unitMid && s.align.unitBeside && s.align.capAbove, JSON.stringify(s.align));
+    check('العبارة بلا خطّين جانبيين', s.lines.every(x => x === 'none' || x === 'normal'), JSON.stringify(s.lines));
     check('الشاشة لا تُفهرس (noindex)', /noindex/.test(s.robots), s.robots);
     w.st.n = 67; await w.page.waitForTimeout(poll); s = await wsnap(w.page);
     check('زائر جديد: العدّاد 67 وتركّبت القطعة 17', s.txt === '67 زائر' && s.digits === '67' && s.on === 17, JSON.stringify(s));
@@ -258,7 +269,7 @@ const msgs = page => page.evaluate(() => [...document.querySelectorAll('.msg')].
     w.st.n = 76; await w.page.waitForTimeout(poll); s = await wsnap(w.page);
     check('الزائر 76 يبدأ شعاراً جديداً والعدّاد يكمل', !s.done && s.on === 1 && s.txt === '76 زائر' && s.digits === '76', JSON.stringify(s));
     w.st.n = 100; await w.page.waitForTimeout(poll); s = await wsnap(w.page);
-    check('عدّاد بثلاث خانات: 100', s.txt === '100 زائر' && s.digits === '100' && s.texts.length === 1, JSON.stringify(s));
+    check('عدّاد بثلاث خانات: 100، وما زال في المنتصف', s.txt === '100 زائر' && s.digits === '100' && s.texts.length === 2 && s.align.odo && s.align.cap && s.align.unitMid, JSON.stringify(s));
     w.st.n = 0; await w.page.waitForTimeout(poll); s = await wsnap(w.page);
     check('تصفير العدّاد: لوحة فارغة والعدّاد 0', s.txt === '0 زائر' && s.digits === '0' && s.on === 0 && !s.done, JSON.stringify(s));
     w.st.fail = true; await w.page.waitForTimeout(poll); s = await wsnap(w.page);
@@ -281,7 +292,13 @@ const msgs = page => page.evaluate(() => [...document.querySelectorAll('.msg')].
     for (const [vw, vh] of [[1920, 1080], [2560, 1440], [1366, 768], [1280, 720], [1440, 900], [1080, 1920], [768, 1024]]) {
       const z = await open({ n: 67, w: vw, h: vh });
       const q = await wsnap(z.page);
-      check(`${vw}×${vh}: اللوحة والعدّاد داخل الشاشة بلا تمرير`, q.fits && q.on === 17 && q.centered, JSON.stringify(q));
+      check(`${vw}×${vh}: اللوحة والعدّاد داخل الشاشة بلا تمرير وعلى المنتصف`, q.fits && q.on === 17 && q.centered && q.align.cap && q.align.odo && q.align.inside && q.align.unitMid, JSON.stringify(q));
+      await z.ctx.close();
+    }
+    for (const [vw, vh] of [[1080, 1920], [1920, 1080]]) {
+      const z = await open({ n: 123456, w: vw, h: vh });
+      const q = await wsnap(z.page);
+      check(`${vw}×${vh}: ست خانات (123456) يصغر العدّاد وحده ويبقى كله داخل الشاشة وفي المنتصف`, q.digits === '123456' && q.align.inside && q.align.odo && q.align.cap && q.align.unitMid && q.fits, JSON.stringify(q));
       await z.ctx.close();
     }
   }
