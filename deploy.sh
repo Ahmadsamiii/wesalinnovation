@@ -20,7 +20,7 @@ KEEP_BACKUPS=5
 # ما يُنشر — قائمة سماح صريحة. أي ملف جديد في المستودع لا يصل الإنتاج حتى
 # يُضاف هنا عمداً؛ عكسها (قائمة منع) يسرّب الجديد افتراضياً.
 SYNC_DIRS=(api assets fonts partners tools homepage)
-SYNC_FILES=(.htaccess index.html corporate.html survey.html ticket.html login.html judges.html schema.sql
+SYNC_FILES=(.htaccess index.html corporate.html survey.html ticket.html login.html hello.html judges.html schema.sql
             robots.txt robots-chat.txt sitemap.xml sitemap-home.xml sitemap-chat.xml
             favicon.ico favicon-192.png og-cover.png)
 

@@ -448,3 +448,10 @@ CREATE TABLE IF NOT EXISTS account_links (
   UNIQUE KEY uq_pl (platform_user_id),
   KEY ix_batch (batch)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- عدّاد زوار جناح وصال (صفحة /hello). صف لكل مسح لبطاقة NFC، وليس فيه أي بيان عن الزائر.
+-- تنشئه api/hello-visit.php تلقائياً عند أول مسح إن لم يكن موجوداً.
+CREATE TABLE IF NOT EXISTS hello_visits (
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  created_at DATETIME NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

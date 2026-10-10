@@ -110,6 +110,10 @@ ServerSignature Off
   RewriteCond %{DOCUMENT_ROOT}/login.html -f
   RewriteRule ^login/?$ login.html [L]
 
+  # صفحة البوث (هاكاثون ذوي الإعاقة) عبر NFC. ملف لا مجلد لنفس سبب /login أعلاه.
+  RewriteCond %{DOCUMENT_ROOT}/hello.html -f
+  RewriteRule ^hello/?$ hello.html [L]
+
   RewriteCond %{DOCUMENT_ROOT}/.switch -f
   RewriteCond %{HTTP_HOST} ^(?:chat\.)?([^:]+)(?::[0-9]+)?$ [NC]
   RewriteRule ^login/?$ https://chat.%1/#login [R=302,NE,L]
