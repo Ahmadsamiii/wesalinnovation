@@ -236,11 +236,13 @@ const check = (name, ok, extra = '') => { ok ? passed++ : failed++; console.log(
   console.log('الجوال (390 بكسل):');
   const m = await ctx.newPage();
   await m.setViewportSize({ width: 390, height: 844 });
-  for (const h of ['', '#/c/tech', '#/faq', '#/train']) {
+  for (const h of ['', '#/c/tech', '#/faq', '#/train', '#/present/tech/0']) {
     await m.goto(PAGE + h); await m.waitForTimeout(350);
+    if (h.startsWith('#/present')) { await m.evaluate(() => localStorage.setItem('jd-pdet', '1')); await m.reload(); await m.waitForTimeout(350); }
     const over = await m.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
     check('بلا تمرير أفقي ' + (h || '#/'), !over);
   }
+  await m.evaluate(() => localStorage.setItem('jd-pdet', '0'));
   await m.goto(PAGE); await m.waitForTimeout(300);
   check('شريط التبويب السفلي', (await m.evaluate(() => getComputedStyle(document.getElementById('nav')).position)) === 'fixed');
   const unnamed = await m.evaluate(() => [...document.querySelectorAll('main a, main button, header a, header button, nav a, nav button')].filter(e => {
