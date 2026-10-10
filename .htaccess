@@ -54,8 +54,14 @@ ServerSignature Off
   Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" env=HTTPS
 
   # صفحة أسئلة التحكيم الداخلية وبياناتها: لا فهرسة ولا أرشفة. الرابط وحده يدخل إليها.
-  <FilesMatch "^(judges\.html|judges-data\.js|judges-notes\.js)$">
+  <FilesMatch "^(judges\.html|judges-data\.js|judges-notes\.js|judges-pdf\.json|judges-qa-(ar|en)\.pdf)$">
     Header always set X-Robots-Tag "noindex, nofollow, noarchive"
+  </FilesMatch>
+
+  # ملفا PDF الجاهزان للتنزيل من صفحة أسئلة التحكيم: يُعاد التحقق منهما في كل طلب (304 إن لم يتغيرا)
+  # كي لا يبقى ملف قديم في المتصفح ساعة كاملة بعد تعديل الأجوبة. اسمهما ثابت عمداً.
+  <FilesMatch "^judges-qa-(ar|en)\.pdf$">
+    Header always set Cache-Control "no-cache"
   </FilesMatch>
 
   # chat. قبل التبديل: بلا فهرسة (انظر قواعد التبديل في كتلة mod_rewrite)

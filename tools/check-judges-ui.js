@@ -15,6 +15,9 @@
  *    - التدريب: كشف الجواب وحفظ التقدم في المتصفح، والعرض: التنقل بالأزرار والأسهم
  *      بحسب اتجاه اللغة، والخروج بـ Escape
  *    - الطباعة: ورق وصال الرسمي (ترويسة وتذييل ببيانات التواصل) وكل الأسئلة
+ *    - الشريط العلوي: «الأسئلة الشائعة»، وأيقونتا التنزيل والطباعة بلا كلمات، والتنزيل
+ *      يجلب ملف PDF سليماً بلغة الصفحة
+ *    - الذيل: نسخة من فوتر الرئيسية (index.html) بأنماطه ومقاساته، ببيانات التحكيم
  *    - الجوال 390 بكسل: لا تمرير أفقي، وشريط تبويب سفلي، ولكل زر ورابط اسم مقروء
  *    - ملف الملاحظات الخاص: إن وُجد محلياً تظهر عناصر «يُؤكَّد من الفريق»، وإن غاب
  *      تعمل الصفحة بدونها (وتسجّل 404 متوقعة لذلك الملف وحده)
@@ -37,7 +40,8 @@ let passed = 0, failed = 0;
 const check = (name, ok, extra = '') => { ok ? passed++ : failed++; console.log(`  ${ok ? '✓' : '✗'} ${name}${extra && !ok ? '  | ' + extra : ''}`); };
 
 (async () => {
-  const browser = await chromium.launch();
+  /* اسم الملف العربي في سمة download يحتاج لغة UTF-8 في كروم: بيئات POSIX ترجع «download» بدل الاسم */
+  const browser = await chromium.launch({ env: Object.assign({}, process.env, { LC_ALL: 'C.UTF-8', LANG: 'C.UTF-8' }) });
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, locale: 'ar-SA', permissions: ['clipboard-read', 'clipboard-write'] });
   const p = await ctx.newPage();
   const jsErrors = [];
@@ -168,6 +172,8 @@ const check = (name, ok, extra = '') => { ok ? passed++ : failed++; console.log(
   check('طُلبت الطباعة مرة واحدة', (await p.evaluate(() => window.__printed)) === 1);
   check('ترويسة وتذييل ورق وصال', /lh-head/.test(pr) && /lh-foot/.test(pr) && /المملكة العربية السعودية/.test(pr) && /شركة وصال/.test(pr));
   check('بيانات التواصل المنشورة في الصفحة الرئيسية', /info@wesalinnovation\.sa/.test(pr) && /\+966 50 112 0161/.test(pr) && !/gmail/.test(pr));
+  check('ذيل ورق وصال: ثلاث أيقونات حسابات (X ولينكد إن وإنستقرام) قبل الهاندل وبلا واتساب', (pr.match(/class="lh-ic"/g) || []).length === 3 && (pr.match(/class="lh-ic"><svg[^>]*><path/g) || []).length === 3 && pr.lastIndexOf('lh-ic') < pr.indexOf('@WesalHub'));
+  check('الهاندل بحرف H كبير: @WesalHub', /<span>@WesalHub<\/span>/.test(pr) && !/@Wesalhub/.test(pr));
   check('كل الأسئلة في الطباعة', (pr.match(/class="pq1"/g) || []).length === (await p.evaluate(() => window.JUDGES.items.length)));
   check('الطباعة بلا «المجيب المقترح» ولا «المرجع» ولا «Suggested answerer»', !/المجيب المقترح|المرجع:|Suggested answerer|Reference:/.test(pr));
   check('لا سكربت داخل الطباعة', !/<script/i.test(pr));
@@ -175,6 +181,94 @@ const check = (name, ok, extra = '') => { ok ? passed++ : failed++; console.log(
   const printLayout = await p.evaluate(() => ({ app: getComputedStyle(document.querySelector('.top')).display, root: getComputedStyle(document.getElementById('printRoot')).display }));
   check('عند الطباعة يختفي التطبيق ويظهر ورق وصال', printLayout.app === 'none' && printLayout.root === 'block', JSON.stringify(printLayout));
   await p.emulateMedia({ media: 'screen' });
+
+  console.log('الشريط العلوي والتنزيل:');
+  await go();
+  check('«الأسئلة الشائعة» في الشريط', (await text('[data-nav=faq] span')).trim() === 'الأسئلة الشائعة', await text('[data-nav=faq] span'));
+  await go('#/faq');
+  check('وعنوان تبويب الصفحة نفسه', (await p.title()).startsWith('الأسئلة الشائعة'), await p.title());
+  await go();
+  const ib = await p.evaluate(() => ['dlBtn', 'printBtn'].map(id => {
+    const e = document.getElementById(id), r = e.getBoundingClientRect();
+    return { id, text: e.textContent.trim(), label: e.getAttribute('aria-label'), title: e.title, svg: !!e.querySelector('svg use'), w: Math.round(r.width), h: Math.round(r.height), next: e.nextElementSibling ? e.nextElementSibling.id : '' };
+  }));
+  check('أيقونتا التنزيل والطباعة بلا كلمات', ib.every(x => x.text === '' && x.svg), JSON.stringify(ib));
+  check('لكل أيقونة اسم مقروء وتلميح', ib[0].label === 'تنزيل PDF' && ib[0].title === 'تنزيل PDF' && ib[1].label === 'طباعة' && ib[1].title === 'طباعة', JSON.stringify(ib));
+  check('الأيقونتان جنب بعض بحجم لمس كافٍ', ib[0].next === 'printBtn' && ib.every(x => x.w >= 44 && x.h >= 44), JSON.stringify(ib));
+  check('لا «طباعة / PDF» نصاً في الشريط', !/طباعة\s*\/\s*PDF/.test(await text('#nav')));
+  const mf = JSON.parse(fs.readFileSync(path.join(ROOT, 'assets/judges-pdf.json'), 'utf8'));
+  const pdfOf = async (lang, fileName) => {
+    const [dl] = await Promise.all([p.waitForEvent('download'), p.click('#dlBtn')]);
+    const file = fs.readFileSync(await dl.path());
+    return { name: dl.suggestedFilename(), head: file.slice(0, 5).toString(), size: file.length, expect: fileName, bytes: mf[lang].bytes };
+  };
+  const dAr = await pdfOf('ar', 'وصال-أسئلة-التحكيم.pdf');
+  check('التنزيل بالعربية: ملف PDF سليم باسمه', dAr.name === dAr.expect && dAr.head === '%PDF-', JSON.stringify(dAr));
+  check('وهو الملف الجاهز المحفوظ بحجمه', dAr.size === dAr.bytes, JSON.stringify(dAr));
+  await p.evaluate(() => localStorage.setItem('jd-lang', 'en')); await p.reload(); await p.waitForTimeout(350);
+  check('الإنجليزية: «Popular questions» وأسماء الأيقونتين', (await text('[data-nav=faq] span')).trim() === 'Popular questions' && (await p.getAttribute('#dlBtn', 'aria-label')) === 'Download PDF' && (await p.getAttribute('#printBtn', 'aria-label')) === 'Print');
+  const dEn = await pdfOf('en', 'Wesal-Judges-QA.pdf');
+  check('التنزيل بالإنجليزية: ملف PDF سليم باسمه', dEn.name === dEn.expect && dEn.head === '%PDF-' && dEn.size === dEn.bytes, JSON.stringify(dEn));
+  await p.evaluate(() => localStorage.setItem('jd-lang', 'ar')); await p.reload(); await p.waitForTimeout(350);
+
+  console.log('الذيل (نفس فوتر الرئيسية):');
+  await go();
+  const ft = await p.evaluate(() => {
+    const t = e => (e ? e.textContent.trim() : null);
+    return {
+      heads: Array.from(document.querySelectorAll('.foot h4')).map(t),
+      soc: Array.from(document.querySelectorAll('.foot .fsb')).map(a => ({ href: a.href, label: a.getAttribute('aria-label'), text: a.textContent.trim(), svg: !!a.querySelector('svg use') })),
+      logo: !!document.querySelector('.fbrand img[alt]'),
+      parts: Array.from(document.querySelectorAll('.fpart-l img')).map(i => i.alt),
+      bottom: Array.from(document.querySelectorAll('.fbottom span')).map(t),
+      text: document.querySelector('.foot').innerText
+    };
+  });
+  const contact = await p.evaluate(() => window.JUDGES.contact);
+  check('عنوان العمود الأول «معلومات المشروع»', ft.heads[0] === 'معلومات المشروع', ft.heads.join(' | '));
+  check('بلا سطر «المرحلة»', !/المرحلة/.test(ft.text));
+  check('الحسابات أيقونات: أربعة، بلا نص، باسم مقروء', ft.soc.length === 4 && ft.soc.every(x => x.text === '' && x.svg && x.label), JSON.stringify(ft.soc));
+  check('روابط الحسابات من بيانات التواصل', [contact.whatsapp, contact.instagram, contact.linkedin, contact.x].every(u => ft.soc.some(x => x.href === u)), JSON.stringify(ft.soc.map(x => x.href)));
+  check('الشعار وثلاثة شعارات للشركاء بنص بديل', ft.logo && ft.parts.length === 3 && ft.parts.every(Boolean), JSON.stringify(ft.parts));
+  check('الشريط السفلي: الحقوق ثم معيار الوصول', ft.bottom.length === 2 && /2026/.test(ft.bottom[0]) && /WCAG 2\.2/.test(ft.bottom[1]), JSON.stringify(ft.bottom));
+
+  /* مطابقة فوتر الرئيسية: الأنماط المحسوبة وإحداثيات أفقية لكل عنصر مقابل (المحتوى يختلف فلا تُقارن أطوال النصوص) */
+  const HOME = { root: '.footer', cont: '.footer .container', grid: '.footer-grid', brandImg: '.footer-brand img', brandP: '.footer-brand p', social: '.footer-social', soc0: '.footer-social-btn:nth-child(1)', soc3: '.footer-social-btn:nth-child(4)', socIcon0: '.footer-social-btn:nth-child(1) svg', h4: '.footer-grid > div:nth-child(2) h4', h4c: '.footer-grid > div:nth-child(4) h4', cP0: '.footer-grid > div:nth-child(4) p:nth-of-type(1)', cP1: '.footer-grid > div:nth-child(4) p:nth-of-type(2)', cP2: '.footer-grid > div:nth-child(4) p:nth-of-type(3)', cA: '.footer-grid > div:nth-child(4) p a', part: '.footer-partners', partL: '.footer-partners-left', partImg0: '.footer-partners-left img', sep0: '.fp-sep', partR: '.footer-partners-right img', bottom: '.footer-bottom', bs0: '.footer-bottom span:nth-child(1)', bs1: '.footer-bottom span:nth-child(2)' };
+  const JUDG = { root: '.foot', cont: '.fcont', grid: '.fgrid', brandImg: '.fbrand img', brandP: '.fbrand p', social: '.fsoc', soc0: '.fsb:nth-child(1)', soc3: '.fsb:nth-child(4)', socIcon0: '.fsb:nth-child(1) svg', h4: '.fgrid > div:nth-child(2) h4', h4c: '.fgrid > div:nth-child(4) h4', cP0: '.fgrid > div:nth-child(4) p:nth-of-type(1)', cP1: '.fgrid > div:nth-child(4) p:nth-of-type(2)', cP2: '.fgrid > div:nth-child(4) p:nth-of-type(3)', cA: '.fgrid > div:nth-child(4) p a', part: '.fpart', partL: '.fpart-l', partImg0: '.fpart-l img', sep0: '.fsep', partR: '.fpart-r img', bottom: '.fbottom', bs0: '.fbottom span:nth-child(1)', bs1: '.fbottom span:nth-child(2)' };
+  const PROPS = ['fontFamily', 'fontSize', 'fontWeight', 'lineHeight', 'letterSpacing', 'color', 'backgroundColor', 'opacity', 'marginBottom', 'paddingTop', 'paddingBottom', 'paddingLeft', 'paddingRight', 'borderTopWidth', 'borderTopColor', 'borderTopStyle', 'borderLeftWidth', 'borderLeftColor', 'borderRadius', 'textDecorationLine', 'columnGap', 'gridTemplateColumns', 'maxWidth'];
+  const SIZED = ['brandImg', 'soc0', 'soc3', 'socIcon0', 'partImg0', 'sep0', 'partR'];
+  const TOP = ['brandImg', 'brandP', 'social', 'soc0', 'soc3', 'socIcon0', 'h4', 'h4c', 'cP0', 'cP1', 'cP2', 'cA', 'cont', 'grid'];
+  const metrics = (pg, map) => pg.evaluate(({ map, PROPS }) => {
+    const root = document.querySelector(map.root), rr = root.getBoundingClientRect(), rtl = getComputedStyle(root).direction === 'rtl', out = {};
+    Object.keys(map).forEach(k => {
+      const el = document.querySelector(map[k]);
+      if (!el) { out[k] = null; return; }
+      const cs = getComputedStyle(el), r = el.getBoundingClientRect(), o = { w: r.width, h: r.height, y: r.top - rr.top, x: rtl ? rr.right - r.right : r.left - rr.left };
+      PROPS.forEach(q => { o[q] = cs[q]; });
+      out[k] = o;
+    });
+    return out;
+  }, { map, PROPS });
+  const hp = await ctx.newPage();
+  await hp.route(/\/api\//, r => r.fulfill({ status: 200, contentType: 'application/json', body: '{}' }));
+  for (const w of [1440, 390]) {
+    await hp.setViewportSize({ width: w, height: 900 });
+    await p.setViewportSize({ width: w, height: 900 });
+    await hp.goto(BASE + '/index.html'); await hp.waitForSelector('.footer', { state: 'attached' });
+    await hp.evaluate(() => document.querySelector('.footer').scrollIntoView()); await hp.waitForTimeout(600);
+    await go(); await p.evaluate(() => document.querySelector('.foot').scrollIntoView()); await p.waitForTimeout(900);
+    const a = await metrics(hp, HOME), b = await metrics(p, JUDG), bad = [];
+    Object.keys(HOME).forEach(k => {
+      if (!a[k] || !b[k]) { bad.push(k + ' مفقود'); return; }
+      PROPS.forEach(q => { if (a[k][q] !== b[k][q]) bad.push(k + '.' + q + ': ' + a[k][q] + ' ≠ ' + b[k][q]); });
+      if (k !== 'root' && Math.abs(a[k].x - b[k].x) > 0.6) bad.push(k + '.x: ' + a[k].x.toFixed(1) + ' ≠ ' + b[k].x.toFixed(1));
+      if (w > 600 && TOP.includes(k) && Math.abs(a[k].y - b[k].y) > 0.6) bad.push(k + '.y: ' + a[k].y.toFixed(1) + ' ≠ ' + b[k].y.toFixed(1));
+      if (SIZED.includes(k) && (Math.abs(a[k].w - b[k].w) > 0.6 || Math.abs(a[k].h - b[k].h) > 0.6)) bad.push(k + ' الحجم: ' + a[k].w.toFixed(1) + '×' + a[k].h.toFixed(1) + ' ≠ ' + b[k].w.toFixed(1) + '×' + b[k].h.toFixed(1));
+    });
+    check('الذيل مطابق لفوتر الرئيسية بعرض ' + w + ' بكسل', bad.length === 0, bad.slice(0, 6).join(' | '));
+  }
+  await hp.close();
+  await p.setViewportSize({ width: 1280, height: 900 });
 
   console.log('سؤال مكرر (عدّاد الأسئلة اللي تكرر سؤالها من اللجنة):');
   await p.evaluate(() => localStorage.removeItem('jd-asked'));
@@ -245,6 +339,8 @@ const check = (name, ok, extra = '') => { ok ? passed++ : failed++; console.log(
   await m.evaluate(() => localStorage.setItem('jd-pdet', '0'));
   await m.goto(PAGE); await m.waitForTimeout(300);
   check('شريط التبويب السفلي', (await m.evaluate(() => getComputedStyle(document.getElementById('nav')).position)) === 'fixed');
+  const mib = await m.evaluate(() => ['dlBtn', 'printBtn'].map(id => { const r = document.getElementById(id).getBoundingClientRect(); return { id, w: Math.round(r.width), h: Math.round(r.height), inView: r.left >= 0 && r.right <= innerWidth && r.bottom <= innerHeight }; }));
+  check('أيقونتا التنزيل والطباعة ظاهرتان بحجم لمس كافٍ على الجوال', mib.every(x => x.w >= 44 && x.h >= 44 && x.inView), JSON.stringify(mib));
   const unnamed = await m.evaluate(() => [...document.querySelectorAll('main a, main button, header a, header button, nav a, nav button')].filter(e => {
     const n = (e.getAttribute('aria-label') || e.textContent || '').trim(); return !n && !e.querySelector('img[alt]:not([alt=""])');
   }).map(e => e.outerHTML.slice(0, 80)));

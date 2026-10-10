@@ -76,6 +76,11 @@ echo "INVITE-STUB"       > "$DOCS/api/invite-redeem.php"
 echo "AUTH-STUB"         > "$DOCS/api/auth.php"
 echo "SHELL"             > "$DOCS/uploads/x.php"
 echo "LOGO"              > "$DOCS/assets/logo.webp"
+# أسئلة التحكيم الداخلية: الصفحة وبياناتها وملفا PDF الجاهزان
+echo "JUDGES-PAGE"       > "$DOCS/judges.html"
+echo "DATA"              > "$DOCS/assets/judges-data.js"
+echo "{}"               > "$DOCS/assets/judges-pdf.json"
+printf '%%PDF-1.4 stub' | tee "$DOCS/assets/judges-qa-ar.pdf" > "$DOCS/assets/judges-qa-en.pdf"
 # مساحة العمل: .htaccess التطبيق نفسه ومتحكم أمامي بديل (يقدّم رداً نصياً)
 cp "$ROOT/workspace/public/.htaccess" "$DOCS/workspace/.htaccess"
 echo "WS-FRONT"          > "$DOCS/workspace/index.php"
@@ -218,6 +223,22 @@ h="$(hdr "$APEX" "/workspace/login" permissions-policy)"
 [[ "$h" != *"microphone=(self)"* ]] && ok "سياسة الأذونات في مساحة العمل بلا ميكروفون" || bad "سياسة الأذونات في مساحة العمل" "بلا microphone=(self)" "$h"
 h="$(hdr "$APEX" "/" permissions-policy)"
 [[ "$h" == *"microphone=(self)"* ]] && ok "والمحادثة تحتفظ بميكروفونها" || bad "سياسة أذونات الجذر" "microphone=(self)" "$h"
+
+# ------------------------------------------------------------- أسئلة التحكيم
+say "أسئلة التحكيم: الصفحة وبياناتها وملفا PDF"
+expect_body    "/judges يعرض الصفحة بلا تحويل"                       "$APEX" "/judges"                   "JUDGES-PAGE"
+for f in /judges.html /assets/judges-data.js /assets/judges-pdf.json /assets/judges-qa-ar.pdf /assets/judges-qa-en.pdf; do
+    h="$(hdr "$APEX" "$f" x-robots-tag)"
+    [ "$h" = "noindex, nofollow, noarchive" ] && ok "$f بلا فهرسة" || bad "$f بلا فهرسة" "noindex, nofollow, noarchive" "${h:-لا ترويسة}"
+done
+for f in /assets/judges-qa-ar.pdf /assets/judges-qa-en.pdf; do
+    h="$(hdr "$APEX" "$f" content-type)"
+    [ "$h" = "application/pdf" ] && ok "$f يُقدَّم PDF" || bad "$f نوع المحتوى" "application/pdf" "${h:-لا ترويسة}"
+    h="$(hdr "$APEX" "$f" cache-control)"
+    [[ "$h" == *no-cache* ]] && ok "$f يُعاد التحقق منه في كل طلب" || bad "$f لا يبقى قديماً في المتصفح" "no-cache" "${h:-لا ترويسة}"
+done
+h="$(hdr "$APEX" "/assets/judges-data.js" cache-control)"
+[[ "$h" != *no-cache* ]] && ok "بقية الأصول تبقى بتخزينها المعتاد" || bad "بقية الأصول" "بلا no-cache" "$h"
 
 # ------------------------------------------------------------- بعد التبديل
 : > "$DOCS/.switch"

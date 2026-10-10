@@ -30,8 +30,7 @@
   var project = {
     number: 'KSCDR_Hackathon_151',
     track: ['الحياة اليومية', 'Everyday Life'],
-    category: ['شركات ومؤسسات', 'Companies and Institutions'],
-    stage: ['نسخة تجريبية عاملة جُرّبت مع مستخدمين', 'Functional beta piloted with users']
+    category: ['شركات ومؤسسات', 'Companies and Institutions']
   };
 
   var clusters = [

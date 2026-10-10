@@ -56,6 +56,7 @@ a{color:var(--primary);font-weight:600}
 .nav::-webkit-scrollbar{display:none}
 .nav a,.nav button,.tbtn{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border:1.5px solid transparent;border-radius:999px;background:transparent;color:var(--text)!important;font:inherit;font-size:.95rem;font-weight:600;text-decoration:none;cursor:pointer;white-space:nowrap}
 .nav a:hover,.nav button:hover,.tbtn:hover{background:var(--alt)}
+.nav .ib{width:44px;padding:0;justify-content:center;gap:0}
 .nav a[aria-current=page]{background:var(--alt);color:var(--accent)!important;border-color:var(--line)}
 .tools{display:flex;gap:4px}
 .tbtn{border-color:var(--line);padding:0 12px}
@@ -65,6 +66,7 @@ a{color:var(--primary);font-weight:600}
   .nav{position:fixed;inset-inline:0;bottom:0;z-index:40;order:0;flex:none;justify-content:space-around;gap:2px;overflow:visible;padding:6px 6px calc(6px + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -6px 20px -10px rgba(40,38,146,.25)}
   .nav a,.nav button{flex:1 1 0;flex-direction:column;justify-content:center;gap:2px;min-width:0;min-height:52px;padding:4px 2px;border-radius:12px;font-size:.74rem;line-height:1.35;text-align:center;white-space:normal}
   .nav .ico{width:1.45em;height:1.45em}
+  .nav .ib{flex:0 0 46px;width:46px;min-height:52px;padding:0}
   .toast{bottom:92px}
   .chip:nth-child(n+6){display:none}
 }
@@ -233,16 +235,34 @@ body.presenting main{position:fixed;inset:0;overflow:auto;max-width:none;margin:
 .pfoot .pb:hover{background:#20134f}
 @media(max-height:800px){.pq{font-size:calc(clamp(1.6rem,4vw,3rem)*var(--pfs))}.pbody{gap:16px;padding-block:12px}.pcard{font-size:calc(clamp(1.05rem,2.1vw,1.5rem)*var(--pfs));padding:clamp(14px,2.4vw,24px)}.pdet{margin-top:16px}}
 
-/* الذيل */
-.foot{margin-top:40px;background:var(--navy);color:#e6def6}
-.foot .wrap{display:grid;gap:24px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));padding-block:36px}
-.foot h2{font-size:1rem;color:#fff;margin-bottom:8px}
-.foot p,.foot li{font-size:.94rem;line-height:1.9}
-.foot ul{list-style:none}
-.foot a{color:#c9b6f5!important;font-weight:500}
-.foot .soc{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-.foot .soc a{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border:1px solid rgba(255,255,255,.3);border-radius:999px;text-decoration:none;color:#fff!important}
-.foot .legal{grid-column:1/-1;border-top:1px solid rgba(255,255,255,.15);padding-top:14px;font-size:.88rem;color:#b9aedb}
+/* الذيل: نسخة من فوتر الرئيسية (index.html .footer) بقيمه نفسها */
+.foot{margin-top:40px;background:#20134f;color:rgba(255,255,255,.7);padding:64px 24px 0;font-family:'Thmanyah Sans','Segoe UI',system-ui,-apple-system,sans-serif;font-size:1rem;font-weight:400;line-height:1.7;letter-spacing:-.005em}
+.fcont{max-width:1200px;margin:0 auto;padding:0 24px}
+.fgrid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:32px;margin-bottom:48px}
+.fbrand p{font-size:.875rem;line-height:1.8;margin:16px 0;max-width:280px}
+.fbrand img{margin-bottom:8px}
+.fsoc{display:flex;gap:8px}
+[dir=ltr] .fsoc{flex-direction:row-reverse;justify-content:flex-end}
+.foot .fsb{width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.15);background:none;color:rgba(255,255,255,.6)!important;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:400;transition:all .2s var(--ease)}
+.foot .fsb:hover{background:rgba(255,255,255,.1);color:#fff!important}
+.fico{width:16px;height:16px;flex:none;fill:currentColor;stroke:none}
+.foot h4{color:#fff;font-size:.875rem;font-weight:700;line-height:1.7;margin-bottom:16px}
+.foot .flink{display:block;width:fit-content;font-size:.875rem;font-weight:400;line-height:normal;letter-spacing:normal;color:rgba(255,255,255,.6)!important;text-decoration:none;padding:4px 0;cursor:pointer;transition:color .2s var(--ease)}
+.foot .flink:hover{color:#fff!important}
+.fcol p{font-size:.875rem;margin-bottom:8px}
+.fcol p:last-child{margin-bottom:0}
+.foot .fcol p a{color:inherit!important;font-weight:inherit}
+.foot .fcol p a.fph{text-decoration:none}
+.fpart{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:24px 0 20px;border-top:1px solid rgba(255,255,255,.12);margin-top:32px;flex-wrap:wrap}
+.fpart-l{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+.fpart-l img{height:42px;width:auto;opacity:.92}
+.fpart-r img{height:40px;width:auto}
+.fsep{width:1px;height:32px;background:rgba(255,255,255,.22)}
+.fbottom{border-top:1px solid rgba(255,255,255,.1);padding:20px 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.fbottom span{font-size:.75rem}
+@media(max-width:1024px){.fgrid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:768px){.fcont{padding:0 16px}.fpart{justify-content:center;gap:20px}.fpart-l{justify-content:center;gap:16px}.fpart-l img{height:34px}}
+@media(max-width:600px){.fgrid{grid-template-columns:1fr}}
 [dir=rtl] .ltr,.ltr{direction:ltr;unicode-bidi:isolate}
 
 /* نافذة الطباعة */
@@ -274,6 +294,10 @@ dialog .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
   .lh-meta{font-size:8pt;line-height:1.55;color:#2b2b33;text-align:right;direction:rtl}
   .lh-foot{position:fixed;left:7mm;right:7mm;bottom:8mm;height:11mm;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 8mm;background:linear-gradient(90deg,#814fc3 0%,#5039a8 45%,#282692 100%);color:#fff;font-size:8pt;direction:ltr;border-radius:1.2mm}
   .lh-foot div{line-height:1.5}
+  .lh-soc{display:flex;align-items:center;gap:1.6mm}
+  .lh-ic{width:5.2mm;height:5.2mm;border:.25mm solid rgba(255,255,255,.6);border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none}
+  .lh-ic svg{width:2.7mm;height:2.7mm;display:block}
+  .lh-soc>span:last-child{margin-inline-start:.8mm}
   .lhT{width:100%;border-collapse:collapse;border-spacing:0}
   .lhT td{padding:0;vertical-align:top}
   .sp-h{height:38mm}
@@ -313,6 +337,7 @@ dialog .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></symbol>
 <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.4 3.8 5.2 3.8 8.5s-1.2 6.1-3.8 8.5c-2.6-2.4-3.8-5.2-3.8-8.5S9.4 5.9 12 3.5z"/></symbol>
 <symbol id="i-print" viewBox="0 0 24 24"><path d="M7 9V3.5h10V9"/><rect x="4" y="9" width="16" height="8" rx="2"/><path d="M7 14h10v6.5H7z"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7.5 11l4.5 4.5 4.5-4.5M5 19.5h14"/></symbol>
 <symbol id="i-play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M10.2 8.6l5 3.4-5 3.4z"/></symbol>
 <symbol id="i-cards" viewBox="0 0 24 24"><rect x="4" y="6" width="12" height="14" rx="2"/><path d="M8 3.5h10.5A1.5 1.5 0 0120 5v11"/></symbol>
 <symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
@@ -325,6 +350,10 @@ dialog .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 <symbol id="i-next" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
 <symbol id="i-tally" viewBox="0 0 24 24"><path d="M6 6v12M10 6v12M14 6v12M18 6v12M3.5 17L20.5 7"/></symbol>
 <symbol id="i-expand" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+<symbol id="ic-brand-x" viewBox="0 0 24 24" fill="currentColor"><path d="M14.234 10.162 22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299-.929-1.329L3.076 1.56h3.182l5.965 8.532.929 1.329 7.754 11.09h-3.182z"/></symbol>
+<symbol id="ic-brand-linkedin" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></symbol>
+<symbol id="ic-brand-instagram" viewBox="0 0 24 24" fill="currentColor"><path d="M7.0301.084c-1.2768.0602-2.1487.264-2.911.5634-.7888.3075-1.4575.72-2.1228 1.3877-.6652.6677-1.075 1.3368-1.3802 2.127-.2954.7638-.4956 1.6365-.552 2.914-.0564 1.2775-.0689 1.6882-.0626 4.947.0062 3.2586.0206 3.6671.0825 4.9473.061 1.2765.264 2.1482.5635 2.9107.308.7889.72 1.4573 1.388 2.1228.6679.6655 1.3365 1.0743 2.1285 1.38.7632.295 1.6361.4961 2.9134.552 1.2773.056 1.6884.069 4.9462.0627 3.2578-.0062 3.668-.0207 4.9478-.0814 1.28-.0607 2.147-.2652 2.9098-.5633.7889-.3086 1.4578-.72 2.1228-1.3881.665-.6682 1.0745-1.3378 1.3795-2.1284.2957-.7632.4966-1.636.552-2.9124.056-1.2809.0692-1.6898.063-4.948-.0063-3.2583-.021-3.6668-.0817-4.9465-.0607-1.2797-.264-2.1487-.5633-2.9117-.3084-.7889-.72-1.4568-1.3876-2.1228C21.2982 1.33 20.628.9208 19.8378.6165 19.074.321 18.2017.1197 16.9244.0645 15.6471.0093 15.236-.005 11.977.0014 8.718.0076 8.31.0215 7.0301.0839m.1402 21.6932c-1.17-.0509-1.8053-.2453-2.2287-.408-.5606-.216-.96-.4771-1.3819-.895-.422-.4178-.6811-.8186-.9-1.378-.1644-.4234-.3624-1.058-.4171-2.228-.0595-1.2645-.072-1.6442-.079-4.848-.007-3.2037.0053-3.583.0607-4.848.05-1.169.2456-1.805.408-2.2282.216-.5613.4762-.96.895-1.3816.4188-.4217.8184-.6814 1.3783-.9003.423-.1651 1.0575-.3614 2.227-.4171 1.2655-.06 1.6447-.072 4.848-.079 3.2033-.007 3.5835.005 4.8495.0608 1.169.0508 1.8053.2445 2.228.408.5608.216.96.4754 1.3816.895.4217.4194.6816.8176.9005 1.3787.1653.4217.3617 1.056.4169 2.2263.0602 1.2655.0739 1.645.0796 4.848.0058 3.203-.0055 3.5834-.061 4.848-.051 1.17-.245 1.8055-.408 2.2294-.216.5604-.4763.96-.8954 1.3814-.419.4215-.8181.6811-1.3783.9-.4224.1649-1.0577.3617-2.2262.4174-1.2656.0595-1.6448.072-4.8493.079-3.2045.007-3.5825-.006-4.848-.0608M16.953 5.5864A1.44 1.44 0 1 0 18.39 4.144a1.44 1.44 0 0 0-1.437 1.4424M5.8385 12.012c.0067 3.4032 2.7706 6.1557 6.173 6.1493 3.4026-.0065 6.157-2.7701 6.1506-6.1733-.0065-3.4032-2.771-6.1565-6.174-6.1498-3.403.0067-6.156 2.771-6.1496 6.1738M8 12.0077a4 4 0 1 1 4.008 3.9921A3.9996 3.9996 0 0 1 8 12.0077"/></symbol>
+<symbol id="ic-brand-whatsapp" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></symbol>
 </defs></svg>
 
 <a class="skip" href="#main" data-i="skip">انتقل إلى المحتوى</a>
@@ -337,7 +366,8 @@ dialog .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 <a href="#/faq" data-nav="faq"><svg class="ico"><use href="#i-star"/></svg><span data-i="nav_faq">الشائعة</span></a>
 <a href="#/train" data-nav="train"><svg class="ico"><use href="#i-cards"/></svg><span data-i="nav_train">التدريب</span></a>
 <a href="#/present/all/0" data-nav="present"><svg class="ico"><use href="#i-play"/></svg><span data-i="nav_present">العرض</span></a>
-<button type="button" id="printBtn"><svg class="ico"><use href="#i-print"/></svg><span data-i="nav_print">طباعة / PDF</span></button>
+<a class="ib" id="dlBtn" href="/assets/judges-qa-ar.pdf" download="وصال-أسئلة-التحكيم.pdf" data-ia="dl_aria"><svg class="ico" aria-hidden="true"><use href="#i-download"/></svg></a>
+<button type="button" class="ib" id="printBtn" data-ia="print_aria"><svg class="ico" aria-hidden="true"><use href="#i-print"/></svg></button>
 </nav>
 <div class="tools">
 <a class="tbtn" id="askedBtn" href="#/asked" hidden><svg class="ico" aria-hidden="true"><use href="#i-tally"/></svg><span id="askedN">0</span></a>
@@ -407,7 +437,7 @@ var HOT=[],byId={},byC={};
 /* ------------------------------------------------------------ نصوص الواجهة */
 var UI={
 ar:{title:'أسئلة التحكيم',sub:'أهم الأسئلة المتوقعة من لجنة التحكيم وإجاباتها.',skip:'انتقل إلى المحتوى',brand:'وصال، أسئلة التحكيم',
-nav_home:'الرئيسية',nav_faq:'الشائعة',nav_train:'التدريب',nav_present:'العرض',nav_print:'طباعة / PDF',lang_aria:'التبديل إلى الإنجليزية',theme_aria:'تبديل المظهر الفاتح والداكن',
+nav_home:'الرئيسية',nav_faq:'الأسئلة الشائعة',nav_train:'التدريب',nav_present:'العرض',dl_aria:'تنزيل PDF',dl_name:'وصال-أسئلة-التحكيم.pdf',print_aria:'طباعة',lang_aria:'التبديل إلى الإنجليزية',theme_aria:'تبديل المظهر الفاتح والداكن',
 search_label:'ابحث في الأسئلة والأجوبة',search_ph:'ابحث: النموذج، الخصوصية، التعادل، المصادر',clear:'مسح البحث',
 popular:'الأكثر شيوعاً',groups:'المجموعات',tools:'أدوات الاستعداد',
 tool_train_t:'وضع التدريب',tool_train_d:'سؤال عشوائي يُخفى جوابه حتى تضغط، مع تتبع ما أتقنته.',
@@ -425,8 +455,10 @@ train_t:'وضع التدريب',train_scope:'المجموعة',train_all:'كل �
 pres_t:'وضع العرض',detail_full:'الجواب التفصيلي',exit:'خروج',bigger:'تكبير الخط',smaller:'تصغير الخط',
 print_t:'طباعة أو حفظ PDF',print_note:'تُطبع الأسئلة على ورق وصال الرسمي. اختر «حفظ بصيغة PDF» من نافذة الطباعة لحفظ نسخة.',p_scope:'ما الذي يُطبع',p_all:'كل الأسئلة',p_faq:'أهم عشرة أسئلة',p_group:'المجموعة الحالية',p_lang:'اللغة',p_ar:'العربية',p_en:'English',p_both:'العربية والإنجليزية معاً',p_detail:'إدراج التفصيل',p_verify:'إدراج ملاحظات «يُؤكَّد من الفريق»',p_go:'طباعة',cancel:'إلغاء',
 print_title:'أسئلة التحكيم',print_sub:'منصة وصال. أسئلة اللجنة المتوقعة وأجوبتها',date:'التاريخ',internal:'للاستخدام الداخلي للفريق',
-f_proj:'المشروع',f_num:'رقم المشاركة',f_track:'المسار',f_cat:'الفئة',f_stage:'المرحلة',f_links:'الروابط',f_site:'الموقع الرسمي',f_repo:'المستودع على GitHub',f_contact:'التواصل',
+f_proj:'معلومات المشروع',f_num:'رقم المشاركة',f_track:'المسار',f_cat:'الفئة',f_links:'الروابط',f_site:'الموقع الرسمي',f_repo:'المستودع على GitHub',f_contact:'التواصل',
 f_legal:'© 2026 وصال الابتكار لتقنية المعلومات. صفحة داخلية للفريق، غير مفهرسة.',
+f_about:'وصال مساعد ذكي سعودي يجيب الأشخاص ذوي الإعاقة وأسرهم عن حقوقهم والخدمات المتاحة لهم، استناداً إلى مصادر رسمية.',f_wcag:'صُمّمت المنصة وفق إرشادات الوصول الرقمي WCAG 2.2',f_logo:'وصال',
+soc_wa:'راسل فريق وصال عبر واتساب',soc_ig:'حساب وصال في إنستقرام',soc_li:'حساب وصال في لينكد إن',soc_x:'حساب وصال في إكس',pt_k:'مركز الملك سلمان لأبحاث الإعاقة',pt_h:'هاكاثون الذكاء الاصطناعي للأشخاص ذوي الإعاقة',pt_a:'عام الذكاء الاصطناعي 2026',
 ask:'سؤال مكرر',ask_aria:'سؤال مكرر: اضغط لزيادة عدد مرات تكراره',ask_cur:'عدد المرات الحالي',ask_done:'زاد العدّاد',undo:'تراجع',askminus:'نقص واحد',askreset:'تصفير العدّاد',
 asked_t:'الأسئلة المكررة',asked_sub:'اضغط «سؤال مكرر» كل مرة تسأل اللجنة هذا السؤال. كل ضغطة تزيد العدّاد، والأكثر تكراراً يطلع أول القوائم.',asked_empty:'ما تكرر أي سؤال للحين. اضغطوا «سؤال مكرر» عند السؤال كل مرة تسأله اللجنة.',asked_all:'كل الأسئلة المكررة',
 share:'نسخ رابط للفريق',share_ok:'تم نسخ الرابط. يفتحه الفريق فتندمج القائمة عنده.',clear_asked:'تصفير الكل',clear_q:'نصفّر كل الأسئلة المكررة؟',f_asked:'المكررة',
@@ -434,7 +466,7 @@ import_t:'قائمة من الفريق',import_msg:'هذا الرابط يحمل
 lg6:'سؤال مكرر: عدّاد عند كل سؤال. اضغطه كل مرة تسأله اللجنة، والأكثر تكراراً يظهر أول القوائم وأعلى الرئيسية.',
 nf:'لم نجد هذه الصفحة',back:'العودة إلى الرئيسية',saved:'تم الحفظ'},
 en:{title:'Judges’ Q&A',sub:'The most important questions expected from the judging committee, and their answers.',skip:'Skip to content',brand:'Wesal, Judges’ Q&A',
-nav_home:'Home',nav_faq:'Popular',nav_train:'Practice',nav_present:'Present',nav_print:'Print / PDF',lang_aria:'Switch to Arabic',theme_aria:'Toggle light and dark theme',
+nav_home:'Home',nav_faq:'Popular questions',nav_train:'Practice',nav_present:'Present',dl_aria:'Download PDF',dl_name:'Wesal-Judges-QA.pdf',print_aria:'Print',lang_aria:'Switch to Arabic',theme_aria:'Toggle light and dark theme',
 search_label:'Search the questions and answers',search_ph:'Search: model, privacy, break-even, sources',clear:'Clear search',
 popular:'Most popular',groups:'Clusters',tools:'Preparation tools',
 tool_train_t:'Practice mode',tool_train_d:'A random question with its answer hidden until you press, tracking what you have mastered.',
@@ -452,8 +484,10 @@ train_t:'Practice mode',train_scope:'Cluster',train_all:'All clusters',train_onl
 pres_t:'Presentation mode',detail_full:'Detailed answer',exit:'Exit',bigger:'Larger text',smaller:'Smaller text',
 print_t:'Print or save as PDF',print_note:'Questions print on Wesal’s official letterhead. Choose “Save as PDF” in the print dialog to keep a copy.',p_scope:'What to print',p_all:'All questions',p_faq:'Top ten questions',p_group:'Current cluster',p_lang:'Language',p_ar:'العربية',p_en:'English',p_both:'Arabic and English together',p_detail:'Include the detail',p_verify:'Include “to confirm with the team” notes',p_go:'Print',cancel:'Cancel',
 print_title:'Judges’ Q&A',print_sub:'Wesal platform. Expected committee questions and answers',date:'Date',internal:'For the team’s internal use',
-f_proj:'Project',f_num:'Entry number',f_track:'Track',f_cat:'Category',f_stage:'Stage',f_links:'Links',f_site:'Official website',f_repo:'GitHub repository',f_contact:'Contact',
+f_proj:'Project information',f_num:'Entry number',f_track:'Track',f_cat:'Category',f_links:'Links',f_site:'Official website',f_repo:'GitHub repository',f_contact:'Contact',
 f_legal:'© 2026 Wesal Innovation for Information Technology. Internal team page, not indexed.',
+f_about:'Wesal is a Saudi AI assistant that answers people with disabilities and their families about their rights and the services available to them, based on official sources.',f_wcag:'The platform is designed in line with the WCAG 2.2 digital accessibility guidelines',f_logo:'Wesal',
+soc_wa:'Message the Wesal team on WhatsApp',soc_ig:'Wesal on Instagram',soc_li:'Wesal on LinkedIn',soc_x:'Wesal on X',pt_k:'King Salman Center for Disability Research',pt_h:'AI Hackathon for People with Disabilities',pt_a:'Year of Artificial Intelligence 2026',
 ask:'Repeated question',ask_aria:'Repeated question: press to add one to the number of times it was asked',ask_cur:'current count',ask_done:'Counter up',undo:'Undo',askminus:'Subtract one',askreset:'Reset counter',
 asked_t:'Repeated questions',asked_sub:'Press “Repeated question” each time the committee asks it. Every press adds one, and the most repeated rises to the top of the lists.',asked_empty:'No question has repeated yet. Press “Repeated question” each time the committee asks one.',asked_all:'All repeated questions',
 share:'Copy link for the team',share_ok:'Link copied. When the team opens it, the list merges on their side.',clear_asked:'Reset all',clear_q:'Reset all repeated questions?',f_asked:'Repeated',
@@ -819,12 +853,19 @@ function viewNotFound(){
 
 /* ------------------------------------------------------------ الذيل والرأس */
 function renderFoot(){
-  var L=LI(),c=D.contact,p=D.project;
-  document.getElementById('foot').innerHTML='<div class="wrap">'+
-  '<div><h2>'+esc(T('f_proj'))+'</h2><p>'+esc(T('f_num'))+': <span class="ltr">'+esc(p.number)+'</span><br>'+esc(T('f_track'))+': '+esc(p.track[L])+'<br>'+esc(T('f_cat'))+': '+esc(p.category[L])+'<br>'+esc(T('f_stage'))+': '+esc(p.stage[L])+'</p></div>'+
-  '<div><h2>'+esc(T('f_links'))+'</h2><ul><li><a href="'+esc(c.site)+'" target="_blank" rel="noopener">'+esc(T('f_site'))+': <span class="ltr">wesalinnovation.sa</span></a></li><li><a href="'+esc(c.repo)+'" target="_blank" rel="noopener">'+esc(T('f_repo'))+'</a></li></ul></div>'+
-  '<div><h2>'+esc(T('f_contact'))+'</h2><p><a class="ltr" href="mailto:'+esc(c.email)+'">'+esc(c.email)+'</a><br><a class="ltr" href="tel:'+esc(c.phone.replace(/\s/g,''))+'">'+esc(c.phone)+'</a><br>'+esc(c.hours[L])+'</p><div class="soc"><a href="'+esc(c.whatsapp)+'" target="_blank" rel="noopener">WhatsApp</a><a href="'+esc(c.x)+'" target="_blank" rel="noopener">X</a><a href="'+esc(c.linkedin)+'" target="_blank" rel="noopener">LinkedIn</a><a href="'+esc(c.instagram)+'" target="_blank" rel="noopener">Instagram</a></div></div>'+
-  '<p class="legal">'+esc(T('f_legal'))+'</p></div>';
+  var L=LI(),c=D.contact,p=D.project,i;
+  var soc=[['wa',c.whatsapp,'whatsapp'],['ig',c.instagram,'instagram'],['li',c.linkedin,'linkedin'],['x',c.x,'x']],s='';
+  for(i=0;i<soc.length;i++)s+='<a class="fsb" href="'+esc(soc[i][1])+'" target="_blank" rel="noopener" aria-label="'+esc(T('soc_'+soc[i][0]))+'"><svg class="fico" aria-hidden="true" focusable="false"><use href="#ic-brand-'+soc[i][2]+'"/></svg></a>';
+  var logo='<img src="/assets/logo-footer.webp" width="95" height="36" alt="'+esc(T('f_logo'))+'">';
+  var pt=[['kscdr','pt_k',3342,1057],['hackathon','pt_h',2152,924],['ai-year','pt_a',3806,1467]],pl='';
+  for(i=0;i<pt.length;i++)pl+=(i?'<span class="fsep" aria-hidden="true"></span>':'')+'<img src="/partners/'+pt[i][0]+'.png?v=4" width="'+pt[i][2]+'" height="'+pt[i][3]+'" alt="'+esc(T(pt[i][1]))+'" loading="lazy" decoding="async">';
+  document.getElementById('foot').innerHTML='<div class="fcont"><div class="fgrid">'+
+  '<div class="fbrand">'+logo+'<p>'+esc(T('f_about'))+'</p><div class="fsoc">'+s+'</div></div>'+
+  '<div class="fcol"><h4>'+esc(T('f_proj'))+'</h4><p>'+esc(T('f_num'))+': <span class="ltr">'+esc(p.number)+'</span></p><p>'+esc(T('f_track'))+': '+esc(p.track[L])+'</p><p>'+esc(T('f_cat'))+': '+esc(p.category[L])+'</p></div>'+
+  '<div><h4>'+esc(T('f_links'))+'</h4><a class="flink" href="'+esc(c.site)+'" target="_blank" rel="noopener">'+esc(T('f_site'))+': <span class="ltr">wesalinnovation.sa</span></a><a class="flink" href="'+esc(c.repo)+'" target="_blank" rel="noopener">'+esc(T('f_repo'))+'</a></div>'+
+  '<div class="fcol"><h4>'+esc(T('f_contact'))+'</h4><p><a href="mailto:'+esc(c.email)+'" dir="ltr">'+esc(c.email)+'</a></p><p><a class="fph" href="tel:'+esc(c.phone.replace(/\s/g,''))+'" dir="ltr">'+esc(c.phone)+'</a></p><p>'+esc(c.hours[L])+'</p></div>'+
+  '</div><div class="fpart"><div class="fpart-l">'+pl+'</div><div class="fpart-r"><img src="/assets/logo-footer.webp" width="106" height="40" alt="'+esc(T('f_logo'))+'"></div></div>'+
+  '<div class="fbottom"><span>'+esc(T('f_legal'))+'</span><span>'+esc(T('f_wcag'))+'</span></div></div>';
 }
 function renderChips(){
   var L=LI();
@@ -835,12 +876,13 @@ function applyChrome(){
   document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';
   var els=document.querySelectorAll('[data-i]');for(var i=0;i<els.length;i++)els[i].textContent=T(els[i].getAttribute('data-i'));
   els=document.querySelectorAll('[data-iph]');for(i=0;i<els.length;i++)els[i].setAttribute('placeholder',T(els[i].getAttribute('data-iph')));
-  els=document.querySelectorAll('[data-ia]');for(i=0;i<els.length;i++)els[i].setAttribute('aria-label',T(els[i].getAttribute('data-ia')));
+  els=document.querySelectorAll('[data-ia]');for(i=0;i<els.length;i++){var t=T(els[i].getAttribute('data-ia'));els[i].setAttribute('aria-label',t);if(els[i].classList.contains('ib'))els[i].title=t}
   document.getElementById('langLbl').textContent=l==='ar'?'English':'العربية';
   document.getElementById('nav').setAttribute('aria-label',l==='ar'?'التنقل الرئيسي':'Main navigation');
   var pl=document.getElementById('pLang').options;pl[0].textContent=T('p_ar');pl[1].textContent=T('p_en');pl[2].textContent=T('p_both');
-  renderFoot();renderChips();syncThemeIcon();syncAskedBtn();
+  renderFoot();renderChips();syncThemeIcon();syncAskedBtn();syncDl();
 }
+function syncDl(){var a=document.getElementById('dlBtn');a.href='/assets/judges-qa-'+state.lang+'.pdf';a.setAttribute('download',T('dl_name'))}
 function effTheme(){return document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light'}
 function syncThemeIcon(){document.getElementById('themeIco').innerHTML='<use href="#i-'+(effTheme()==='dark'?'sun':'moon')+'"/>'}
 
@@ -884,7 +926,7 @@ function buildPrint(o){
   var c0=D.contact;
   var h='<div class="lh-bg"><svg viewBox="0 0 210 297" preserveAspectRatio="none" aria-hidden="true"><g fill="none" stroke="#dedee4" stroke-width="2.2"><circle cx="92" cy="312" r="104"/><circle cx="152" cy="328" r="118"/></g></svg></div>';
   h+='<div class="lh-head"><img src="/assets/logo-color.png" alt=""><div class="lh-meta"><div>المملكة العربية السعودية</div><div>شركة وصال</div><div>'+esc(TL('ar','date'))+': '+esc(date)+'</div></div></div>';
-  h+='<div class="lh-foot"><div><div>'+esc(c0.email)+'</div><div>'+esc(c0.phone)+'</div></div><div>wesalinnovation.sa</div><div>@Wesalhub</div></div>';
+  h+='<div class="lh-foot"><div><div>'+esc(c0.email)+'</div><div>'+esc(c0.phone)+'</div></div><div>wesalinnovation.sa</div><div class="lh-soc">'+['x','linkedin','instagram'].map(lhIcon).join('')+'<span>@WesalHub</span></div></div>';
   h+='<table class="lhT"><thead><tr><td><div class="sp-h"></div></td></tr></thead><tbody><tr><td class="lh-body"><div class="ppage"><h1>'+esc(langs.length===2?TL('ar','print_title')+' | '+TL('en','print_title'):TL(langs[0]===0?'ar':'en','print_title'))+'</h1>';
   h+='<div class="psub">'+esc(TL(langs[0]===0?'ar':'en','print_sub'))+'. '+esc(D.project.number)+'. '+esc(TL(langs[0]===0?'ar':'en','internal'))+'.</div>';
   var n=0;
@@ -906,6 +948,7 @@ function buildPrint(o){
   h+='</div></td></tr></tbody><tfoot><tr><td><div class="sp-f"></div></td></tr></tfoot></table>';
   return h;
 }
+function lhIcon(n){var s=document.getElementById('ic-brand-'+n);return s?'<span class="lh-ic"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">'+s.innerHTML+'</svg></span>':''}
 function openPrint(){
   var L=LI(),sel=document.getElementById('pScope'),p=parse(),h='<option value="all">'+esc(T('p_all'))+'</option><option value="faq">'+esc(T('p_faq'))+'</option>'+(askDistinct()?'<option value="asked">'+esc(T('asked_t'))+'</option>':'');
   if(p[0]==='c'&&clusterOf(p[1]))h+='<option value="c:'+p[1]+'">'+esc(T('p_group'))+': '+esc(clusterOf(p[1]).t[L])+'</option>';

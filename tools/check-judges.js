@@ -101,5 +101,27 @@ if (fs.existsSync(notesFile)) {
   console.log('  الملف الخاص غير موجود هنا. طبيعي في المستودع، وتعمل الصفحة بلا ملاحظات.');
 }
 
+console.log('ملفا PDF الجاهزان:');
+{
+  const { contentHash } = require('./judges-pdf-hash');
+  const manifest = path.join(root, 'assets/judges-pdf.json');
+  const regen = ' شغّل: NODE_PATH="$(npm root -g)" node tools/build-judges-pdf.js';
+  let m = null;
+  if (!fs.existsSync(manifest)) bad('assets/judges-pdf.json غير موجود.' + regen);
+  else { try { m = JSON.parse(fs.readFileSync(manifest, 'utf8')); } catch (e) { bad('assets/judges-pdf.json ليس JSON سليماً.' + regen); } }
+  if (m) {
+    if (m.sha !== contentHash(root)) bad('ملفا PDF قديمان: تغيّر المحتوى أو ورق الطباعة بعد آخر توليد.' + regen);
+    ['ar', 'en'].forEach(l => {
+      const e = m[l], p = e && path.join(root, 'assets', e.file || '');
+      if (!e || !fs.existsSync(p)) { bad('ملف PDF (' + l + ') مفقود.' + regen); return; }
+      const b = fs.readFileSync(p);
+      if (b.slice(0, 5).toString() !== '%PDF-') bad(e.file + ' ليس PDF سليماً');
+      if (b.length !== e.bytes) bad(e.file + ' لا يطابق بيانه في judges-pdf.json (تعديل يدوي؟).' + regen);
+      if (e.questions !== D.items.length) bad(e.file + ' فيه ' + e.questions + ' سؤالاً والبيانات ' + D.items.length + '.' + regen);
+      console.log('  ' + e.file + ': ' + e.questions + ' سؤالاً، ' + e.pages + ' صفحة، ' + Math.round(e.bytes / 1024) + ' كيلوبايت');
+    });
+  }
+}
+
 console.log(errors ? '\n✗ ' + errors + ' خطأ' : '\n✓ بيانات أسئلة التحكيم سليمة' + (warns ? ' (' + warns + ' تنبيه)' : ''));
 process.exit(errors ? 1 : 0);
