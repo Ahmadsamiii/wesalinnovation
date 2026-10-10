@@ -53,6 +53,11 @@ ServerSignature Off
   # HSTS — يُرسل على اتصالات HTTPS فقط
   Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" env=HTTPS
 
+  # صفحة أسئلة التحكيم الداخلية وبياناتها: لا فهرسة ولا أرشفة. الرابط وحده يدخل إليها.
+  <FilesMatch "^(judges\.html|judges-data\.js|judges-notes\.js)$">
+    Header always set X-Robots-Tag "noindex, nofollow, noarchive"
+  </FilesMatch>
+
   # chat. قبل التبديل: بلا فهرسة (انظر قواعد التبديل في كتلة mod_rewrite)
   Header always set X-Robots-Tag "noindex, nofollow" env=WESAL_NOINDEX
 
@@ -109,6 +114,10 @@ ServerSignature Off
   RewriteCond %{HTTP_HOST} ^(?:chat\.)?([^:]+)(?::[0-9]+)?$ [NC]
   RewriteRule ^login/?$ https://chat.%1/#login [R=302,NE,L]
   RewriteRule ^login/?$ /#login [R=302,NE,L]
+
+  # أسئلة التحكيم (judges.html) على النطاقين بلا تحويل. ملف لا مجلد، لنفس سبب /login.
+  RewriteCond %{DOCUMENT_ROOT}/judges.html -f
+  RewriteRule ^judges/?$ judges.html [L]
 
   # الصفحة المؤسسية القديمة صارت /homepage/. الشرط الثاني يحمي الرابط القديم
   # من الانقطاع لو لم تصل الصفحة الجديدة إلى الخادم لسبب ما.
