@@ -142,7 +142,7 @@ svg.ico{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;st
 .composer{border-top:0;padding-top:10px}
 
 /* ===================================================== شاشة الختام */
-.fin{position:fixed;top:0;right:0;bottom:0;left:0;z-index:8;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;align-items:center;text-align:center;color:#fff;padding:calc(34px + env(safe-area-inset-top)) 24px calc(28px + env(safe-area-inset-bottom));background:linear-gradient(150deg,#282692 0%,#5039a8 62%,#814fc3 125%);opacity:0;transition:opacity .5s var(--ease)}
+.fin{position:fixed;top:0;right:0;bottom:0;left:0;z-index:8;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;align-items:center;text-align:center;color:#fff;padding:calc(34px + env(safe-area-inset-top)) 24px calc(28px + env(safe-area-inset-bottom));background:linear-gradient(150deg,#282692 0%,#5039a8 62%,#814fc3 125%);opacity:0;transition:opacity .5s var(--ease)}
 .fin.on{opacity:1}
 .fin>*:not(.arcs){position:relative;z-index:1}
 .fin .brand .lk{justify-content:center}
@@ -166,8 +166,6 @@ svg.ico{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;st
 .wa{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:54px;margin-top:12px;border-radius:999px;border:1.5px solid rgba(255,255,255,.75);background:rgba(255,255,255,.1);color:#fff;font-weight:700;font-size:1.02rem;text-decoration:none}
 .wa svg.ico{width:24px;height:24px}
 .mini{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 16px;margin-top:14px}
-.pill{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border-radius:999px;border:1.5px solid rgba(255,255,255,.5);color:#fff;font-weight:700;font-size:.92rem;text-decoration:none}
-.pill svg.ico{width:18px;height:18px}
 .back{min-height:44px;padding:0 6px;border:0;background:none;color:#fff;font-size:.92rem;text-decoration:underline;text-underline-offset:4px;cursor:pointer}
 .fsoc{display:flex;justify-content:center;gap:12px;margin-top:22px}
 .fsoc a{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.14);border:1.5px solid rgba(255,255,255,.5);color:#fff}
@@ -227,7 +225,7 @@ bdi{unicode-bidi:isolate}
   .fin .acts{margin-top:18px}
   .wa{min-height:48px;margin-top:8px}
   .mini{margin-top:8px}
-  .pill,.back{min-height:40px}
+  .back{min-height:40px}
   .fsoc{margin-top:10px}
   .fsoc a{width:42px;height:42px}
 }
@@ -250,8 +248,64 @@ bdi{unicode-bidi:isolate}
   .fin .m1{margin-top:12px}
   .fin .acts{margin-top:14px}
   .wa{min-height:44px}
-  .pill,.back{min-height:36px}
+  .back{min-height:36px}
   .fsoc a{width:38px;height:38px}
+}
+
+/* لوحة وصال في شاشة الختام: بطاقة بيضاء فيها الرمز بألوانه الرسمية يتركب قطعة قطعة */
+.pzcard{width:100%;margin-top:clamp(18px,3vh,28px);padding:clamp(16px,2.4vh,22px) 16px 16px;border-radius:26px;background:#fff;color:var(--ink);box-shadow:0 26px 48px -26px rgba(15,8,50,.75)}
+.pzhost{width:min(100%,300px);margin:0 auto}
+.pzline{margin-top:clamp(10px,1.8vh,16px);padding-top:clamp(8px,1.5vh,12px);border-top:1px solid var(--line);display:flex;flex-wrap:wrap;align-items:baseline;justify-content:center;gap:0 8px;font-size:1.02rem;font-weight:700;line-height:1.7}
+.pzline .num{font-size:clamp(1.9rem,8.6vw,2.45rem);font-weight:800;line-height:1.15;color:var(--primary);font-variant-numeric:tabular-nums}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.fin .m1,.fin .m2{text-wrap:balance}
+.fin .acts.late{animation:fadeIn .7s ease .5s both}
+@media(max-height:660px){.fsoc{display:none}}
+@media(max-height:960px){
+  .fin .brand{margin-bottom:clamp(18px,3vh,28px)}
+  .fin .brand .lk .mk{height:clamp(54px,16vw,66px)}
+  .fin .brand .lk .wm{height:clamp(32px,9.6vw,40px)}
+  .fin .brand .lk .sp{height:clamp(24px,7.2vw,30px)}
+  .fin h2{font-size:clamp(1.45rem,6vw,1.85rem);line-height:1.4}
+  .pzhost{width:min(100%,262px)}
+  .pzcard{margin-top:12px;padding:12px 14px 10px}
+  .pzline{margin-top:8px;padding-top:6px}
+  .fin .m1{margin-top:14px;line-height:1.6}
+  .fin .m2{margin-top:2px;line-height:1.65}
+  .fin .acts{margin-top:14px}
+  .fin .acts .go{min-height:58px}
+  .wa{min-height:50px;margin-top:10px}
+  .mini{margin-top:10px}
+  .fsoc{margin-top:12px}
+  .fsoc a{width:44px;height:44px}
+}
+@media(max-height:800px){
+  .fin .brand{margin-bottom:14px}
+  .pzhost{width:min(100%,236px)}
+  .pzcard{margin-top:10px;padding:10px 12px 8px;border-radius:22px}
+  .pzline .num{font-size:1.7rem}
+  .pzline{font-size:.98rem}
+  .fin .m1{margin-top:10px;font-size:1.05rem}
+  .fin .m2{font-size:.92rem;line-height:1.6}
+  .fin .acts{margin-top:12px}
+  .fin .acts .go{min-height:54px}
+  .wa{min-height:46px;margin-top:8px}
+  .mini{margin-top:6px}
+  .fsoc{margin-top:8px}
+  .fsoc a{width:40px;height:40px}
+}
+@media(max-height:700px){
+  .fin .brand{margin-bottom:10px}
+  .fin .m2{line-height:1.55}
+  .pzhost{width:min(100%,188px)}
+  .pzcard{margin-top:8px;padding:8px 10px 6px}
+  .pzline .num{font-size:1.5rem}
+  .fin .m1{margin-top:8px}
+  .fin .acts{margin-top:10px}
+  .fin .acts .go{min-height:48px}
+  .wa{min-height:40px}
+  .fsoc{margin-top:6px}
+  .fsoc a{width:36px;height:36px}
 }
 
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
@@ -333,18 +387,22 @@ bdi{unicode-bidi:isolate}
   <div class="main">
     <h2 id="finT"></h2>
     <div class="wait" id="wait" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="pzcard" id="pzcard" hidden>
+      <div class="pzhost" id="pzhost"></div>
+      <div class="pzline"><span id="pn1"></span><b class="num" id="pnum">0</b><span>في جناح وصال</span></div>
+    </div>
     <div class="numcard" id="numcard" hidden>
       <p class="n1" id="n1"></p>
       <p class="num" id="num" aria-live="polite">0</p>
       <p class="n2">في جناح وصال</p>
     </div>
+    <p class="sr" id="pzlive" aria-live="polite"></p>
     <p class="m1" id="m1" hidden></p>
     <p class="m2" id="m2" hidden></p>
     <div class="acts" id="acts" hidden>
-      <a class="go" href="/#chat"><span>جرّب المحادثة الكاملة</span><span class="arr" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></span></a>
+      <a class="go" href="https://wesalinnovation.sa/#chat"><span>انتقل للصفحة الرئيسية</span><span class="arr" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></span></a>
       <a class="wa" id="wa" href="https://wa.me/966500039204" target="_blank" rel="noopener noreferrer"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5l1.3-4.1A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 9.5c.4 2.2 2.3 4.1 4.5 4.5l1-1.3-1.8-.9-.7.8a3.6 3.6 0 0 1-1.6-1.6l.8-.7-.9-1.8z" fill="currentColor" stroke="none"/></svg><span>تواصل معنا عبر WhatsApp</span></a>
       <div class="mini">
-        <a class="pill" href="https://wesalinnovation.sa/"><span>انتقل للصفحة الرئيسية</span><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></a>
         <button class="back" type="button" id="back">رجوع للمحادثة</button>
       </div>
       <div class="fsoc" id="fsoc"></div>
@@ -352,6 +410,7 @@ bdi{unicode-bidi:isolate}
   </div>
 </section>
 
+<script src="/assets/hello-puzzle.js"></script>
 <script>
 (function(){
 'use strict';
@@ -491,28 +550,50 @@ function registerScan(){
   else visit();
 }
 setTimeout(registerScan,1200);
-function countUp(to){
-  if(reduce||to<2){numEl.textContent=to;return;}
+setTimeout(function(){if(window.WesalPuzzle&&visitNo)WesalPuzzle.preload(WesalPuzzle.pieceOf(visitNo)===WesalPuzzle.COUNT);},2600);
+function countUp(to,el){
+  el=el||numEl;
+  if(reduce||to<2){el.textContent=to;return;}
   var t0=null,dur=1300;
-  function f(ts){if(t0===null)t0=ts;var k=Math.min(1,(ts-t0)/dur),e=1-Math.pow(1-k,3);numEl.textContent=Math.round(to*e);if(k<1)requestAnimationFrame(f);}
+  function f(ts){if(t0===null)t0=ts;var k=Math.min(1,(ts-t0)/dur),e=1-Math.pow(1-k,3);el.textContent=Math.round(to*e);if(k<1)requestAnimationFrame(f);}
   requestAnimationFrame(f);
+}
+var pzcard=$('#pzcard'),pzhost=$('#pzhost'),pzlive=$('#pzlive'),pn1=$('#pn1'),pnum=$('#pnum'),board=null;
+function showBoard(n){
+  var P=window.WesalPuzzle,k=P.pieceOf(n),lap=P.lapOf(n);
+  pn1.textContent=G('أنت الزائر رقم','أنتِ الزائرة رقم','أنت الزائر رقم');
+  m1El.textContent='وهذا مو مجرد رقم زيارة.';
+  m2El.textContent=G('أنت ساهمت','أنتِ ساهمتِ','أنت ساهمت')+' في دعم فكرة وصال: أن توصل المعلومة الصحيحة لكل شخص من ذوي الإعاقة يحتاجها، بأبسط أسلوب وأسرع طريقة.';
+  if(board){board.destroy();board=null;}
+  pzhost.textContent='';
+  pzcard.hidden=false;pnum.textContent=reduce?String(n):'0';
+  board=P.mount(pzhost);
+  board.label('لوحة شعار وصال تتركب قطعة قطعة مع كل زائر. ركّبت قطعتك رقم '+k+' من '+P.COUNT+' في الشعار رقم '+lap+'.');
+  m1El.hidden=false;m2El.hidden=false;acts.hidden=false;acts.classList.remove('late');void acts.offsetWidth;acts.classList.add('late');
+  countUp(n,pnum);
+  pzlive.textContent='';
+  setTimeout(function(){pzlive.textContent=pn1.textContent+' '+n+' في جناح وصال';},reduce?0:1500);
+  board.fill(k-1,true,function(){
+    board.land(k,{num:n,done:function(){if(k===P.COUNT)board.celebrate({});}});
+  });
 }
 function finish(){
   if(tts)speechSynthesis.cancel();
   finT.textContent='';finT.appendChild(document.createTextNode(NAME?'شكراً لك يا ':'شكراً لك'));
   if(NAME){var b=document.createElement('bdi');b.textContent=NAME;finT.appendChild(b);}
-  numcard.hidden=true;m1El.hidden=true;m2El.hidden=true;acts.hidden=true;waitEl.hidden=false;
+  numcard.hidden=true;pzcard.hidden=true;m1El.hidden=true;m2El.hidden=true;acts.hidden=true;waitEl.hidden=false;
   fin.hidden=false;requestAnimationFrame(function(){fin.classList.add('on');});
   visit().then(function(n){
     waitEl.hidden=true;
+    if(n&&window.WesalPuzzle){showBoard(n);return;}
     if(n){
       n1El.textContent=G('أنت الزائر رقم','أنتِ الزائرة رقم','أنت الزائر رقم');
       m1El.textContent='وهذا مو مجرد رقم زيارة.';
-      m2El.textContent=G('أنت ساهمت','أنتِ ساهمتِ','أنت ساهمت')+' في دعم فكرة وصال: أن توصل المعلومة الصحيحة لكل شخص يحتاجها، بأوضح لغة.';
+      m2El.textContent=G('أنت ساهمت','أنتِ ساهمتِ','أنت ساهمت')+' في دعم فكرة وصال: أن توصل المعلومة الصحيحة لكل شخص من ذوي الإعاقة يحتاجها، بأبسط أسلوب وأسرع طريقة.';
       numcard.hidden=false;numEl.textContent='0';
     }else{
       m1El.textContent='نشكرك على وقتك معنا.';
-      m2El.textContent='فكرة وصال: أن توصل المعلومة الصحيحة لكل شخص يحتاجها، بأوضح لغة.';
+      m2El.textContent='فكرة وصال: أن توصل المعلومة الصحيحة لكل شخص من ذوي الإعاقة يحتاجها، بأبسط أسلوب وأسرع طريقة.';
     }
     m1El.hidden=false;m2El.hidden=false;acts.hidden=false;
     if(n)countUp(n);
