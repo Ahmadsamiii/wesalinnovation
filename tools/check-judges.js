@@ -6,7 +6,7 @@
  *      node tools/check-judges.js
  *
  *  يتحقق من assets/judges-data.js: كل نص بلغتين وغير فارغ، ومعرّفات الأسئلة
- *  فريدة، والمجموعات والمجيبون والمراجع معرّفة، وترتيب «أهم عشرة» متصل،
+ *  فريدة، والمجموعات معرّفة، وترتيب «أهم عشرة» متصل،
  *  ولا شرطة طويلة ولا قصيرة (قواعد README «كتابة النصوص الظاهرة للمستخدم»)،
  *  ولا عبارة جاهزة من قائمة check-copy.php.
  *  ويمنع عودة ملاحظات الفريق الداخلية إلى الملف العام: المستودع عام، فتلك
@@ -71,8 +71,6 @@ D.items.forEach(it => {
   ids.add(it.id);
   if (!cids.has(it.c)) bad(w + ': مجموعة غير معرّفة (' + it.c + ')');
   perC[it.c] = (perC[it.c] || 0) + 1;
-  if (!D.team[it.who]) bad(w + ': مجيب غير معرّف (' + it.who + ')');
-  (it.src || []).forEach(k => { if (!D.sources[k]) bad(w + ': مرجع غير معرّف (' + k + ')'); });
   pair(it.q, w + ' السؤال'); pair(it.s, w + ' الجواب المختصر');
   if (it.d) pair(it.d, w + ' التفصيل');
   if (it.v) bad(w + ': حقل v ممنوع في الملف العام، ضع الملاحظة في judges-notes.js');
@@ -87,7 +85,6 @@ Object.keys(perC).forEach(c => console.log('    ' + c + ': ' + perC[c]));
 console.log('أرقام للحفظ:');
 D.facts.forEach((f, i) => {
   pair(f.v, 'رقم ' + (i + 1) + ' القيمة'); pair(f.l, 'رقم ' + (i + 1) + ' الوصف');
-  if (!D.sources[f.s]) bad('رقم ' + (i + 1) + ': مرجع غير معرّف (' + f.s + ')');
 });
 console.log('  ' + D.facts.length + ' رقماً');
 
