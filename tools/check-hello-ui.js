@@ -1,5 +1,5 @@
 /* ==========================================================================
- *  وصال: فحص صفحة جناح الهاكاثون /hello في المتصفح
+ *  وصال: فحص صفحة جناح الهاكاثون /hello وشاشة الجناح /hello/wall في المتصفح
  *
  *  على نسخة محلية بقاعدة تجريبية فقط (كل مسح جديد يضيف صفاً في hello_visits). من جذر المستودع:
  *      php -S 127.0.0.1:8080 &
@@ -11,6 +11,8 @@
  *    - العدّاد: المسح يُحسب مرة لكل جهاز، والزاحف والطلب الغريب لا يُحسبان
  *    - شاشة الختام: رقم الزائر ولوحة الشعار، القطعة من الرقم، والاكتمال عند 25، وتقليل الحركة
  *    - سقوط مكوّن اللوحة أو العدّاد لا يكسر الصفحة
+ *    - شاشة الجناح: تقرأ العدّاد وتركّب القطع، والاكتمال عند 25 وشعار جديد، وتصفير العدّاد،
+ *      وانقطاع الخادم، وبلا كوكي ولا طلب غير GET، وتناسب الشاشات الأفقية والعمودية
  *    - المقاسات: لا تمرير أفقي، ولا تمرير رأسي في شاشة الختام على الجوالات الشائعة
  * ========================================================================== */
 
@@ -148,8 +150,11 @@ const msgs = page => page.evaluate(() => [...document.querySelectorAll('.msg')].
     const raw = await B.request.post(`${BASE}/api/hello-visit.php`, { headers: { 'User-Agent': UA } });
     check('الطلب بلا الترويسة المخصصة يُرفض', raw.status() === 405 && rows() === before + 2, String(raw.status()));
     const get = await B.request.get(`${BASE}/api/hello-visit.php`, { headers: { 'User-Agent': UA } });
-    check('الطلب بطريقة GET يُرفض', get.status() === 405, String(get.status()));
-    const setCookie = (await bot.headersArray()).filter(h => h.name.toLowerCase() === 'set-cookie');
+    const gj = await get.json();
+    check('GET يعيد آخر رقم ولا يغيّر شيئاً', get.status() === 200 && gj.ok === true && gj.n >= parseInt(storedB, 10) && rows() === before + 2, JSON.stringify(gj));
+    const put = await B.request.put(`${BASE}/api/hello-visit.php`, { headers: { 'X-Hello': '1', 'User-Agent': UA } });
+    check('بقية الطرق تُرفض', put.status() === 405, String(put.status()));
+    const setCookie = [...(await bot.headersArray()), ...(await get.headersArray())].filter(h => h.name.toLowerCase() === 'set-cookie');
     check('العدّاد لا يضع كوكي', setCookie.length === 0, JSON.stringify(setCookie));
     await A.close(); await B.close();
   }
@@ -204,6 +209,69 @@ const msgs = page => page.evaluate(() => [...document.querySelectorAll('.msg')].
     check('سقوط العدّاد: شكر بلا رقم ولا لوحة', !q.board && !q.old && q.m1 === 'نشكرك على وقتك معنا.', q.m1);
     check('وبلا أخطاء برمجية', w.errs.length === 0, w.errs.join(' | '));
     await w.ctx.close();
+  }
+
+  console.log('\nشاشة الجناح /hello/wall:');
+  {
+    const open = async (o = {}) => {
+      const ctx = await browser.newContext({ viewport: { width: o.w || 1920, height: o.h || 1080 }, reducedMotion: o.reduce === false ? 'no-preference' : 'reduce' });
+      const page = await ctx.newPage();
+      const st = { n: o.n === undefined ? 0 : o.n, fail: false, hits: [], errs: [], paths: [] };
+      page.on('pageerror', e => st.errs.push(String(e)));
+      page.on('console', m => { if (m.type() === 'error' && !/favicon|ERR_FAILED/.test(m.text())) st.errs.push(m.text()); });
+      page.on('request', r => { const u = new URL(r.url()); if (u.pathname.startsWith('/api/')) st.paths.push(r.method() + ' ' + u.pathname); });
+      await page.route('**/api/hello-visit.php', r => { st.hits.push(r.request().method()); return st.fail ? r.abort() : r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, n: st.n }) }); });
+      await page.goto(`${BASE}/hello-wall.html`);
+      await page.waitForTimeout(o.settle || 900);
+      return { ctx, page, st };
+    };
+    const wsnap = page => page.evaluate(() => {
+      const r = s => document.querySelector(s).getBoundingClientRect();
+      return {
+        big: document.querySelector('#big').textContent, lap: document.querySelector('#lap').textContent,
+        on: document.querySelectorAll('.pz .pc.on').length, dots: document.querySelectorAll('#dots i.on').length, done: !!document.querySelector('.pz.done'),
+        win: document.querySelector('#win').hidden ? '' : document.querySelector('#w1').textContent + ' | ' + document.querySelector('#w2').textContent,
+        bad: document.querySelector('#stat').classList.contains('bad'),
+        fits: document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight && r('#cta').bottom <= innerHeight && r('.card').bottom <= innerHeight && r('.brand').top >= 0,
+        robots: (document.querySelector('meta[name=robots]') || {}).content || ''
+      };
+    });
+    const poll = 3300;
+
+    const w = await open({ n: 66 });
+    let s = await wsnap(w.page);
+    check('تبدأ من آخر رقم: 66 هو القطعة 16 من الشعار 3', s.big === '66' && s.on === 16 && s.dots === 16 && s.lap === 'الشعار رقم 3' && !s.done && !s.bad, JSON.stringify(s));
+    check('الشاشة لا تُفهرس (noindex)', /noindex/.test(s.robots), s.robots);
+    w.st.n = 67; await w.page.waitForTimeout(poll); s = await wsnap(w.page);
+    check('زائر جديد: العدّاد 67 وتركّب القطعة 17', s.big === '67' && s.on === 17 && s.dots === 17, JSON.stringify(s));
+    w.st.n = 75; await w.page.waitForFunction(() => !!document.querySelector('.pz.done'), null, { timeout: 12000 }).catch(() => {}); s = await wsnap(w.page);
+    check('الزائر 75 يكمّل الشعار: الرمز كاملاً وتهنئة', s.on === 25 && s.done && s.big === '75' && s.win === 'اكتمل الشعار رقم 3 | رقم 75 كمّله، مبروك!', JSON.stringify(s));
+    w.st.n = 76; await w.page.waitForTimeout(poll); s = await wsnap(w.page);
+    check('الزائر 76 يبدأ شعاراً جديداً والعدّاد يكمل', !s.done && s.on === 1 && s.lap === 'الشعار رقم 4' && s.big === '76' && s.win === '', JSON.stringify(s));
+    w.st.n = 0; await w.page.waitForTimeout(poll); s = await wsnap(w.page);
+    check('تصفير العدّاد: لوحة فارغة بانتظار أول زائر', s.big === '0' && s.on === 0 && !s.done && /بانتظار أول زائر/.test(s.lap), JSON.stringify(s));
+    w.st.fail = true; await w.page.waitForTimeout(poll); s = await wsnap(w.page);
+    check('انقطاع الخادم: نقطة الحالة تتغير واللوحة باقية', s.bad && s.big === '0', JSON.stringify(s));
+    w.st.fail = false; w.st.n = 3; await w.page.waitForTimeout(poll); s = await wsnap(w.page);
+    check('عودة الخادم: تكمل من الرقم الجديد', !s.bad && s.big === '3' && s.on === 3, JSON.stringify(s));
+    check('الشاشة لا تطلب إلا GET للعدّاد، بلا كوكي ولا أخطاء', w.st.paths.every(p => p === 'GET /api/hello-visit.php') && (await w.ctx.cookies()).length === 0 && w.st.errs.length === 0, w.st.paths.slice(0, 3).join(',') + ' ' + w.st.errs.join(' | '));
+    await w.ctx.close();
+
+    const m = await open({ n: 24, reduce: false });
+    check('بالحركة: 24 قطعة مركّبة عند الفتح', (await wsnap(m.page)).on === 24);
+    m.st.n = 25;
+    const sawWin = await m.page.waitForFunction(() => !document.querySelector('#win').hidden, null, { timeout: 12000 }).then(() => m.page.textContent('#w1')).catch(() => '');
+    const sawDone = await m.page.waitForFunction(() => !!document.querySelector('.pz.done'), null, { timeout: 12000 }).then(() => true).catch(() => false);
+    s = await wsnap(m.page);
+    check('بالحركة الكاملة: القطعة 25 تكمل الشعار وتظهر التهنئة', sawDone && s.on === 25 && /اكتمل الشعار رقم 1/.test(sawWin) && m.st.errs.length === 0, `${sawDone} ${sawWin} ${m.st.errs.join(' | ')}`);
+    await m.ctx.close();
+
+    for (const [vw, vh] of [[1920, 1080], [2560, 1440], [1366, 768], [1280, 720], [1080, 1920], [768, 1024]]) {
+      const z = await open({ n: 67, w: vw, h: vh });
+      const q = await wsnap(z.page);
+      check(`${vw}×${vh}: كل شيء داخل الشاشة بلا تمرير`, q.fits && q.on === 17, JSON.stringify(q));
+      await z.ctx.close();
+    }
   }
 
   console.log('\nالمقاسات (شاشة الختام):');

@@ -196,7 +196,8 @@
       self.ring(i);
       self.pulse(i - 1);
       self.pulse(i + 1);
-      if (navigator.vibrate) { try { navigator.vibrate(28); } catch (e) { /* بعض المتصفحات لا تدعمه */ } }
+      /* الاهتزاز لا يُسمح به قبل أن يلمس المستخدم الصفحة (شاشة الجناح لا يلمسها أحد) */
+      if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) { try { navigator.vibrate(28); } catch (e) { /* بعض المتصفحات لا تدعمه */ } }
       done();
     };
     return a;
