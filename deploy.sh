@@ -20,13 +20,14 @@ KEEP_BACKUPS=5
 # ما يُنشر — قائمة سماح صريحة. أي ملف جديد في المستودع لا يصل الإنتاج حتى
 # يُضاف هنا عمداً؛ عكسها (قائمة منع) يسرّب الجديد افتراضياً.
 SYNC_DIRS=(api assets fonts partners tools homepage)
-SYNC_FILES=(.htaccess index.html corporate.html survey.html ticket.html login.html hello.html schema.sql
+SYNC_FILES=(.htaccess index.html corporate.html survey.html ticket.html login.html hello.html judges.html schema.sql
             robots.txt robots-chat.txt sitemap.xml sitemap-home.xml sitemap-chat.xml
             favicon.ico favicon-192.png og-cover.png)
 
 # ما لا يُلمس أبداً: الإعدادات فيها أسرار الإنتاج وليست في المستودع أصلاً،
-# والمرفوعات بيانات مستخدمين لا نسخة منها في أي مكان آخر.
-PROTECTED=(--exclude=config.php --exclude=uploads/ --exclude=storage/)
+# والمرفوعات بيانات مستخدمين لا نسخة منها في أي مكان آخر. وjudges-notes.js ملاحظات
+# الفريق الداخلية لصفحة أسئلة التحكيم: يضعه الفريق بيده وليس في المستودع (عام).
+PROTECTED=(--exclude=config.php --exclude=judges-notes.js --exclude=uploads/ --exclude=storage/)
 
 say()  { printf '\n\033[1m%s\033[0m\n' "$*"; }
 ok()   { printf '  \033[32m✓\033[0m %s\n' "$*"; }
