@@ -80,8 +80,8 @@ const check = (name, ok, extra = '') => { ok ? passed++ : failed++; console.log(
   await p.uncheck('#biChk');
   await p.click('#q-' + firstId + ' [data-copy]'); await p.waitForTimeout(200);
   check('نسخ رابط السؤال', (await p.evaluate(() => navigator.clipboard.readText())).endsWith('#/q/' + firstId));
-  await go('#/q/t2');
-  check('الرابط المباشر يفتح السؤال ومجموعته', (await p.$eval('#q-t2', e => e.open)) && (await text('h1.vt')).includes('التقنية'));
+  await go('#/q/ai1');
+  check('الرابط المباشر يفتح السؤال ومجموعته', (await p.$eval('#q-ai1', e => e.open)) && (await text('h1.vt')).includes('التقنية'));
 
   console.log('الشائعة:');
   await go('#/faq');

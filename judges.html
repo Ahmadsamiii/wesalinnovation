@@ -612,7 +612,7 @@ window.addEventListener('storage',function(e){if(e.key==='jd-asked'){try{asked=J
 /* ------------------------------------------------------------ عناصر مشتركة */
 function badges(it){
   var h='';
-  if(it.hot)h+='<span class="bg hot">'+ic('star')+esc(T('hot'))+'</span>';
+  if(it.hot||it.com)h+='<span class="bg hot">'+ic('star')+esc(T('hot'))+'</span>';
   if(it.hard)h+='<span class="bg hard">'+ic('bolt')+esc(T('hard'))+'</span>';
   if(it.v)h+='<span class="bg vf">'+ic('alert')+esc(T('verify'))+'</span>';
   return h;
@@ -624,7 +624,7 @@ function ansBlock(it,i,re,full){
 function itemHTML(it,o){
   o=o||{};var L=LI(),O=1-L,re=o.re||null,cl=clusterOf(it.c);
   var langs=state.bi?[L,O]:[L];
-  var h='<details class="q" id="q-'+it.id+'" data-id="'+it.id+'" data-hot="'+(it.hot?1:0)+'" data-hard="'+it.hard+'" data-v="'+(it.v?1:0)+'" data-asked="'+(askN(it.id)?1:0)+'"'+(o.open?' open':'')+'>';
+  var h='<details class="q" id="q-'+it.id+'" data-id="'+it.id+'" data-hot="'+((it.hot||it.com)?1:0)+'" data-hard="'+it.hard+'" data-v="'+(it.v?1:0)+'" data-asked="'+(askN(it.id)?1:0)+'"'+(o.open?' open':'')+'>';
   h+='<summary><span class="qt">'+(o.num?'<span class="num">'+o.num+'</span>':'')+'<span'+langAttrs(L)+'>'+hl(it.q[L],re)+'</span>'+(state.bi?'<span class="q2"'+langAttrs(O)+'>'+hl(it.q[O],re)+'</span>':'')+'</span><span class="bdg">'+badges(it)+'</span>'+askBtn(it)+ic('chev','chev')+'</summary>';
   h+='<div class="qb">';
   langs.forEach(function(i){h+=ansBlock(it,i,re)});
