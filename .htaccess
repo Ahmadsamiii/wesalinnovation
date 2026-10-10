@@ -53,8 +53,8 @@ ServerSignature Off
   # HSTS — يُرسل على اتصالات HTTPS فقط
   Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" env=HTTPS
 
-  # صفحة أسئلة التحكيم الداخلية وبياناتها: لا فهرسة ولا أرشفة. الرابط وحده يدخل إليها.
-  <FilesMatch "^(judges\.html|judges-data\.js|judges-notes\.js)$">
+  # صفحة أسئلة التحكيم الداخلية وبياناتها وشاشة الجناح: لا فهرسة ولا أرشفة. الرابط وحده يدخل إليها.
+  <FilesMatch "^(judges\.html|judges-data\.js|judges-notes\.js|hello-wall\.html)$">
     Header always set X-Robots-Tag "noindex, nofollow, noarchive"
   </FilesMatch>
 
@@ -113,6 +113,10 @@ ServerSignature Off
   # صفحة البوث (هاكاثون ذوي الإعاقة) عبر NFC. ملف لا مجلد لنفس سبب /login أعلاه.
   RewriteCond %{DOCUMENT_ROOT}/hello.html -f
   RewriteRule ^hello/?$ hello.html [L]
+
+  # شاشة الجناح الحيّة (hello-wall.html) على /hello/wall: شاشة كبيرة عند الجناح تتركب فيها قطع الشعار.
+  RewriteCond %{DOCUMENT_ROOT}/hello-wall.html -f
+  RewriteRule ^hello/wall/?$ hello-wall.html [L]
 
   RewriteCond %{DOCUMENT_ROOT}/.switch -f
   RewriteCond %{HTTP_HOST} ^(?:chat\.)?([^:]+)(?::[0-9]+)?$ [NC]
