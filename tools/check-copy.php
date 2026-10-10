@@ -23,7 +23,7 @@ if (PHP_SAPI !== 'cli') {
 }
 
 $ROOT = realpath(__DIR__ . '/..');
-const HTML_FILES = ['index.html', 'corporate.html', 'survey.html', 'ticket.html', 'login.html'];
+const HTML_FILES = ['index.html', 'corporate.html', 'survey.html', 'ticket.html', 'login.html', 'hello.html'];
 const JS_FILES   = ['assets/landing-editor.js'];
 /* صفحة الشركة (homepage/): كل ما فيها من HTML وJS يُفحص دون تسمية ملفاتها واحداً واحداً */
 $rel = fn(string $p): string => substr($p, strlen($ROOT) + 1);
