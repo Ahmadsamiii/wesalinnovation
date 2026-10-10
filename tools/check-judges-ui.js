@@ -51,6 +51,8 @@ const check = (name, ok, extra = '') => { ok ? passed++ : failed++; console.log(
   check('ثماني شرائح شائعة', (await p.$$eval('#chips .chip', e => e.length)) === 8);
   check('عنوان التبويب بالفاصل |', (await p.title()) === 'أسئلة التحكيم | وصال');
   check('الصفحة بلا فهرسة', (await p.getAttribute('meta[name=robots]', 'content')).includes('noindex'));
+  check('الوصف تحت العنوان بالعربي', (await text('p.lead')).trim() === 'أهم الأسئلة المتوقعة من لجنة التحكيم وإجاباتها.', await text('p.lead'));
+  check('دليل الرموز بلا «المجيب المقترح»', !/المجيب المقترح/.test(await p.evaluate(() => document.body.innerText)));
 
   console.log('البحث:');
   await p.fill('#q', 'الخصوصيه'); await p.waitForTimeout(450);
@@ -82,10 +84,20 @@ const check = (name, ok, extra = '') => { ok ? passed++ : failed++; console.log(
   check('نسخ رابط السؤال', (await p.evaluate(() => navigator.clipboard.readText())).endsWith('#/q/' + firstId));
   await go('#/q/ai1');
   check('الرابط المباشر يفتح السؤال ومجموعته', (await p.$eval('#q-ai1', e => e.open)) && (await text('h1.vt')).includes('التقنية'));
+  await go('#/c/business'); await p.evaluate(() => document.querySelectorAll('details.q').forEach(d => { d.open = true; }));
+  const qText = await p.evaluate(() => document.querySelector('main').innerText);
+  check('لا «المجيب المقترح» ولا «المرجع» تحت أي سؤال', !/المجيب المقترح|المرجع\s*$/m.test(qText) && (await p.$$eval('details.q dl, details.q dt', e => e.length)) === 0);
+  await go('#/search/' + encodeURIComponent('لمياء'));
+  const byName = await p.$$eval('main details.q', e => e.length);
+  check('البحث باسم عضو الفريق لا يرجع أسئلته كأنه «مجيب»', byName < 10, String(byName));
 
   console.log('الشائعة:');
   await go('#/faq');
   check('أرقام للحفظ', (await p.$$eval('.fact', e => e.length)) === 14);
+  const factsText = await p.$$eval('.fact', e => e.map(x => x.innerText).join(' | '));
+  check('بلا مصادر تحت الأرقام', (await p.$$eval('.fact small', e => e.length)) === 0 && !/عرض الهاكاثون|العرض العربي|الهيئة العامة للإحصاء/.test(factsText), factsText);
+  check('بلا بطاقة «أعضاء في الفريق»', !/أعضاء في الفريق/.test(factsText));
+  check('«أكثر من 40» و«أكثر من 120» بطاقتان واضحتان', /أكثر من 40/.test(factsText) && /أكثر من 120/.test(factsText) && !/\+40|\+120/.test(factsText), factsText);
   check('أهم عشرة أسئلة', (await p.$$eval('#qs details.q', e => e.length)) === 10);
 
   console.log('التدريب والعرض:');
@@ -97,19 +109,53 @@ const check = (name, ok, extra = '') => { ok ? passed++ : failed++; console.log(
   check('التقدم يُحفظ في المتصفح', Object.keys(await p.evaluate(() => JSON.parse(localStorage.getItem('jd-prog')))).length === 1);
   await go('#/present/tech/0');
   check('وضع العرض يخفي الرأس', await p.evaluate(() => document.body.classList.contains('presenting')) && !(await p.isVisible('.top')));
-  await p.click('[data-act=preveal]'); await p.waitForTimeout(100);
-  check('كشف الجواب في العرض', !!(await p.$('#pcard')));
+  check('الجواب ظاهر فوراً بلا زر «أظهر الجواب»', !!(await p.$('#pcard .short')) && !(await p.$('[data-act=preveal]')) && !/أظهر الجواب/.test(await p.evaluate(() => document.body.innerText)));
+  check('«الجواب التفصيلي» تحت الجواب ومطوي', (await p.getAttribute('#pdetBtn', 'aria-expanded')) === 'false' && (await text('#pdetBtn')).includes('الجواب التفصيلي') && (await p.$eval('#pdetBody', e => e.hidden)));
+  const yShortBottom = await p.$eval('#pcard .short', e => e.getBoundingClientRect().bottom), yBtn = await p.$eval('#pdetBtn', e => e.getBoundingClientRect().top);
+  check('زر التفصيل تحت الجواب المختصر', yBtn >= yShortBottom - 2, yBtn + ' / ' + yShortBottom);
+  await p.click('#pdetBtn'); await p.waitForTimeout(120);
+  check('الضغط يفتح التفصيل تحت الزر', (await p.getAttribute('#pdetBtn', 'aria-expanded')) === 'true' && !(await p.$eval('#pdetBody', e => e.hidden)) && (await p.$eval('#pdetBody', e => e.getBoundingClientRect().top)) >= (await p.$eval('#pdetBtn', e => e.getBoundingClientRect().bottom)) - 2);
+  await p.keyboard.press('Space'); await p.waitForTimeout(100);
+  check('Space على الزر يطويه', (await p.getAttribute('#pdetBtn', 'aria-expanded')) === 'false');
+  await p.evaluate(() => document.activeElement.blur());
+  await p.keyboard.press('Space'); await p.waitForTimeout(100);
+  check('Space خارج الأزرار يفتح التفصيل', (await p.getAttribute('#pdetBtn', 'aria-expanded')) === 'true');
+  const geo = await p.evaluate(() => { const r = s => document.querySelector(s).getBoundingClientRect(); const tr = s => getComputedStyle(document.querySelector(s + ' svg')).transform; return { nx: r('[data-act=pnext]').x, pv: r('[data-act=pprev]').x, nT: tr('[data-act=pnext]'), pT: tr('[data-act=pprev]') }; });
+  check('العربية: «التالي» يمين و«السابق» يسار', geo.nx > geo.pv, JSON.stringify(geo));
+  check('العربية: رمز «التالي» < ورمز «السابق» >', geo.nT === 'matrix(-1, 0, 0, 1, 0, 0)' && geo.pT === 'none', JSON.stringify(geo));
   await p.click('[data-act=pnext]'); await p.waitForTimeout(200);
   check('«التالي» يحرّك الرابط', (await p.evaluate(() => location.hash)).endsWith('/tech/1'));
+  check('التفصيل المفتوح يبقى مفتوحاً في السؤال التالي', (await p.$('#pdetBtn')) ? (await p.getAttribute('#pdetBtn', 'aria-expanded')) === 'true' : true);
   await p.keyboard.press('ArrowLeft'); await p.waitForTimeout(200);
   check('السهم الأيسر هو «التالي» في العربية', (await p.evaluate(() => location.hash)).endsWith('/tech/2'));
+  await p.evaluate(() => localStorage.setItem('jd-lang', 'en')); await p.reload(); await p.waitForTimeout(400);
+  const geoEn = await p.evaluate(() => { const r = s => document.querySelector(s).getBoundingClientRect(); const tr = s => getComputedStyle(document.querySelector(s + ' svg')).transform; return { nx: r('[data-act=pnext]').x, pv: r('[data-act=pprev]').x, nT: tr('[data-act=pnext]'), pT: tr('[data-act=pprev]') }; });
+  check('الإنجليزية: Next يمين وPrevious يسار برمزيهما المعتادين', geoEn.nx > geoEn.pv && geoEn.nT === 'none' && geoEn.pT === 'matrix(-1, 0, 0, 1, 0, 0)', JSON.stringify(geoEn));
+  await p.evaluate(() => localStorage.setItem('jd-lang', 'ar')); await p.reload(); await p.waitForTimeout(400);
   await p.keyboard.press('Escape'); await p.waitForTimeout(200);
   check('Escape يخرج من العرض', !(await p.evaluate(() => document.body.classList.contains('presenting'))));
 
   console.log('اللغة:');
   await go('#/c/tech'); await p.click('#langBtn'); await p.waitForTimeout(300);
   check('الإنجليزية: اتجاه LTR وعنوان إنجليزي', (await p.evaluate(() => document.documentElement.dir)) === 'ltr' && (await text('h1.vt')).includes('Technology'));
+  await go('#/'); 
+  check('الإنجليزية: الوصف تحت العنوان', (await text('p.lead')).trim() === 'The most important questions expected from the judging committee, and their answers.', await text('p.lead'));
   await p.click('#langBtn');
+
+  console.log('المظهر (الفاتح هو الافتراضي):');
+  const dctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, colorScheme: 'dark' });
+  const dp = await dctx.newPage();
+  await dp.goto(PAGE); await dp.waitForTimeout(350);
+  const bgOf = () => dp.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  const lum = c => { const m = c.match(/\d+/g).map(Number); return 0.2126 * m[0] + 0.7152 * m[1] + 0.0722 * m[2]; };
+  check('الافتراضي فاتح حتى لو الجهاز داكن', lum(await bgOf()) > 200 && !(await dp.evaluate(() => document.documentElement.hasAttribute('data-theme'))), await bgOf());
+  await dp.click('#themeBtn'); await dp.waitForTimeout(150);
+  check('زر المظهر يحوّل للداكن', lum(await bgOf()) < 60, await bgOf());
+  await dp.reload(); await dp.waitForTimeout(350);
+  check('اختيار الداكن يُحفظ بعد إعادة التحميل', lum(await bgOf()) < 60, await bgOf());
+  await dp.click('#themeBtn'); await dp.waitForTimeout(150);
+  check('زر المظهر يرجّع الفاتح', lum(await bgOf()) > 200, await bgOf());
+  await dctx.close();
 
   console.log('الطباعة على ورق وصال:');
   await go();
@@ -123,6 +169,7 @@ const check = (name, ok, extra = '') => { ok ? passed++ : failed++; console.log(
   check('ترويسة وتذييل ورق وصال', /lh-head/.test(pr) && /lh-foot/.test(pr) && /المملكة العربية السعودية/.test(pr) && /شركة وصال/.test(pr));
   check('بيانات التواصل المنشورة في الصفحة الرئيسية', /info@wesalinnovation\.sa/.test(pr) && /\+966 50 112 0161/.test(pr) && !/gmail/.test(pr));
   check('كل الأسئلة في الطباعة', (pr.match(/class="pq1"/g) || []).length === (await p.evaluate(() => window.JUDGES.items.length)));
+  check('الطباعة بلا «المجيب المقترح» ولا «المرجع» ولا «Suggested answerer»', !/المجيب المقترح|المرجع:|Suggested answerer|Reference:/.test(pr));
   check('لا سكربت داخل الطباعة', !/<script/i.test(pr));
   await p.emulateMedia({ media: 'print' });
   const printLayout = await p.evaluate(() => ({ app: getComputedStyle(document.querySelector('.top')).display, root: getComputedStyle(document.getElementById('printRoot')).display }));
@@ -189,11 +236,13 @@ const check = (name, ok, extra = '') => { ok ? passed++ : failed++; console.log(
   console.log('الجوال (390 بكسل):');
   const m = await ctx.newPage();
   await m.setViewportSize({ width: 390, height: 844 });
-  for (const h of ['', '#/c/tech', '#/faq', '#/train']) {
+  for (const h of ['', '#/c/tech', '#/faq', '#/train', '#/present/tech/0']) {
     await m.goto(PAGE + h); await m.waitForTimeout(350);
+    if (h.startsWith('#/present')) { await m.evaluate(() => localStorage.setItem('jd-pdet', '1')); await m.reload(); await m.waitForTimeout(350); }
     const over = await m.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
     check('بلا تمرير أفقي ' + (h || '#/'), !over);
   }
+  await m.evaluate(() => localStorage.setItem('jd-pdet', '0'));
   await m.goto(PAGE); await m.waitForTimeout(300);
   check('شريط التبويب السفلي', (await m.evaluate(() => getComputedStyle(document.getElementById('nav')).position)) === 'fixed');
   const unnamed = await m.evaluate(() => [...document.querySelectorAll('main a, main button, header a, header button, nav a, nav button')].filter(e => {
