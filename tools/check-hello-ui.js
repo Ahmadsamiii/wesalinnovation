@@ -11,8 +11,9 @@
  *    - العدّاد: المسح يُحسب مرة لكل جهاز، والزاحف والطلب الغريب لا يُحسبان
  *    - شاشة الختام: رقم الزائر ولوحة الشعار، القطعة من الرقم، والاكتمال عند 25، وتقليل الحركة
  *    - سقوط مكوّن اللوحة أو العدّاد لا يكسر الصفحة
- *    - شاشة الجناح: تقرأ العدّاد وتركّب القطع، والاكتمال عند 25 وشعار جديد، وتصفير العدّاد،
- *      وانقطاع الخادم، وبلا كوكي ولا طلب غير GET، وتناسب الشاشات الأفقية والعمودية
+ *    - شاشة الجناح: لوحة في المنتصف وعدّاد يدور بجانبه «زائر» ولا نص غيرهما، تقرأ العدّاد وتركّب
+ *      القطع، والاكتمال عند 25 وشعار جديد، وتصفير العدّاد، وانقطاع الخادم، وبلا كوكي ولا طلب
+ *      غير GET، وتناسب الشاشات الأفقية والعمودية
  *    - المقاسات: لا تمرير أفقي، ولا تمرير رأسي في شاشة الختام على الجوالات الشائعة
  * ========================================================================== */
 
@@ -227,12 +228,17 @@ const msgs = page => page.evaluate(() => [...document.querySelectorAll('.msg')].
     };
     const wsnap = page => page.evaluate(() => {
       const r = s => document.querySelector(s).getBoundingClientRect();
+      /* الرقم الظاهر فعلاً في العدّاد: موضع شريط كل خانة */
+      const digits = [...document.querySelectorAll('#odo .strip')].map(t => (parseInt((t.style.transform.match(/-?(\d+)em/) || [0, 0])[1], 10) % 10)).join('');
+      /* كل نص ظاهر في الصفحة خارج العدّاد وخارج نص القارئ الشاشي */
+      const texts = [...document.body.querySelectorAll('*')].filter(e => !e.closest('#odo') && !e.closest('.sr') && !['SCRIPT', 'STYLE'].includes(e.tagName) && [...e.childNodes].some(c => c.nodeType === 3 && c.textContent.trim()))
+        .map(e => e.textContent.trim());
       return {
-        big: document.querySelector('#big').textContent, lap: document.querySelector('#lap').textContent,
-        on: document.querySelectorAll('.pz .pc.on').length, dots: document.querySelectorAll('#dots i.on').length, done: !!document.querySelector('.pz.done'),
-        win: document.querySelector('#win').hidden ? '' : document.querySelector('#w1').textContent + ' | ' + document.querySelector('#w2').textContent,
+        txt: document.querySelector('#bigtxt').textContent, digits, texts,
+        on: document.querySelectorAll('.pz .pc.on').length, done: !!document.querySelector('.pz.done'),
         bad: document.querySelector('#stat').classList.contains('bad'),
-        fits: document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight && r('#cta').bottom <= innerHeight && r('.card').bottom <= innerHeight && r('.brand').top >= 0,
+        fits: document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight && r('.card').top >= 0 && r('.counter').bottom <= innerHeight,
+        centered: Math.abs((r('.card').left + r('.card').right) / 2 - innerWidth / 2) < 3,
         robots: (document.querySelector('meta[name=robots]') || {}).content || ''
       };
     });
@@ -240,36 +246,40 @@ const msgs = page => page.evaluate(() => [...document.querySelectorAll('.msg')].
 
     const w = await open({ n: 66 });
     let s = await wsnap(w.page);
-    check('تبدأ من آخر رقم: 66 هو القطعة 16 من الشعار 3', s.big === '66' && s.on === 16 && s.dots === 16 && s.lap === 'الشعار رقم 3' && !s.done && !s.bad, JSON.stringify(s));
+    check('تبدأ من آخر رقم: 66 هو القطعة 16 من الشعار 3', s.txt === '66 زائر' && s.digits === '66' && s.on === 16 && !s.done && !s.bad, JSON.stringify(s));
+    check('اللوحة في المنتصف، ولا نص في الشاشة غير «زائر»', s.centered && s.texts.length === 1 && s.texts[0] === 'زائر', JSON.stringify(s.texts));
     check('الشاشة لا تُفهرس (noindex)', /noindex/.test(s.robots), s.robots);
     w.st.n = 67; await w.page.waitForTimeout(poll); s = await wsnap(w.page);
-    check('زائر جديد: العدّاد 67 وتركّب القطعة 17', s.big === '67' && s.on === 17 && s.dots === 17, JSON.stringify(s));
+    check('زائر جديد: العدّاد 67 وتركّبت القطعة 17', s.txt === '67 زائر' && s.digits === '67' && s.on === 17, JSON.stringify(s));
     w.st.n = 75; await w.page.waitForFunction(() => !!document.querySelector('.pz.done'), null, { timeout: 12000 }).catch(() => {}); s = await wsnap(w.page);
-    check('الزائر 75 يكمّل الشعار: الرمز كاملاً وتهنئة', s.on === 25 && s.done && s.big === '75' && s.win === 'اكتمل الشعار رقم 3 | رقم 75 كمّله، مبروك!', JSON.stringify(s));
+    check('الزائر 75 يكمّل الشعار: الرمز كاملاً والعدّاد 75', s.on === 25 && s.done && s.txt === '75 زائر' && s.digits === '75', JSON.stringify(s));
     w.st.n = 76; await w.page.waitForTimeout(poll); s = await wsnap(w.page);
-    check('الزائر 76 يبدأ شعاراً جديداً والعدّاد يكمل', !s.done && s.on === 1 && s.lap === 'الشعار رقم 4' && s.big === '76' && s.win === '', JSON.stringify(s));
+    check('الزائر 76 يبدأ شعاراً جديداً والعدّاد يكمل', !s.done && s.on === 1 && s.txt === '76 زائر' && s.digits === '76', JSON.stringify(s));
+    w.st.n = 100; await w.page.waitForTimeout(poll); s = await wsnap(w.page);
+    check('عدّاد بثلاث خانات: 100', s.txt === '100 زائر' && s.digits === '100' && s.texts.length === 1, JSON.stringify(s));
     w.st.n = 0; await w.page.waitForTimeout(poll); s = await wsnap(w.page);
-    check('تصفير العدّاد: لوحة فارغة بانتظار أول زائر', s.big === '0' && s.on === 0 && !s.done && /بانتظار أول زائر/.test(s.lap), JSON.stringify(s));
+    check('تصفير العدّاد: لوحة فارغة والعدّاد 0', s.txt === '0 زائر' && s.digits === '0' && s.on === 0 && !s.done, JSON.stringify(s));
     w.st.fail = true; await w.page.waitForTimeout(poll); s = await wsnap(w.page);
-    check('انقطاع الخادم: نقطة الحالة تتغير واللوحة باقية', s.bad && s.big === '0', JSON.stringify(s));
+    check('انقطاع الخادم: نقطة الحالة تتغير واللوحة باقية', s.bad && s.txt === '0 زائر', JSON.stringify(s));
     w.st.fail = false; w.st.n = 3; await w.page.waitForTimeout(poll); s = await wsnap(w.page);
-    check('عودة الخادم: تكمل من الرقم الجديد', !s.bad && s.big === '3' && s.on === 3, JSON.stringify(s));
+    check('عودة الخادم: تكمل من الرقم الجديد', !s.bad && s.digits === '3' && s.on === 3, JSON.stringify(s));
     check('الشاشة لا تطلب إلا GET للعدّاد، بلا كوكي ولا أخطاء', w.st.paths.every(p => p === 'GET /api/hello-visit.php') && (await w.ctx.cookies()).length === 0 && w.st.errs.length === 0, w.st.paths.slice(0, 3).join(',') + ' ' + w.st.errs.join(' | '));
     await w.ctx.close();
 
-    const m = await open({ n: 24, reduce: false });
-    check('بالحركة: 24 قطعة مركّبة عند الفتح', (await wsnap(m.page)).on === 24);
+    const m = await open({ n: 18, reduce: false });
+    check('بالحركة: 18 قطعة مركّبة والعدّاد 18 عند الفتح', (await wsnap(m.page)).on === 18 && (await wsnap(m.page)).digits === '18');
+    m.st.n = 19; await m.page.waitForTimeout(poll + 2400); s = await wsnap(m.page);
+    check('بالحركة: العدّاد يدور إلى 19 وتستقر القطعة 19', s.digits === '19' && s.on === 19, JSON.stringify(s));
     m.st.n = 25;
-    const sawWin = await m.page.waitForFunction(() => !document.querySelector('#win').hidden, null, { timeout: 12000 }).then(() => m.page.textContent('#w1')).catch(() => '');
-    const sawDone = await m.page.waitForFunction(() => !!document.querySelector('.pz.done'), null, { timeout: 12000 }).then(() => true).catch(() => false);
+    const sawDone = await m.page.waitForFunction(() => !!document.querySelector('.pz.done'), null, { timeout: 25000 }).then(() => true).catch(() => false);
     s = await wsnap(m.page);
-    check('بالحركة الكاملة: القطعة 25 تكمل الشعار وتظهر التهنئة', sawDone && s.on === 25 && /اكتمل الشعار رقم 1/.test(sawWin) && m.st.errs.length === 0, `${sawDone} ${sawWin} ${m.st.errs.join(' | ')}`);
+    check('بالحركة الكاملة: تتابع القطع حتى 25 فيكتمل الشعار والعدّاد 25', sawDone && s.on === 25 && s.digits === '25' && m.st.errs.length === 0, `${sawDone} ${JSON.stringify(s)} ${m.st.errs.join(' | ')}`);
     await m.ctx.close();
 
-    for (const [vw, vh] of [[1920, 1080], [2560, 1440], [1366, 768], [1280, 720], [1080, 1920], [768, 1024]]) {
+    for (const [vw, vh] of [[1920, 1080], [2560, 1440], [1366, 768], [1280, 720], [1440, 900], [1080, 1920], [768, 1024]]) {
       const z = await open({ n: 67, w: vw, h: vh });
       const q = await wsnap(z.page);
-      check(`${vw}×${vh}: كل شيء داخل الشاشة بلا تمرير`, q.fits && q.on === 17, JSON.stringify(q));
+      check(`${vw}×${vh}: اللوحة والعدّاد داخل الشاشة بلا تمرير`, q.fits && q.on === 17 && q.centered, JSON.stringify(q));
       await z.ctx.close();
     }
   }
