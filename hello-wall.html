@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>وصال | شاشة الجناح</title>
+<meta name="theme-color" content="#20134f">
+<link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
+<link rel="preload" href="/fonts/thmanyahsans-Bold.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:'Thmanyah Sans';src:url('/fonts/thmanyahsans-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Thmanyah Sans';src:url('/fonts/thmanyahsans-Bold.woff2') format('woff2');font-weight:600 800;font-style:normal;font-display:swap}
+/* ألوان دليل الهوية البصرية فقط */
+:root{--primary:#282692;--secondary:#814fc3;--tertiary:#5039a8;--deep:#20134f;--blue:#3e9eed;--sky:#52bdf9;
+  /* وحدة التصميم: بكسل واحد على شاشة 1920x1080، وتكبر وتصغر مع الشاشة كلها */
+  --u:min(100vw / 1920, 100vh / 1080)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Thmanyah Sans','Segoe UI',system-ui,-apple-system,Tahoma,sans-serif;color:#fff;background:linear-gradient(150deg,#20134f 0%,#282692 48%,#5039a8 100%);overflow:hidden;-webkit-font-smoothing:antialiased;line-height:1.5}
+.arcs{position:fixed;top:0;right:0;bottom:0;left:0;pointer-events:none;overflow:hidden}
+.arcs i{position:absolute;border-radius:50%;border:calc(var(--u)*2.5) solid #814fc3;opacity:.5}
+.arcs i:nth-child(1){width:calc(var(--u)*2300);height:calc(var(--u)*2300);right:calc(var(--u)*-1500);top:calc(var(--u)*-560);animation:drift 26s ease-in-out infinite alternate}
+.arcs i:nth-child(2){width:calc(var(--u)*1700);height:calc(var(--u)*1700);left:calc(var(--u)*-1050);bottom:calc(var(--u)*-900);border-color:#52bdf9;opacity:.34;animation:drift 32s ease-in-out infinite alternate-reverse}
+@keyframes drift{to{transform:translate(calc(var(--u)*40),calc(var(--u)*-30))}}
+
+/* لوحة الشعار في المنتصف وتحتها العدّاد، لا شيء غيرهما */
+.stage{position:fixed;top:0;right:0;bottom:0;left:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(var(--u)*40);padding:calc(var(--u)*40) calc(var(--u)*60)}
+.card{position:relative;width:calc(var(--u)*940);padding:calc(var(--u)*56) calc(var(--u)*62);border-radius:calc(var(--u)*56);background:#fff;box-shadow:0 calc(var(--u)*60) calc(var(--u)*110) calc(var(--u)*-50) rgba(10,5,40,.85);animation:float 9s ease-in-out infinite alternate}
+@keyframes float{to{transform:translateY(calc(var(--u)*-10))}}
+
+/* العدّاد: كل خانة شريط أرقام يدور إلى رقمها الجديد */
+.counter{display:flex;align-items:baseline;justify-content:center;gap:calc(var(--u)*34);line-height:1}
+.odo{display:inline-flex;direction:ltr;height:1em;overflow:hidden;font-size:calc(var(--u)*200);font-weight:800;line-height:1;letter-spacing:0;font-variant-numeric:tabular-nums;filter:drop-shadow(0 calc(var(--u)*12) calc(var(--u)*36) rgba(15,8,50,.45))}
+.odo .col{display:inline-block;height:1em;overflow:hidden}
+.odo .strip{display:block;will-change:transform}
+.odo .strip i{display:block;height:1em;line-height:1em;font-style:normal;text-align:center}
+.unit{font-size:calc(var(--u)*84);font-weight:700;color:var(--sky)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.stat{position:fixed;left:calc(var(--u)*24);bottom:calc(var(--u)*24);width:calc(var(--u)*12);height:calc(var(--u)*12);border-radius:50%;background:#52bdf9;opacity:.5}
+.stat.bad{background:#ffffff;opacity:.25}
+
+@media (orientation:portrait){
+  :root{--u:min(100vw / 1080, 100vh / 1920)}
+  .stage{gap:calc(var(--u)*70)}
+  .card{width:calc(var(--u)*960)}
+  .odo{font-size:calc(var(--u)*300)}
+  .unit{font-size:calc(var(--u)*120)}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="arcs" aria-hidden="true"><i></i><i></i></div>
+
+<main class="stage" aria-label="شاشة جناح وصال">
+  <div class="card"><div id="host"></div></div>
+  <p class="counter" aria-live="polite">
+    <span class="sr" id="bigtxt">0 زائر</span>
+    <span class="odo" id="odo" aria-hidden="true"></span>
+    <span class="unit" aria-hidden="true">زائر</span>
+  </p>
+</main>
+
+<i class="stat" id="stat" aria-hidden="true"></i>
+
+<script src="/assets/hello-puzzle.js"></script>
+<script>
+(function(){
+'use strict';
+var P=window.WesalPuzzle,COUNT=P.COUNT,reduce=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+function $(s){return document.querySelector(s);}
+var odoEl=$('#odo'),bigtxt=$('#bigtxt'),stat=$('#stat');
+var board=P.mount($('#host'));
+board.label('لوحة شعار وصال تتركب قطعة قطعة مع كل زائر');
+P.preload(true);
+
+/* العدّاد: شريط من 0 إلى 9 ثم 0 مكرر، فيدور الرقم 9 إلى 0 للأمام كالعدّادات الحقيقية */
+var cols=[],shown='';
+function buildCols(len){
+  odoEl.textContent='';cols=[];
+  for(var i=0;i<len;i++){
+    var col=document.createElement('span'),strip=document.createElement('span');
+    col.className='col';strip.className='strip';
+    for(var d=0;d<11;d++){var cell=document.createElement('i');cell.textContent=String(d%10);strip.appendChild(cell);}
+    col.appendChild(strip);odoEl.appendChild(col);cols.push({strip:strip,d:0});
+  }
+  shown='';
+}
+function setNumber(n,animate){
+  var s=String(n),first=false;
+  if(s.length!==cols.length){buildCols(s.length);first=true;}
+  animate=animate&&!first&&!reduce;
+  cols.forEach(function(c,i){
+    var nd=parseInt(s.charAt(i),10);
+    if(nd===c.d&&shown!=='')return;
+    var wrap=animate&&nd===0&&c.d>0,target=wrap?10:nd;
+    c.strip.style.transition=animate?'transform .9s cubic-bezier(.2,.8,.2,1)':'none';
+    c.strip.style.transform='translateY(-'+target+'em)';
+    if(wrap)setTimeout(function(){c.strip.style.transition='none';c.strip.style.transform='translateY(0)';},960);
+    c.d=nd;
+  });
+  shown=s;
+  bigtxt.textContent=s+' زائر';
+}
+setNumber(0,false);
+
+var st={target:null,busy:false,queue:[]};
+function renderInstant(n){
+  board.clear(false);
+  var k=n?P.pieceOf(n):0;
+  if(k===COUNT)board.complete();else board.fill(k,false);
+  setNumber(n,false);
+}
+function run(){
+  if(st.busy||!st.queue.length)return;
+  st.busy=true;
+  var n=st.queue.shift(),k=P.pieceOf(n),fast=st.queue.length>3;
+  function next(){st.busy=false;setTimeout(run,reduce?0:450);}
+  function go(){
+    setNumber(n,true);
+    if(fast){board.fill(k,false);if(k===COUNT)board.complete();next();return;}
+    board.land(k,{num:n,hero:.3,done:function(){
+      if(k===COUNT)board.celebrate({big:true,done:next});else next();
+    }});
+  }
+  /* أول قطعة من شعار جديد: يختفي الشعار المكتمل ثم نبدأ */
+  if(k===1&&board.count()>0)board.clear(true,go);else go();
+}
+function sync(n){
+  if(st.target===null||n<st.target){st.target=n;st.queue=[];renderInstant(n);return;}
+  for(var i=st.target+1;i<=n;i++)st.queue.push(i);
+  st.target=n;run();
+}
+
+/* الأرقام من الخادم فقط، ولا يُختلق رقم أبداً: عند تعذّر القراءة تبقى آخر لوحة معروضة */
+(function poll(){
+  fetch('/api/hello-visit.php',{cache:'no-store',credentials:'omit'})
+    .then(function(r){return r.ok?r.json():null;})
+    .then(function(j){var ok=!!(j&&j.ok&&j.n>=0);stat.classList.toggle('bad',!ok);if(ok)sync(parseInt(j.n,10)||0);})
+    .catch(function(){stat.classList.add('bad');})
+    .then(function(){setTimeout(poll,2500);});
+})();
+/* وقت الهدوء: لمعة خفيفة كل 24 ثانية */
+setInterval(function(){if(!st.busy&&!st.queue.length)board.wave();},24000);
+})();
+</script>
+</body>
+</html>
