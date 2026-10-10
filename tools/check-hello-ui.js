@@ -96,6 +96,8 @@ const msgs = page => page.evaluate(() => [...document.querySelectorAll('.msg')].
     [l, g] = await lab();
     check('زائر: ترجع صيغة المذكر', l.startsWith('اكتب لنا اسمك') && g === 'جرّب وصال', l + ' | ' + g);
     check('سطر الخصوصية يذكر أن الزيارة تُحسب رقماً', /زيارتك تُحسب كرقم/.test(await p.textContent('#priv')));
+    check('زر التخطي «ابدأ بدون اسم»', (await p.textContent('#skipname')).trim() === 'ابدأ بدون اسم');
+    check('سطر رعاية المؤتمر بصيغته المعتمدة', (await p.textContent('.foot')).trim() === 'من فعاليات المؤتمر الدولي السابع لذوي الإعاقة، تحت رعاية كريمة من خادم الحرمين الشريفين الملك سلمان بن عبدالعزيز آل سعود حفظه الله');
     await ctx.close();
   }
 
