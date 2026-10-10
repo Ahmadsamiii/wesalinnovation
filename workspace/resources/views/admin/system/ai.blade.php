@@ -70,7 +70,7 @@ PLATFORM_DB_PASSWORD=…</pre>
 
     <x-card title="أين يُضبط المزوّد" class="mt-6">
         <p class="text-sm leading-7 text-gray-700">
-            اختيار المزوّد (gemini أو openai أو claude أو kimi) ومفاتيحه في إعدادات خادم المنصة
+            اختيار المزوّد (gemini أو openai أو claude أو kimi أو allam) ومفاتيحه في إعدادات خادم المنصة
             <span dir="ltr" class="font-mono">api/config.php</span> (الثابت AI_PROVIDER)، وللمزوّد النشط بديل تلقائي عند الفشل.
             لا تُعرض المفاتيح ولا تُعدَّل من هنا عمداً: الأسرار تبقى على الخادم خارج قاعدة مساحة العمل.
         </p>

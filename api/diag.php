@@ -11,7 +11,7 @@ if (!$u || $u['role'] !== 'admin') {
 }
 
 /* ---------- فحص المزوّد ---------- */
-function tryProvider(string $name, string $url, array $payload, array $headers): array {
+function tryProvider(string $name, string $url, array $payload, array $headers, string $modelConst = 'GEMINI_MODEL'): array {
     $ch = curl_init($url);
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true, CURLOPT_POST => true,
@@ -29,7 +29,7 @@ function tryProvider(string $name, string $url, array $payload, array $headers):
     elseif ($code === 400 && str_contains($body, 'API_KEY_INVALID')) $status = 'المفتاح غير صالح ❌ — أنشئ مفتاحاً جديداً من aistudio.google.com/apikey (يبدأ بـ AIza) وضعه في config.php';
     elseif ($code === 400)       $status = 'طلب مرفوض (400) — راجع التفاصيل';
     elseif ($code === 401 || $code === 403) $status = 'المفتاح مرفوض أو بلا صلاحية ❌ — جدّد المفتاح';
-    elseif ($code === 404)       $status = 'اسم النموذج غير موجود — راجع GEMINI_MODEL في config.php';
+    elseif ($code === 404)       $status = 'اسم النموذج غير موجود — راجع ' . $modelConst . ' في config.php';
     elseif ($code === 429)       $status = 'تجاوزت حد الاستخدام مؤقتاً — انتظر دقائق وجرّب';
     else                         $status = 'رد غير متوقع (HTTP ' . $code . ')';
     return ['provider' => $name, 'http' => $code, 'status' => $status, 'sample' => $body];
@@ -91,6 +91,20 @@ if (defined('OPENAI_KEY') && OPENAI_KEY !== '') {
 
 /* قاعدة المعرفة (منها تأتي مصادر الإجابات) وصحة الرد المباشر آخر ٧ أيام */
 require_once __DIR__ . '/chat-shared.php';
+
+/* علام: طلب قصير فعلي من كل نقطة مضبوطة (يستهلك من خادمكم لا من حصة مزوّد خارجي) */
+$allamUrls = allamEndpoints();
+if (!$allamUrls) {
+    $out['allam'] = ['status' => 'غير مفعّل (اختياري): اضبط ALLAM_BASE_URL في config.php'];
+} else {
+    $out['allam'] = [];
+    foreach ($allamUrls as $i => $base) {
+        $out['allam'][$i ? 'النسخة_الثانية' : 'النسخة_الأولى'] = tryProvider('allam', $base . '/chat/completions',
+            ['model' => allamModel(), 'messages' => [['role' => 'user', 'content' => 'قل: تمام']], 'max_tokens' => 8],
+            allamHeaders(), 'ALLAM_MODEL');
+    }
+}
+
 try {
     $kb = ragKbStats();
     $out['قاعدة_المعرفة'] = $kb['pages']
@@ -145,11 +159,13 @@ foreach ((array)glob($root . '/*.{png,PNG,jpg,JPG,jpeg,svg,SVG,webp,ico}', GLOB_
 }
 $out['الصور_الموجودة_في_الجذر'] = $found ?: ['لا توجد أي صور في جذر الموقع!'];
 
-$g = $out['gemini']['status'] ?? '';
+$g = ($out['gemini']['status'] ?? '');
+$activeAllam = defined('AI_PROVIDER') && AI_PROVIDER === 'allam';
+if ($activeAllam) $g = (string) (($out['allam']['النسخة_الأولى']['status'] ?? $out['allam']['status'] ?? ''));
 $logoBad = [];
 foreach (['logo-color.png','logo-white.png'] as $f)
     if (!str_contains($out['ملفات_الشعار'][$f]['الحالة'], '✅')) $logoBad[] = $f;
-$out['الخلاصة'] = (str_contains($g, '✅') ? 'النموذج يعمل ✅. ' : 'النموذج لا يستجيب — عالج حالة Gemini أعلاه. ')
+$out['الخلاصة'] = (str_contains($g, '✅') ? 'النموذج يعمل ✅. ' : ($activeAllam ? 'النموذج لا يستجيب — عالج حالة علام أعلاه. ' : 'النموذج لا يستجيب — عالج حالة Gemini أعلاه. '))
     . ($logoBad ? 'ملفات الشعار فيها مشكلة (' . implode('، ', $logoBad) . ') — اقرأ حالتها فوق.' : 'ملفات الشعار سليمة ✅ — لو ما زال ما يظهر فهي كاش المتصفح/كلاودفلير: اعمل Ctrl+Shift+R و Purge Cache.');
 
 echo json_encode($out, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);

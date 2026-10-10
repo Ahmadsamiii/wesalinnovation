@@ -324,6 +324,94 @@ function askKimi(string $sys, string $msg, array $hist): ?string {
     return $t;
 }
 
+/* علام (ALLaM): نموذج سعودي بأوزان مفتوحة يشتغل على خادم تديرونه أنتم، وأي خادم بصيغة OpenAI يصلح
+   (vLLM وllama.cpp وOllama). نقطتان اختياريتان: الثانية نسخة من النموذج نفسه على خادم ثاني، تُجرَّب لو
+   فشلت الأولى قبل أن يصل أي نص. المزوّد مطفي ما لم يُضبط ALLAM_BASE_URL.
+   نافذة النموذج 4096 توكن، فلا نرسل أكثر مما يتسع: يُسقط أقدم دور من التاريخ (سؤال وجوابه معاً) ويُحدّ
+   طول الرد بما يبقى، لأن الخادم يرفض الطلب كله حين يتجاوز الحد بدل أن يقصّه.
+   قيس برومبت وصال بمفردات علام نفسها فكان نحو 0.25 توكن للحرف العربي، ونرفع التقدير إلى 0.30 احتياطاً. */
+const ALLAM_TOKENS_PER_CHAR = 0.30;
+const ALLAM_TEMPLATE_TOKENS = 64;     // وسوم القالب والأدوار حول الرسائل
+const ALLAM_MIN_REPLY_TOKENS = 300;   // أقل رد نبقي له مكاناً حين نقصّ التاريخ
+
+/** نقاط علام المضبوطة بالترتيب (الأولى ثم الثانية)، بلا تكرار ولا فراغ. فارغة = المزوّد مطفي. */
+function allamEndpoints(): array {
+    $out = [];
+    foreach (['ALLAM_BASE_URL', 'ALLAM_BASE_URL_2'] as $c) {
+        if (!defined($c)) continue;
+        $u = rtrim(trim((string) constant($c)), '/');
+        if ($u !== '' && preg_match('#^https?://#i', $u) && !in_array($u, $out, true)) $out[] = $u;
+    }
+    return $out;
+}
+function allamHeaders(): array {
+    $k = defined('ALLAM_KEY') ? trim((string) ALLAM_KEY) : '';
+    return $k !== '' ? ['Authorization: Bearer ' . $k] : [];
+}
+function allamModel(): string {
+    return defined('ALLAM_MODEL') && trim((string) ALLAM_MODEL) !== '' ? trim((string) ALLAM_MODEL) : 'allam';
+}
+function allamTokens(string $s): int { return (int) ceil(mb_strlen($s) * ALLAM_TOKENS_PER_CHAR); }
+
+/** قالب علام يشترط تناوب المستخدم والمساعد. يُرتَّب التاريخ ليبدأ بالمستخدم وينتهي بالمساعد: يُترك ما يسبق
+ *  أول سؤال، وتُدمج الأدوار المتتالية، وسؤال سابق بلا رد يُدمج في سؤال اليوم.
+ *  @return array{0: array<int, array{role:string, content:string}>, 1: string} */
+function allamTurns(array $hist, string $msg): array {
+    $turns = [];
+    foreach ($hist as $h) {
+        $role = ($h['role'] ?? '') === 'user' ? 'user' : 'assistant';
+        $text = mb_substr((string) ($h['text'] ?? ''), 0, AI_HIST_CHAR_LIMIT);
+        if ($text === '' || (!$turns && $role === 'assistant')) continue;
+        $n = count($turns);
+        if ($n && $turns[$n - 1]['role'] === $role) { $turns[$n - 1]['content'] .= "\n" . $text; continue; }
+        $turns[] = ['role' => $role, 'content' => $text];
+    }
+    if ($turns && $turns[count($turns) - 1]['role'] === 'user') {
+        $last = array_pop($turns);
+        $msg = $last['content'] . "\n" . $msg;
+    }
+    return [$turns, $msg];
+}
+
+/** الرسائل وأقصى توكنات الرد لطلب علام: التاريخ مقصوص ليتسع، والرد محدود بما يبقى من النافذة.
+ *  @return array{messages: array, max_tokens: int} */
+function allamPayload(string $sys, string $msg, array $hist): array {
+    [$turns, $msg] = allamTurns($hist, $msg);
+    $ctx   = defined('ALLAM_CONTEXT') ? max(1024, (int) ALLAM_CONTEXT) : 4096;
+    $fixed = ALLAM_TEMPLATE_TOKENS + allamTokens($sys) + allamTokens($msg);
+    $room  = $ctx - $fixed - ALLAM_MIN_REPLY_TOKENS;
+    $cost  = fn(array $t): int => array_sum(array_map(fn(array $x): int => allamTokens($x['content']) + 8, $t));
+    while ($turns && $cost($turns) > $room) $turns = array_slice($turns, 2);
+    $used = $fixed + $cost($turns);
+    $msgs = [['role' => 'system', 'content' => $sys]];
+    foreach ($turns as $t) $msgs[] = $t;
+    $msgs[] = ['role' => 'user', 'content' => $msg];
+    return ['messages' => $msgs, 'max_tokens' => max(64, min(AI_MAX_OUTPUT_TOKENS, $ctx - $used - 16))];
+}
+
+function askAllam(string $sys, string $msg, array $hist): ?string {
+    $urls = allamEndpoints();
+    if (!$urls) return null;
+    $p = allamPayload($sys, $msg, $hist);
+    $payload = ['model' => allamModel(), 'messages' => $p['messages'], 'temperature' => AI_TEMPERATURE,
+                'top_p' => AI_TOP_P, 'max_tokens' => $p['max_tokens']];
+    foreach ($urls as $base) {
+        $j = httpPost($base . '/chat/completions', $payload, allamHeaders());
+        $t = $j['choices'][0]['message']['content'] ?? null;
+        if (is_string($t) && trim($t) !== '') { $GLOBALS['ai_last_model'] = allamModel(); return $t; }
+    }
+    return null;
+}
+
+/** ترتيب المزوّدين حين يكون النشط علام: هو وحده، وبعده مزوّد احتياطي فقط لو سُمّي صراحة في ALLAM_FALLBACK.
+ *  الافتراضي بلا احتياطي خارجي كي لا يخرج نص السؤال من خوادمكم حتى عند العطل. */
+function chatAllamOrder(): array {
+    $order = ['allam'];
+    $fb = defined('ALLAM_FALLBACK') ? trim((string) ALLAM_FALLBACK) : '';
+    if (in_array($fb, ['gemini', 'openai', 'claude', 'kimi'], true)) $order[] = $fb;
+    return $order;
+}
+
 /* المزوّد النشط يُضبط من config.php بلا تعديل كود. gemini وopenai يبقيان
    بديلين لبعضهما كما كانا دائماً؛ claude وkimi مزوّدان اختياريان جديدان،
    وبديلهما التلقائي gemini لأنه لا يحتاج اشتراكاً مدفوعاً (قرار المشروع).
@@ -334,6 +422,7 @@ function chatProviderOrder(): array {
         case 'openai': return ['openai', 'gemini'];
         case 'claude': return ['claude', 'gemini'];
         case 'kimi':   return ['kimi', 'gemini'];
+        case 'allam':  return chatAllamOrder();
         case 'gemini': return ['gemini', 'openai'];
         default:       return ['gemini'];
     }
@@ -345,6 +434,7 @@ function chatAskProvider(string $provider, string $sys, string $msg, array $hist
         case 'openai': return askOpenAI($sys, $msg, $hist);
         case 'claude': return askClaude($sys, $msg, $hist);
         case 'kimi':   return askKimi($sys, $msg, $hist);
+        case 'allam':  return askAllam($sys, $msg, $hist);
         default:       return null;
     }
 }
@@ -358,7 +448,7 @@ function chatAskProvider(string $provider, string $sys, string $msg, array $hist
    على \b العادية فهي صحيحة وكافية لحدودها. */
 function chatScrubReply(string $reply): string {
     $reply = preg_replace(
-        '/(?<![A-Za-z0-9])(google|gemini|openai|chatgpt|gpt-?[0-9o]*|anthropic|claude|api key)(?![A-Za-z0-9])/iu',
+        '/(?<![A-Za-z0-9])(google|gemini|openai|chatgpt|gpt-?[0-9o]*|anthropic|claude|allam|api key)(?![A-Za-z0-9])/iu',
         'وصال', $reply);
     return preg_replace(
         '/\b(مفتاح api|جوجل|قوقل|جيميناي|أوبن ?إيه ?آي)\b/iu',

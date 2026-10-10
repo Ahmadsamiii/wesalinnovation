@@ -202,12 +202,30 @@ function askKimiStream(string $sys, string $msg, array $hist, callable $onDelta)
     return $r;
 }
 
+/* ---------- علام (خادم تديرونه، صيغة OpenAI) ----------
+   النقطة الثانية نسخة من النموذج نفسه: تُجرَّب لو لم تلتزم الأولى بأي نص. بعد أول نص لا ننتقل. */
+function askAllamStream(string $sys, string $msg, array $hist, callable $onDelta): array {
+    $r = ['committed' => false, 'broken' => false, 'aborted' => false];
+    $urls = allamEndpoints();
+    if (!$urls) return $r;
+    $p = allamPayload($sys, $msg, $hist);
+    $body = json_encode(['model' => allamModel(), 'messages' => $p['messages'], 'temperature' => AI_TEMPERATURE,
+                          'top_p' => AI_TOP_P, 'max_tokens' => $p['max_tokens'], 'stream' => true], JSON_UNESCAPED_UNICODE);
+    $extract = fn(array $j): ?string => $j['choices'][0]['delta']['content'] ?? null;
+    foreach ($urls as $base) {
+        $r = chatStreamCurl($base . '/chat/completions', $body, allamHeaders(), $extract, $onDelta);
+        if ($r['committed']) { $GLOBALS['ai_last_model'] = allamModel(); break; }
+    }
+    return $r;
+}
+
 function chatAskProviderStream(string $provider, string $sys, string $msg, array $hist, callable $onDelta): array {
     switch ($provider) {
         case 'gemini': return askGeminiStream($sys, $msg, $hist, $onDelta);
         case 'openai': return askOpenAIStream($sys, $msg, $hist, $onDelta);
         case 'claude': return askClaudeStream($sys, $msg, $hist, $onDelta);
         case 'kimi':   return askKimiStream($sys, $msg, $hist, $onDelta);
+        case 'allam':  return askAllamStream($sys, $msg, $hist, $onDelta);
         default:       return ['committed' => false, 'broken' => false, 'aborted' => false];
     }
 }
