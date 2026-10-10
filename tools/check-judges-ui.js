@@ -129,7 +129,7 @@ const check = (name, ok, extra = '') => { ok ? passed++ : failed++; console.log(
   check('عند الطباعة يختفي التطبيق ويظهر ورق وصال', printLayout.app === 'none' && printLayout.root === 'block', JSON.stringify(printLayout));
   await p.emulateMedia({ media: 'screen' });
 
-  console.log('جانا (عدّاد الأسئلة اللي سألتها اللجنة):');
+  console.log('سؤال مكرر (عدّاد الأسئلة اللي تكرر سؤالها من اللجنة):');
   await p.evaluate(() => localStorage.removeItem('jd-asked'));
   await go('#/c/business');
   const ids = await p.$$eval('details.q', e => e.map(x => x.getAttribute('data-id')));
@@ -143,7 +143,7 @@ const check = (name, ok, extra = '') => { ok ? passed++ : failed++; console.log(
   await p.click(`#q-${B} [data-ask]`); await p.waitForTimeout(150);
   check('كل ضغطة تزيد العدّاد', (await text(`#q-${B} .askn`)) === '2');
   check('الأعلى عدداً أول القائمة', (await p.getAttribute('details.q >> nth=0', 'data-id')) === B);
-  check('زر الرأس يعدّ الأسئلة اللي جانت', (await p.isVisible('#askedBtn')) && (await text('#askedN')) === '2');
+  check('زر الرأس يعدّ الأسئلة المكررة', (await p.isVisible('#askedBtn')) && (await text('#askedN')) === '2');
   await p.click('.tundo'); await p.waitForTimeout(150);
   check('«تراجع» في الإشعار ينقص واحداً', (await text(`#q-${B} .askn`)) === '1');
   await p.click(`#q-${B} [data-ask]`); await p.waitForTimeout(150);
@@ -154,20 +154,20 @@ const check = (name, ok, extra = '') => { ok ? passed++ : failed++; console.log(
   check('«نقص واحد» من داخل السؤال', (await text(`#q-${B} .askn`)) === '2');
   await p.click(`#q-${B} [data-ask]`); await p.waitForTimeout(150);
   check('الترتيب يحفظ المفتوح', await p.$eval(`#q-${B}`, e => e.open));
-  check('تصفية «اللي جانا» تظهر وتضيّق', await p.$$eval('[data-filter=asked]', e => e.length) === 1);
+  check('تصفية «المكررة» تظهر وتضيّق', await p.$$eval('[data-filter=asked]', e => e.length) === 1);
   await p.click('[data-filter=asked]'); await p.waitForTimeout(100);
-  check('تعرض اللي جانا فقط', (await p.$$eval('details.q:not([hidden])', e => e.length)) === 2);
+  check('تعرض المكررة فقط', (await p.$$eval('details.q:not([hidden])', e => e.length)) === 2);
   await p.reload(); await p.waitForTimeout(350);
   check('العدّاد يبقى بعد إعادة التحميل', (await text(`#q-${B} .askn`)) === '3' && (await text(`#q-${A} .askn`)) === '1');
   await go();
-  check('أعلى الرئيسية قسم «اللي جانا»', (await p.$$eval('.askhome .akrow', e => e.length)) === 2);
+  check('أعلى الرئيسية قسم «الأسئلة المكررة»', (await p.$$eval('.askhome .akrow', e => e.length)) === 2);
   check('الأعلى عدداً أول صف', (await p.$$eval('.askhome .akrow .akn', e => e.map(x => x.textContent))).join() === '3,1');
   await go('#/asked');
-  check('شاشة «اللي جانا» مرتّبة', (await p.getAttribute('#qs details.q >> nth=0', 'data-id')) === B);
+  check('شاشة «الأسئلة المكررة» مرتّبة', (await p.getAttribute('#qs details.q >> nth=0', 'data-id')) === B);
   await go('#/present/asked/0');
   check('العرض يبدأ بالأكثر تكراراً', (await text('#pq')) === (await p.evaluate(id => window.JUDGES.items.find(i => i.id === id).q[0], B)));
   await go('#/train');
-  check('نطاق «اللي جانا» في التدريب', (await p.$$eval('#tScope option[value=asked]', e => e.length)) === 1);
+  check('نطاق «المكررة» في التدريب', (await p.$$eval('#tScope option[value=asked]', e => e.length)) === 1);
   await go('#/asked');
   await p.click('[data-act=asksharelink]'); await p.waitForTimeout(200);
   const link = await p.evaluate(() => navigator.clipboard.readText());
@@ -178,7 +178,7 @@ const check = (name, ok, extra = '') => { ok ? passed++ : failed++; console.log(
   check('الرابط يعرض القائمة قبل الدمج', (await f.$$eval('.akrow', e => e.length)) === 2);
   check('لا شي يُحفظ قبل الموافقة', (await f.evaluate(() => localStorage.getItem('jd-asked'))) === null);
   await f.click('[data-act=askmerge]'); await f.waitForTimeout(400);
-  check('الدمج يفتح «اللي جانا» بالعدّادات نفسها', (await f.evaluate(() => location.hash)) === '#/asked' && (await f.$$eval('.askn', e => e.map(x => x.textContent))).join() === '3,1');
+  check('الدمج يفتح «الأسئلة المكررة» بالعدّادات نفسها', (await f.evaluate(() => location.hash)) === '#/asked' && (await f.$$eval('.askn', e => e.map(x => x.textContent))).join() === '3,1');
   await f.goto(PAGE + '#/import/zzz.9,' + encodeURIComponent('<b>x</b>.2')); await f.waitForTimeout(300);
   check('رابط دمج فاسد لا يُقبل', (await f.$$eval('.akrow', e => e.length)) === 0 && /ما فيه أسئلة صالحة/.test(await f.textContent('main')));
   await fresh.close();
