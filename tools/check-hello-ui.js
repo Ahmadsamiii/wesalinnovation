@@ -14,7 +14,8 @@
  *    - شاشة الجناح: لوحة في المنتصف وتحتها عبارة «عدد زوار جناح وصال» ثم عدّاد يدور بجانبه «زائر»
  *      ولا نص غيرها، والعبارة والعدّاد على محور المنتصف نفسه، تقرأ العدّاد وتركّب القطع،
  *      والاكتمال عند 25 وشعار جديد، وتصفير العدّاد، وانقطاع الخادم، وبلا كوكي ولا طلب غير GET،
- *      وتناسب الشاشات الأفقية والعمودية ولو كثرت خانات العدّاد
+ *      وتناسب الشاشات الأفقية والعمودية ولو كثرت خانات العدّاد، ومؤشر الفأرة مخفي، وتطلب إبقاء
+ *      الشاشة مضاءة (wakeLock مُحاكى) وتعيد الطلب إذا فلته المتصفح، ولا تتعطل إن رفضه أو لم يدعمه
  *    - المقاسات: لا تمرير أفقي، ولا تمرير رأسي في شاشة الختام على الجوالات الشائعة
  * ========================================================================== */
 
@@ -294,6 +295,41 @@ const msgs = page => page.evaluate(() => [...document.querySelectorAll('.msg')].
       const q = await wsnap(z.page);
       check(`${vw}×${vh}: اللوحة والعدّاد داخل الشاشة بلا تمرير وعلى المنتصف`, q.fits && q.on === 17 && q.centered && q.align.cap && q.align.odo && q.align.inside && q.align.unitMid, JSON.stringify(q));
       await z.ctx.close();
+    }
+    /* الشاشة لا تنام: wakeLock مُحاكى لأن المتصفح الآلي بلا شاشة حقيقية */
+    {
+      const trial = async (stub, n) => {
+        const ctx = await browser.newContext({ viewport: { width: 1920, height: 1080 }, reducedMotion: 'reduce' });
+        await ctx.addInitScript(stub);
+        const page = await ctx.newPage(); const errs = [];
+        page.on('pageerror', e => errs.push(String(e)));
+        page.on('console', m => { if (m.type() === 'error' && !/favicon|ERR_FAILED/.test(m.text())) errs.push(m.text()); });
+        await page.route('**/api/hello-visit.php', r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, n }) }));
+        await page.goto(`${BASE}/hello-wall.html`); await page.waitForTimeout(900);
+        return { ctx, page, errs };
+      };
+      const fake = () => {
+        window.__wl = { calls: 0, last: null };
+        Object.defineProperty(navigator, 'wakeLock', { configurable: true, value: { request: async t => { window.__wl.calls++; const l = new EventTarget(); l.type = t; window.__wl.last = l; return l; } } });
+      };
+      let t = await trial(fake, 5);
+      const c1 = await t.page.evaluate(() => ({ calls: window.__wl.calls, type: window.__wl.last && window.__wl.last.type, cursor: getComputedStyle(document.documentElement).cursor }));
+      check('الشاشة تطلب إبقاءها مضاءة مرة واحدة عند الفتح', c1.calls === 1 && c1.type === 'screen', JSON.stringify(c1));
+      check('مؤشر الفأرة مخفي', c1.cursor === 'none', c1.cursor);
+      await t.page.evaluate(() => { window.__wl.last.dispatchEvent(new Event('release')); document.dispatchEvent(new Event('visibilitychange')); });
+      await t.page.waitForTimeout(300);
+      const c2 = await t.page.evaluate(() => window.__wl.calls);
+      check('بعد أن يفلت المتصفح القفل تطلبه الصفحة من جديد', c2 === 2, String(c2));
+      check('وبلا أخطاء برمجية', t.errs.length === 0, t.errs.join(' | '));
+      await t.ctx.close();
+      t = await trial(() => Object.defineProperty(navigator, 'wakeLock', { configurable: true, value: { request: () => Promise.reject(new DOMException('no', 'NotAllowedError')) } }), 5);
+      let q = await wsnap(t.page);
+      check('إن رفض المتصفح القفل تعمل الشاشة بلا خطأ', q.on === 5 && q.digits === '5' && t.errs.length === 0, JSON.stringify([q.on, q.digits, t.errs]));
+      await t.ctx.close();
+      t = await trial(() => Object.defineProperty(navigator, 'wakeLock', { configurable: true, value: undefined }), 5);
+      q = await wsnap(t.page);
+      check('إن لم يدعمه المتصفح تعمل الشاشة بلا خطأ', q.on === 5 && q.digits === '5' && t.errs.length === 0, JSON.stringify([q.on, q.digits, t.errs]));
+      await t.ctx.close();
     }
     for (const [vw, vh] of [[1080, 1920], [1920, 1080]]) {
       const z = await open({ n: 123456, w: vw, h: vh });

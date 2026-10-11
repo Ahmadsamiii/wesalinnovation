@@ -17,6 +17,8 @@
   --u:min(100vw / 1920, 100vh / 1080);--cw:850}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
+/* شاشة عرض لا يلمسها أحد: مؤشر الفأرة مخفي */
+html{cursor:none}
 body{font-family:'Thmanyah Sans','Segoe UI',system-ui,-apple-system,Tahoma,sans-serif;color:#fff;background:linear-gradient(150deg,#20134f 0%,#282692 48%,#5039a8 100%);overflow:hidden;-webkit-font-smoothing:antialiased;line-height:1.5}
 
 /* خلفية بعمق: ضوءان كبيران يتحرّكان ببطء، وجزيئات خفيفة تصعد، وتعتيم هادئ عند الأطراف */
@@ -231,6 +233,23 @@ function sync(n){
 })();
 /* وقت الهدوء: لمعة خفيفة كل 24 ثانية */
 setInterval(function(){if(!st.busy&&!st.queue.length)board.wave();},24000);
+
+/* الشاشة لا تنام: نطلب من المتصفح إبقاءها مضاءة، ونعيد الطلب كلما عادت الصفحة ظاهرة لأن المتصفح يفلت القفل عند إخفائها
+   (وكل دقيقة إن فلته لسبب آخر). إن لم يدعمه المتصفح أو رفضه نكمل بلا خطأ، ويبقى إيقاف سكون الجهاز خطوة احتياطية في التشغيل */
+var lock=null,asking=false;
+function keepAwake(){
+  if(lock||asking||!navigator.wakeLock||document.visibilityState!=='visible')return;
+  asking=true;
+  try{
+    navigator.wakeLock.request('screen').then(function(l){
+      asking=false;lock=l;
+      l.addEventListener('release',function(){if(lock===l)lock=null;});
+    }).catch(function(){asking=false;});
+  }catch(e){asking=false;}
+}
+keepAwake();
+document.addEventListener('visibilitychange',keepAwake);
+setInterval(keepAwake,60000);
 })();
 </script>
 </body>
