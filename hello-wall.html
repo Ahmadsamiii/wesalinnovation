@@ -17,8 +17,6 @@
   --u:min(100vw / 1920, 100vh / 1080);--cw:850}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
-/* شاشة عرض لا يلمسها أحد: مؤشر الفأرة مخفي */
-html{cursor:none}
 body{font-family:'Thmanyah Sans','Segoe UI',system-ui,-apple-system,Tahoma,sans-serif;color:#fff;background:linear-gradient(150deg,#20134f 0%,#282692 48%,#5039a8 100%);overflow:hidden;-webkit-font-smoothing:antialiased;line-height:1.5}
 
 /* خلفية بعمق: ضوءان كبيران يتحرّكان ببطء، وجزيئات خفيفة تصعد، وتعتيم هادئ عند الأطراف */
@@ -72,8 +70,32 @@ body{font-family:'Thmanyah Sans','Segoe UI',system-ui,-apple-system,Tahoma,sans-
 .odo .strip{display:block;will-change:transform}
 .odo .strip i{display:block;height:1em;line-height:1em;font-style:normal;text-align:center}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-.stat{position:fixed;left:calc(var(--u)*24);bottom:calc(var(--u)*24);width:calc(var(--u)*12);height:calc(var(--u)*12);border-radius:50%;background:#52bdf9;opacity:.5}
+.stat{position:fixed;right:calc(var(--u)*24);bottom:calc(var(--u)*24);width:calc(var(--u)*12);height:calc(var(--u)*12);border-radius:50%;background:#52bdf9;opacity:.5}
 .stat.bad{background:#ffffff;opacity:.25}
+
+.logos{position:fixed;top:calc(var(--u)*34);display:flex;align-items:center;gap:calc(var(--u)*26)}
+.logos.r{right:calc(var(--u)*56)}
+.logos.l{left:calc(var(--u)*56)}
+.logos img{display:block;height:calc(var(--u)*64);width:auto}
+.logos .sp{width:calc(var(--u)*2);height:calc(var(--u)*46);background:rgba(255,255,255,.35)}
+
+/* أيقونتان أسفل اليسار: مؤشر ليزر وملء الشاشة. تظهران مع الماوس وتختفيان معه بعد السكون */
+.tools{position:fixed;left:calc(var(--u)*24);bottom:calc(var(--u)*24);display:flex;gap:calc(var(--u)*14);direction:ltr;z-index:60;transition:opacity .4s}
+.tools button{display:grid;place-items:center;width:calc(var(--u)*64);height:calc(var(--u)*64);padding:0;border-radius:50%;border:calc(var(--u)*2) solid rgba(255,255,255,.3);background:rgba(255,255,255,.14);color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .2s,border-color .2s}
+.tools button[hidden]{display:none}
+.tools button:hover{background:rgba(255,255,255,.26)}
+.tools button:focus-visible{outline:calc(var(--u)*3) solid var(--sky);outline-offset:calc(var(--u)*3)}
+.tools button.on{background:rgba(82,189,249,.32);border-color:var(--sky)}
+#laserBtn.on{background:rgba(255,59,59,.3);border-color:#ff7b7b}
+.tools svg{width:calc(var(--u)*30);height:calc(var(--u)*30);fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.tools .i2{display:none}
+.tools button.on .i1{display:none}
+.tools button.on .i2{display:block}
+body.idle .tools{opacity:0;pointer-events:none}
+body.idle,body.idle *,body.lz,body.lz *{cursor:none!important}
+/* نقطة الليزر: حمراء لتظهر على اللوحة البيضاء وعلى الخلفية الداكنة معاً */
+.laser{position:fixed;left:0;top:0;width:calc(var(--u)*44);height:calc(var(--u)*44);margin:calc(var(--u)*-22) 0 0 calc(var(--u)*-22);border-radius:50%;pointer-events:none;z-index:70;opacity:0;transition:opacity .15s;background:radial-gradient(circle,#fff 0,#fff 9%,#ff2d2d 15%,rgba(255,45,45,.62) 38%,rgba(255,45,45,0) 70%)}
+.laser.on{opacity:1}
 
 @media (orientation:portrait){
   :root{--u:min(100vw / 1080, 100vh / 1920);--cw:960}
@@ -107,6 +129,14 @@ body{font-family:'Thmanyah Sans','Segoe UI',system-ui,-apple-system,Tahoma,sans-
   </section>
 </main>
 
+<header class="logos r"><img src="/partners/kscdr.png?v=4" width="3342" height="1057" alt="مركز الملك سلمان لأبحاث الإعاقة"><span class="sp" aria-hidden="true"></span><img src="/partners/hackathon.png?v=4" width="2152" height="924" alt="هاكاثون الذكاء الاصطناعي للأشخاص ذوي الإعاقة"></header>
+<div class="logos l"><img src="/partners/ai-year.png?v=4" width="3806" height="1467" alt="عام الذكاء الاصطناعي 2026"></div>
+
+<div class="tools" id="tools">
+  <button type="button" id="laserBtn" aria-label="مؤشر ليزر" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.6 20.4l6.2-6.2" stroke-width="4.2"/><path d="M12.4 11.6l4.2-4.2" stroke-width="2" stroke-dasharray="0.1 3.2"/><circle cx="19.4" cy="4.6" r="2.3" fill="currentColor" stroke="none"/></svg></button>
+  <button type="button" id="fsBtn" aria-label="ملء الشاشة" aria-pressed="false"><svg class="i1" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><svg class="i2" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button>
+</div>
+<i class="laser" id="laser" aria-hidden="true"></i>
 <i class="stat" id="stat" aria-hidden="true"></i>
 
 <script src="/assets/hello-puzzle.js"></script>
@@ -233,6 +263,56 @@ function sync(n){
 })();
 /* وقت الهدوء: لمعة خفيفة كل 24 ثانية */
 setInterval(function(){if(!st.busy&&!st.queue.length)board.wave();},24000);
+
+/* المؤشر والأيقونتان: يظهران مع حركة الماوس أو اللمس ويختفيان بعد 3 ثوانٍ من السكون.
+   نتجاهل حركة بلا تغيّر في الإحداثيات لأن المتصفح قد يرسل حركة صورية عند تغيّر ما تحت المؤشر */
+var laserOn=false,idleT=0,lx=-1,ly=-1,laserEl=$('#laser'),laserBtn=$('#laserBtn'),fsBtn=$('#fsBtn'),root=document.documentElement;
+function awake(){
+  document.body.classList.remove('idle');
+  clearTimeout(idleT);
+  idleT=setTimeout(function(){document.body.classList.add('idle');},3000);
+}
+function putLaser(){
+  if(!laserOn||lx<0)return;
+  laserEl.style.transform='translate3d('+lx+'px,'+ly+'px,0)';
+  laserEl.classList.add('on');
+}
+addEventListener('pointermove',function(e){
+  if(e.clientX===lx&&e.clientY===ly)return;
+  lx=e.clientX;ly=e.clientY;awake();putLaser();
+},{passive:true});
+addEventListener('pointerdown',function(e){lx=e.clientX;ly=e.clientY;awake();putLaser();},{passive:true});
+addEventListener('keydown',awake);
+addEventListener('pointerout',function(e){if(!e.relatedTarget)laserEl.classList.remove('on');});
+awake();
+
+/* مؤشر ليزر: نقطة حمراء تتبع الماوس بدل المؤشر العادي */
+laserBtn.addEventListener('click',function(){
+  laserOn=!laserOn;
+  document.body.classList.toggle('lz',laserOn);
+  laserBtn.classList.toggle('on',laserOn);
+  laserBtn.setAttribute('aria-pressed',laserOn?'true':'false');
+  if(laserOn)putLaser();else laserEl.classList.remove('on');
+  awake();
+});
+
+/* ملء الشاشة: يخفي الزر إن لم يدعمه المتصفح (آيفون مثلاً) */
+function fsEl(){return document.fullscreenElement||document.webkitFullscreenElement||null;}
+function syncFs(){
+  var on=!!fsEl();
+  fsBtn.classList.toggle('on',on);
+  fsBtn.setAttribute('aria-pressed',on?'true':'false');
+  awake();
+}
+if(!(root.requestFullscreen||root.webkitRequestFullscreen))fsBtn.hidden=true;
+fsBtn.addEventListener('click',function(){
+  try{
+    var r=fsEl()?(document.exitFullscreen||document.webkitExitFullscreen).call(document):(root.requestFullscreen||root.webkitRequestFullscreen).call(root);
+    if(r&&r.catch)r.catch(function(){});
+  }catch(e){}
+});
+document.addEventListener('fullscreenchange',syncFs);
+document.addEventListener('webkitfullscreenchange',syncFs);
 
 /* الشاشة لا تنام: نطلب من المتصفح إبقاءها مضاءة، ونعيد الطلب كلما عادت الصفحة ظاهرة لأن المتصفح يفلت القفل عند إخفائها
    (وكل دقيقة إن فلته لسبب آخر). إن لم يدعمه المتصفح أو رفضه نكمل بلا خطأ، ويبقى إيقاف سكون الجهاز خطوة احتياطية في التشغيل */

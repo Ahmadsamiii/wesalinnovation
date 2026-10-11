@@ -15,7 +15,8 @@
  *      ولا نص غيرها، والعبارة والعدّاد على محور المنتصف نفسه، تقرأ العدّاد وتركّب القطع،
  *      والاكتمال عند 25 وشعار جديد، وتصفير العدّاد، وانقطاع الخادم، وبلا كوكي ولا طلب غير GET،
  *      وتناسب الشاشات الأفقية والعمودية ولو كثرت خانات العدّاد، ومؤشر الفأرة مخفي، وتطلب إبقاء
- *      الشاشة مضاءة (wakeLock مُحاكى) وتعيد الطلب إذا فلته المتصفح، ولا تتعطل إن رفضه أو لم يدعمه
+ *      الشاشة مضاءة (wakeLock مُحاكى) وتعيد الطلب إذا فلته المتصفح، ولا تتعطل إن رفضه أو لم يدعمه،
+ *      وشعارات الجهات في الزاويتين العلويتين، والمؤشر وأيقونتا الليزر وملء الشاشة تختفي بعد السكون
  *    - المقاسات: لا تمرير أفقي، ولا تمرير رأسي في شاشة الختام على الجوالات الشائعة
  * ========================================================================== */
 
@@ -315,7 +316,7 @@ const msgs = page => page.evaluate(() => [...document.querySelectorAll('.msg')].
       let t = await trial(fake, 5);
       const c1 = await t.page.evaluate(() => ({ calls: window.__wl.calls, type: window.__wl.last && window.__wl.last.type, cursor: getComputedStyle(document.documentElement).cursor }));
       check('الشاشة تطلب إبقاءها مضاءة مرة واحدة عند الفتح', c1.calls === 1 && c1.type === 'screen', JSON.stringify(c1));
-      check('مؤشر الفأرة مخفي', c1.cursor === 'none', c1.cursor);
+      check('المؤشر ظاهر عند الفتح', c1.cursor !== 'none', c1.cursor);
       await t.page.evaluate(() => { window.__wl.last.dispatchEvent(new Event('release')); document.dispatchEvent(new Event('visibilitychange')); });
       await t.page.waitForTimeout(300);
       const c2 = await t.page.evaluate(() => window.__wl.calls);
@@ -330,6 +331,58 @@ const msgs = page => page.evaluate(() => [...document.querySelectorAll('.msg')].
       q = await wsnap(t.page);
       check('إن لم يدعمه المتصفح تعمل الشاشة بلا خطأ', q.on === 5 && q.digits === '5' && t.errs.length === 0, JSON.stringify([q.on, q.digits, t.errs]));
       await t.ctx.close();
+    }
+    /* شعارات الجهات، والمؤشر يختفي بعد السكون، وأيقونتا الليزر وملء الشاشة بلا نصوص */
+    {
+      const ctx = await browser.newContext({ viewport: { width: 1920, height: 1080 }, reducedMotion: 'reduce' });
+      await ctx.addInitScript(() => {
+        window.__fs = 0;
+        Element.prototype.requestFullscreen = function () { window.__fs++; Object.defineProperty(document, 'fullscreenElement', { configurable: true, value: this }); document.dispatchEvent(new Event('fullscreenchange')); return Promise.resolve(); };
+        document.exitFullscreen = function () { Object.defineProperty(document, 'fullscreenElement', { configurable: true, value: null }); document.dispatchEvent(new Event('fullscreenchange')); return Promise.resolve(); };
+      });
+      const page = await ctx.newPage(); const errs = [];
+      page.on('pageerror', e => errs.push(String(e)));
+      page.on('console', m => { if (m.type() === 'error' && !/favicon|ERR_FAILED/.test(m.text())) errs.push(m.text()); });
+      await page.route('**/api/hello-visit.php', r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, n: 57 }) }));
+      await page.goto(`${BASE}/hello-wall.html`); await page.waitForTimeout(900);
+      const lg = await page.evaluate(() => {
+        const rc = e => { const b = e.getBoundingClientRect(); return { l: b.left, r: b.right, t: b.top, b: b.bottom, h: b.height }; };
+        const img = [...document.querySelectorAll('.logos img')].map(i => ({ src: i.getAttribute('src').split('?')[0], ok: i.naturalWidth > 0, ...rc(i) }));
+        const card = rc(document.querySelector('.card')), mid = innerWidth / 2;
+        const side = n => { const m = img.find(x => x.src.endsWith(n)); return m && (m.l + m.r) / 2 > mid ? 'right' : 'left'; };
+        const hit = img.some(x => x.l < card.r && x.r > card.l && x.t < card.b && x.b > card.t);
+        return { img, kscdr: side('kscdr.png'), hack: side('hackathon.png'), year: side('ai-year.png'), hit, hMax: Math.max(...img.map(x => x.h)), topMax: Math.max(...img.map(x => x.b)), u: innerHeight / 1080 };
+      });
+      check('الهاكاثون والمركز أعلى اليمين وعام الذكاء الاصطناعي أعلى اليسار', lg.img.length === 3 && lg.kscdr === 'right' && lg.hack === 'right' && lg.year === 'left' && lg.img.every(x => x.ok), JSON.stringify(lg));
+      check('الشعارات صغيرة (حتى 72 بكسلاً على شاشة 1080) ولا تلمس اللوحة', lg.hMax <= 72 * lg.u + 1 && !lg.hit, JSON.stringify([lg.hMax, lg.hit]));
+      const tl = await page.evaluate(() => ({ btns: [...document.querySelectorAll('.tools button')].map(b => ({ label: b.getAttribute('aria-label'), text: b.textContent.trim(), vis: getComputedStyle(b).display !== 'none' })), pos: (() => { const b = document.querySelector('.tools').getBoundingClientRect(); return { left: b.left, bottom: innerHeight - b.bottom }; })(), op: getComputedStyle(document.querySelector('.tools')).opacity, cursor: getComputedStyle(document.body).cursor }));
+      check('أيقونتان أسفل اليسار (ليزر وملء الشاشة) بلا نصوص ظاهرة', tl.btns.length === 2 && tl.btns.every(b => b.text === '' && b.label && b.vis) && tl.pos.left < 60 && tl.pos.bottom < 60, JSON.stringify(tl));
+      check('الأيقونتان والمؤشر ظاهران عند الفتح', tl.op === '1' && tl.cursor !== 'none', JSON.stringify([tl.op, tl.cursor]));
+      await page.waitForTimeout(3500);
+      let st = await page.evaluate(() => ({ op: getComputedStyle(document.querySelector('.tools')).opacity, cursor: getComputedStyle(document.body).cursor, idle: document.body.classList.contains('idle') }));
+      check('بعد السكون يختفي المؤشر وتختفي الأيقونتان', st.idle && st.cursor === 'none' && st.op === '0', JSON.stringify(st));
+      await page.mouse.move(400, 400); await page.waitForTimeout(500);
+      st = await page.evaluate(() => ({ op: getComputedStyle(document.querySelector('.tools')).opacity, cursor: getComputedStyle(document.body).cursor, idle: document.body.classList.contains('idle') }));
+      check('حركة الماوس تُظهرهما من جديد', !st.idle && st.cursor !== 'none' && st.op === '1', JSON.stringify(st));
+      await page.waitForTimeout(3500);
+      check('ثم يختفيان مرة ثانية بعد السكون', await page.evaluate(() => document.body.classList.contains('idle')));
+      /* مؤشر الليزر: نقطة تتبع الماوس والمؤشر العادي مخفي */
+      await page.mouse.move(500, 500); await page.waitForTimeout(300);
+      await page.click('#laserBtn');
+      await page.mouse.move(700, 450); await page.waitForTimeout(300);
+      const lz = await page.evaluate(() => { const b = document.querySelector('#laser').getBoundingClientRect(); return { on: document.querySelector('#laser').classList.contains('on'), x: (b.left + b.right) / 2, y: (b.top + b.bottom) / 2, pressed: document.querySelector('#laserBtn').getAttribute('aria-pressed'), cursor: getComputedStyle(document.body).cursor }; });
+      check('الليزر: النقطة تتبع الماوس والمؤشر العادي مخفي', lz.on && Math.abs(lz.x - 700) < 3 && Math.abs(lz.y - 450) < 3 && lz.pressed === 'true' && lz.cursor === 'none', JSON.stringify(lz));
+      await page.click('#laserBtn'); await page.waitForTimeout(200);
+      const lz2 = await page.evaluate(() => ({ on: document.querySelector('#laser').classList.contains('on'), pressed: document.querySelector('#laserBtn').getAttribute('aria-pressed') }));
+      check('الضغط الثاني يطفئ الليزر', !lz2.on && lz2.pressed === 'false', JSON.stringify(lz2));
+      /* ملء الشاشة: يدخل ويخرج، والأيقونة تتبدل */
+      await page.click('#fsBtn'); await page.waitForTimeout(200);
+      const f1 = await page.evaluate(() => ({ calls: window.__fs, pressed: document.querySelector('#fsBtn').getAttribute('aria-pressed'), on: document.querySelector('#fsBtn').classList.contains('on') }));
+      await page.click('#fsBtn'); await page.waitForTimeout(200);
+      const f2 = await page.evaluate(() => ({ pressed: document.querySelector('#fsBtn').getAttribute('aria-pressed'), on: document.querySelector('#fsBtn').classList.contains('on') }));
+      check('ملء الشاشة: الزر يدخل ثم يخرج وتتبدل الأيقونة', f1.calls === 1 && f1.pressed === 'true' && f1.on && f2.pressed === 'false' && !f2.on, JSON.stringify([f1, f2]));
+      check('بلا أخطاء برمجية', errs.length === 0, errs.join(' | '));
+      await ctx.close();
     }
     for (const [vw, vh] of [[1080, 1920], [1920, 1080]]) {
       const z = await open({ n: 123456, w: vw, h: vh });
