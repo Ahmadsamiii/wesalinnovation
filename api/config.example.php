@@ -87,11 +87,11 @@ define('UNIFIED_SESSION', false);
 define('TRUST_PROXY', false);
 
 /* ---------- مزوّد الذكاء الاصطناعي ----------
- * التبديل بين المزوّدين الأربعة إعداد هنا فقط، بلا لمس أي كود. المزوّد
+ * التبديل بين المزوّدين الخمسة إعداد هنا فقط، بلا لمس أي كود. المزوّد
  * النشط دائماً له بديل تلقائي فوري عند الفشل — gemini للاثنين الجديدين
  * لأنه الوحيد المجاني، والقديمين (gemini/openai) يبقيان بديلي بعضهما
  * كما كانا قبل إضافة claude وkimi. */
-define('AI_PROVIDER', 'gemini');       // 'gemini' | 'openai' | 'claude' | 'kimi'
+define('AI_PROVIDER', 'gemini');       // 'gemini' | 'openai' | 'claude' | 'kimi' | 'allam'
 
 // Gemini — المفتاح من https://aistudio.google.com/apikey (يبدأ عادة بـ AIza)
 define('GEMINI_KEY',   '');
@@ -114,6 +114,17 @@ define('CLAUDE_MODEL', 'claude-sonnet-5');
 define('KIMI_KEY',      '');
 define('KIMI_MODEL',    'kimi-k2-turbo-preview');
 define('KIMI_BASE_URL', 'https://api.moonshot.ai/v1');
+
+// علام (ALLaM): نموذج سعودي بأوزان مفتوحة (7B) يشتغل على خادم تديرونه أنتم، فلا يخرج نص السؤال لشركة
+// نماذج. أي خادم يتكلم بصيغة OpenAI يصلح (vLLM وllama.cpp وOllama)، ويحتاج النموذج كرت GPU بذاكرة
+// نحو 16 جيجا بلا ضغط. اضبط AI_PROVIDER على 'allam' لتفعيله. بلا ALLAM_BASE_URL يبقى مطفياً.
+// تنبيه: خطوة البحث في المصادر (api/rag.php) والصوت (api/voice.php) خدمتان منفصلتان وتبقيان كما هما.
+define('ALLAM_BASE_URL',   '');   // مثال: 'http://10.0.0.5:8000/v1' (يُلحق به /chat/completions)
+define('ALLAM_BASE_URL_2', '');   // اختياري: نسخة ثانية من النموذج نفسه على خادم ثاني، تُجرَّب لو فشلت الأولى قبل أي نص
+define('ALLAM_KEY',        '');   // مفتاح الخادم إن وضعتم واحداً (--api-key في vLLM)، وإلا فاتركه فارغاً
+define('ALLAM_MODEL',      'humain-ai/ALLaM-7B-Instruct-preview');   // الاسم الذي يعرضه خادمكم (--served-model-name)
+define('ALLAM_CONTEXT',    4096); // نافذة النموذج بالتوكن، ويُقصّ التاريخ ويُحدّ الرد ليتسعا فيها
+define('ALLAM_FALLBACK',   '');   // مزوّد احتياطي بعد علام (اسم من القائمة أعلاه). فارغ = لا مزوّد خارجي أبداً
 
 /* ---------- الصوت السعودي: قراءة الإجابات والإدخال الصوتي (api/voice.php) ----------
  * كل ما في هذا القسم اختياري: بلا مفاتيح تبقى الواجهة على صوت المتصفح كما كانت.

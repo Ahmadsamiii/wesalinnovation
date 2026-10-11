@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS chat_logs (
   mode        VARCHAR(20)  NOT NULL DEFAULT 'simple', -- simple | detailed | small
   cost        TINYINT UNSIGNED NOT NULL DEFAULT 0,
   model       VARCHAR(40)  NULL,       -- اسم النموذج الفعلي — داخلي/إداري فقط
-  provider    VARCHAR(20)  NULL,       -- gemini | openai | claude | kimi
+  provider    VARCHAR(20)  NULL,       -- gemini | openai | claude | kimi | allam
   stream      TINYINT(1)   NOT NULL DEFAULT 0,
   ttfb_ms     INT UNSIGNED NULL,       -- زمن أول كلمة (بث فقط)
   total_ms    INT UNSIGNED NULL,
