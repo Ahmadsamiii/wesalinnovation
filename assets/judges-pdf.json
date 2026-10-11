@@ -1,0 +1,16 @@
+{
+  "sha": "9dc7a6916c1af8cd85239a7b6fd18d177f8e0d44c56b529c4ca18eae48d7bc0e",
+  "built": "2026-10-10",
+  "ar": {
+    "file": "judges-qa-ar.pdf",
+    "bytes": 957850,
+    "pages": 19,
+    "questions": 83
+  },
+  "en": {
+    "file": "judges-qa-en.pdf",
+    "bytes": 798336,
+    "pages": 24,
+    "questions": 83
+  }
+}

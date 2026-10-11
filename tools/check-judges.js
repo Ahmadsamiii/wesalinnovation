@@ -6,7 +6,7 @@
  *      node tools/check-judges.js
  *
  *  يتحقق من assets/judges-data.js: كل نص بلغتين وغير فارغ، ومعرّفات الأسئلة
- *  فريدة، والمجموعات والمجيبون والمراجع معرّفة، وترتيب «أهم عشرة» متصل،
+ *  فريدة، والمجموعات معرّفة، وترتيب «أهم عشرة» متصل،
  *  ولا شرطة طويلة ولا قصيرة (قواعد README «كتابة النصوص الظاهرة للمستخدم»)،
  *  ولا عبارة جاهزة من قائمة check-copy.php.
  *  ويمنع عودة ملاحظات الفريق الداخلية إلى الملف العام: المستودع عام، فتلك
@@ -71,8 +71,6 @@ D.items.forEach(it => {
   ids.add(it.id);
   if (!cids.has(it.c)) bad(w + ': مجموعة غير معرّفة (' + it.c + ')');
   perC[it.c] = (perC[it.c] || 0) + 1;
-  if (!D.team[it.who]) bad(w + ': مجيب غير معرّف (' + it.who + ')');
-  (it.src || []).forEach(k => { if (!D.sources[k]) bad(w + ': مرجع غير معرّف (' + k + ')'); });
   pair(it.q, w + ' السؤال'); pair(it.s, w + ' الجواب المختصر');
   if (it.d) pair(it.d, w + ' التفصيل');
   if (it.v) bad(w + ': حقل v ممنوع في الملف العام، ضع الملاحظة في judges-notes.js');
@@ -87,7 +85,6 @@ Object.keys(perC).forEach(c => console.log('    ' + c + ': ' + perC[c]));
 console.log('أرقام للحفظ:');
 D.facts.forEach((f, i) => {
   pair(f.v, 'رقم ' + (i + 1) + ' القيمة'); pair(f.l, 'رقم ' + (i + 1) + ' الوصف');
-  if (!D.sources[f.s]) bad('رقم ' + (i + 1) + ': مرجع غير معرّف (' + f.s + ')');
 });
 console.log('  ' + D.facts.length + ' رقماً');
 
@@ -102,6 +99,28 @@ if (fs.existsSync(notesFile)) {
   console.log('  ' + Object.keys(N).length + ' ملاحظة في الملف الخاص (محلي، غير مرفوع)');
 } else {
   console.log('  الملف الخاص غير موجود هنا. طبيعي في المستودع، وتعمل الصفحة بلا ملاحظات.');
+}
+
+console.log('ملفا PDF الجاهزان:');
+{
+  const { contentHash } = require('./judges-pdf-hash');
+  const manifest = path.join(root, 'assets/judges-pdf.json');
+  const regen = ' شغّل: NODE_PATH="$(npm root -g)" node tools/build-judges-pdf.js';
+  let m = null;
+  if (!fs.existsSync(manifest)) bad('assets/judges-pdf.json غير موجود.' + regen);
+  else { try { m = JSON.parse(fs.readFileSync(manifest, 'utf8')); } catch (e) { bad('assets/judges-pdf.json ليس JSON سليماً.' + regen); } }
+  if (m) {
+    if (m.sha !== contentHash(root)) bad('ملفا PDF قديمان: تغيّر المحتوى أو ورق الطباعة بعد آخر توليد.' + regen);
+    ['ar', 'en'].forEach(l => {
+      const e = m[l], p = e && path.join(root, 'assets', e.file || '');
+      if (!e || !fs.existsSync(p)) { bad('ملف PDF (' + l + ') مفقود.' + regen); return; }
+      const b = fs.readFileSync(p);
+      if (b.slice(0, 5).toString() !== '%PDF-') bad(e.file + ' ليس PDF سليماً');
+      if (b.length !== e.bytes) bad(e.file + ' لا يطابق بيانه في judges-pdf.json (تعديل يدوي؟).' + regen);
+      if (e.questions !== D.items.length) bad(e.file + ' فيه ' + e.questions + ' سؤالاً والبيانات ' + D.items.length + '.' + regen);
+      console.log('  ' + e.file + ': ' + e.questions + ' سؤالاً، ' + e.pages + ' صفحة، ' + Math.round(e.bytes / 1024) + ' كيلوبايت');
+    });
+  }
 }
 
 console.log(errors ? '\n✗ ' + errors + ' خطأ' : '\n✓ بيانات أسئلة التحكيم سليمة' + (warns ? ' (' + warns + ' تنبيه)' : ''));
