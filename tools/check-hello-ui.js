@@ -16,7 +16,7 @@
  *      والاكتمال عند 25 وشعار جديد، وتصفير العدّاد، وانقطاع الخادم، وبلا كوكي ولا طلب غير GET،
  *      وتناسب الشاشات الأفقية والعمودية ولو كثرت خانات العدّاد، ومؤشر الفأرة مخفي، وتطلب إبقاء
  *      الشاشة مضاءة (wakeLock مُحاكى) وتعيد الطلب إذا فلته المتصفح، ولا تتعطل إن رفضه أو لم يدعمه،
- *      وشعارات الجهات في الزاويتين العلويتين، والمؤشر وأيقونتا الليزر وملء الشاشة تختفي بعد السكون
+ *      وشعارات الجهات في الزاويتين العلويتين، والمؤشر وأيقونة ملء الشاشة يختفيان بعد السكون
  *    - المقاسات: لا تمرير أفقي، ولا تمرير رأسي في شاشة الختام على الجوالات الشائعة
  * ========================================================================== */
 
@@ -332,7 +332,7 @@ const msgs = page => page.evaluate(() => [...document.querySelectorAll('.msg')].
       check('إن لم يدعمه المتصفح تعمل الشاشة بلا خطأ', q.on === 5 && q.digits === '5' && t.errs.length === 0, JSON.stringify([q.on, q.digits, t.errs]));
       await t.ctx.close();
     }
-    /* شعارات الجهات، والمؤشر يختفي بعد السكون، وأيقونتا الليزر وملء الشاشة بلا نصوص */
+    /* شعارات الجهات، والمؤشر يختفي بعد السكون، وأيقونة ملء الشاشة بلا نص */
     {
       const ctx = await browser.newContext({ viewport: { width: 1920, height: 1080 }, reducedMotion: 'reduce' });
       await ctx.addInitScript(() => {
@@ -356,26 +356,18 @@ const msgs = page => page.evaluate(() => [...document.querySelectorAll('.msg')].
       check('الهاكاثون والمركز أعلى اليمين وعام الذكاء الاصطناعي أعلى اليسار', lg.img.length === 3 && lg.kscdr === 'right' && lg.hack === 'right' && lg.year === 'left' && lg.img.every(x => x.ok), JSON.stringify(lg));
       check('الشعارات صغيرة (حتى 72 بكسلاً على شاشة 1080) ولا تلمس اللوحة', lg.hMax <= 72 * lg.u + 1 && !lg.hit, JSON.stringify([lg.hMax, lg.hit]));
       const tl = await page.evaluate(() => ({ btns: [...document.querySelectorAll('.tools button')].map(b => ({ label: b.getAttribute('aria-label'), text: b.textContent.trim(), vis: getComputedStyle(b).display !== 'none' })), pos: (() => { const b = document.querySelector('.tools').getBoundingClientRect(); return { left: b.left, bottom: innerHeight - b.bottom }; })(), op: getComputedStyle(document.querySelector('.tools')).opacity, cursor: getComputedStyle(document.body).cursor }));
-      check('أيقونتان أسفل اليسار (ليزر وملء الشاشة) بلا نصوص ظاهرة', tl.btns.length === 2 && tl.btns.every(b => b.text === '' && b.label && b.vis) && tl.pos.left < 60 && tl.pos.bottom < 60, JSON.stringify(tl));
-      check('الأيقونتان والمؤشر ظاهران عند الفتح', tl.op === '1' && tl.cursor !== 'none', JSON.stringify([tl.op, tl.cursor]));
+      check('أيقونة ملء الشاشة أسفل اليسار بلا نص ظاهر', tl.btns.length === 1 && tl.btns.every(b => b.text === '' && b.label && b.vis) && tl.pos.left < 60 && tl.pos.bottom < 60, JSON.stringify(tl));
+      check('الأيقونة والمؤشر ظاهران عند الفتح', tl.op === '1' && tl.cursor !== 'none', JSON.stringify([tl.op, tl.cursor]));
       await page.waitForTimeout(3500);
       let st = await page.evaluate(() => ({ op: getComputedStyle(document.querySelector('.tools')).opacity, cursor: getComputedStyle(document.body).cursor, idle: document.body.classList.contains('idle') }));
-      check('بعد السكون يختفي المؤشر وتختفي الأيقونتان', st.idle && st.cursor === 'none' && st.op === '0', JSON.stringify(st));
+      check('بعد السكون يختفي المؤشر وتختفي الأيقونة', st.idle && st.cursor === 'none' && st.op === '0', JSON.stringify(st));
       await page.mouse.move(400, 400); await page.waitForTimeout(500);
       st = await page.evaluate(() => ({ op: getComputedStyle(document.querySelector('.tools')).opacity, cursor: getComputedStyle(document.body).cursor, idle: document.body.classList.contains('idle') }));
       check('حركة الماوس تُظهرهما من جديد', !st.idle && st.cursor !== 'none' && st.op === '1', JSON.stringify(st));
       await page.waitForTimeout(3500);
       check('ثم يختفيان مرة ثانية بعد السكون', await page.evaluate(() => document.body.classList.contains('idle')));
-      /* مؤشر الليزر: نقطة تتبع الماوس والمؤشر العادي مخفي */
+      /* ملء الشاشة: يدخل ويخرج، والأيقونة تتبدل. الأيقونة مخفية بعد السكون فنحرّك الماوس لتظهر */
       await page.mouse.move(500, 500); await page.waitForTimeout(300);
-      await page.click('#laserBtn');
-      await page.mouse.move(700, 450); await page.waitForTimeout(300);
-      const lz = await page.evaluate(() => { const b = document.querySelector('#laser').getBoundingClientRect(); return { on: document.querySelector('#laser').classList.contains('on'), x: (b.left + b.right) / 2, y: (b.top + b.bottom) / 2, pressed: document.querySelector('#laserBtn').getAttribute('aria-pressed'), cursor: getComputedStyle(document.body).cursor }; });
-      check('الليزر: النقطة تتبع الماوس والمؤشر العادي مخفي', lz.on && Math.abs(lz.x - 700) < 3 && Math.abs(lz.y - 450) < 3 && lz.pressed === 'true' && lz.cursor === 'none', JSON.stringify(lz));
-      await page.click('#laserBtn'); await page.waitForTimeout(200);
-      const lz2 = await page.evaluate(() => ({ on: document.querySelector('#laser').classList.contains('on'), pressed: document.querySelector('#laserBtn').getAttribute('aria-pressed') }));
-      check('الضغط الثاني يطفئ الليزر', !lz2.on && lz2.pressed === 'false', JSON.stringify(lz2));
-      /* ملء الشاشة: يدخل ويخرج، والأيقونة تتبدل */
       await page.click('#fsBtn'); await page.waitForTimeout(200);
       const f1 = await page.evaluate(() => ({ calls: window.__fs, pressed: document.querySelector('#fsBtn').getAttribute('aria-pressed'), on: document.querySelector('#fsBtn').classList.contains('on') }));
       await page.click('#fsBtn'); await page.waitForTimeout(200);
