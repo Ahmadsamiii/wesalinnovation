@@ -8,47 +8,69 @@ README.md والتزم به، ثم شغّل:
 php tools/check-copy.php
 php tools/check-landing.php
 ```
-
 ## خريطة المشروع
 
-### الفكرة
-منصة ذكاء اصطناعي عربية تجيب الأشخاص ذوي الإعاقة في السعودية عن الحقوق والخدمات والتقنيات المساعدة.
-ثلاثة أنظمة في مستودع واحد: (1) المنصة العامة PHP+MySQL بلا بناء، (2) صفحة الشركة `homepage/`، (3) `workspace/` تطبيق Laravel 12/PHP 8.4 داخلي لإدارة المشاريع.
+آخر مراجعة: 27 نوفمبر 2026، بقراءة كل ملفات المستودع. ما تحت «علل متحقق منها» فُحص على الشيفرة نفسها، وما تحت «ملاحظات لم تُتحقق» جاء من القراءة فقط فتُراجَع قبل أي إصلاح.
 
-### المنصة العامة (جذر المستودع)
-- `index.html` (~5900 سطر، تطبيق صفحة واحدة، CSS/JS مضمّنان). الصفحات (`pages` في `go()`): home, chat, settings, dashboard, resources, about, contact, login, register, privacy, terms, faq, forgot, reset.
-- لوحة التحكم: تبويبات overview, chats, users, messages, tickets, content (محرر صفحة الهبوط), experience (استبيانات), audit, profile؛ تُظهَر حسب `data-perm`.
-- صفحات مستقلة: login.html (/login)، survey.html (استبانة بدعوة أو رابط عام)، ticket.html (متابعة تذكرة برمز)، hello.html (/hello بوث NFC بهاكاثون ذوي الإعاقة)، hello-wall.html (/hello/wall شاشة الجناح)، judges.html (/judges أسئلة التحكيم، داخلية noindex)، corporate.html (تحويل 301 إلى /homepage/).
-- `api/`: db.php (اتصال+جلسة+ensureSchema+أدوار+حدود)، session-lib.php (جلسة موحدة auth_sessions + كوكي wesal_auth)، auth.php، chat.php وchat-stream.php (SSE) وchat-shared.php (برومبت `chatSystemPrompt()`، الحدود، المصادر) وchat-stream-providers.php، rag.php (kb_chunks)، voice.php/voice-lib.php (Groq ثم Azure ثم المتصفح)، admin.php، content.php + landing-schema.php (محتوى الهبوط live/draft)، tickets.php + cron-tickets.php (SLA وتذكيرات وإغلاق تلقائي)، surveys.php، invite-redeem.php، demo.php، contact.php، notifications.php، hello-visit.php، diag.php، stream-test.php.
-- المزوّدون: Gemini أساسي، وقابل للتبديل OpenAI/Claude/Kimi/ALLaM (خادم ذاتي، نافذة 4096) عبر `AI_PROVIDER`، مع بديل محلي في الواجهة.
-- قاعدة البيانات (`schema.sql` + `ensureSchema()` معاً): users, chat_logs, kb_chunks, messages, support_tickets, invites, invitations, password_resets, site_content, landing_content, audit_log, rate_limits, surveys + survey_questions/options/invitations/submissions/answers/answer_options, survey_responses, auth_sessions, account_links, hello_visits.
-- الأدوار الاثنا عشر: user, reviewer, mod, admin(=sysadmin) للمحادثة، و executive, pm, finance, medical, team_member, client, hr, crm للمساحة. أول حساب في قاعدة فارغة = مدير نظام. مصفوفة الدعوة يفرضها الخادم.
-- حدود: لكل دقيقة/IP، يومي لكل IP، يومي للمنصة (قاطع دائرة). `TRUST_PROXY` فقط خلف وكيل.
-- الخروج التلقائي: 30د/24س للمستفيد، 15د/12س للأدوار، والخادم هو الحكم.
+### الفكرة والأنظمة
+منصة ذكاء اصطناعي عربية تجيب الأشخاص ذوي الإعاقة في السعودية عن الحقوق والخدمات والتقنيات المساعدة. ثلاثة أنظمة في مستودع واحد:
+1. **المنصة العامة**: PHP 8 وMySQL بلا composer ولا npm. الواجهة `index.html` (نحو 5900 سطر).
+2. **صفحة الشركة** `homepage/`: `index.html` و`assets/home.css` و`assets/home.js`.
+3. **مساحة العمل** `workspace/`: Laravel 13.31 وPHP 8.4 (لا 12)، Blade وAlpine وTailwind 3.4، لإدارة المشاريع الداخلية. فيها 47 ملف اختبار (39 Feature و7 Auth و1 Unit)، و25 نموذجاً و10 سياسات و20 Enum و33 ترحيلاً.
+
+### المنصة العامة
+- **الصفحات في `index.html`** (`pages` في `go()`): home, chat, settings, dashboard, resources, about, contact, login, register, privacy, terms, faq, forgot, reset. تبويبات اللوحة: overview, chats, profile (بلا صلاحية)، users.view, messages.view, tickets.view, content.manage, experience.view, audit.view.
+- **صفحات مستقلة**: `login.html` (/login) و`survey.html` (?t= دعوة 40 hex، ?s= رابط عام) و`ticket.html` (?token= 32 hex) و`hello.html` (/hello بوث NFC) و`hello-wall.html` (/hello/wall) و`judges.html` (/judges داخلية بلا فهرسة، 83 سؤالاً في 10 أقسام) و`corporate.html` (نسخة قديمة كاملة تُحوَّل 301 إلى /homepage/).
+- **api/**: `db.php` يُضمَّن في كل نقطة عدا `hello-visit.php` و`stream-test.php`، ويحوي الاتصال والجلسة وensureSchema والأدوار والحدود والبريد. `session-lib.php` للجلسة الموحدة. `auth.php` و`admin.php` و`tickets.php` و`cron-tickets.php` و`surveys.php` و`content.php` و`landing-schema.php` و`notifications.php` و`contact.php` و`demo.php` و`invite-redeem.php`. المحادثة: `chat.php` و`chat-stream.php` (SSE) و`chat-shared.php` و`chat-stream-providers.php` و`rag.php`. الصوت: `voice.php` و`voice-lib.php`.
+- **الجلسة**: 30 دقيقة خمولاً و24 ساعة حداً أقصى للمستفيد، و15 دقيقة و12 ساعة لفريق المنصة ولكل صاحب `org_role`. الخادم هو الحكم بهامش 120 ثانية. `UNIFIED_SESSION` مطفأ افتراضياً.
+- **الأدوار الاثنا عشر**: user, reviewer, mod, admin للمحادثة (admin = sysadmin)، وexecutive, pm, finance, medical, team_member, client, hr, crm للمساحة. الدور الفعلي: admin ثم org_role ثم role. أول حساب في قاعدة فارغة يصبح admin. مصفوفة الدعوة يفرضها الخادم (`invitableRoles`).
+- **المحادثة**: Gemini أساسي. ترتيب المزوّدين: gemini ثم openai احتياطاً، وopenai ثم gemini، وclaude وkimi ثم gemini، وallam وحده إلا مع `ALLAM_FALLBACK`. الخصم من الرصيد يسبق نداء المزوّد. تكلفة السؤال من 1 إلى 3. أحداث البث: delta وsuggestions وsources وdone وerror. بعد أول delta لا بديل أبداً.
+- **قاعدة البيانات**: `schema.sql` لا يكفي وحده. جدولا `users` و`chat_logs` فيه فقط، وجداول التذاكر والإشعارات و`cron_runs` تُبنى في `ensureSchema()` (`migrateTickets` وغيرها). عند أي تعديل على البنية حدّث الاثنين.
+- **ثوابت متزامنة مع الواجهة**: `GUEST_LIMIT=5` و`USER_TOKENS=30` و`RENEW_HOURS=6` في `config.php` تقابل `RENEW_MS` في `index.html`. وثوابت بلا قيمة افتراضية في `db.php` (يقع Fatal إن غابت من config قديم): DB_*, SITE_NAME, SITE_URL, AI_PROVIDER, GEMINI_KEY, GEMINI_MODEL, MAIL_FROM, MAIL_FROM_NAME, CONTACT_TO, CRON_SECRET.
+- **التذاكر**: حالات new, in_progress, waiting, escalated, resolved, closed, reopened. مستويات none, agent, lead, exec. SLA: critical ساعة و4 ساعات على مدار الساعة، وhigh 4 و8، وnormal 8 و24، وlow 16 و40 بساعات عمل الأحد إلى الخميس 8ص إلى 6م بتوقيت الرياض.
 
 ### التوجيه والنشر
-- `.htaccess`: ترويسات أمان وCSP (unsafe-inline) وروابط /login /hello /hello/wall /judges /invite/{token}. التبديل يوم 13 أكتوبر بوجود ملف `.switch`: الجذر = صفحة الشركة، المحادثة على chat.wesalinnovation.sa.
-- النشر: دفع إلى main ← GitHub Actions (deploy.yml) ← SSH إلى Hostinger ← `deploy.sh` (قائمة سماح SYNC_DIRS/SYNC_FILES، يحمي config.php وuploads وjudges-notes.js، يستدعي `workspace/deploy.sh` متى وُجد .env). أي صفحة عامة جديدة تُضاف إلى sitemap.xml وإلى SYNC_FILES.
-- `workspace.yml`: اختبارات Laravel على SQLite ثم MariaDB.
-
-### صفحة الشركة `homepage/`
-index.html + assets/home.css/home.js. الأقسام: hero, products, services (ثلاثة مجالات), about, method (خمس خطوات), partners (هاكاثونات), proof, contact, footer.
-
-### مساحة العمل `workspace/` (Laravel)
-- مشاريع (مسودة→بانتظار الاعتماد→معتمد→قيد التنفيذ→منجز) وأعضاء ومراحل ومهام (كانبان) ومرفقات خاصة، عقود، أوامر شراء (عتبة اعتماد تنفيذي 50,000)، فواتير (INV-السنة-0001، بالهللات)، شهادات إنجاز/مشاركة، بطاقة رقمية، إفادات وظيفية، طلبات توظيف، تقارير لكل دور، محتوى صحي بمراجعة طبية (/kb/{id}) وتنبيهات حساسية، صحة النظام وتكامل البريد والذكاء، /verify للتحقق العام.
-- تسعة أدوار في `config/roles.php` (مصدر واحد للتبويبات). 25 موديلاً، 10 سياسات، 20 Enum، 33 ترحيلاً، 39 ملف اختبار. أوامر: workspace:create-sysadmin, platform:link-accounts, content:export-kb.
-- دخول موحد مطفأ افتراضياً: `UNIFIED_SESSION` (المنصة) و`UNIFIED_AUTH` (المساحة).
+- `.htaccess`: ترويسات أمان وCSP بـ unsafe-inline، وروابط /login و/hello و/hello/wall و/judges و/invite/{token}. التبديل بملف `.switch` على الخادم: الجذر صفحة الشركة والمحادثة على chat.
+- الدفع إلى `main` ينشر تلقائياً: `deploy.yml` ثم SSH إلى Hostinger ثم `deploy.sh` (قائمة سماح `SYNC_DIRS` و`SYNC_FILES`، يحمي config.php وuploads وjudges-notes.js). **لا يشترط نجاح أي فحص**، ولا يُختبر `api/` ولا `tools/` في CI. صفحة عامة جديدة تُضاف إلى sitemap.xml وإلى `SYNC_FILES`.
+- لا تتوفر في جلسات Claude السحابية بيانات الاستضافة ولا SSH. `api/config.php` غير موجود محلياً.
 
 ### الأدوات `tools/`
-check-copy.php (لا شرطات في النصوص)، check-landing.php (سجل الهبوط = index.html)، check-roles/invites/auth-session/session/sources/voice/allam/stream/beta (PHP)، check-*-ui.js وbuild-judges-pdf.js (Playwright)، check-routes.sh، rag/ingest-kb.php، seed-demo.php، source-logo.php.
+`check-copy.php` يفحص 8 صفحات HTML و`homepage/` وأربعة ملفات JS وكل `api/*.php` (عدا diag وstream-test)، **ولا يفحص `workspace/` ولا `tools/` ولا Blade**. العبارات الجاهزة تنبيهات لا أخطاء. `check-landing.php` يطابق `landing-schema.php` مع `index.html`. فحوص بلا قاعدة بيانات: check-copy, check-landing, check-sources, check-voice, check-stream, check-allam, check-judges.js. فحوص تحتاج قاعدة ومحلية فقط: check-roles, check-session, check-auth-session, check-beta, check-invites، وفحوص `*-ui.js` بـ Playwright (BASE محلي وإلا خروج 2). `exit("نص")` في PHP يرجع 0، فغياب config.php يبدو نجاحاً في عدة فحوص. أدوات غير مذكورة في README: kscdr-scan.php وexport-chat-training-data.php وrag/collect-disability-sources.ipynb وtraining/wesal-finetune.ipynb وjudges-pdf-hash.js.
 
-### قواعد الكتابة (CLAUDE.md + README)
-قبل أي نص ظاهر: اقرأ «كتابة النصوص الظاهرة للمستخدم». لا — ولا –، فصحى ميسّرة (المساعد وحده بلهجة سعودية بيضاء)، جمل قصيرة، لا ادعاء بلا دليل، «الأشخاص ذوو الإعاقة». ثم شغّل `php tools/check-copy.php` و`php tools/check-landing.php`.
+### مساحة العمل
+- تسعة أدوار في `config/roles.php` (مصدر واحد للتبويبات). أوامر: `workspace:create-sysadmin` و`platform:link-accounts` (تقرير جاف ثم `--apply --plan`، وفيه `--undo`) و`content:export-kb`.
+- الحساب بالهللات في المعاينة (`app.js`) والتخزين `decimal:2` بالريال. الضريبة 15%. عتبة اعتماد أمر الشراء التنفيذي 50000 (أكبر تماماً). الأرقام: INV عند الإصدار، وPO وCT وCERT وHIR عند الإنشاء، وREF عند الاعتماد.
+- لا تضف دوراً إلا في `config/roles.php`. لا تشغّل `DatabaseSeeder` في الإنتاج (تسعة حسابات بكلمة مرور password).
+
+### قواعد الكتابة
+قبل أي نص ظاهر اقرأ «كتابة النصوص الظاهرة للمستخدم» في README. لا شرطة طويلة ولا قصيرة، فصحى ميسّرة (المساعد وحده بلهجة سعودية بيضاء)، جملة قصيرة، لا ادعاء بلا دليل. ثم شغّل `check-copy.php` و`check-landing.php`.
 
 ### فخاخ معروفة
-- تعديل البنية: في schema.sql **و** ensureSchema().
-- ثلاث قيم متزامنة بين config.php وindex.html: GUEST_LIMIT, USER_TOKENS, RENEW_HOURS/RENEW_MS.
-- إضافة حقل لصفحة الهبوط: landingSchema() + data-lp في index.html ثم check-landing.
-- عند تعديل assets/landing-editor.* ارفع LPE_VER. عند تعديل أسئلة التحكيم أعد توليد ملفي PDF. لا تضع حقل `v` في judges-data.js.
-- judges-notes.js خارج Git عمداً (المستودع عام).
-- أي تغيير في /hello: العدّاد يحتاج `TRUNCATE hello_visits` قبل الحدث.
+- ثلاث قيم متزامنة بين config.php وindex.html (انظر أعلاه). إضافة حقل لصفحة الهبوط: `landingSchema()` و`data-lp` ثم `check-landing`. تعديل `assets/landing-editor.*` يستلزم رفع `LPE_VER`.
+- بعد أي تعديل على أسئلة التحكيم أو ورق الطباعة أعد توليد ملفي PDF. لا تضع حقل `v` في `judges-data.js`. `judges-notes.js` خارج Git عمداً (المستودع عام).
+- تصفير عدّاد /hello بـ `TRUNCATE hello_visits` لا `DELETE`.
+- الدخول الموحد: مساحة العمل تكتب في `auth_sessions` بالمنصة، وتعديل الدور أو الاسم محلياً قد يُمحى بمزامنة المنصة.
+
+### علل متحقق منها (تنتظر قراراً)
+1. `api/stream-test.php` عام بلا مصادقة، ويستدعي Gemini بمفتاح الإنتاج عند `?sse=2`، ولا يحجبه `.htaccess`، ويُنشر لأن `api` ضمن `SYNC_DIRS`. README نفسه يقول إنه يُحذف بعد الاختبار.
+2. أجوبة `assets/judges-data.js` (te3 وv5 وv6 وai1 وb4) تدّعي أن النموذج ALLaM على خوادمنا داخل المملكة وأنه لا يُرسل نص السؤال لمزوّد خارجي. الشيفرة: Gemini أساسي، والصوت Groq أو Azure، و`ragEmbed()` في `api/rag.php:20-25` يرسل نص السؤال إلى Google متى وُجد `GEMINI_KEY` أياً كان المزوّد (وREADME يقر بذلك). والنشر على Hostinger. صحّحوا الأجوبة قبل أي جلسة تحكيم.
+3. `api/chat-shared.php:105` خصم الرصيد بلا شرط `tokens>=?` فالتوازي قد يهبط تحت الصفر.
+4. `api/contact.php` لا يستدعي `ensureSchema()` ويرسل بـ `@mail()` لا SMTP. وتقييم الزائر (`index.html:2433`) يرسل بريداً فارغاً فيرفضه الخادم حسب التقرير ويضيع التقييم مع «شكراً لتقييمك».
+5. `schema.sql` يحوي `support_tickets` بصيغته القديمة (open وdone)، فالتذاكر لا تعمل منه وحده.
+6. `index.html`: مؤشر القوة في صفحة إعادة التعيين (س2233 و2237) يحدّث عناصر التسجيل لا `pwBar2` و`pwHint2`.
+7. `workspace`: صفحة `/kb/{id}` العامة تعرض `category` و`source_url` من السجل القابل للتحرير لا من النسخة المنشورة، و`update()` يغيّرهما فوراً. وتعديل منشور يعيده مسودة فيسقط من قائمة المراجعة الدورية (`ContentReviewController:27-30` يشترط Approved) فيبقى منشوراً بعد انتهاء 12 شهراً.
+8. `workspace/certificates/show.blade.php:32` يطبع `type->label()` لا العنوان المخصص.
+9. `workspace`: 55 ملف Blade فيها شرطة طويلة أو قصيرة، بعضها نص ظاهر (مثل `invoices/print.blade.php:7` و`kb/show.blade.php:6`)، ولا يفحصها `check-copy.php`.
+10. `workspace/resources/views/components/form/textarea.blade.php` (ومثلها input وselect) تقرأ `old()` بالاسم وحده، و`medical/alerts.blade.php:58-60` يكرر الحقول نفسها لكل تنبيه فقد تتسرب القيم والأخطاء بين البطاقات.
+11. `deploy.yml` لا يشترط نجاح أي فحص قبل النشر.
+
+### ملاحظات لم تُتحقق (من القراءة فقط)
+- `smallTalkReply` قد يعترض أسئلة حقيقية («من انتهت صلاحية بطاقتي»، «شكراً كيف أقدّم...») ويجيب بجواب جاهز بلا خصم.
+- الواجهة: رد HTML بخطأ 5xx على البث يُعد التزاماً فلا يسقط إلى `chat.php`، ورد `ok:false` بحد المعدل يُعرض جواباً محلياً (`index.html:3251-3319`).
+- `migrateMessagesToTickets` (`db.php:667`) تحوّل رسائل التواصل إلى تذاكر مغلقة، فتزدوج الصناديق.
+- `must_change_pw` يُفرض في الواجهة فقط، والكلمة المؤقتة بلا انتهاء.
+- حذف الحساب لا ينظف `ticket_entries` وغيرها، والرسالة تدّعي حذفاً نهائياً.
+- `AccountLinker`: التراجع يحدّث `reverted_at` ولا يحذف الصف، والمفتاحان `uq_ws` و`uq_pl` فريدان، فإعادة الربط بعد التراجع قد تفشل (المفتاحان مؤكدان في المخطط، والسلوك لم يُجرَّب).
+- `hello-wall.html:190` مؤقت 960ms قد يصفّر خانة بعد تغيرها في الوضع السريع.
+- `homepage/assets/home.js:270` يحذف `aria-describedby` عند أول إدخال.
+- `tools/check-invites.php` و`check-auth-session.php` يصفّران `rate_limits` ويجرّبان `RENAME TABLE`، فلا يُشغَّلان على قاعدة مشتركة.
