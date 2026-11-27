@@ -25,6 +25,26 @@ jobs:
           # تحقّق بصمة الخادم فعلياً بدل تعطيل الفحص — يمنع اتصالاً بخادم منتحل.
           ssh-keyscan -p "${{ secrets.HOSTINGER_PORT }}" -H "${{ secrets.HOSTINGER_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
 
+      # يفشل مبكراً برسالة واضحة إن كان الخادم الذي وصل إليه GitHub لا يحوي مجلد الموقع،
+      # وهو العطل الذي ظهر بعد نقل الموقع: السكربت يقول «مجلد الوجهة غير موجود» ولا يبيّن
+      # أي خادم رآه. لا يطبع إلا قيماً غير حساسة (سجل الوجهة عام لأن المستودع عام): هل
+      # المجلد موجود، وكم نسخة احتياطية فيه، واسم أحدثها، وهو طابع زمني فقط. يُقارَن اسم
+      # الأحدث بما يراه صاحب الخادم في جلسته لمعرفة هل هما الخادم نفسه.
+      - name: فحص الخادم قبل النشر
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/deploy_key \
+              -p "${{ secrets.HOSTINGER_PORT }}" \
+              -o StrictHostKeyChecking=yes \
+              -o BatchMode=yes \
+              "${{ secrets.HOSTINGER_USER }}@${{ secrets.HOSTINGER_HOST }}" \
+              'if [ -d "$HOME/domains/wesalinnovation.sa/public_html" ]; then echo "مجلد الموقع: موجود"; else echo "مجلد الموقع: غير موجود"; fi
+               if [ -d "$HOME/wesal-repo/.git" ]; then echo "نسخة المستودع: موجودة"; else echo "نسخة المستودع: غير موجودة"; fi
+               echo "عدد النسخ الاحتياطية: $(ls -1 "$HOME"/wesal-backups/public_html-*.tar.gz 2>/dev/null | wc -l)"
+               echo "أحدث نسخة احتياطية: $(ls -1 "$HOME"/wesal-backups/public_html-*.tar.gz 2>/dev/null | sort | tail -n 1 | xargs -r basename)"
+               [ -d "$HOME/domains/wesalinnovation.sa/public_html" ]' \
+            || { echo "::error::الخادم الذي وصل إليه GitHub لا يحوي مجلد الموقع. راجع أسرار HOSTINGER_HOST وHOSTINGER_PORT وHOSTINGER_USER في إعدادات المستودع."; exit 1; }
+
       - name: نشر عبر السطر الآمر المقيَّد على الخادم
         run: |
           set -euo pipefail
