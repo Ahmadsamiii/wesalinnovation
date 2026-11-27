@@ -183,6 +183,19 @@ define('SMTP_PASS',       '');               // فارغ = مُعطَّل، يب
  * عبر الرابط تلقائياً حتى تضبطه. */
 define('CRON_SECRET', '');
 
+/* ---------- بوابة قاعدة البيانات (api/db-gateway.php) ----------
+ * نقطة HTTPS تنفّذ جملة SQL على قاعدة الإنتاج لمن يحمل المفتاح، لتمكين أداة خارجية
+ * (مساعد برمجي مثلاً) من فحص البيانات وتعديلها بلا فتح MySQL للشبكة.
+ * معطّلة ما دام المفتاح أقصر من ٣٢ حرفاً (ترد 404). ولّده على الخادم، ولا ترسله في
+ * محادثة ولا بريد:
+ *     php -r "echo bin2hex(random_bytes(32)), PHP_EOL;"
+ * الكتابة معطّلة حتى مع وجود المفتاح. اتركها false ما لم تحتجها، وأعدها false بعد
+ * الانتهاء. كل كتابة مثبّتة تُسجَّل في الجدول db_gateway_log. */
+define('DB_GATEWAY_KEY',      '');
+define('DB_GATEWAY_WRITE',    false);
+// define('DB_GATEWAY_MAX_ROWS', 1000);   // أقصى صفوف في رد قراءة واحد
+// define('DB_GATEWAY_REDACT', '/pass(word)?|secret|token|api_?key|hash$/i');   // أعمدة لا تخرج قيمها
+
 /* مجلد التخزين الخاص (ملفات قاعدة المعرفة والمكتبات المجلوبة). يُفضَّل خارج المجلد العام،
    مثل: /home/USER/domains/wesalinnovation.sa/storage — وإن تُرك يُستخدم storage/ داخل المشروع محمياً بـ .htaccess */
 // define('STORAGE_DIR', '/home/USER/domains/wesalinnovation.sa/storage');
